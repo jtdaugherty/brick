@@ -20,12 +20,6 @@ data CursorLocation =
                    , cursorLocationName :: Maybe Name
                    }
 
-locOffset :: Location -> Location -> Location
-locOffset (Location (w1, h1)) (Location (w2, h2)) = Location (w1+w2, h1+h2)
-
-clOffset :: CursorLocation -> Location -> CursorLocation
-clOffset cl loc = cl { cursorLocation = (cursorLocation cl) `locOffset` loc }
-
 data Render =
     Render { renderImage :: Image
            , renderCursors :: [CursorLocation]
@@ -40,11 +34,6 @@ data Widget =
            , widgetName :: Maybe Name
            }
 
-txt :: String -> Widget
-txt s =
-    def { render = \_ _ a -> def { renderImage = string a s }
-    }
-
 instance IsString Widget where
     fromString = txt
 
@@ -53,6 +42,32 @@ data Editor =
            , editCursorPos :: Int
            , editorName :: Name
            }
+
+instance Default Widget where
+    def = Widget { render = const $ const $ const def
+                 , widgetName = Nothing
+                 }
+
+data App a =
+    App { appDraw :: a -> Widget
+        , appChooseCursor :: a -> [CursorLocation] -> Maybe CursorLocation
+        , appHandleEvent :: Event -> a -> Either ExitCode a
+        , appHandleResize :: Name -> DisplayRegion -> a -> a
+        }
+
+data FocusRing = FocusRingEmpty
+               | FocusRingNonempty [Name] Int
+
+locOffset :: Location -> Location -> Location
+locOffset (Location (w1, h1)) (Location (w2, h2)) = Location (w1+w2, h1+h2)
+
+clOffset :: CursorLocation -> Location -> CursorLocation
+clOffset cl loc = cl { cursorLocation = (cursorLocation cl) `locOffset` loc }
+
+txt :: String -> Widget
+txt s =
+    def { render = \_ _ a -> def { renderImage = string a s }
+    }
 
 named :: Widget -> Name -> Widget
 named w name = w { widgetName = Just name }
@@ -239,11 +254,6 @@ fg = (defAttr `withForeColor`)
 bg :: Color -> Attr
 bg = (defAttr `withBackColor`)
 
-instance Default Widget where
-    def = Widget { render = const $ const $ const def
-                 , widgetName = Nothing
-                 }
-
 withAttr :: Widget -> Attr -> Widget
 withAttr w attr =
     def { render = \loc sz _ -> render_ w loc sz attr
@@ -263,13 +273,6 @@ withCursor w cursorLoc =
                                         }
       }
 
-data App a =
-    App { appDraw :: a -> Widget
-        , appChooseCursor :: a -> [CursorLocation] -> Maybe CursorLocation
-        , appHandleEvent :: Event -> a -> Either ExitCode a
-        , appHandleResize :: Name -> DisplayRegion -> a -> a
-        }
-
 runVty :: (MonadIO m) => App a -> a -> Vty -> m ()
 runVty app initialState vty = do
     let run state = do
@@ -288,9 +291,6 @@ runVty app initialState vty = do
               Right newState -> run newState
 
     run initialState
-
-data FocusRing = FocusRingEmpty
-               | FocusRingNonempty [Name] Int
 
 focusRing :: [Name] -> FocusRing
 focusRing [] = FocusRingEmpty
