@@ -15,11 +15,10 @@ data St =
 
 drawUI :: St -> Widget
 drawUI st =
-    let ew = edit (stEditor st)
-    in vBox [ ew `withAttr` (cyan `on` blue)
-            , hBorder '-'
-            , "stuff and things"
-            ]
+    vBox [ edit (stEditor st) `withAttr` (cyan `on` blue)
+         , hBorder '-'
+         , "stuff and things"
+         ]
 
 handleEvent :: Event -> St -> Either ExitCode St
 handleEvent e st =
@@ -36,10 +35,10 @@ pickCursor st ls =
 initialState :: St
 initialState =
     let eName = Name "edit"
-    St { msg = ""
-       , focus = focusRing [eName]
-       , stEditor = editor eName ""
-       }
+    in St { msg = ""
+          , focus = focusRing [eName]
+          , stEditor = editor eName ""
+          }
 
 main :: IO ()
 main = standardIOConfig

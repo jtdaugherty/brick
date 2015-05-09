@@ -41,7 +41,7 @@ data Editor =
            }
 
 editor :: Name -> String -> Editor
-editor name s = Editor s (length name) name
+editor name s = Editor s (length s) name
 
 edit :: Editor -> Widget
 edit e =
