@@ -241,24 +241,24 @@ runVty draw chooseCursor handleEv state vty = do
         Right newState -> runVty draw chooseCursor handleEv newState vty
 
 data FocusRing = FocusRingEmpty
-               | FocusRingNonemtpy [Name] Int
+               | FocusRingNonempty [Name] Int
 
 focusRing :: [Name] -> FocusRing
 focusRing [] = FocusRingEmpty
-focusRing names = FocusRingNonemtpy names 0
+focusRing names = FocusRingNonempty names 0
 
 focusNext :: FocusRing -> FocusRing
 focusNext FocusRingEmpty = FocusRingEmpty
-focusNext (FocusRingNonemtpy ns i) = FocusRingNonemtpy ns i'
+focusNext (FocusRingNonempty ns i) = FocusRingNonempty ns i'
     where
         i' = (i + 1) `mod` (length ns)
 
 focusPrev :: FocusRing -> FocusRing
 focusPrev FocusRingEmpty = FocusRingEmpty
-focusPrev (FocusRingNonemtpy ns i) = FocusRingNonemtpy ns i'
+focusPrev (FocusRingNonempty ns i) = FocusRingNonempty ns i'
     where
         i' = (i + (length ns) - 1) `mod` (length ns)
 
 focusGetCurrent :: FocusRing -> Maybe Name
 focusGetCurrent FocusRingEmpty = Nothing
-focusGetCurrent (FocusRingNonemtpy ns i) = Just $ ns !! i
+focusGetCurrent (FocusRingNonempty ns i) = Just $ ns !! i
