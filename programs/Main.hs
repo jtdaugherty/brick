@@ -1,7 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-import Data.Maybe
 import Graphics.Vty
 import System.Exit
 
@@ -28,13 +27,6 @@ handleEvent e st =
         EvKey KEsc [] -> Left ExitSuccess
         ev -> Right $ st { stEditor = editEvent ev (stEditor st) }
 
-pickCursor :: St -> [CursorLocation] -> Maybe CursorLocation
-pickCursor st ls =
-    listToMaybe $ filter isCurrent ls
-    where
-        isCurrent cl = cursorLocationName cl ==
-                       (focusGetCurrent $ focus st)
-
 initialState :: St
 initialState =
     St { focus = focusRing [eName]
@@ -47,4 +39,4 @@ handleResize name size st = error $ show name
 main :: IO ()
 main = standardIOConfig
        >>= mkVty
-       >>= runVty drawUI pickCursor handleEvent handleResize initialState
+       >>= runVty drawUI (focusRingCursor focus) handleEvent handleResize initialState

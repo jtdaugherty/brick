@@ -3,6 +3,7 @@ module Brick where
 import Control.Monad.IO.Class
 import Control.Applicative
 import Control.Arrow
+import Data.Maybe
 import Data.String
 import Data.Monoid
 import System.Exit
@@ -290,3 +291,10 @@ focusPrev (FocusRingNonempty ns i) = FocusRingNonempty ns i'
 focusGetCurrent :: FocusRing -> Maybe Name
 focusGetCurrent FocusRingEmpty = Nothing
 focusGetCurrent (FocusRingNonempty ns i) = Just $ ns !! i
+
+focusRingCursor :: (a -> FocusRing) -> a -> [CursorLocation] -> Maybe CursorLocation
+focusRingCursor getRing st ls =
+    listToMaybe $ filter isCurrent ls
+    where
+        isCurrent cl = cursorLocationName cl ==
+                       (focusGetCurrent $ getRing st)
