@@ -53,7 +53,7 @@ instance Default Widget where
                  }
 
 data App a =
-    App { appDraw :: a -> Widget
+    App { appDraw :: a -> [Widget]
         , appChooseCursor :: a -> [CursorLocation] -> Maybe CursorLocation
         , appHandleEvent :: Event -> a -> IO a
         , appHandleResize :: Name -> DisplayRegion -> a -> a
@@ -250,19 +250,20 @@ render_ w loc sz attr =
         result = render w sz attr
         img = renderImage result
 
-renderFinal :: Widget
+renderFinal :: [Widget]
             -> DisplayRegion
             -> ([CursorLocation] -> Maybe CursorLocation)
             -> (Picture, [(Name, DisplayRegion)])
-renderFinal widget sz chooseCursor = (pic, renderSizes renderResult)
+renderFinal layerWidgets sz chooseCursor = (pic, concatMap renderSizes layerResults)
     where
-        pic = basePic { picCursor = cursor }
-        basePic = picForImage $ uncurry resize sz $ renderImage renderResult
-        cursor = case chooseCursor (renderCursors renderResult) of
+        cursor = case chooseCursor (concatMap renderCursors layerResults) of
                    Nothing -> NoCursor
                    Just cl -> let Location (w, h) = cursorLocation cl
                               in Cursor w h
-        renderResult = render_ widget (Location (0, 0)) sz defAttr
+        layerRenderResult w = render_ w (Location (0, 0)) sz defAttr
+        layerResults = layerRenderResult <$> layerWidgets
+        basePic = picForLayers $ uncurry resize sz <$> renderImage <$> layerResults
+        pic = basePic { picCursor = cursor }
 
 liftVty :: Image -> Widget
 liftVty img =

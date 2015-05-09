@@ -15,14 +15,15 @@ data St =
 eName :: Name
 eName = Name "edit"
 
-drawUI :: St -> Widget
-drawUI st =
-    vBox [ "Top"
-         , hBorder '-'
-         , hBox [ " Edit: "
-                , hLimit 20 $ edit (stEditor st) `withAttr` (cyan `on` blue)
-                ]
-         ]
+drawUI :: St -> [Widget]
+drawUI st = [top]
+    where
+        top = vBox [ "Top"
+                   , hBorder '-'
+                   , hBox [ " Edit: "
+                          , hLimit 20 $ edit (stEditor st) `withAttr` (cyan `on` blue)
+                          ]
+                   ]
 
 handleEvent :: Event -> St -> IO St
 handleEvent e st =
