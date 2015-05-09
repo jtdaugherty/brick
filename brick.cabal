@@ -28,4 +28,5 @@ executable brick
   main-is:             Main.hs
   build-depends:       base,
                        brick,
-                       vty >= 5.2.9
+                       vty >= 5.2.9,
+                       data-default

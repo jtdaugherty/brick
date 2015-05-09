@@ -56,6 +56,13 @@ data App a =
         , appHandleResize :: Name -> DisplayRegion -> a -> a
         }
 
+instance Default (App a) where
+    def = App { appDraw = const def
+              , appChooseCursor = const $ const Nothing
+              , appHandleEvent = const $ Right
+              , appHandleResize = const $ const id
+              }
+
 data FocusRing = FocusRingEmpty
                | FocusRingNonempty ![Name] !Int
 

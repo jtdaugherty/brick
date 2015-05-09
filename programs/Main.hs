@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
+import Data.Default
 import Graphics.Vty
 import System.Exit
 
@@ -38,10 +39,9 @@ handleResize name size st = error $ show name
 
 app :: App St
 app =
-    App { appDraw = drawUI
+    def { appDraw = drawUI
         , appChooseCursor = focusRingCursor focus
         , appHandleEvent = handleEvent
-        , appHandleResize = handleResize
         }
 
 main :: IO ()
