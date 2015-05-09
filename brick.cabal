@@ -18,7 +18,8 @@ library
   exposed-modules:     Brick
   build-depends:       base >=4.7 && <4.8,
                        vty >= 5.2.9,
-                       transformers
+                       transformers,
+                       data-default
 
 executable brick
   hs-source-dirs:      programs
