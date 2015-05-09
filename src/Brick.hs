@@ -2,6 +2,7 @@ module Brick where
 
 import Control.Monad.IO.Class
 import Data.String
+import Data.Monoid
 import System.Exit
 import Graphics.Vty
 
@@ -40,6 +41,55 @@ data Editor =
            , editorName :: Name
            }
 
+editEvent :: Event -> Editor -> Editor
+editEvent e theEdit = f theEdit
+    where
+        f = case e of
+              EvKey (KChar 'a') [MCtrl] -> gotoBOL
+              EvKey (KChar 'e') [MCtrl] -> gotoEOL
+              EvKey (KChar c) [] | c /= '\t' -> insertChar c
+              EvKey KDel [] -> deleteChar
+              EvKey KLeft [] -> moveLeft
+              EvKey KRight [] -> moveRight
+              EvKey KBS [] -> deletePreviousChar
+              _ -> id
+
+moveLeft :: Editor -> Editor
+moveLeft e = e { editCursorPos = max 0 (editCursorPos e - 1)
+               }
+
+moveRight :: Editor -> Editor
+moveRight e = e { editCursorPos = min (editCursorPos e + 1) (length $ editStr e)
+                }
+
+deletePreviousChar :: Editor -> Editor
+deletePreviousChar e
+  | editCursorPos e == 0 = e
+  | otherwise = deleteChar $ moveLeft e
+
+gotoBOL :: Editor -> Editor
+gotoBOL e = e { editCursorPos = 0 }
+
+gotoEOL :: Editor -> Editor
+gotoEOL e = e { editCursorPos = length (editStr e) }
+
+deleteChar :: Editor -> Editor
+deleteChar e = e { editStr = s'
+                 }
+    where
+        n = editCursorPos e
+        s = editStr e
+        s' = take n s <> drop (n+1) s
+
+insertChar :: Char -> Editor -> Editor
+insertChar c theEdit = theEdit { editStr = s
+                               , editCursorPos = n + 1
+                               }
+    where
+        s = take n oldStr ++ [c] ++ drop n oldStr
+        n = editCursorPos theEdit
+        oldStr = editStr theEdit
+
 editor :: Name -> String -> Editor
 editor name s = Editor s (length s) name
 
@@ -49,9 +99,15 @@ edit e =
            }
     where
         renderEditor loc sz@(width, _) attr =
-            let cursorPos = CursorLocation (Location (editCursorPos e, 0)) (Just $ editorName e)
-                w = hBox [ txt (editStr e)
-                         , txt (replicate (width - (length $ editStr e)) ' ')
+            let cursorPos = CursorLocation (Location (pos', 0)) (Just $ editorName e)
+                s = editStr e
+                pos = editCursorPos e
+                (s', pos') = let winSize = width
+                                 start = max 0 (pos + 1 - winSize)
+                                 newPos = min pos (width - 1)
+                             in (drop start s, newPos)
+                w = hBox [ txt s'
+                         , txt (replicate (width - length s' + 1) ' ')
                          ]
                 (img, _) = render_ w loc sz attr
             in (img, [cursorPos])
