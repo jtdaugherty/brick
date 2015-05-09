@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns #-}
 module Brick where
 
 import Control.Monad.IO.Class
@@ -16,14 +17,14 @@ newtype Name = Name String
                deriving (Eq, Show)
 
 data CursorLocation =
-    CursorLocation { cursorLocation :: Location
-                   , cursorLocationName :: Maybe Name
+    CursorLocation { cursorLocation :: !Location
+                   , cursorLocationName :: !(Maybe Name)
                    }
 
 data Render =
-    Render { renderImage :: Image
-           , renderCursors :: [CursorLocation]
-           , renderSizes :: [(Name, DisplayRegion)]
+    Render { renderImage :: !Image
+           , renderCursors :: ![CursorLocation]
+           , renderSizes :: ![(Name, DisplayRegion)]
            }
 
 instance Default Render where
@@ -31,16 +32,16 @@ instance Default Render where
 
 data Widget =
     Widget { render :: Location -> DisplayRegion -> Attr -> Render
-           , widgetName :: Maybe Name
+           , widgetName :: !(Maybe Name)
            }
 
 instance IsString Widget where
     fromString = txt
 
 data Editor =
-    Editor { editStr :: String
-           , editCursorPos :: Int
-           , editorName :: Name
+    Editor { editStr :: !String
+           , editCursorPos :: !Int
+           , editorName :: !Name
            }
 
 instance Default Widget where
@@ -56,7 +57,7 @@ data App a =
         }
 
 data FocusRing = FocusRingEmpty
-               | FocusRingNonempty [Name] Int
+               | FocusRingNonempty ![Name] !Int
 
 locOffset :: Location -> Location -> Location
 locOffset (Location (w1, h1)) (Location (w2, h2)) = Location (w1+w2, h1+h2)
