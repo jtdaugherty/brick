@@ -26,6 +26,7 @@ handleEvent :: Event -> St -> IO St
 handleEvent e st =
     case e of
         EvKey KEsc [] -> exitSuccess
+        EvKey KEnter [] -> error $ editStr $ stEditor st
         ev -> return $ st { stEditor = editEvent ev (stEditor st) }
 
 initialState :: St
