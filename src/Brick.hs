@@ -184,4 +184,3 @@ focusPrev (FocusRingNonemtpy ns i) = FocusRingNonemtpy ns i'
 focusGetCurrent :: FocusRing -> Maybe Name
 focusGetCurrent FocusRingEmpty = Nothing
 focusGetCurrent (FocusRingNonemtpy ns i) = Just $ ns !! i
-
