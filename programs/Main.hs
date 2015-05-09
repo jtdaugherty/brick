@@ -34,9 +34,6 @@ initialState =
        , stEditor = editor eName ""
        }
 
-handleResize :: Name -> DisplayRegion -> St -> St
-handleResize name size st = error $ show name
-
 app :: App St
 app =
     def { appDraw = drawUI
