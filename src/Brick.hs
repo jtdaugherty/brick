@@ -238,6 +238,15 @@ vLimit height w =
     def { render = \(width, _) attr -> render w (width, height) attr
         }
 
+translated :: Location -> Widget -> Widget
+translated off@(Location (wOff, hOff)) w =
+    def { render = \sz attr ->
+            let result = render w sz attr
+            in result { renderImage = translate wOff hOff $ renderImage result
+                      , renderCursors = (`clOffset` off) <$> renderCursors result
+                      }
+        }
+
 render_ :: Widget -> Location -> DisplayRegion -> Attr -> Render
 render_ w loc sz attr =
     def { renderImage = uncurry crop sz img
