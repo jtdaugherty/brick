@@ -30,7 +30,10 @@ handleEvent e st =
 
 pickCursor :: St -> [CursorLocation] -> Maybe CursorLocation
 pickCursor st ls =
-    listToMaybe $ filter (\cl -> cursorLocationName cl == (focusGetCurrent $ focus st)) ls
+    listToMaybe $ filter isCurrent ls
+    where
+        isCurrent cl = cursorLocationName cl ==
+                       (focusGetCurrent $ focus st)
 
 initialState :: St
 initialState =
