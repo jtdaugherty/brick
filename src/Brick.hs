@@ -1,14 +1,14 @@
 {-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module Brick where
 
-import Control.Monad.IO.Class
 import Control.Applicative
 import Control.Arrow ((>>>))
+import Control.Exception (finally)
 import Data.Default
 import Data.Maybe
 import Data.String
 import Data.Monoid
-import System.Exit
 import Graphics.Vty
 
 newtype Location = Location (Int, Int)
@@ -52,14 +52,14 @@ instance Default Widget where
 data App a =
     App { appDraw :: a -> Widget
         , appChooseCursor :: a -> [CursorLocation] -> Maybe CursorLocation
-        , appHandleEvent :: Event -> a -> Either ExitCode a
+        , appHandleEvent :: Event -> a -> IO a
         , appHandleResize :: Name -> DisplayRegion -> a -> a
         }
 
 instance Default (App a) where
     def = App { appDraw = const def
               , appChooseCursor = const $ const Nothing
-              , appHandleEvent = const $ Right
+              , appHandleEvent = const return
               , appHandleResize = const $ const id
               }
 
@@ -281,24 +281,21 @@ withCursor w cursorLoc =
                                         }
       }
 
-runVty :: (MonadIO m) => App a -> a -> Vty -> m ()
+runVty :: App a -> a -> Vty -> IO ()
 runVty app initialState vty = do
     let run state = do
-          sz <- liftIO $ displayBounds $ outputIface vty
+          sz <- displayBounds $ outputIface vty
           let (pic, sizes) = renderFinal (appDraw app state) sz (appChooseCursor app state)
-          liftIO $ update vty pic
+          update vty pic
 
-          let applyResizes = foldl (>>>) id $ (uncurry (appHandleResize app)) <$> sizes
-              resizedState = applyResizes state
+          let !applyResizes = foldl (>>>) id $ (uncurry (appHandleResize app)) <$> sizes
+              !resizedState = applyResizes state
 
-          e <- liftIO $ nextEvent vty
-          case appHandleEvent app e resizedState of
-              Left status -> liftIO $ do
-                  shutdown vty
-                  exitWith status
-              Right newState -> run newState
+          e <- nextEvent vty
+          newState <- appHandleEvent app e resizedState
+          run newState
 
-    run initialState
+    run initialState `finally` (shutdown vty)
 
 focusRing :: [Name] -> FocusRing
 focusRing [] = FocusRingEmpty

@@ -22,11 +22,11 @@ drawUI st =
          , "stuff and things"
          ]
 
-handleEvent :: Event -> St -> Either ExitCode St
+handleEvent :: Event -> St -> IO St
 handleEvent e st =
     case e of
-        EvKey KEsc [] -> Left ExitSuccess
-        ev -> Right $ st { stEditor = editEvent ev (stEditor st) }
+        EvKey KEsc [] -> exitSuccess
+        ev -> return $ st { stEditor = editEvent ev (stEditor st) }
 
 initialState :: St
 initialState =
