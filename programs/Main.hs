@@ -12,6 +12,9 @@ data St =
        , stEditor :: Editor
        }
 
+eName :: Name
+eName = Name "edit"
+
 drawUI :: St -> Widget
 drawUI st =
     vBox [ hLimit 15 $ edit (stEditor st) `withAttr` (cyan `on` blue)
@@ -31,12 +34,14 @@ pickCursor st ls =
 
 initialState :: St
 initialState =
-    let eName = Name "edit"
-    in St { focus = focusRing [eName]
-          , stEditor = editor eName ""
-          }
+    St { focus = focusRing [eName]
+       , stEditor = editor eName ""
+       }
+
+handleResize :: Name -> DisplayRegion -> St -> St
+handleResize name size st = error $ show name
 
 main :: IO ()
 main = standardIOConfig
        >>= mkVty
-       >>= runVty drawUI pickCursor handleEvent initialState
+       >>= runVty drawUI pickCursor handleEvent handleResize initialState
