@@ -89,6 +89,7 @@ editEvent e theEdit = f theEdit
         f = case e of
               EvKey (KChar 'a') [MCtrl] -> gotoBOL
               EvKey (KChar 'e') [MCtrl] -> gotoEOL
+              EvKey (KChar 'd') [MCtrl] -> deleteChar
               EvKey (KChar c) [] | c /= '\t' -> insertChar c
               EvKey KDel [] -> deleteChar
               EvKey KLeft [] -> moveLeft
