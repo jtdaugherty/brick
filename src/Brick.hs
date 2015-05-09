@@ -176,7 +176,7 @@ vBox widgets =
         }
     where
         renderVBox (width, height) attr =
-            let results = doIt attr width widgets height origin
+            let results = renderChildren attr width widgets height origin
                 imgs = renderImage <$> results
                 maxWidth = maximum $ imageWidth <$> imgs
                 padded = addPadding maxWidth attr <$> imgs
@@ -188,15 +188,15 @@ vBox widgets =
         addPadding width attr img =
             img <|> charFill attr ' ' (width - imageWidth img) (imageHeight img)
 
-        doIt _ _ [] _ _ = []
-        doIt attr width (w:ws) hRemaining loc
+        renderChildren _ _ [] _ _ = []
+        renderChildren attr width (w:ws) hRemaining loc
           | hRemaining <= 0 = []
           | otherwise =
             let result = render_ w loc (width, hRemaining) attr
                 img = renderImage result
                 newHeight = hRemaining - imageHeight img
                 newLoc = loc `locOffset` Location (0, imageHeight img)
-                results = doIt attr width ws newHeight newLoc
+                results = renderChildren attr width ws newHeight newLoc
             in result:results
 
 hBox :: [Widget] -> Widget
@@ -205,7 +205,7 @@ hBox widgets =
         }
     where
         renderHBox (width, height) attr =
-            let results = doIt attr height widgets width origin
+            let results = renderChildren attr height widgets width origin
                 imgs = renderImage <$> results
                 maxHeight = maximum $ imageHeight <$> imgs
                 padded = addPadding maxHeight attr <$> imgs
@@ -217,15 +217,15 @@ hBox widgets =
         addPadding height attr img =
             img <-> charFill attr ' ' (imageWidth img) (height - imageHeight img)
 
-        doIt _ _ [] _ _ = []
-        doIt attr height (w:ws) wRemaining loc
+        renderChildren _ _ [] _ _ = []
+        renderChildren attr height (w:ws) wRemaining loc
           | wRemaining <= 0 = []
           | otherwise =
             let result = render_ w loc (wRemaining, height) attr
                 img = renderImage result
                 newWidth = wRemaining - imageWidth img
                 newLoc = loc `locOffset` Location (imageWidth img, 0)
-                results = doIt attr height ws newWidth newLoc
+                results = renderChildren attr height ws newWidth newLoc
             in result:results
 
 hLimit :: Int -> Widget -> Widget
