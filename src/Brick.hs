@@ -2,7 +2,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Brick where
 
-import Control.Applicative
+import Control.Applicative hiding ((<|>))
 import Control.Arrow ((>>>))
 import Control.Exception (finally)
 import Data.Default
@@ -177,10 +177,16 @@ vBox widgets =
     where
         renderVBox (width, height) attr =
             let results = doIt attr width widgets height origin
-            in def { renderImage = vertCat $ renderImage <$> results
+                imgs = renderImage <$> results
+                maxWidth = maximum $ imageWidth <$> imgs
+                padded = addPadding maxWidth attr <$> imgs
+            in def { renderImage = vertCat padded
                    , renderCursors = concat $ renderCursors <$> results
                    , renderSizes = concat $ renderSizes <$> results
                    }
+
+        addPadding width attr img =
+            img <|> charFill attr ' ' (width - imageWidth img) (imageHeight img)
 
         doIt _ _ [] _ _ = []
         doIt attr width (w:ws) hRemaining loc
@@ -200,10 +206,16 @@ hBox widgets =
     where
         renderHBox (width, height) attr =
             let results = doIt attr height widgets width origin
-            in def { renderImage = horizCat $ renderImage <$> results
+                imgs = renderImage <$> results
+                maxHeight = maximum $ imageHeight <$> imgs
+                padded = addPadding maxHeight attr <$> imgs
+            in def { renderImage = horizCat padded
                    , renderCursors = concat $ renderCursors <$> results
                    , renderSizes = concat $ renderSizes <$> results
                    }
+
+        addPadding height attr img =
+            img <-> charFill attr ' ' (imageWidth img) (height - imageHeight img)
 
         doIt _ _ [] _ _ = []
         doIt attr height (w:ws) wRemaining loc
