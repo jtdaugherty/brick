@@ -34,6 +34,28 @@ txt s = Widget { render = \_ _ a -> ( string a s
 instance IsString Widget where
     fromString = txt
 
+data Editor =
+    Editor { editStr :: String
+           , editCursorPos :: Int
+           , editorName :: Name
+           }
+
+editor :: Name -> String -> Editor
+editor name s = Editor s (length name) name
+
+edit :: Editor -> Widget
+edit e =
+    Widget { render = renderEditor
+           }
+    where
+        renderEditor loc sz@(width, _) attr =
+            let cursorPos = CursorLocation (Location (editCursorPos e, 0)) (Just $ editorName e)
+                w = hBox [ txt (editStr e)
+                         , txt (replicate (width - (length $ editStr e)) ' ')
+                         ]
+                (img, _) = render_ w loc sz attr
+            in (img, [cursorPos])
+
 hBorder :: Char -> Widget
 hBorder ch =
     Widget { render = \_ (width, _) attr -> ( charFill attr ch width 1

@@ -10,12 +10,13 @@ import Brick
 data St =
     St { msg :: String
        , focus :: FocusRing
+       , stEditor :: Editor
        }
 
 drawUI :: St -> Widget
 drawUI st =
-    let editor = txt (msg st) `withNamedCursor` (Name "edit", Location (length $ msg st, 0))
-    in vBox [ editor `withAttr` (cyan `on` blue)
+    let ew = edit (stEditor st)
+    in vBox [ ew `withAttr` (cyan `on` blue)
             , hBorder '-'
             , "stuff and things"
             ]
@@ -34,8 +35,10 @@ pickCursor st ls =
 
 initialState :: St
 initialState =
+    let eName = Name "edit"
     St { msg = ""
-       , focus = focusRing [Name "edit"]
+       , focus = focusRing [eName]
+       , stEditor = editor eName ""
        }
 
 main :: IO ()
