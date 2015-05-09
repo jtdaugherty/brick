@@ -17,10 +17,12 @@ eName = Name "edit"
 
 drawUI :: St -> Widget
 drawUI st =
-    vBox [ hLimit 15 $ edit (stEditor st) `withAttr` (cyan `on` blue)
+    vBox [ "top"
          , hBorder '-'
-         , "stuff and things"
-         ]
+         , hBox [ "left"
+                , hLimit 15 $ edit (stEditor st) `withAttr` (cyan `on` blue)
+                ]
+                ]
 
 handleEvent :: Event -> St -> IO St
 handleEvent e st =

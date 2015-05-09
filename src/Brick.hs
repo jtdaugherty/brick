@@ -13,6 +13,9 @@ import Graphics.Vty
 
 newtype Location = Location (Int, Int)
 
+origin :: Location
+origin = Location (0, 0)
+
 newtype Name = Name String
                deriving (Eq, Show)
 
@@ -31,7 +34,7 @@ instance Default Render where
     def = Render emptyImage [] []
 
 data Widget =
-    Widget { render :: Location -> DisplayRegion -> Attr -> Render
+    Widget { render :: DisplayRegion -> Attr -> Render
            , widgetName :: !(Maybe Name)
            }
 
@@ -45,7 +48,7 @@ data Editor =
            }
 
 instance Default Widget where
-    def = Widget { render = const $ const $ const def
+    def = Widget { render = const $ const def
                  , widgetName = Nothing
                  }
 
@@ -74,7 +77,7 @@ clOffset cl loc = cl { cursorLocation = (cursorLocation cl) `locOffset` loc }
 
 txt :: String -> Widget
 txt s =
-    def { render = \_ _ a -> def { renderImage = string a s }
+    def { render = \_ a -> def { renderImage = string a s }
     }
 
 named :: Widget -> Name -> Widget
@@ -138,7 +141,7 @@ edit e =
         , widgetName = Just $ editorName e
         }
     where
-        renderEditor loc sz@(width, _) attr =
+        renderEditor sz@(width, _) attr =
             let cursorPos = CursorLocation (Location (pos', 0)) (Just $ editorName e)
                 s = editStr e
                 pos = editCursorPos e
@@ -149,20 +152,20 @@ edit e =
                 w = hBox [ txt s'
                          , txt (replicate (width - length s' + 1) ' ')
                          ]
-                result = render_ w loc sz attr
+                result = render w sz attr
             in result { renderCursors = [cursorPos]
                       , renderSizes = []
                       }
 
 hBorder :: Char -> Widget
 hBorder ch =
-    def { render = \_ (width, _) attr ->
+    def { render = \(width, _) attr ->
             def { renderImage = charFill attr ch width 1 }
         }
 
 vBorder :: Char -> Widget
 vBorder ch =
-    def { render = \_ (_, height) attr ->
+    def { render = \(_, height) attr ->
             def { renderImage = charFill attr ch 1 height }
         }
 
@@ -171,8 +174,8 @@ vBox widgets =
     def { render = renderVBox
         }
     where
-        renderVBox loc (width, height) attr =
-            let results = doIt attr width widgets height loc
+        renderVBox (width, height) attr =
+            let results = doIt attr width widgets height origin
             in def { renderImage = vertCat $ renderImage <$> results
                    , renderCursors = concat $ renderCursors <$> results
                    , renderSizes = concat $ renderSizes <$> results
@@ -182,7 +185,7 @@ vBox widgets =
         doIt attr width (w:ws) hRemaining loc
           | hRemaining <= 0 = []
           | otherwise =
-            let result = render w loc (width, hRemaining) attr
+            let result = render_ w loc (width, hRemaining) attr
                 img = renderImage result
                 newHeight = hRemaining - imageHeight img
                 newLoc = loc `locOffset` Location (0, imageHeight img)
@@ -194,8 +197,8 @@ hBox widgets =
     def { render = renderHBox
         }
     where
-        renderHBox loc (width, height) attr =
-            let results = doIt attr height widgets width loc
+        renderHBox (width, height) attr =
+            let results = doIt attr height widgets width origin
             in def { renderImage = horizCat $ renderImage <$> results
                    , renderCursors = concat $ renderCursors <$> results
                    , renderSizes = concat $ renderSizes <$> results
@@ -205,7 +208,7 @@ hBox widgets =
         doIt attr height (w:ws) wRemaining loc
           | wRemaining <= 0 = []
           | otherwise =
-            let result = render w loc (wRemaining, height) attr
+            let result = render_ w loc (wRemaining, height) attr
                 img = renderImage result
                 newWidth = wRemaining - imageWidth img
                 newLoc = loc `locOffset` Location (imageWidth img, 0)
@@ -214,23 +217,24 @@ hBox widgets =
 
 hLimit :: Int -> Widget -> Widget
 hLimit width w =
-    def { render = \loc (_, height) attr -> render_ w loc (width, height) attr
+    def { render = \(_, height) attr -> render w (width, height) attr
         }
 
 vLimit :: Int -> Widget -> Widget
 vLimit height w =
-    def { render = \loc (width, _) attr -> render_ w loc (width, height) attr
+    def { render = \(width, _) attr -> render w (width, height) attr
         }
 
 render_ :: Widget -> Location -> DisplayRegion -> Attr -> Render
 render_ w loc sz attr =
-    result { renderImage = uncurry crop sz img
-           , renderSizes = case widgetName w of
-               Nothing -> renderSizes result
-               Just n -> (n, (imageWidth img, imageHeight img)) : renderSizes result
-           }
+    def { renderImage = uncurry crop sz img
+        , renderSizes = case widgetName w of
+            Nothing -> renderSizes result
+            Just n -> (n, (imageWidth img, imageHeight img)) : renderSizes result
+        , renderCursors = (`clOffset` loc) <$> renderCursors result
+        }
     where
-        result = render w loc sz attr
+        result = render w sz attr
         img = renderImage result
 
 renderFinal :: Widget
@@ -249,7 +253,7 @@ renderFinal widget sz chooseCursor = (pic, renderSizes renderResult)
 
 liftVty :: Image -> Widget
 liftVty img =
-    def { render = const $ const $ const $ def { renderImage = img }
+    def { render = const $ const $ def { renderImage = img }
         }
 
 on :: Color -> Color -> Attr
@@ -264,21 +268,21 @@ bg = (defAttr `withBackColor`)
 
 withAttr :: Widget -> Attr -> Widget
 withAttr w attr =
-    def { render = \loc sz _ -> render_ w loc sz attr
+    def { render = \sz _ -> render w sz attr
         }
 
 withNamedCursor :: Widget -> (Name, Location) -> Widget
 withNamedCursor w (name, cursorLoc) =
-    w { render = \loc sz a -> let result = render_ w loc sz a
-                              in result { renderCursors = [CursorLocation (cursorLoc `locOffset` loc) (Just name)]
-                                        }
+    w { render = \sz a -> let result = render w sz a
+                          in result { renderCursors = [CursorLocation cursorLoc (Just name)]
+                                    }
       }
 
 withCursor :: Widget -> Location -> Widget
 withCursor w cursorLoc =
-    w { render = \loc sz a -> let result = render_ w loc sz a
-                              in result { renderCursors = [CursorLocation (cursorLoc `locOffset` loc) Nothing]
-                                        }
+    w { render = \sz a -> let result = render w sz a
+                          in result { renderCursors = [CursorLocation cursorLoc Nothing]
+                                    }
       }
 
 runVty :: App a -> a -> Vty -> IO ()
