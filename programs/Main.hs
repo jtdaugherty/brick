@@ -20,9 +20,7 @@ drawUI st =
     vBox [ "Top"
          , hBorder '-'
          , hBox [ " Edit: "
-                , vBox [ hLimit 20 $ edit (stEditor st) `withAttr` (cyan `on` blue)
-                       , txt $ show (100 - (length $ editStr $ stEditor st)) ++ " chars left"
-                       ]
+                , hLimit 20 $ edit (stEditor st) `withAttr` (cyan `on` blue)
                 ]
          ]
 
