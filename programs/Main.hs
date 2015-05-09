@@ -14,12 +14,11 @@ data St =
 
 drawUI :: St -> Widget
 drawUI st =
-    hBox [ hLimit 25 $ vBox [ "-- header --"
-                            , (txt (msg st)) `withNamedCursor` (Name "bar", Location (length $ msg st, 0))
-                            ] `withAttr` (fg red)
-         , vBorder '|'
-         , "stuff things" `withNamedCursor` (Name "foo", Location (0, 0))
-         ]
+    let editor = txt (msg st) `withNamedCursor` (Name "edit", Location (length $ msg st, 0))
+    in vBox [ editor `withAttr` (cyan `on` blue)
+            , hBorder '-'
+            , "stuff and things"
+            ]
 
 handleEvent :: Event -> St -> Either ExitCode St
 handleEvent e st =
@@ -36,7 +35,7 @@ pickCursor st ls =
 initialState :: St
 initialState =
     St { msg = ""
-       , focus = focusRing [Name "foo", Name "bar"]
+       , focus = focusRing [Name "edit"]
        }
 
 main :: IO ()
