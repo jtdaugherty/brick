@@ -2,7 +2,7 @@ module Brick where
 
 import Control.Monad.IO.Class
 import Control.Applicative
-import Control.Arrow
+import Control.Arrow ((>>>))
 import Data.Maybe
 import Data.String
 import Data.Monoid
@@ -246,28 +246,31 @@ withCursor w cursorLoc =
                               in (img, [CursorLocation (cursorLoc `locOffset` loc) Nothing], sizes)
       }
 
-runVty :: (MonadIO m)
-       => (a -> Widget)
-       -> (a -> [CursorLocation] -> Maybe CursorLocation)
-       -> (Event -> a -> Either ExitCode a)
-       -> (Name -> DisplayRegion -> a -> a)
-       -> a
-       -> Vty
-       -> m ()
-runVty draw chooseCursor handleEv handleResize state vty = do
-    sz <- liftIO $ displayBounds $ outputIface vty
-    let (pic, sizes) = renderFinal (draw state) sz (chooseCursor state)
-    liftIO $ update vty pic
+data App a =
+    App { appDraw :: a -> Widget
+        , appChooseCursor :: a -> [CursorLocation] -> Maybe CursorLocation
+        , appHandleEvent :: Event -> a -> Either ExitCode a
+        , appHandleResize :: Name -> DisplayRegion -> a -> a
+        }
 
-    let applyResizes = foldl (>>>) id $ (uncurry handleResize) <$> sizes
-        resizedState = applyResizes state
+runVty :: (MonadIO m) => App a -> a -> Vty -> m ()
+runVty app initialState vty = do
+    let run state = do
+          sz <- liftIO $ displayBounds $ outputIface vty
+          let (pic, sizes) = renderFinal (appDraw app state) sz (appChooseCursor app state)
+          liftIO $ update vty pic
 
-    e <- liftIO $ nextEvent vty
-    case handleEv e resizedState of
-        Left status -> liftIO $ do
-            shutdown vty
-            exitWith status
-        Right newState -> runVty draw chooseCursor handleEv handleResize newState vty
+          let applyResizes = foldl (>>>) id $ (uncurry (appHandleResize app)) <$> sizes
+              resizedState = applyResizes state
+
+          e <- liftIO $ nextEvent vty
+          case appHandleEvent app e resizedState of
+              Left status -> liftIO $ do
+                  shutdown vty
+                  exitWith status
+              Right newState -> run newState
+
+    run initialState
 
 data FocusRing = FocusRingEmpty
                | FocusRingNonempty [Name] Int

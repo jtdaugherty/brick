@@ -36,7 +36,15 @@ initialState =
 handleResize :: Name -> DisplayRegion -> St -> St
 handleResize name size st = error $ show name
 
+app :: App St
+app =
+    App { appDraw = drawUI
+        , appChooseCursor = focusRingCursor focus
+        , appHandleEvent = handleEvent
+        , appHandleResize = handleResize
+        }
+
 main :: IO ()
 main = standardIOConfig
        >>= mkVty
-       >>= runVty drawUI (focusRingCursor focus) handleEvent handleResize initialState
+       >>= runVty app initialState
