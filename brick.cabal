@@ -30,3 +30,15 @@ executable brick
                        brick,
                        vty >= 5.2.9,
                        data-default
+
+executable brick-rogue
+  hs-source-dirs:      programs
+  ghc-options:         -threaded -Wall -fno-warn-unused-do-bind
+  default-language:    Haskell2010
+  main-is:             Rogue.hs
+  build-depends:       base,
+                       brick,
+                       vty >= 5.2.9,
+                       data-default,
+                       array,
+                       random
