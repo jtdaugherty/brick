@@ -111,7 +111,7 @@ renderBordered w sz attr = result { renderImage = borderedImg
 txt :: String -> Widget
 txt s =
     def { render = \_ a -> def { renderImage = string a s }
-    }
+        }
 
 named :: Widget -> Name -> Widget
 named w name = w { widgetName = Just name }
