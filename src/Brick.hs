@@ -271,6 +271,33 @@ vLimit height w =
     def { render = \(width, _) attr -> render w (width, height) attr
         }
 
+hCentered :: Widget -> Widget
+hCentered w =
+    def { render = \sz attr ->
+            let result = render w sz attr
+                img = renderImage result
+                wOff = (fst sz - imageWidth img) `div` 2
+                trans = Location (wOff, 0)
+            in result { renderImage = translate wOff 0 img
+                      , renderCursors = (`clOffset` trans) <$> renderCursors result
+                      }
+        }
+
+vCentered :: Widget -> Widget
+vCentered w =
+    def { render = \sz attr ->
+            let result = render w sz attr
+                img = renderImage result
+                hOff = (snd sz - imageHeight img) `div` 2
+                trans = Location (0, hOff)
+            in result { renderImage = translate 0 hOff img
+                      , renderCursors = (`clOffset` trans) <$> renderCursors result
+                      }
+        }
+
+centered :: Widget -> Widget
+centered = hCentered . vCentered
+
 translated :: Location -> Widget -> Widget
 translated off@(Location (wOff, hOff)) w =
     def { render = \sz attr ->
