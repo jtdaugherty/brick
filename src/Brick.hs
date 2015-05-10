@@ -4,7 +4,9 @@ module Brick where
 
 import Control.Applicative hiding ((<|>))
 import Control.Arrow ((>>>))
+import Control.Concurrent
 import Control.Exception (finally)
+import Control.Monad (forever)
 import Data.Default
 import Data.Maybe
 import Data.String
@@ -52,14 +54,14 @@ instance Default Widget where
                  , widgetName = Nothing
                  }
 
-data App a =
+data App a e =
     App { appDraw :: a -> [Widget]
         , appChooseCursor :: a -> [CursorLocation] -> Maybe CursorLocation
-        , appHandleEvent :: Event -> a -> IO a
+        , appHandleEvent :: e -> a -> IO a
         , appHandleResize :: Name -> DisplayRegion -> a -> a
         }
 
-instance Default (App a) where
+instance Default (App a e) where
     def = App { appDraw = const def
               , appChooseCursor = const $ const Nothing
               , appHandleEvent = const return
@@ -308,21 +310,48 @@ withCursor w cursorLoc =
                                     }
       }
 
-runVty :: App a -> a -> Vty -> IO ()
-runVty app initialState vty = do
-    let run state = do
-          sz <- displayBounds $ outputIface vty
-          let (pic, sizes) = renderFinal (appDraw app state) sz (appChooseCursor app state)
-          update vty pic
+defaultMain :: App a Event -> a -> IO ()
+defaultMain = defaultMainWithVty (mkVty def)
 
-          let !applyResizes = foldl (>>>) id $ (uncurry (appHandleResize app)) <$> sizes
-              !resizedState = applyResizes state
+defaultMainWithVty :: IO Vty -> App a Event -> a -> IO ()
+defaultMainWithVty buildVty app initialState = do
+    chan <- newChan
+    withVty buildVty $ \vty -> do
+        forkIO $ supplyVtyEvents vty id chan
+        runVty vty chan app initialState
 
-          e <- nextEvent vty
-          newState <- appHandleEvent app e resizedState
-          run newState
+supplyVtyEvents :: Vty -> (Event -> e) -> Chan e -> IO ()
+supplyVtyEvents vty mkEvent chan =
+    forever $ do
+        e <- nextEvent vty
+        writeChan chan $ mkEvent e
 
-    run initialState `finally` (shutdown vty)
+runVty :: Vty -> Chan e -> App a e -> a -> IO ()
+runVty vty chan app state = do
+    state' <- renderApp vty app state
+    e <- readChan chan
+    appHandleEvent app e state' >>= runVty vty chan app
+
+withVty :: IO Vty -> (Vty -> IO a) -> IO a
+withVty buildVty useVty = do
+    vty <- buildVty
+    useVty vty `finally` shutdown vty
+
+renderApp :: Vty -> App a e -> a -> IO a
+renderApp vty app state = do
+    sz <- displayBounds $ outputIface vty
+    let (pic, sizes) = renderFinal (appDraw app state) sz (appChooseCursor app state)
+    update vty pic
+
+    let !applyResizes = foldl (>>>) id $ (uncurry (appHandleResize app)) <$> sizes
+        !resizedState = applyResizes state
+
+    return resizedState
+
+getNextEvent :: Vty -> App a Event -> a -> IO a
+getNextEvent vty app state = do
+    e <- nextEvent vty
+    appHandleEvent app e state
 
 focusRing :: [Name] -> FocusRing
 focusRing [] = FocusRingEmpty
