@@ -298,6 +298,16 @@ vCentered w =
 centered :: Widget -> Widget
 centered = hCentered . vCentered
 
+centeredAbout :: Location -> Widget -> Widget
+centeredAbout (Location (col, row)) widget =
+    def { render = \sz@(w, h) attr ->
+            let tx = (w `div` 2) - col
+                ty = (h `div` 2) - row
+                result = render widget sz attr
+            in result { renderImage = translate tx ty $ renderImage result
+                      }
+        }
+
 translated :: Location -> Widget -> Widget
 translated off@(Location (wOff, hOff)) w =
     def { render = \sz attr ->
