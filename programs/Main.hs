@@ -23,6 +23,7 @@ drawUI :: St -> [Widget]
 drawUI st = [top]
     where
         top = translated (trans st) $
+              bordered $
               hLimit 40 $
               vBox [ txt $ "Top (counter: " <> show (counter st) <> ")"
                    , hBorder '-'

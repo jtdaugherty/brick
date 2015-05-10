@@ -77,6 +77,37 @@ locOffset (Location (w1, h1)) (Location (w2, h2)) = Location (w1+w2, h1+h2)
 clOffset :: CursorLocation -> Location -> CursorLocation
 clOffset cl loc = cl { cursorLocation = (cursorLocation cl) `locOffset` loc }
 
+bordered :: Widget -> Widget
+bordered w =
+    def { render = renderBordered w
+        }
+
+renderBordered :: Widget -> DisplayRegion -> Attr -> Render
+renderBordered w sz attr = result { renderImage = borderedImg
+                                  , renderCursors = translatedCursors
+                                  }
+    where
+        result = render w sz attr
+        childImg = renderImage result
+        (width, height) = ( imageWidth childImg
+                          , imageHeight childImg
+                          )
+        topBottomBorder = horizCat [ string attr "+"
+                                   , charFill attr '-' width 1
+                                   , string attr "+"
+                                   ]
+        leftRightBorder = charFill attr '|' 1 height
+        withSideBorders = horizCat [ leftRightBorder
+                                   , childImg
+                                   , leftRightBorder
+                                   ]
+        borderedImg = vertCat [ topBottomBorder
+                              , withSideBorders
+                              , topBottomBorder
+                              ]
+        translatedCursors = (`clOffset` (Location (1,1))) <$>
+                            renderCursors result
+
 txt :: String -> Widget
 txt s =
     def { render = \_ a -> def { renderImage = string a s }
