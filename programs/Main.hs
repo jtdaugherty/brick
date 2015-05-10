@@ -10,8 +10,7 @@ import System.Exit
 import Brick
 
 data St =
-    St { focus :: FocusRing
-       , stEditor :: Editor
+    St { stEditor :: Editor
        , trans :: Location
        , counter :: Int
        }
@@ -48,8 +47,7 @@ handleEvent e st =
 
 initialState :: St
 initialState =
-    St { focus = focusRing [eName]
-       , stEditor = editor eName ""
+    St { stEditor = editor eName ""
        , trans = Location (0, 0)
        , counter = 0
        }
@@ -60,7 +58,7 @@ data MyEvent = VtyEvent Event
 theApp :: App St MyEvent
 theApp =
     def { appDraw = drawUI
-        , appChooseCursor = focusRingCursor focus
+        , appChooseCursor = showFirstCursor
         , appHandleEvent = handleEvent
         }
 

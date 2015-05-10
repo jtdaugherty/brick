@@ -431,6 +431,12 @@ focusGetCurrent :: FocusRing -> Maybe Name
 focusGetCurrent FocusRingEmpty = Nothing
 focusGetCurrent (FocusRingNonempty ns i) = Just $ ns !! i
 
+neverShowCursor :: a -> [CursorLocation] -> Maybe CursorLocation
+neverShowCursor = const $ const Nothing
+
+showFirstCursor :: a -> [CursorLocation] -> Maybe CursorLocation
+showFirstCursor = const $ listToMaybe
+
 focusRingCursor :: (a -> FocusRing) -> a -> [CursorLocation] -> Maybe CursorLocation
 focusRingCursor getRing st ls =
     listToMaybe $ filter isCurrent ls
