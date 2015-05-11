@@ -29,7 +29,8 @@ executable brick
   build-depends:       base,
                        brick,
                        vty >= 5.2.9,
-                       data-default
+                       data-default,
+                       lens
 
 executable brick-rogue
   hs-source-dirs:      programs
