@@ -18,6 +18,10 @@ newtype Location = Location (Int, Int)
 origin :: Location
 origin = Location (0, 0)
 
+instance Monoid Location where
+    mempty = origin
+    mappend (Location (w1, h1)) (Location (w2, h2)) = Location (w1+w2, h1+h2)
+
 newtype Name = Name String
                deriving (Eq, Show)
 
@@ -71,11 +75,8 @@ instance Default (App a e) where
 data FocusRing = FocusRingEmpty
                | FocusRingNonempty ![Name] !Int
 
-locOffset :: Location -> Location -> Location
-locOffset (Location (w1, h1)) (Location (w2, h2)) = Location (w1+w2, h1+h2)
-
 clOffset :: CursorLocation -> Location -> CursorLocation
-clOffset cl loc = cl { cursorLocation = (cursorLocation cl) `locOffset` loc }
+clOffset cl loc = cl { cursorLocation = (cursorLocation cl) <> loc }
 
 bordered :: Widget -> Widget
 bordered w =
@@ -228,7 +229,7 @@ vBox widgets =
             let result = render_ w loc (width, hRemaining) attr
                 img = renderImage result
                 newHeight = hRemaining - imageHeight img
-                newLoc = loc `locOffset` Location (0, imageHeight img)
+                newLoc = loc <> Location (0, imageHeight img)
                 results = renderChildren attr width ws newHeight newLoc
             in result:results
 
@@ -257,7 +258,7 @@ hBox widgets =
             let result = render_ w loc (wRemaining, height) attr
                 img = renderImage result
                 newWidth = wRemaining - imageWidth img
-                newLoc = loc `locOffset` Location (imageWidth img, 0)
+                newLoc = loc <> Location (imageWidth img, 0)
                 results = renderChildren attr height ws newWidth newLoc
             in result:results
 
