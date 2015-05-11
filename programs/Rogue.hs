@@ -114,23 +114,16 @@ movePlayer world dx dy = do
         _          -> world
 
 updateDisplay :: World -> [Widget]
-updateDisplay world = info : translatedWorldLayers
+updateDisplay world = [ info, playerLayer, geoLayer ]
     where
         info = vBox [ hCentered $ txt "Move with the arrows keys. Press ESC to exit."
                     , hBorder '-'
                     ]
-        playerLoc = Location $ playerCoord $ player world
-        translatedWorldLayers = centeredAbout playerLoc <$> worldLayers world
-
-worldLayers :: World -> [Widget]
-worldLayers world = [ playerWidget
-                    , liftVty $ levelGeoImage theLevel
-                    ]
-    where
+        (px, py) = playerCoord $ player world
+        playerLoc = Location (px, py)
         theLevel = level world
-        thePlayer = player world
-        (px, py) = (playerX thePlayer, playerY thePlayer)
-        playerWidget = translated (Location (px, py)) $ liftVty (char pieceA '@')
+        playerLayer = centeredAbout playerLoc $ translated playerLoc $ liftVty (char pieceA '@')
+        geoLayer = centeredAbout playerLoc $ liftVty $ levelGeoImage theLevel
 
 imageForGeo :: LevelPiece -> Image
 imageForGeo EmptySpace = char (defAttr `withBackColor` green) ' '
