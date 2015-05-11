@@ -263,12 +263,16 @@ hBox widgets =
 
 hLimit :: Int -> Widget -> Widget
 hLimit width w =
-    def { render = \(_, height) attr -> render w (width, height) attr
+    def { render = \(_, height) attr -> let result = render w (width, height) attr
+                                        in result { renderImage = crop width height $ renderImage result
+                                                  }
         }
 
 vLimit :: Int -> Widget -> Widget
 vLimit height w =
-    def { render = \(width, _) attr -> render w (width, height) attr
+    def { render = \(width, _) attr -> let result = render w (width, height) attr
+                                       in result { renderImage = crop width height $ renderImage result
+                                                 }
         }
 
 hCentered :: Widget -> Widget
