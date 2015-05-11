@@ -17,9 +17,6 @@ data St =
 
 makeLenses ''St
 
-eName :: Name
-eName = Name "edit"
-
 drawUI :: St -> [Widget]
 drawUI st = [top]
     where
@@ -46,7 +43,7 @@ handleEvent e st =
 
 initialState :: St
 initialState =
-    St { _stEditor = editor eName ""
+    St { _stEditor = editor (Name "edit") ""
        , _trans = Location (0, 0)
        }
 
