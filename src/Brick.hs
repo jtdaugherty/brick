@@ -67,7 +67,7 @@ data App a e =
 
 instance Default (App a e) where
     def = App { appDraw = const def
-              , appChooseCursor = const $ const Nothing
+              , appChooseCursor = neverShowCursor
               , appHandleEvent = const return
               , appHandleResize = const $ const id
               }
