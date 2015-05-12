@@ -20,15 +20,17 @@ makeLenses ''St
 drawUI :: St -> [Widget]
 drawUI st = [top]
     where
-        top = translated (st^.trans) $
-              bordered $
-              hLimit 40 $
-              vBox [ "Top"
-                   , hBorder '-'
-                   , hBox [ " Edit: "
-                          , hLimit 20 $ edit (st^.stEditor) `withAttr` (cyan `on` blue)
-                          ]
-                   ]
+        top = liftVty $ mkImage (10, 10) defAttr $
+              borderTest $ Fixed "foo"
+--        top = translated (st^.trans) $
+--              bordered $
+--              hLimit 40 $
+--              vBox [ "Top"
+--                   , hBorder '-'
+--                   , hBox [ " Edit: "
+--                          , hLimit 20 $ edit (st^.stEditor) `withAttr` (cyan `on` blue)
+--                          ]
+--                   ]
 
 handleEvent :: Event -> St -> IO St
 handleEvent e st =

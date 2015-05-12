@@ -30,6 +30,70 @@ data CursorLocation =
                    , cursorLocationName :: !(Maybe Name)
                    }
 
+data Prim = Fixed String
+          | HFill Char
+          | VFill Char
+          | LeftRight Prim Prim
+          | TopBottom Prim Prim
+          | HLimit Int Prim
+          | VLimit Int Prim
+          | UseAttr Attr Prim
+
+mkImage :: DisplayRegion -> Attr -> Prim -> Image
+mkImage (w, h) a (Fixed s) = if w > 0 && h > 0
+                             then crop w h $ string a s
+                             else emptyImage
+mkImage (w, _) a (HFill c) = charFill a c w 1
+mkImage (_, h) a (VFill c) = charFill a c 1 h
+mkImage (_, h) a (HLimit w p) = mkImage (w, h) a p
+mkImage (w, _) a (VLimit h p) = mkImage (w, h) a p
+mkImage (w, h) _ (UseAttr a p) = mkImage (w, h) a p
+mkImage (w, h) a (LeftRight p1 p2) = horizCat [first, second]
+    where
+        (first, second) = if isHFixed p1
+                          then let p1Img = mkImage (w, h) a p1
+                                   p2Img = mkImage (w - imageWidth p1Img, h) a p2
+                               in (p1Img, p2Img)
+                          else let p1Img = mkImage (w - imageWidth p2Img, h) a p1
+                                   p2Img = mkImage (w, h) a p2
+                               in (p1Img, p2Img)
+mkImage (w, h) a (TopBottom p1 p2) = vertCat [first, second]
+    where
+        (first, second) = if isVFixed p1
+                          then let p1Img = mkImage (w, h) a p1
+                                   p2Img = mkImage (w, h - imageHeight p1Img) a p2
+                               in (p1Img, p2Img)
+                          else let p1Img = mkImage (w, h - imageHeight p2Img) a p1
+                                   p2Img = mkImage (w, h) a p2
+                               in (p1Img, p2Img)
+
+isHFixed :: Prim -> Bool
+isHFixed (Fixed _) = True
+isHFixed (HFill _) = False
+isHFixed (VFill _) = True
+isHFixed (LeftRight a b) = isHFixed a && isHFixed b
+isHFixed (TopBottom a b) = isHFixed a && isHFixed b
+isHFixed (HLimit _ _) = True
+isHFixed (VLimit _ p) = isHFixed p
+isHFixed (UseAttr _ p) = isHFixed p
+
+isVFixed :: Prim -> Bool
+isVFixed (Fixed _) = True
+isVFixed (HFill _) = True
+isVFixed (VFill _) = False
+isVFixed (LeftRight a b) = isVFixed a && isVFixed b
+isVFixed (TopBottom a b) = isVFixed a && isVFixed b
+isVFixed (HLimit _ p) = isVFixed p
+isVFixed (VLimit _ _) = True
+isVFixed (UseAttr _ p) = isVFixed p
+
+borderTest :: Prim -> Prim
+borderTest wrapped = total
+    where
+        top = LeftRight (Fixed "+") (LeftRight (HFill '-') (Fixed "+"))
+        middle = LeftRight (VFill '|') (LeftRight wrapped (VFill '|'))
+        total = TopBottom top (TopBottom middle top)
+
 data Render =
     Render { renderImage :: !Image
            , renderCursors :: ![CursorLocation]
