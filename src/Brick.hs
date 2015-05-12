@@ -38,10 +38,14 @@ data Prim = Fixed String
           | HLimit Int Prim
           | VLimit Int Prim
           | UseAttr Attr Prim
+          | Raw Image
 
 mkImage :: DisplayRegion -> Attr -> Prim -> Image
 mkImage (w, h) a (Fixed s) = if w > 0 && h > 0
                              then crop w h $ string a s
+                             else emptyImage
+mkImage (w, h) _ (Raw img) = if w > 0 && h > 0
+                             then crop w h img
                              else emptyImage
 mkImage (w, _) a (HFill c) = charFill a c w 1
 mkImage (_, h) a (VFill c) = charFill a c 1 h
