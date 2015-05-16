@@ -8,6 +8,8 @@ import Control.Applicative
 import Control.Concurrent
 import Control.Exception (finally)
 import Control.Monad (forever)
+import qualified Data.Function as DF
+import Data.List (sortBy)
 import Data.Default
 import Data.Maybe
 import Data.String
@@ -31,20 +33,24 @@ data CursorLocation =
                    , cursorLocationName :: !(Maybe Name)
                    }
 
-data RenderOrder = A | B
+data Priority = High | Low
+              deriving Eq
 
 data Prim = Fixed String
           | HPad Char
           | VPad Char
           | HFill Char
           | VFill Char
-          | HBox Prim Prim RenderOrder
-          | VBox Prim Prim RenderOrder
+          | HBox [(Prim, Priority)]
+          | VBox [(Prim, Priority)]
           | HLimit Int Prim
           | VLimit Int Prim
           | UseAttr Attr Prim
           | Raw Image
           | Translate Int Int Prim
+
+instance IsString Prim where
+    fromString = Fixed
 
 mkImage :: DisplayRegion -> Attr -> Prim -> Image
 mkImage (w, h) a (Fixed s) =
@@ -64,38 +70,62 @@ mkImage (w, _) a (VLimit h p) = mkImage (w, h) a p
 mkImage (w, h) _ (UseAttr a p) = mkImage (w, h) a p
 mkImage (w, h) a (Translate tw th p) =
     crop w h $ translate tw th $ mkImage (w, h) a p
-mkImage (w, h) a (HBox p1 p2 order) = horizCat [first, second]
+mkImage (w, h) a (HBox pairs) = horizCat $ snd <$> rendered
     where
-        (first, second) =
-            case order of
-                A -> let p1Img = mkImage (w, h) a p1
-                         p2Img = mkImage (w - imageWidth p1Img, min h (imageHeight p1Img)) a p2
-                     in (p1Img, p2Img)
-                B -> let p1Img = mkImage (w - imageWidth p2Img, min h (imageHeight p2Img)) a p1
-                         p2Img = mkImage (w, h) a p2
-                     in (p1Img, p2Img)
-mkImage (w, h) a (VBox p1 p2 order) = vertCat [first, second]
+        pairsIndexed :: [(Int, (Prim, Priority))]
+        pairsIndexed = zip [0..] pairs
+        his :: [(Int, (Prim, Priority))]
+        his = filter (\p -> (snd $ snd p) == High) pairsIndexed
+        lows :: [(Int, (Prim, Priority))]
+        lows = filter (\p -> (snd $ snd p) == Low) pairsIndexed
+        renderedHis :: [(Int, Image)]
+        renderedHis = (\(i, (prim, _)) -> (i, mkImage (w, h) a prim)) <$> his
+        remainingWidth :: Int
+        remainingWidth = w - (sum $ (imageWidth . snd) <$> renderedHis)
+        widthPerLow :: Int
+        widthPerLow = remainingWidth `div` length lows
+        heightPerLow = maximum $ (imageHeight . snd) <$> renderedHis
+        renderedLows :: [(Int, Image)]
+        renderedLows = (\(i, (prim, _)) -> (i, mkImage (widthPerLow, heightPerLow) a prim)) <$> lows
+        rendered :: [(Int, Image)]
+        rendered = sortBy (compare `DF.on` fst) $ renderedHis ++ renderedLows
+mkImage (w, h) a (VBox pairs) = vertCat $ snd <$> rendered
     where
-        (first, second) =
-            case order of
-                A -> let p1Img = mkImage (w, h) a p1
-                         p2Img = mkImage (min w (imageWidth p1Img), h - imageHeight p1Img) a p2
-                     in (p1Img, p2Img)
-                B -> let p1Img = mkImage (min w (imageWidth p2Img), h - imageHeight p2Img) a p1
-                         p2Img = mkImage (w, h) a p2
-                     in (p1Img, p2Img)
+        pairsIndexed :: [(Int, (Prim, Priority))]
+        pairsIndexed = zip [0..] pairs
+        his :: [(Int, (Prim, Priority))]
+        his = filter (\p -> (snd $ snd p) == High) pairsIndexed
+        lows :: [(Int, (Prim, Priority))]
+        lows = filter (\p -> (snd $ snd p) == Low) pairsIndexed
+        renderedHis :: [(Int, Image)]
+        renderedHis = (\(i, (prim, _)) -> (i, mkImage (w, h) a prim)) <$> his
+        remainingHeight :: Int
+        remainingHeight = h - (sum $ (imageHeight . snd) <$> renderedHis)
+        heightPerLow :: Int
+        heightPerLow = remainingHeight `div` length lows
+        widthPerLow = maximum $ (imageWidth . snd) <$> renderedHis
+        renderedLows :: [(Int, Image)]
+        renderedLows = (\(i, (prim, _)) -> (i, mkImage (widthPerLow, heightPerLow) a prim)) <$> lows
+        rendered :: [(Int, Image)]
+        rendered = sortBy (compare `DF.on` fst) $ renderedHis ++ renderedLows
+
+(<+>) :: Prim -> Prim -> Prim
+(<+>) a b = HBox [(a, High), (b, High)]
 
 (<<+) :: Prim -> Prim -> Prim
-(<<+) a b = HBox a b A
+(<<+) a b = HBox [(a, High), (b, Low)]
 
 (+>>) :: Prim -> Prim -> Prim
-(+>>) a b = HBox a b B
+(+>>) a b = HBox [(a, Low), (b, High)]
+
+(<=>) :: Prim -> Prim -> Prim
+(<=>) a b = VBox [(a, High), (b, High)]
 
 (<<=) :: Prim -> Prim -> Prim
-(<<=) a b = VBox a b A
+(<<=) a b = VBox [(a, High), (b, Low)]
 
 (=>>) :: Prim -> Prim -> Prim
-(=>>) a b = VBox a b B
+(=>>) a b = VBox [(a, Low), (b, High)]
 
 bordered :: Prim -> Prim
 bordered wrapped = total
@@ -103,9 +133,6 @@ bordered wrapped = total
         topBottom = "+" <<+ HFill '-' +>> "+"
         middle = VFill '|' +>> wrapped <<+ VFill '|'
         total = topBottom =>> middle <<= topBottom
-
-instance IsString Prim where
-    fromString = Fixed
 
 data Editor =
     Editor { editStr :: !String
@@ -207,43 +234,21 @@ editor name s = Editor s (length s) name
 --             in result { renderCursors = [cursorPos]
 --                       , renderSizes = []
 --                       }
--- 
--- hCentered :: Widget -> Widget
--- hCentered w =
---     def { render = \sz attr ->
---             let result = render w sz attr
---                 img = renderImage result
---                 wOff = (fst sz - imageWidth img) `div` 2
---                 trans = Location (wOff, 0)
---             in result { renderImage = translate wOff 0 img
---                       , renderCursors = (`clOffset` trans) <$> renderCursors result
---                       }
---         }
--- 
--- vCentered :: Widget -> Widget
--- vCentered w =
---     def { render = \sz attr ->
---             let result = render w sz attr
---                 img = renderImage result
---                 hOff = (snd sz - imageHeight img) `div` 2
---                 trans = Location (0, hOff)
---             in result { renderImage = translate 0 hOff img
---                       , renderCursors = (`clOffset` trans) <$> renderCursors result
---                       }
---         }
--- 
--- centered :: Widget -> Widget
--- centered = hCentered . vCentered
--- 
--- centeredAbout :: Location -> Widget -> Widget
--- centeredAbout (Location (col, row)) widget =
---     def { render = \sz@(w, h) attr ->
---             let tx = (w `div` 2) - col
---                 ty = (h `div` 2) - row
---                 result = render widget sz attr
---             in result { renderImage = translate tx ty $ renderImage result
---                       }
---         }
+
+hCentered :: Prim -> Prim
+hCentered p = HBox [ (HPad ' ', Low)
+                   , (p, High)
+                   , (HPad ' ', Low)
+                   ]
+
+vCentered :: Prim -> Prim
+vCentered p = VBox [ (VPad ' ', Low)
+                   , (p, High)
+                   , (VPad ' ', Low)
+                   ]
+
+centered :: Prim -> Prim
+centered = vCentered . hCentered
 
 translated :: Location -> Prim -> Prim
 translated (Location (wOff, hOff)) p = Translate wOff hOff p
@@ -267,11 +272,6 @@ fg = (defAttr `withForeColor`)
 bg :: Color -> Attr
 bg = (defAttr `withBackColor`)
 
--- withAttr :: Widget -> Attr -> Widget
--- withAttr w attr =
---     def { render = \sz _ -> render w sz attr
---         }
--- 
 -- withNamedCursor :: Widget -> (Name, Location) -> Widget
 -- withNamedCursor w (name, cursorLoc) =
 --     w { render = \sz a -> let result = render w sz a

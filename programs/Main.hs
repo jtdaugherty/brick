@@ -20,7 +20,9 @@ makeLenses ''St
 drawUI :: St -> [Prim]
 drawUI st = [a]
     where
-        a = bordered $ HLimit 75 (Fixed "foobar stakdjslf asdf asdf ljasdfjlk asdflkas kljdfaslkdf thing" <<+ HPad ' ')
+        a = centered box
+        box = bordered $ VLimit 1 $ UseAttr (fg cyan) msg
+        msg = Fixed "foobar stakdjslf asdf asdf ljasdfjlk asdflkas kljdfaslkdf thing"
 
 handleEvent :: Event -> St -> IO St
 handleEvent e st =
