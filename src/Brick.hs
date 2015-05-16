@@ -1,6 +1,7 @@
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TupleSections #-}
 module Brick where
 
 import Control.Applicative
@@ -8,6 +9,7 @@ import Control.Applicative
 import Control.Concurrent
 import Control.Exception (finally)
 import Control.Monad (forever)
+import Control.Monad.Trans.State.Lazy
 import qualified Data.Function as DF
 import Data.List (sortBy)
 import Data.Default
@@ -56,70 +58,81 @@ data Prim = Fixed String
 instance IsString Prim where
     fromString = Fixed
 
-mkImage :: DisplayRegion -> Attr -> Prim -> Image
-mkImage (w, h) a (Fixed s) =
+data RenderState =
+    RenderState { cursors :: [CursorLocation]
+                }
+
+render :: DisplayRegion -> Attr -> Prim -> (Image, [CursorLocation])
+render sz attr p =
+    let (img, rs) = runState (mkImage sz attr p) (RenderState [])
+    in (img, cursors rs)
+
+mkImage :: DisplayRegion -> Attr -> Prim -> State RenderState Image
+mkImage (w, h) a (Fixed s) = return $
     if w > 0 && h > 0
     then crop w h $ string a s
     else emptyImage
-mkImage (w, h) _ (Raw img) =
+mkImage (w, h) _ (Raw img) = return $
     if w > 0 && h > 0
     then crop w h img
     else emptyImage
-mkImage (w, h) a (CropLeftBy c p) =
-    let img = mkImage (w, h) a p
-        amt = imageWidth img - c
-    in if amt < 0
-       then emptyImage
-       else cropLeft amt img
-mkImage (w, h) a (CropRightBy c p) =
-    let img = mkImage (w, h) a p
-        amt = imageWidth img - c
-    in if amt < 0
-       then emptyImage
-       else cropRight amt img
-mkImage (w, h) a (CropTopBy c p) =
-    let img = mkImage (w, h) a p
-        amt = imageHeight img - c
-    in if amt < 0
-       then emptyImage
-       else cropTop amt img
-mkImage (w, h) a (CropBottomBy c p) =
-    let img = mkImage (w, h) a p
-        amt = imageHeight img - c
-    in if amt < 0
-       then emptyImage
-       else cropBottom amt img
-mkImage (w, h) a (HPad c) = charFill a c w (max 1 h)
-mkImage (w, h) a (VPad c) = charFill a c (max 1 w) h
-mkImage (w, h) a (HFill c) = charFill a c w (min h 1)
-mkImage (w, h) a (VFill c) = charFill a c (min w 1) h
+mkImage (w, h) a (CropLeftBy c p) = do
+    img <- mkImage (w, h) a p
+    let amt = imageWidth img - c
+    return $ if amt < 0 then emptyImage else cropLeft amt img
+mkImage (w, h) a (CropRightBy c p) = do
+    img <- mkImage (w, h) a p
+    let amt = imageWidth img - c
+    return $ if amt < 0 then emptyImage else cropRight amt img
+mkImage (w, h) a (CropTopBy c p) = do
+    img <- mkImage (w, h) a p
+    let amt = imageHeight img - c
+    return $ if amt < 0 then emptyImage else cropTop amt img
+mkImage (w, h) a (CropBottomBy c p) = do
+    img <- mkImage (w, h) a p
+    let amt = imageHeight img - c
+    return $ if amt < 0 then emptyImage else cropBottom amt img
+mkImage (w, h) a (HPad c) = return $ charFill a c w (max 1 h)
+mkImage (w, h) a (VPad c) = return $ charFill a c (max 1 w) h
+mkImage (w, h) a (HFill c) = return $ charFill a c w (min h 1)
+mkImage (w, h) a (VFill c) = return $ charFill a c (min w 1) h
 mkImage (_, h) a (HLimit w p) = mkImage (w, h) a p
 mkImage (w, _) a (VLimit h p) = mkImage (w, h) a p
 mkImage (w, h) _ (UseAttr a p) = mkImage (w, h) a p
-mkImage (w, h) a (Translate tw th p) =
-    crop w h $ translate tw th $ mkImage (w, h) a p
-mkImage (w, h) a (HBox pairs) = horizCat $ snd <$> rendered
-    where
-        pairsIndexed = zip [(0::Int)..] pairs
+mkImage (w, h) a (Translate tw th p) = do
+    img <- mkImage (w, h) a p
+    return $ crop w h $ translate tw th img
+mkImage (w, h) a (HBox pairs) = do
+    let pairsIndexed = zip [(0::Int)..] pairs
         his = filter (\p -> (snd $ snd p) == High) pairsIndexed
         lows = filter (\p -> (snd $ snd p) == Low) pairsIndexed
-        renderedHis = (\(i, (prim, _)) -> (i, mkImage (w, h) a prim)) <$> his
-        remainingWidth = w - (sum $ (imageWidth . snd) <$> renderedHis)
+
+    renderedHis <- mapM (\(i, (prim, _)) -> (i,) <$> mkImage (w, h) a prim) his
+
+    let remainingWidth = w - (sum $ (imageWidth . snd) <$> renderedHis)
         widthPerLow = remainingWidth `div` length lows
         heightPerLow = maximum $ (imageHeight . snd) <$> renderedHis
-        renderedLows = (\(i, (prim, _)) -> (i, mkImage (widthPerLow, heightPerLow) a prim)) <$> lows
-        rendered = sortBy (compare `DF.on` fst) $ renderedHis ++ renderedLows
-mkImage (w, h) a (VBox pairs) = vertCat $ snd <$> rendered
-    where
-        pairsIndexed = zip [(0::Int)..] pairs
+
+    renderedLows <- mapM (\(i, (prim, _)) -> (i,) <$> mkImage (widthPerLow, heightPerLow) a prim) lows
+    let rendered = sortBy (compare `DF.on` fst) $ renderedHis ++ renderedLows
+
+    return $ horizCat $ snd <$> rendered
+
+mkImage (w, h) a (VBox pairs) = do
+    let pairsIndexed = zip [(0::Int)..] pairs
         his = filter (\p -> (snd $ snd p) == High) pairsIndexed
         lows = filter (\p -> (snd $ snd p) == Low) pairsIndexed
-        renderedHis = (\(i, (prim, _)) -> (i, mkImage (w, h) a prim)) <$> his
-        remainingHeight = h - (sum $ (imageHeight . snd) <$> renderedHis)
+
+    renderedHis <- mapM (\(i, (prim, _)) -> (i,) <$> mkImage (w, h) a prim) his
+
+    let remainingHeight = h - (sum $ (imageHeight . snd) <$> renderedHis)
         heightPerLow = remainingHeight `div` length lows
         widthPerLow = maximum $ (imageWidth . snd) <$> renderedHis
-        renderedLows = (\(i, (prim, _)) -> (i, mkImage (widthPerLow, heightPerLow) a prim)) <$> lows
-        rendered = sortBy (compare `DF.on` fst) $ renderedHis ++ renderedLows
+
+    renderedLows <- mapM (\(i, (prim, _)) -> (i,) <$> mkImage (widthPerLow, heightPerLow) a prim) lows
+    let rendered = sortBy (compare `DF.on` fst) $ renderedHis ++ renderedLows
+
+    return $ vertCat $ snd <$> rendered
 
 (<+>) :: Prim -> Prim -> Prim
 (<+>) a b = HBox [(a, High), (b, High)]
@@ -255,8 +268,8 @@ renderFinal :: [Prim]
             -> Picture
 renderFinal layerPrims sz chooseCursor = pic
     where
-        layerResults = mkImage sz defAttr <$> layerPrims
-        pic = picForLayers $ uncurry resize sz <$> layerResults
+        layerResults = render sz defAttr <$> layerPrims
+        pic = picForLayers $ uncurry resize sz <$> fst <$> layerResults
 
 on :: Color -> Color -> Attr
 on f b = defAttr `withForeColor` f
@@ -299,8 +312,8 @@ supplyVtyEvents vty mkEvent chan =
         writeChan chan $ mkEvent e
 
 runVty :: Vty -> Chan e -> App a e -> a -> IO ()
-runVty vty chan app state = do
-    state' <- renderApp vty app state
+runVty vty chan app appState = do
+    state' <- renderApp vty app appState
     e <- readChan chan
     appHandleEvent app e state' >>= runVty vty chan app
 
@@ -310,21 +323,20 @@ withVty buildVty useVty = do
     useVty vty `finally` shutdown vty
 
 renderApp :: Vty -> App a e -> a -> IO a
-renderApp vty app state = do
+renderApp vty app appState = do
     sz <- displayBounds $ outputIface vty
-    let pic = renderFinal (appDraw app state) sz (appChooseCursor app state)
+    let pic = renderFinal (appDraw app appState) sz (appChooseCursor app appState)
     update vty pic
-
-    return state
+    return appState
     -- let !applyResizes = foldl (>>>) id $ (uncurry (appHandleResize app)) <$> sizes
     --     !resizedState = applyResizes state
 
     -- return resizedState
 
 getNextEvent :: Vty -> App a Event -> a -> IO a
-getNextEvent vty app state = do
+getNextEvent vty app appState = do
     e <- nextEvent vty
-    appHandleEvent app e state
+    appHandleEvent app e appState
 
 focusRing :: [Name] -> FocusRing
 focusRing [] = FocusRingEmpty
