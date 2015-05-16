@@ -48,6 +48,10 @@ data Prim = Fixed String
           | UseAttr Attr Prim
           | Raw Image
           | Translate Int Int Prim
+          | CropLeftBy Int Prim
+          | CropRightBy Int Prim
+          | CropTopBy Int Prim
+          | CropBottomBy Int Prim
 
 instance IsString Prim where
     fromString = Fixed
@@ -61,6 +65,30 @@ mkImage (w, h) _ (Raw img) =
     if w > 0 && h > 0
     then crop w h img
     else emptyImage
+mkImage (w, h) a (CropLeftBy c p) =
+    let img = mkImage (w, h) a p
+        amt = imageWidth img - c
+    in if amt < 0
+       then emptyImage
+       else cropLeft amt img
+mkImage (w, h) a (CropRightBy c p) =
+    let img = mkImage (w, h) a p
+        amt = imageWidth img - c
+    in if amt < 0
+       then emptyImage
+       else cropRight amt img
+mkImage (w, h) a (CropTopBy c p) =
+    let img = mkImage (w, h) a p
+        amt = imageHeight img - c
+    in if amt < 0
+       then emptyImage
+       else cropTop amt img
+mkImage (w, h) a (CropBottomBy c p) =
+    let img = mkImage (w, h) a p
+        amt = imageHeight img - c
+    in if amt < 0
+       then emptyImage
+       else cropBottom amt img
 mkImage (w, h) a (HPad c) = charFill a c w (max 1 h)
 mkImage (w, h) a (VPad c) = charFill a c (max 1 w) h
 mkImage (w, h) a (HFill c) = charFill a c w (min h 1)
