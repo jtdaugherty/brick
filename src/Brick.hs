@@ -1,9 +1,10 @@
 {-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 module Brick where
 
-import Control.Applicative hiding ((<|>))
-import Control.Arrow ((>>>))
+import Control.Applicative
+--import Control.Arrow ((>>>))
 import Control.Concurrent
 import Control.Exception (finally)
 import Control.Monad (forever)
@@ -11,7 +12,7 @@ import Data.Default
 import Data.Maybe
 import Data.String
 import Data.Monoid
-import Graphics.Vty
+import Graphics.Vty hiding ((<|>))
 
 newtype Location = Location (Int, Int)
 
@@ -30,90 +31,81 @@ data CursorLocation =
                    , cursorLocationName :: !(Maybe Name)
                    }
 
+data RenderOrder = A | B
+
 data Prim = Fixed String
+          | HPad Char
+          | VPad Char
           | HFill Char
           | VFill Char
-          | LeftRight Prim Prim
-          | TopBottom Prim Prim
+          | HBox Prim Prim RenderOrder
+          | VBox Prim Prim RenderOrder
           | HLimit Int Prim
           | VLimit Int Prim
           | UseAttr Attr Prim
           | Raw Image
+          | Translate Int Int Prim
 
 mkImage :: DisplayRegion -> Attr -> Prim -> Image
-mkImage (w, h) a (Fixed s) = if w > 0 && h > 0
-                             then crop w h $ string a s
-                             else emptyImage
-mkImage (w, h) _ (Raw img) = if w > 0 && h > 0
-                             then crop w h img
-                             else emptyImage
-mkImage (w, _) a (HFill c) = charFill a c w 1
-mkImage (_, h) a (VFill c) = charFill a c 1 h
+mkImage (w, h) a (Fixed s) =
+    if w > 0 && h > 0
+    then crop w h $ string a s
+    else emptyImage
+mkImage (w, h) _ (Raw img) =
+    if w > 0 && h > 0
+    then crop w h img
+    else emptyImage
+mkImage (w, h) a (HPad c) = charFill a c w (max 1 h)
+mkImage (w, h) a (VPad c) = charFill a c (max 1 w) h
+mkImage (w, h) a (HFill c) = charFill a c w (min h 1)
+mkImage (w, h) a (VFill c) = charFill a c (min w 1) h
 mkImage (_, h) a (HLimit w p) = mkImage (w, h) a p
 mkImage (w, _) a (VLimit h p) = mkImage (w, h) a p
 mkImage (w, h) _ (UseAttr a p) = mkImage (w, h) a p
-mkImage (w, h) a (LeftRight p1 p2) = horizCat [first, second]
+mkImage (w, h) a (Translate tw th p) =
+    crop w h $ translate tw th $ mkImage (w, h) a p
+mkImage (w, h) a (HBox p1 p2 order) = horizCat [first, second]
     where
-        (first, second) = if isHFixed p1
-                          then let p1Img = mkImage (w, h) a p1
-                                   p2Img = mkImage (w - imageWidth p1Img, h) a p2
-                               in (p1Img, p2Img)
-                          else let p1Img = mkImage (w - imageWidth p2Img, h) a p1
-                                   p2Img = mkImage (w, h) a p2
-                               in (p1Img, p2Img)
-mkImage (w, h) a (TopBottom p1 p2) = vertCat [first, second]
+        (first, second) =
+            case order of
+                A -> let p1Img = mkImage (w, h) a p1
+                         p2Img = mkImage (w - imageWidth p1Img, min h (imageHeight p1Img)) a p2
+                     in (p1Img, p2Img)
+                B -> let p1Img = mkImage (w - imageWidth p2Img, min h (imageHeight p2Img)) a p1
+                         p2Img = mkImage (w, h) a p2
+                     in (p1Img, p2Img)
+mkImage (w, h) a (VBox p1 p2 order) = vertCat [first, second]
     where
-        (first, second) = if isVFixed p1
-                          then let p1Img = mkImage (w, h) a p1
-                                   p2Img = mkImage (w, h - imageHeight p1Img) a p2
-                               in (p1Img, p2Img)
-                          else let p1Img = mkImage (w, h - imageHeight p2Img) a p1
-                                   p2Img = mkImage (w, h) a p2
-                               in (p1Img, p2Img)
+        (first, second) =
+            case order of
+                A -> let p1Img = mkImage (w, h) a p1
+                         p2Img = mkImage (min w (imageWidth p1Img), h - imageHeight p1Img) a p2
+                     in (p1Img, p2Img)
+                B -> let p1Img = mkImage (min w (imageWidth p2Img), h - imageHeight p2Img) a p1
+                         p2Img = mkImage (w, h) a p2
+                     in (p1Img, p2Img)
 
-isHFixed :: Prim -> Bool
-isHFixed (Fixed _) = True
-isHFixed (HFill _) = False
-isHFixed (VFill _) = True
-isHFixed (LeftRight a b) = isHFixed a && isHFixed b
-isHFixed (TopBottom a b) = isHFixed a && isHFixed b
-isHFixed (HLimit _ _) = True
-isHFixed (VLimit _ p) = isHFixed p
-isHFixed (UseAttr _ p) = isHFixed p
+(<<+) :: Prim -> Prim -> Prim
+(<<+) a b = HBox a b A
 
-isVFixed :: Prim -> Bool
-isVFixed (Fixed _) = True
-isVFixed (HFill _) = True
-isVFixed (VFill _) = False
-isVFixed (LeftRight a b) = isVFixed a && isVFixed b
-isVFixed (TopBottom a b) = isVFixed a && isVFixed b
-isVFixed (HLimit _ p) = isVFixed p
-isVFixed (VLimit _ _) = True
-isVFixed (UseAttr _ p) = isVFixed p
+(+>>) :: Prim -> Prim -> Prim
+(+>>) a b = HBox a b B
 
-borderTest :: Prim -> Prim
-borderTest wrapped = total
+(<<=) :: Prim -> Prim -> Prim
+(<<=) a b = VBox a b A
+
+(=>>) :: Prim -> Prim -> Prim
+(=>>) a b = VBox a b B
+
+bordered :: Prim -> Prim
+bordered wrapped = total
     where
-        top = LeftRight (Fixed "+") (LeftRight (HFill '-') (Fixed "+"))
-        middle = LeftRight (VFill '|') (LeftRight wrapped (VFill '|'))
-        total = TopBottom top (TopBottom middle top)
+        topBottom = "+" <<+ HFill '-' +>> "+"
+        middle = VFill '|' +>> wrapped <<+ VFill '|'
+        total = topBottom =>> middle <<= topBottom
 
-data Render =
-    Render { renderImage :: !Image
-           , renderCursors :: ![CursorLocation]
-           , renderSizes :: ![(Name, DisplayRegion)]
-           }
-
-instance Default Render where
-    def = Render emptyImage [] []
-
-data Widget =
-    Widget { render :: DisplayRegion -> Attr -> Render
-           , widgetName :: !(Maybe Name)
-           }
-
-instance IsString Widget where
-    fromString = txt
+instance IsString Prim where
+    fromString = Fixed
 
 data Editor =
     Editor { editStr :: !String
@@ -121,13 +113,8 @@ data Editor =
            , editorName :: !Name
            }
 
-instance Default Widget where
-    def = Widget { render = const $ const def
-                 , widgetName = Nothing
-                 }
-
 data App a e =
-    App { appDraw :: a -> [Widget]
+    App { appDraw :: a -> [Prim]
         , appChooseCursor :: a -> [CursorLocation] -> Maybe CursorLocation
         , appHandleEvent :: e -> a -> IO a
         , appHandleResize :: Name -> DisplayRegion -> a -> a
@@ -145,45 +132,6 @@ data FocusRing = FocusRingEmpty
 
 clOffset :: CursorLocation -> Location -> CursorLocation
 clOffset cl loc = cl { cursorLocation = (cursorLocation cl) <> loc }
-
-bordered :: Widget -> Widget
-bordered w =
-    def { render = renderBordered w
-        }
-
-renderBordered :: Widget -> DisplayRegion -> Attr -> Render
-renderBordered w sz attr = result { renderImage = borderedImg
-                                  , renderCursors = translatedCursors
-                                  }
-    where
-        result = render w sz attr
-        childImg = renderImage result
-        (width, height) = ( imageWidth childImg
-                          , imageHeight childImg
-                          )
-        topBottomBorder = horizCat [ string attr "+"
-                                   , charFill attr '-' width 1
-                                   , string attr "+"
-                                   ]
-        leftRightBorder = charFill attr '|' 1 height
-        withSideBorders = horizCat [ leftRightBorder
-                                   , childImg
-                                   , leftRightBorder
-                                   ]
-        borderedImg = vertCat [ topBottomBorder
-                              , withSideBorders
-                              , topBottomBorder
-                              ]
-        translatedCursors = (`clOffset` (Location (1,1))) <$>
-                            renderCursors result
-
-txt :: String -> Widget
-txt s =
-    def { render = \_ a -> def { renderImage = string a s }
-        }
-
-named :: Widget -> Name -> Widget
-named w name = w { widgetName = Just name }
 
 editEvent :: Event -> Editor -> Editor
 editEvent e theEdit = f theEdit
@@ -238,189 +186,76 @@ insertChar c theEdit = theEdit { editStr = s
 editor :: Name -> String -> Editor
 editor name s = Editor s (length s) name
 
-edit :: Editor -> Widget
-edit e =
-    def { render = renderEditor
-        , widgetName = Just $ editorName e
-        }
-    where
-        renderEditor sz@(width, _) attr =
-            let cursorPos = CursorLocation (Location (pos', 0)) (Just $ editorName e)
-                s = editStr e
-                pos = editCursorPos e
-                (s', pos') = let winSize = width
-                                 start = max 0 (pos + 1 - winSize)
-                                 newPos = min pos (width - 1)
-                             in (drop start s, newPos)
-                w = hBox [ txt s'
-                         , txt (replicate (width - length s' + 1) ' ')
-                         ]
-                result = render w sz attr
-            in result { renderCursors = [cursorPos]
-                      , renderSizes = []
-                      }
+-- edit :: Editor -> Widget
+-- edit e =
+--     def { render = renderEditor
+--         , widgetName = Just $ editorName e
+--         }
+--     where
+--         renderEditor sz@(width, _) attr =
+--             let cursorPos = CursorLocation (Location (pos', 0)) (Just $ editorName e)
+--                 s = editStr e
+--                 pos = editCursorPos e
+--                 (s', pos') = let winSize = width
+--                                  start = max 0 (pos + 1 - winSize)
+--                                  newPos = min pos (width - 1)
+--                              in (drop start s, newPos)
+--                 w = hBox [ txt s'
+--                          , txt (replicate (width - length s' + 1) ' ')
+--                          ]
+--                 result = render w sz attr
+--             in result { renderCursors = [cursorPos]
+--                       , renderSizes = []
+--                       }
+-- 
+-- hCentered :: Widget -> Widget
+-- hCentered w =
+--     def { render = \sz attr ->
+--             let result = render w sz attr
+--                 img = renderImage result
+--                 wOff = (fst sz - imageWidth img) `div` 2
+--                 trans = Location (wOff, 0)
+--             in result { renderImage = translate wOff 0 img
+--                       , renderCursors = (`clOffset` trans) <$> renderCursors result
+--                       }
+--         }
+-- 
+-- vCentered :: Widget -> Widget
+-- vCentered w =
+--     def { render = \sz attr ->
+--             let result = render w sz attr
+--                 img = renderImage result
+--                 hOff = (snd sz - imageHeight img) `div` 2
+--                 trans = Location (0, hOff)
+--             in result { renderImage = translate 0 hOff img
+--                       , renderCursors = (`clOffset` trans) <$> renderCursors result
+--                       }
+--         }
+-- 
+-- centered :: Widget -> Widget
+-- centered = hCentered . vCentered
+-- 
+-- centeredAbout :: Location -> Widget -> Widget
+-- centeredAbout (Location (col, row)) widget =
+--     def { render = \sz@(w, h) attr ->
+--             let tx = (w `div` 2) - col
+--                 ty = (h `div` 2) - row
+--                 result = render widget sz attr
+--             in result { renderImage = translate tx ty $ renderImage result
+--                       }
+--         }
 
-hBorder :: Char -> Widget
-hBorder ch =
-    def { render = \(width, _) attr ->
-            def { renderImage = charFill attr ch width 1 }
-        }
+translated :: Location -> Prim -> Prim
+translated (Location (wOff, hOff)) p = Translate wOff hOff p
 
-vBorder :: Char -> Widget
-vBorder ch =
-    def { render = \(_, height) attr ->
-            def { renderImage = charFill attr ch 1 height }
-        }
-
-vBox :: [Widget] -> Widget
-vBox widgets =
-    def { render = renderVBox
-        }
-    where
-        renderVBox (width, height) attr =
-            let results = renderChildren attr width widgets height origin
-                imgs = renderImage <$> results
-                maxWidth = maximum $ imageWidth <$> imgs
-                padded = addPadding maxWidth attr <$> imgs
-            in def { renderImage = vertCat padded
-                   , renderCursors = concat $ renderCursors <$> results
-                   , renderSizes = concat $ renderSizes <$> results
-                   }
-
-        addPadding width attr img =
-            img <|> charFill attr ' ' (width - imageWidth img) (imageHeight img)
-
-        renderChildren _ _ [] _ _ = []
-        renderChildren attr width (w:ws) hRemaining loc
-          | hRemaining <= 0 = []
-          | otherwise =
-            let result = render_ w loc (width, hRemaining) attr
-                img = renderImage result
-                newHeight = hRemaining - imageHeight img
-                newLoc = loc <> Location (0, imageHeight img)
-                results = renderChildren attr width ws newHeight newLoc
-            in result:results
-
-hBox :: [Widget] -> Widget
-hBox widgets =
-    def { render = renderHBox
-        }
-    where
-        renderHBox (width, height) attr =
-            let results = renderChildren attr height widgets width origin
-                imgs = renderImage <$> results
-                maxHeight = maximum $ imageHeight <$> imgs
-                padded = addPadding maxHeight attr <$> imgs
-            in def { renderImage = horizCat padded
-                   , renderCursors = concat $ renderCursors <$> results
-                   , renderSizes = concat $ renderSizes <$> results
-                   }
-
-        addPadding height attr img =
-            img <-> charFill attr ' ' (imageWidth img) (height - imageHeight img)
-
-        renderChildren _ _ [] _ _ = []
-        renderChildren attr height (w:ws) wRemaining loc
-          | wRemaining <= 0 = []
-          | otherwise =
-            let result = render_ w loc (wRemaining, height) attr
-                img = renderImage result
-                newWidth = wRemaining - imageWidth img
-                newLoc = loc <> Location (imageWidth img, 0)
-                results = renderChildren attr height ws newWidth newLoc
-            in result:results
-
-hLimit :: Int -> Widget -> Widget
-hLimit width w =
-    def { render = \(_, height) attr -> let result = render w (width, height) attr
-                                        in result { renderImage = crop width height $ renderImage result
-                                                  }
-        }
-
-vLimit :: Int -> Widget -> Widget
-vLimit height w =
-    def { render = \(width, _) attr -> let result = render w (width, height) attr
-                                       in result { renderImage = crop width height $ renderImage result
-                                                 }
-        }
-
-hCentered :: Widget -> Widget
-hCentered w =
-    def { render = \sz attr ->
-            let result = render w sz attr
-                img = renderImage result
-                wOff = (fst sz - imageWidth img) `div` 2
-                trans = Location (wOff, 0)
-            in result { renderImage = translate wOff 0 img
-                      , renderCursors = (`clOffset` trans) <$> renderCursors result
-                      }
-        }
-
-vCentered :: Widget -> Widget
-vCentered w =
-    def { render = \sz attr ->
-            let result = render w sz attr
-                img = renderImage result
-                hOff = (snd sz - imageHeight img) `div` 2
-                trans = Location (0, hOff)
-            in result { renderImage = translate 0 hOff img
-                      , renderCursors = (`clOffset` trans) <$> renderCursors result
-                      }
-        }
-
-centered :: Widget -> Widget
-centered = hCentered . vCentered
-
-centeredAbout :: Location -> Widget -> Widget
-centeredAbout (Location (col, row)) widget =
-    def { render = \sz@(w, h) attr ->
-            let tx = (w `div` 2) - col
-                ty = (h `div` 2) - row
-                result = render widget sz attr
-            in result { renderImage = translate tx ty $ renderImage result
-                      }
-        }
-
-translated :: Location -> Widget -> Widget
-translated off@(Location (wOff, hOff)) w =
-    def { render = \sz attr ->
-            let result = render w sz attr
-            in result { renderImage = translate wOff hOff $ renderImage result
-                      , renderCursors = (`clOffset` off) <$> renderCursors result
-                      }
-        }
-
-render_ :: Widget -> Location -> DisplayRegion -> Attr -> Render
-render_ w loc sz attr =
-    def { renderImage = uncurry crop sz img
-        , renderSizes = case widgetName w of
-            Nothing -> renderSizes result
-            Just n -> (n, (imageWidth img, imageHeight img)) : renderSizes result
-        , renderCursors = (`clOffset` loc) <$> renderCursors result
-        }
-    where
-        result = render w sz attr
-        img = renderImage result
-
-renderFinal :: [Widget]
+renderFinal :: [Prim]
             -> DisplayRegion
             -> ([CursorLocation] -> Maybe CursorLocation)
-            -> (Picture, [(Name, DisplayRegion)])
-renderFinal layerWidgets sz chooseCursor = (pic, concatMap renderSizes layerResults)
+            -> Picture
+renderFinal layerPrims sz chooseCursor = pic
     where
-        cursor = case chooseCursor (concatMap renderCursors layerResults) of
-                   Nothing -> NoCursor
-                   Just cl -> let Location (w, h) = cursorLocation cl
-                              in Cursor w h
-        layerRenderResult w = render_ w (Location (0, 0)) sz defAttr
-        layerResults = layerRenderResult <$> layerWidgets
-        basePic = picForLayers $ uncurry resize sz <$> renderImage <$> layerResults
-        pic = basePic { picCursor = cursor }
-
-liftVty :: Image -> Widget
-liftVty img =
-    def { render = const $ const $ def { renderImage = img }
-        }
+        layerResults = mkImage sz defAttr <$> layerPrims
+        pic = picForLayers $ uncurry resize sz <$> layerResults
 
 on :: Color -> Color -> Attr
 on f b = defAttr `withForeColor` f
@@ -432,24 +267,24 @@ fg = (defAttr `withForeColor`)
 bg :: Color -> Attr
 bg = (defAttr `withBackColor`)
 
-withAttr :: Widget -> Attr -> Widget
-withAttr w attr =
-    def { render = \sz _ -> render w sz attr
-        }
-
-withNamedCursor :: Widget -> (Name, Location) -> Widget
-withNamedCursor w (name, cursorLoc) =
-    w { render = \sz a -> let result = render w sz a
-                          in result { renderCursors = [CursorLocation cursorLoc (Just name)]
-                                    }
-      }
-
-withCursor :: Widget -> Location -> Widget
-withCursor w cursorLoc =
-    w { render = \sz a -> let result = render w sz a
-                          in result { renderCursors = [CursorLocation cursorLoc Nothing]
-                                    }
-      }
+-- withAttr :: Widget -> Attr -> Widget
+-- withAttr w attr =
+--     def { render = \sz _ -> render w sz attr
+--         }
+-- 
+-- withNamedCursor :: Widget -> (Name, Location) -> Widget
+-- withNamedCursor w (name, cursorLoc) =
+--     w { render = \sz a -> let result = render w sz a
+--                           in result { renderCursors = [CursorLocation cursorLoc (Just name)]
+--                                     }
+--       }
+-- 
+-- withCursor :: Widget -> Location -> Widget
+-- withCursor w cursorLoc =
+--     w { render = \sz a -> let result = render w sz a
+--                           in result { renderCursors = [CursorLocation cursorLoc Nothing]
+--                                     }
+--       }
 
 defaultMain :: App a Event -> a -> IO ()
 defaultMain = defaultMainWithVty (mkVty def)
@@ -481,13 +316,14 @@ withVty buildVty useVty = do
 renderApp :: Vty -> App a e -> a -> IO a
 renderApp vty app state = do
     sz <- displayBounds $ outputIface vty
-    let (pic, sizes) = renderFinal (appDraw app state) sz (appChooseCursor app state)
+    let pic = renderFinal (appDraw app state) sz (appChooseCursor app state)
     update vty pic
 
-    let !applyResizes = foldl (>>>) id $ (uncurry (appHandleResize app)) <$> sizes
-        !resizedState = applyResizes state
+    return state
+    -- let !applyResizes = foldl (>>>) id $ (uncurry (appHandleResize app)) <$> sizes
+    --     !resizedState = applyResizes state
 
-    return resizedState
+    -- return resizedState
 
 getNextEvent :: Vty -> App a Event -> a -> IO a
 getNextEvent vty app state = do
