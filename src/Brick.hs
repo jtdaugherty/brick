@@ -5,7 +5,7 @@
 module Brick where
 
 import Control.Applicative
---import Control.Arrow ((>>>))
+import Control.Arrow ((>>>))
 import Control.Concurrent
 import Control.Exception (finally)
 import Control.Monad (forever)
@@ -54,6 +54,7 @@ data Prim = Fixed !String
           | CropTopBy !Int !Prim
           | CropBottomBy !Int !Prim
           | ShowCursor !Name !Location !Prim
+          | GetSize !Name !Prim
 
 instance IsString Prim where
     fromString = Fixed
@@ -61,6 +62,7 @@ instance IsString Prim where
 data Render =
     Render { image :: Image
            , cursors :: [CursorLocation]
+           , sizes :: [(Name, DisplayRegion)]
            }
 
 data App a e =
@@ -84,11 +86,6 @@ addCursor :: Name -> Location -> Render -> Render
 addCursor n loc r =
     r { cursors = CursorLocation loc (Just n) : cursors r }
 
-render :: DisplayRegion -> Attr -> Prim -> (Image, [CursorLocation])
-render sz attr p =
-    let r = mkImage sz attr p
-    in (image r, cursors r)
-
 addCursorOffset :: Location -> Render -> Render
 addCursorOffset off r =
     let onlyVisible = filter isVisible
@@ -105,12 +102,12 @@ setImage i r = r { image = i }
 mkImage :: DisplayRegion -> Attr -> Prim -> Render
 mkImage (w, h) a (Fixed s) =
     if w > 0 && h > 0
-    then Render (crop w h $ string a s) []
-    else Render emptyImage []
+    then Render (crop w h $ string a s) [] []
+    else Render emptyImage [] []
 mkImage (w, h) _ (Raw img) =
     if w > 0 && h > 0
-    then Render (crop w h img) []
-    else Render emptyImage []
+    then Render (crop w h img) [] []
+    else Render emptyImage [] []
 mkImage (w, h) a (CropLeftBy c p) =
     let result = mkImage (w, h) a p
         img = image result
@@ -139,10 +136,10 @@ mkImage (w, h) a (CropBottomBy c p) =
         cropped = if amt < 0 then emptyImage else cropBottom amt img
     -- xxx crop cursors
     in setImage cropped result
-mkImage (w, h) a (HPad c) = Render (charFill a c w (max 1 h)) []
-mkImage (w, h) a (VPad c) = Render (charFill a c (max 1 w) h) []
-mkImage (w, h) a (HFill c) = Render (charFill a c w (min h 1)) []
-mkImage (w, h) a (VFill c) = Render (charFill a c (min w 1) h) []
+mkImage (w, h) a (HPad c) = Render (charFill a c w (max 1 h)) [] []
+mkImage (w, h) a (VPad c) = Render (charFill a c (max 1 w) h) [] []
+mkImage (w, h) a (HFill c) = Render (charFill a c w (min h 1)) [] []
+mkImage (w, h) a (VFill c) = Render (charFill a c (min w 1) h) [] []
 mkImage (_, h) a (HLimit w p) =
     -- xxx crop cursors
     mkImage (w, h) a p
@@ -158,6 +155,12 @@ mkImage (w, h) a (Translate tw th p) =
 mkImage sz a (ShowCursor n loc p) =
     let result = mkImage sz a p
     in result { cursors = (CursorLocation loc (Just n)):cursors result }
+mkImage sz a (GetSize name p) =
+    let result = mkImage sz a p
+        img = image result
+        imgSz = (imageWidth img, imageHeight img)
+    in result { sizes = (name, imgSz) : sizes result
+              }
 mkImage (w, h) a (HBox pairs) =
     let pairsIndexed = zip [(0::Int)..] pairs
         his = filter (\p -> (snd $ snd p) == High) pairsIndexed
@@ -170,6 +173,7 @@ mkImage (w, h) a (HBox pairs) =
         rendered = sortBy (compare `DF.on` fst) $ renderedHis ++ renderedLows
 
         allResults = snd <$> rendered
+        allSizes = sizes <$> allResults
         allImages = image <$> allResults
         allWidths = imageWidth <$> allImages
         allTranslatedCursors = for (zip [0..] allResults) $ \(i, result) ->
@@ -177,7 +181,7 @@ mkImage (w, h) a (HBox pairs) =
                 offWidth = sum $ take i allWidths
             in cursors $ addCursorOffset off result
 
-    in Render (horizCat allImages) (concat allTranslatedCursors)
+    in Render (horizCat allImages) (concat allTranslatedCursors) (concat allSizes)
 
 mkImage (w, h) a (VBox pairs) =
     let pairsIndexed = zip [(0::Int)..] pairs
@@ -191,6 +195,7 @@ mkImage (w, h) a (VBox pairs) =
         rendered = sortBy (compare `DF.on` fst) $ renderedHis ++ renderedLows
 
         allResults = snd <$> rendered
+        allSizes = sizes <$> allResults
         allImages = image <$> allResults
         allHeights = imageHeight <$> allImages
         allTranslatedCursors = for (zip [0..] allResults) $ \(i, result) ->
@@ -198,7 +203,7 @@ mkImage (w, h) a (VBox pairs) =
                 offHeight = sum $ take i allHeights
             in cursors $ addCursorOffset off result
 
-    in Render (vertCat allImages) (concat allTranslatedCursors)
+    in Render (vertCat allImages) (concat allTranslatedCursors) (concat allSizes)
 
 (<+>) :: Prim -> Prim -> Prim
 (<+>) a b = HBox [(a, High), (b, High)]
@@ -288,7 +293,8 @@ editor :: Name -> String -> Editor
 editor name s = Editor s (length s) name
 
 edit :: Editor -> Prim
-edit e = txt (editStr e) <<+ HPad ' '
+edit e = GetSize (Name "edit") $ ShowCursor (Name "edit") (Location (editCursorPos e, 0)) $
+         txt (editStr e) <<+ HPad ' '
 
 txt :: String -> Prim
 txt = Fixed
@@ -314,13 +320,14 @@ translated (Location (wOff, hOff)) p = Translate wOff hOff p
 renderFinal :: [Prim]
             -> DisplayRegion
             -> ([CursorLocation] -> Maybe CursorLocation)
-            -> (Picture, Maybe CursorLocation)
-renderFinal layerPrims sz chooseCursor = (pic, theCursor)
+            -> (Picture, Maybe CursorLocation, [(Name, DisplayRegion)])
+renderFinal layerPrims sz chooseCursor = (pic, theCursor, theSizes)
     where
-        layerResults = render sz defAttr <$> layerPrims
-        pic = picForLayers $ uncurry resize sz <$> fst <$> layerResults
-        layerCursors = snd <$> layerResults
+        layerResults = mkImage sz defAttr <$> layerPrims
+        pic = picForLayers $ uncurry resize sz <$> image <$> layerResults
+        layerCursors = cursors <$> layerResults
         theCursor = chooseCursor $ concat layerCursors
+        theSizes = concat $ sizes <$> layerResults
 
 on :: Color -> Color -> Attr
 on f b = defAttr `withForeColor` f
@@ -376,16 +383,17 @@ withVty buildVty useVty = do
 renderApp :: Vty -> App a e -> a -> IO a
 renderApp vty app appState = do
     sz <- displayBounds $ outputIface vty
-    let (pic, theCursor) = renderFinal (appDraw app appState) sz (appChooseCursor app appState)
+    let (pic, theCursor, theSizes) = renderFinal (appDraw app appState) sz (appChooseCursor app appState)
         picWithCursor = case theCursor of
             Nothing -> pic { picCursor = NoCursor }
             Just (CursorLocation (Location (w, h)) _) -> pic { picCursor = Cursor w h }
-    update vty picWithCursor
-    return appState
-    -- let !applyResizes = foldl (>>>) id $ (uncurry (appHandleResize app)) <$> sizes
-    --     !resizedState = applyResizes state
 
-    -- return resizedState
+    update vty picWithCursor
+
+    let !applyResizes = foldl (>>>) id $ (uncurry (appHandleResize app)) <$> theSizes
+        !resizedState = applyResizes appState
+
+    return resizedState
 
 getNextEvent :: Vty -> App a Event -> a -> IO a
 getNextEvent vty app appState = do
