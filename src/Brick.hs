@@ -54,6 +54,7 @@ data Prim = Fixed String
           | CropRightBy Int Prim
           | CropTopBy Int Prim
           | CropBottomBy Int Prim
+          | ShowCursor Name Location Prim
 
 instance IsString Prim where
     fromString = Fixed
@@ -61,6 +62,10 @@ instance IsString Prim where
 data RenderState =
     RenderState { cursors :: [CursorLocation]
                 }
+
+addCursor :: Name -> Location -> State RenderState ()
+addCursor n loc =
+    modify $ \s -> s { cursors = CursorLocation loc (Just n) : cursors s }
 
 render :: DisplayRegion -> Attr -> Prim -> (Image, [CursorLocation])
 render sz attr p =
@@ -102,6 +107,9 @@ mkImage (w, h) _ (UseAttr a p) = mkImage (w, h) a p
 mkImage (w, h) a (Translate tw th p) = do
     img <- mkImage (w, h) a p
     return $ crop w h $ translate tw th img
+mkImage sz a (ShowCursor n loc p) = do
+    addCursor n loc
+    mkImage sz a p
 mkImage (w, h) a (HBox pairs) = do
     let pairsIndexed = zip [(0::Int)..] pairs
         his = filter (\p -> (snd $ snd p) == High) pairsIndexed
@@ -265,11 +273,13 @@ translated (Location (wOff, hOff)) p = Translate wOff hOff p
 renderFinal :: [Prim]
             -> DisplayRegion
             -> ([CursorLocation] -> Maybe CursorLocation)
-            -> Picture
-renderFinal layerPrims sz chooseCursor = pic
+            -> (Picture, Maybe CursorLocation)
+renderFinal layerPrims sz chooseCursor = (pic, theCursor)
     where
         layerResults = render sz defAttr <$> layerPrims
         pic = picForLayers $ uncurry resize sz <$> fst <$> layerResults
+        layerCursors = snd <$> layerResults
+        theCursor = chooseCursor $ concat layerCursors
 
 on :: Color -> Color -> Attr
 on f b = defAttr `withForeColor` f
@@ -325,8 +335,11 @@ withVty buildVty useVty = do
 renderApp :: Vty -> App a e -> a -> IO a
 renderApp vty app appState = do
     sz <- displayBounds $ outputIface vty
-    let pic = renderFinal (appDraw app appState) sz (appChooseCursor app appState)
-    update vty pic
+    let (pic, theCursor) = renderFinal (appDraw app appState) sz (appChooseCursor app appState)
+        picWithCursor = case theCursor of
+            Nothing -> pic { picCursor = NoCursor }
+            Just (CursorLocation (Location (w, h)) _) -> pic { picCursor = Cursor w h }
+    update vty picWithCursor
     return appState
     -- let !applyResizes = foldl (>>>) id $ (uncurry (appHandleResize app)) <$> sizes
     --     !resizedState = applyResizes state
