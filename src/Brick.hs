@@ -9,7 +9,6 @@ import Control.Applicative
 import Control.Concurrent
 import Control.Exception (finally)
 import Control.Monad (forever)
-import Control.Monad.Trans.State.Lazy
 import qualified Data.Function as DF
 import Data.List (sortBy)
 import Data.Default
@@ -59,88 +58,121 @@ data Prim = Fixed String
 instance IsString Prim where
     fromString = Fixed
 
-data RenderState =
-    RenderState { cursors :: [CursorLocation]
-                }
+data Render =
+    Render { image :: Image
+           , cursors :: [CursorLocation]
+           }
 
-addCursor :: Name -> Location -> State RenderState ()
-addCursor n loc =
-    modify $ \s -> s { cursors = CursorLocation loc (Just n) : cursors s }
+addCursor :: Name -> Location -> Render -> Render
+addCursor n loc r =
+    r { cursors = CursorLocation loc (Just n) : cursors r }
 
 render :: DisplayRegion -> Attr -> Prim -> (Image, [CursorLocation])
 render sz attr p =
-    let (img, rs) = runState (mkImage sz attr p) (RenderState [])
-    in (img, cursors rs)
+    let r = mkImage sz attr p
+    in (image r, cursors r)
 
-mkImage :: DisplayRegion -> Attr -> Prim -> State RenderState Image
-mkImage (w, h) a (Fixed s) = return $
+addCursorOffset :: Location -> Render -> Render
+addCursorOffset off r =
+    let onlyVisible = filter isVisible
+        isVisible (CursorLocation (Location (w, h)) _) = w >= 0 && h >= 0
+    in r { cursors = onlyVisible $ (`clOffset` off) <$> cursors r
+         }
+
+setImage :: Image -> Render -> Render
+setImage i r = r { image = i }
+
+mkImage :: DisplayRegion -> Attr -> Prim -> Render
+mkImage (w, h) a (Fixed s) =
     if w > 0 && h > 0
-    then crop w h $ string a s
-    else emptyImage
-mkImage (w, h) _ (Raw img) = return $
+    then Render (crop w h $ string a s) []
+    else Render emptyImage []
+mkImage (w, h) _ (Raw img) =
     if w > 0 && h > 0
-    then crop w h img
-    else emptyImage
-mkImage (w, h) a (CropLeftBy c p) = do
-    img <- mkImage (w, h) a p
-    let amt = imageWidth img - c
-    return $ if amt < 0 then emptyImage else cropLeft amt img
-mkImage (w, h) a (CropRightBy c p) = do
-    img <- mkImage (w, h) a p
-    let amt = imageWidth img - c
-    return $ if amt < 0 then emptyImage else cropRight amt img
-mkImage (w, h) a (CropTopBy c p) = do
-    img <- mkImage (w, h) a p
-    let amt = imageHeight img - c
-    return $ if amt < 0 then emptyImage else cropTop amt img
-mkImage (w, h) a (CropBottomBy c p) = do
-    img <- mkImage (w, h) a p
-    let amt = imageHeight img - c
-    return $ if amt < 0 then emptyImage else cropBottom amt img
-mkImage (w, h) a (HPad c) = return $ charFill a c w (max 1 h)
-mkImage (w, h) a (VPad c) = return $ charFill a c (max 1 w) h
-mkImage (w, h) a (HFill c) = return $ charFill a c w (min h 1)
-mkImage (w, h) a (VFill c) = return $ charFill a c (min w 1) h
-mkImage (_, h) a (HLimit w p) = mkImage (w, h) a p
-mkImage (w, _) a (VLimit h p) = mkImage (w, h) a p
+    then Render (crop w h img) []
+    else Render emptyImage []
+mkImage (w, h) a (CropLeftBy c p) =
+    let result = mkImage (w, h) a p
+        img = image result
+        amt = imageWidth img - c
+        cropped = if amt < 0 then emptyImage else cropLeft amt img
+    in addCursorOffset (Location (-1 * c, 0)) $
+       setImage cropped result
+mkImage (w, h) a (CropRightBy c p) =
+    let result = mkImage (w, h) a p
+        img = image result
+        amt = imageWidth img - c
+        cropped = if amt < 0 then emptyImage else cropRight amt img
+    -- xxx cursors
+    in setImage cropped result
+mkImage (w, h) a (CropTopBy c p) =
+    let result = mkImage (w, h) a p
+        img = image result
+        amt = imageHeight img - c
+        cropped = if amt < 0 then emptyImage else cropTop amt img
+    in addCursorOffset (Location (0, -1 * c)) $
+       setImage cropped result
+mkImage (w, h) a (CropBottomBy c p) =
+    let result = mkImage (w, h) a p
+        img = image result
+        amt = imageHeight img - c
+        cropped = if amt < 0 then emptyImage else cropBottom amt img
+    -- xxx crop cursors
+    in setImage cropped result
+mkImage (w, h) a (HPad c) = Render (charFill a c w (max 1 h)) []
+mkImage (w, h) a (VPad c) = Render (charFill a c (max 1 w) h) []
+mkImage (w, h) a (HFill c) = Render (charFill a c w (min h 1)) []
+mkImage (w, h) a (VFill c) = Render (charFill a c (min w 1) h) []
+mkImage (_, h) a (HLimit w p) =
+    -- xxx crop cursors
+    mkImage (w, h) a p
+mkImage (w, _) a (VLimit h p) =
+    -- xxx crop cursors
+    mkImage (w, h) a p
 mkImage (w, h) _ (UseAttr a p) = mkImage (w, h) a p
-mkImage (w, h) a (Translate tw th p) = do
-    img <- mkImage (w, h) a p
-    return $ crop w h $ translate tw th img
-mkImage sz a (ShowCursor n loc p) = do
-    addCursor n loc
-    mkImage sz a p
-mkImage (w, h) a (HBox pairs) = do
+mkImage (w, h) a (Translate tw th p) =
+    let result = mkImage (w, h) a p
+        img = image result
+    in addCursorOffset (Location (tw, th)) $
+       setImage (crop w h $ translate tw th img) result
+mkImage sz a (ShowCursor n loc p) =
+    let result = mkImage sz a p
+    in result { cursors = (CursorLocation loc (Just n)):cursors result }
+mkImage (w, h) a (HBox pairs) =
     let pairsIndexed = zip [(0::Int)..] pairs
         his = filter (\p -> (snd $ snd p) == High) pairsIndexed
         lows = filter (\p -> (snd $ snd p) == Low) pairsIndexed
 
-    renderedHis <- mapM (\(i, (prim, _)) -> (i,) <$> mkImage (w, h) a prim) his
+        -- xxx translate cursors
+        renderedHis = (\(i, (prim, _)) -> (i, mkImage (w, h) a prim)) <$> his
 
-    let remainingWidth = w - (sum $ (imageWidth . snd) <$> renderedHis)
+        remainingWidth = w - (sum $ (imageWidth . image . snd) <$> renderedHis)
         widthPerLow = remainingWidth `div` length lows
-        heightPerLow = maximum $ (imageHeight . snd) <$> renderedHis
+        heightPerLow = maximum $ (imageHeight . image . snd) <$> renderedHis
 
-    renderedLows <- mapM (\(i, (prim, _)) -> (i,) <$> mkImage (widthPerLow, heightPerLow) a prim) lows
-    let rendered = sortBy (compare `DF.on` fst) $ renderedHis ++ renderedLows
+        -- xxx translate cursors
+        renderedLows = (\(i, (prim, _)) -> (i, mkImage (widthPerLow, heightPerLow) a prim)) <$> lows
+        rendered = sortBy (compare `DF.on` fst) $ renderedHis ++ renderedLows
 
-    return $ horizCat $ snd <$> rendered
+    in Render (horizCat $ (image . snd) <$> rendered) []
 
-mkImage (w, h) a (VBox pairs) = do
+mkImage (w, h) a (VBox pairs) =
     let pairsIndexed = zip [(0::Int)..] pairs
         his = filter (\p -> (snd $ snd p) == High) pairsIndexed
         lows = filter (\p -> (snd $ snd p) == Low) pairsIndexed
 
-    renderedHis <- mapM (\(i, (prim, _)) -> (i,) <$> mkImage (w, h) a prim) his
+        -- xxx translate cursors
+        renderedHis = (\(i, (prim, _)) -> (i, mkImage (w, h) a prim)) <$> his
 
-    let remainingHeight = h - (sum $ (imageHeight . snd) <$> renderedHis)
+        remainingHeight = h - (sum $ (imageHeight . image . snd) <$> renderedHis)
         heightPerLow = remainingHeight `div` length lows
-        widthPerLow = maximum $ (imageWidth . snd) <$> renderedHis
+        widthPerLow = maximum $ (imageWidth . image . snd) <$> renderedHis
 
-    renderedLows <- mapM (\(i, (prim, _)) -> (i,) <$> mkImage (widthPerLow, heightPerLow) a prim) lows
-    let rendered = sortBy (compare `DF.on` fst) $ renderedHis ++ renderedLows
+        -- xxx translate cursors
+        renderedLows = (\(i, (prim, _)) -> (i, mkImage (widthPerLow, heightPerLow) a prim)) <$> lows
+        rendered = sortBy (compare `DF.on` fst) $ renderedHis ++ renderedLows
 
-    return $ vertCat $ snd <$> rendered
+    in Render (vertCat $ (image . snd) <$> rendered) []
 
 (<+>) :: Prim -> Prim -> Prim
 (<+>) a b = HBox [(a, High), (b, High)]
