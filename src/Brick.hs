@@ -339,20 +339,6 @@ fg = (defAttr `withForeColor`)
 bg :: Color -> Attr
 bg = (defAttr `withBackColor`)
 
--- withNamedCursor :: Widget -> (Name, Location) -> Widget
--- withNamedCursor w (name, cursorLoc) =
---     w { render = \sz a -> let result = render w sz a
---                           in result { renderCursors = [CursorLocation cursorLoc (Just name)]
---                                     }
---       }
--- 
--- withCursor :: Widget -> Location -> Widget
--- withCursor w cursorLoc =
---     w { render = \sz a -> let result = render w sz a
---                           in result { renderCursors = [CursorLocation cursorLoc Nothing]
---                                     }
---       }
-
 defaultMain :: App a Event -> a -> IO ()
 defaultMain = defaultMainWithVty (mkVty def)
 
