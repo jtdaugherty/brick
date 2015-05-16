@@ -37,23 +37,23 @@ data CursorLocation =
 data Priority = High | Low
               deriving Eq
 
-data Prim = Fixed String
-          | HPad Char
-          | VPad Char
-          | HFill Char
-          | VFill Char
-          | HBox [(Prim, Priority)]
-          | VBox [(Prim, Priority)]
-          | HLimit Int Prim
-          | VLimit Int Prim
-          | UseAttr Attr Prim
-          | Raw Image
-          | Translate Int Int Prim
-          | CropLeftBy Int Prim
-          | CropRightBy Int Prim
-          | CropTopBy Int Prim
-          | CropBottomBy Int Prim
-          | ShowCursor Name Location Prim
+data Prim = Fixed !String
+          | HPad !Char
+          | VPad !Char
+          | HFill !Char
+          | VFill !Char
+          | HBox ![(Prim, Priority)]
+          | VBox ![(Prim, Priority)]
+          | HLimit !Int !Prim
+          | VLimit !Int !Prim
+          | UseAttr !Attr !Prim
+          | Raw !Image
+          | Translate !Int !Int !Prim
+          | CropLeftBy !Int !Prim
+          | CropRightBy !Int !Prim
+          | CropTopBy !Int !Prim
+          | CropBottomBy !Int !Prim
+          | ShowCursor !Name !Location !Prim
 
 instance IsString Prim where
     fromString = Fixed
