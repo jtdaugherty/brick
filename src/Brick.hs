@@ -213,27 +213,11 @@ insertChar c theEdit = theEdit { editStr = s
 editor :: Name -> String -> Editor
 editor name s = Editor s (length s) name
 
--- edit :: Editor -> Widget
--- edit e =
---     def { render = renderEditor
---         , widgetName = Just $ editorName e
---         }
---     where
---         renderEditor sz@(width, _) attr =
---             let cursorPos = CursorLocation (Location (pos', 0)) (Just $ editorName e)
---                 s = editStr e
---                 pos = editCursorPos e
---                 (s', pos') = let winSize = width
---                                  start = max 0 (pos + 1 - winSize)
---                                  newPos = min pos (width - 1)
---                              in (drop start s, newPos)
---                 w = hBox [ txt s'
---                          , txt (replicate (width - length s' + 1) ' ')
---                          ]
---                 result = render w sz attr
---             in result { renderCursors = [cursorPos]
---                       , renderSizes = []
---                       }
+edit :: Editor -> Prim
+edit e = txt (editStr e) <<+ HPad ' '
+
+txt :: String -> Prim
+txt = Fixed
 
 hCentered :: Prim -> Prim
 hCentered p = HBox [ (HPad ' ', Low)
