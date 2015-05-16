@@ -234,6 +234,8 @@ data Editor =
     Editor { editStr :: !String
            , editCursorPos :: !Int
            , editorName :: !Name
+           , editLeft :: !Int
+           , editWidth :: !Int
            }
 
 clOffset :: CursorLocation -> Location -> CursorLocation
@@ -282,19 +284,29 @@ deleteChar e = e { editStr = s'
 
 insertChar :: Char -> Editor -> Editor
 insertChar c theEdit = theEdit { editStr = s
-                               , editCursorPos = n + 1
+                               , editCursorPos = newCursorPos
+                               , editLeft = newLeft
                                }
     where
         s = take n oldStr ++ [c] ++ drop n oldStr
         n = editCursorPos theEdit
+        newCursorPos = n + 1
         oldStr = editStr theEdit
+        newLeft = if newCursorPos > editLeft theEdit + editWidth theEdit
+                  then editLeft theEdit + 1
+                  else editLeft theEdit
+
+resizeEdit :: DisplayRegion -> Editor -> Editor
+resizeEdit (w, _) e = e { editWidth = w }
 
 editor :: Name -> String -> Editor
-editor name s = Editor s (length s) name
+editor name s = Editor s (length s) name 0 0
 
 edit :: Editor -> Prim
-edit e = GetSize (Name "edit") $ ShowCursor (Name "edit") (Location (editCursorPos e, 0)) $
-         txt (editStr e) <<+ HPad ' '
+edit e =
+    GetSize (editorName e) $
+    ShowCursor (editorName e) (Location (editCursorPos e - editLeft e, 0)) $
+    txt (drop (editLeft e) $ editStr e) <<+ HPad ' '
 
 txt :: String -> Prim
 txt = Fixed
