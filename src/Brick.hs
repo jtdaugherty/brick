@@ -151,14 +151,16 @@ mkImage (w, h) a (HBox pairs) =
         heightPerLow = maximum $ (imageHeight . image . snd) <$> renderedHis
         renderedLows = (\(i, (prim, _)) -> (i, mkImage (widthPerLow, heightPerLow) a prim)) <$> lows
         rendered = sortBy (compare `DF.on` fst) $ renderedHis ++ renderedLows
-        allWidths = (imageWidth . image . snd) <$> rendered
-        translatedCursorResults = for rendered $ \(i, result) ->
+
+        allResults = snd <$> rendered
+        allImages = image <$> allResults
+        allWidths = imageWidth <$> allImages
+        allTranslatedCursors = for (zip [0..] allResults) $ \(i, result) ->
             let off = Location (offWidth, 0)
                 offWidth = sum $ take i allWidths
-            in (i, addCursorOffset off result)
+            in cursors $ addCursorOffset off result
 
-    in Render (horizCat $ (image . snd) <$> translatedCursorResults)
-              (concat $ (cursors . snd) <$> translatedCursorResults)
+    in Render (horizCat allImages) (concat allTranslatedCursors)
 
 mkImage (w, h) a (VBox pairs) =
     let pairsIndexed = zip [(0::Int)..] pairs
@@ -170,14 +172,16 @@ mkImage (w, h) a (VBox pairs) =
         widthPerLow = maximum $ (imageWidth . image . snd) <$> renderedHis
         renderedLows = (\(i, (prim, _)) -> (i, mkImage (widthPerLow, heightPerLow) a prim)) <$> lows
         rendered = sortBy (compare `DF.on` fst) $ renderedHis ++ renderedLows
-        allHeights = (imageHeight . image . snd) <$> rendered
-        translatedCursorResults = for rendered $ \(i, result) ->
+
+        allResults = snd <$> rendered
+        allImages = image <$> allResults
+        allHeights = imageHeight <$> allImages
+        allTranslatedCursors = for (zip [0..] allResults) $ \(i, result) ->
             let off = Location (0, offHeight)
                 offHeight = sum $ take i allHeights
-            in (i, addCursorOffset off result)
+            in cursors $ addCursorOffset off result
 
-    in Render (vertCat $ (image . snd) <$> translatedCursorResults)
-              (concat $ (cursors . snd) <$> translatedCursorResults)
+    in Render (vertCat allImages) (concat allTranslatedCursors)
 
 (<+>) :: Prim -> Prim -> Prim
 (<+>) a b = HBox [(a, High), (b, High)]
