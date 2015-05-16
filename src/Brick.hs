@@ -100,41 +100,25 @@ mkImage (w, h) a (Translate tw th p) =
     crop w h $ translate tw th $ mkImage (w, h) a p
 mkImage (w, h) a (HBox pairs) = horizCat $ snd <$> rendered
     where
-        pairsIndexed :: [(Int, (Prim, Priority))]
-        pairsIndexed = zip [0..] pairs
-        his :: [(Int, (Prim, Priority))]
+        pairsIndexed = zip [(0::Int)..] pairs
         his = filter (\p -> (snd $ snd p) == High) pairsIndexed
-        lows :: [(Int, (Prim, Priority))]
         lows = filter (\p -> (snd $ snd p) == Low) pairsIndexed
-        renderedHis :: [(Int, Image)]
         renderedHis = (\(i, (prim, _)) -> (i, mkImage (w, h) a prim)) <$> his
-        remainingWidth :: Int
         remainingWidth = w - (sum $ (imageWidth . snd) <$> renderedHis)
-        widthPerLow :: Int
         widthPerLow = remainingWidth `div` length lows
         heightPerLow = maximum $ (imageHeight . snd) <$> renderedHis
-        renderedLows :: [(Int, Image)]
         renderedLows = (\(i, (prim, _)) -> (i, mkImage (widthPerLow, heightPerLow) a prim)) <$> lows
-        rendered :: [(Int, Image)]
         rendered = sortBy (compare `DF.on` fst) $ renderedHis ++ renderedLows
 mkImage (w, h) a (VBox pairs) = vertCat $ snd <$> rendered
     where
-        pairsIndexed :: [(Int, (Prim, Priority))]
-        pairsIndexed = zip [0..] pairs
-        his :: [(Int, (Prim, Priority))]
+        pairsIndexed = zip [(0::Int)..] pairs
         his = filter (\p -> (snd $ snd p) == High) pairsIndexed
-        lows :: [(Int, (Prim, Priority))]
         lows = filter (\p -> (snd $ snd p) == Low) pairsIndexed
-        renderedHis :: [(Int, Image)]
         renderedHis = (\(i, (prim, _)) -> (i, mkImage (w, h) a prim)) <$> his
-        remainingHeight :: Int
         remainingHeight = h - (sum $ (imageHeight . snd) <$> renderedHis)
-        heightPerLow :: Int
         heightPerLow = remainingHeight `div` length lows
         widthPerLow = maximum $ (imageWidth . snd) <$> renderedHis
-        renderedLows :: [(Int, Image)]
         renderedLows = (\(i, (prim, _)) -> (i, mkImage (widthPerLow, heightPerLow) a prim)) <$> lows
-        rendered :: [(Int, Image)]
         rendered = sortBy (compare `DF.on` fst) $ renderedHis ++ renderedLows
 
 (<+>) :: Prim -> Prim -> Prim
