@@ -63,6 +63,23 @@ data Render =
            , cursors :: [CursorLocation]
            }
 
+data App a e =
+    App { appDraw :: a -> [Prim]
+        , appChooseCursor :: a -> [CursorLocation] -> Maybe CursorLocation
+        , appHandleEvent :: e -> a -> IO a
+        , appHandleResize :: Name -> DisplayRegion -> a -> a
+        }
+
+instance Default (App a e) where
+    def = App { appDraw = const def
+              , appChooseCursor = neverShowCursor
+              , appHandleEvent = const return
+              , appHandleResize = const $ const id
+              }
+
+data FocusRing = FocusRingEmpty
+               | FocusRingNonempty ![Name] !Int
+
 addCursor :: Name -> Location -> Render -> Render
 addCursor n loc r =
     r { cursors = CursorLocation loc (Just n) : cursors r }
@@ -213,23 +230,6 @@ data Editor =
            , editCursorPos :: !Int
            , editorName :: !Name
            }
-
-data App a e =
-    App { appDraw :: a -> [Prim]
-        , appChooseCursor :: a -> [CursorLocation] -> Maybe CursorLocation
-        , appHandleEvent :: e -> a -> IO a
-        , appHandleResize :: Name -> DisplayRegion -> a -> a
-        }
-
-instance Default (App a e) where
-    def = App { appDraw = const def
-              , appChooseCursor = neverShowCursor
-              , appHandleEvent = const return
-              , appHandleResize = const $ const id
-              }
-
-data FocusRing = FocusRingEmpty
-               | FocusRingNonempty ![Name] !Int
 
 clOffset :: CursorLocation -> Location -> CursorLocation
 clOffset cl loc = cl { cursorLocation = (cursorLocation cl) <> loc }
