@@ -44,11 +44,11 @@ appEvent e st =
 initialState :: St
 initialState =
     St { _stEditor = editor (Name "edit") ""
-       , _stList = newList (Name "list") listDraw [0..6]
+       , _stList = newList (Name "list") listDrawElem [0..6]
        }
 
-listDraw :: Bool -> Int -> Prim
-listDraw sel i =
+listDrawElem :: Bool -> Int -> Prim
+listDrawElem sel i =
     let selAttr = white `on` blue
         p = hCentered (Txt $ "Number " <> show i)
     in if sel
