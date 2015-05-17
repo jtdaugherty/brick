@@ -71,14 +71,14 @@ data App a e =
     App { appDraw :: a -> [Prim]
         , appChooseCursor :: a -> [CursorLocation] -> Maybe CursorLocation
         , appHandleEvent :: e -> a -> IO a
-        , appHandleResize :: Name -> DisplayRegion -> a -> a
+        , appHandleSize :: Name -> DisplayRegion -> a -> a
         }
 
 instance Default (App a e) where
     def = App { appDraw = const def
               , appChooseCursor = neverShowCursor
               , appHandleEvent = const return
-              , appHandleResize = const $ const id
+              , appHandleSize = const $ const id
               }
 
 data FocusRing = FocusRingEmpty
@@ -457,7 +457,7 @@ renderApp vty app appState = do
 
     update vty picWithCursor
 
-    let !applyResizes = foldl (>>>) id $ (uncurry (appHandleResize app)) <$> theSizes
+    let !applyResizes = foldl (>>>) id $ (uncurry (appHandleSize app)) <$> theSizes
         !resizedState = applyResizes appState
 
     return resizedState

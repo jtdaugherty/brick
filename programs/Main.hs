@@ -42,7 +42,7 @@ theApp =
     def { appDraw = drawUI
         , appChooseCursor = showFirstCursor
         , appHandleEvent = handleEvent
-        , appHandleResize =
+        , appHandleSize =
             \_ sz st -> st & stEditor %~ setSize sz
         }
 
