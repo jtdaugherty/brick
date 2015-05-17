@@ -46,7 +46,7 @@ theApp =
         , appChooseCursor = showFirstCursor
         , appHandleEvent = handleEvent
         , appHandleResize =
-            \name sz st -> st & stEditor %~ resizeEdit sz
+            \_ sz st -> st & stEditor %~ resizeEdit sz
         }
 
 main :: IO ()
