@@ -37,7 +37,9 @@ appEvent :: Event -> St -> IO St
 appEvent e st =
     case e of
         EvKey KEsc [] -> exitSuccess
-        EvKey KEnter [] -> error $ editStr $ st^.stEditor
+        EvKey KEnter [] ->
+            let e = length $ listElements $ st^.stList
+            in return $ st & stList %~ listInsert 0 e
         ev -> return $ st & stEditor %~ (handleEvent ev)
                           & stList %~ (handleEvent ev)
 

@@ -328,6 +328,20 @@ drawList l =
        vScroll (listScroll l) $
        VBox drawn <<= VPad ' '
 
+listInsert :: Int -> a -> List a -> List a
+listInsert pos e l =
+    let es = listElements l
+        newSel = case listSelected l of
+          Nothing -> 0
+          Just s -> if pos < s
+                    then s + 1
+                    else s
+        (front, back) = splitAt pos es
+    in l { listSelected = Just newSel
+         , listElements = front ++ (e : back)
+         , listScroll = vScrollToView newSel (listScroll l)
+         }
+
 class HandleEvent a where
     handleEvent :: Event -> a -> a
 
