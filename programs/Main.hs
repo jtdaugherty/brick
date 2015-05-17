@@ -4,7 +4,6 @@ module Main where
 
 import Control.Lens
 import Data.Default
-import Data.Monoid
 import Graphics.Vty
 import System.Exit
 
