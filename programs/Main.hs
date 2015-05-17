@@ -28,9 +28,9 @@ drawUI st = [a]
 handleEvent :: Event -> St -> IO St
 handleEvent e st =
     case e of
-        EvKey KEsc []         -> exitSuccess
-        EvKey KEnter []       -> error $ editStr $ st^.stEditor
-        ev                    -> return $ st & stEditor %~ (editEvent ev)
+        EvKey KEsc [] -> exitSuccess
+        EvKey KEnter [] -> error $ editStr $ st^.stEditor
+        ev -> return $ st & stEditor %~ (editEvent ev)
 
 initialState :: St
 initialState =
