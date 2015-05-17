@@ -178,8 +178,11 @@ render (w, h) a (HBox pairs) =
         renderedHis = (\(i, (prim, _)) -> (i, render (w, h) a prim)) <$> his
         remainingWidth = w - (sum $ (imageWidth . image . snd) <$> renderedHis)
         widthPerLow = remainingWidth `div` length lows
+        padFirst = if widthPerLow * length lows < remainingWidth
+                   then remainingWidth - widthPerLow * length lows
+                   else 0
         heightPerLow = maximum $ (imageHeight . image . snd) <$> renderedHis
-        renderedLows = (\(i, (prim, _)) -> (i, render (widthPerLow, heightPerLow) a prim)) <$> lows
+        renderedLows = (\(i, (prim, _)) -> (i, render (widthPerLow + (if i == 0 then padFirst else 0), heightPerLow) a prim)) <$> lows
         rendered = sortBy (compare `DF.on` fst) $ renderedHis ++ renderedLows
 
         allResults = snd <$> rendered
@@ -200,8 +203,11 @@ render (w, h) a (VBox pairs) =
         renderedHis = (\(i, (prim, _)) -> (i, render (w, h) a prim)) <$> his
         remainingHeight = h - (sum $ (imageHeight . image . snd) <$> renderedHis)
         heightPerLow = remainingHeight `div` length lows
+        padFirst = if heightPerLow * length lows < remainingHeight
+                   then remainingHeight - heightPerLow * length lows
+                   else 0
         widthPerLow = maximum $ (imageWidth . image . snd) <$> renderedHis
-        renderedLows = (\(i, (prim, _)) -> (i, render (widthPerLow, heightPerLow) a prim)) <$> lows
+        renderedLows = (\(i, (prim, _)) -> (i, render (widthPerLow, heightPerLow + if i == 0 then padFirst else 0) a prim)) <$> lows
         rendered = sortBy (compare `DF.on` fst) $ renderedHis ++ renderedLows
 
         allResults = snd <$> rendered
