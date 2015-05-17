@@ -39,7 +39,7 @@ appEvent e st =
         EvKey KEsc [] -> exitSuccess
         EvKey KEnter [] ->
             let e = length $ listElements $ st^.stList
-            in return $ st & stList %~ listInsert 0 e
+            in return $ st & stList %~ listInsert e e
         ev -> return $ st & stEditor %~ (handleEvent ev)
                           & stList %~ (handleEvent ev)
 
