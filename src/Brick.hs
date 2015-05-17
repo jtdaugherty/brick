@@ -332,7 +332,7 @@ resizeEdit (w, _) e = e { editorScroll = (editorScroll e) { hScrollWidth = w }
                         }
 
 editor :: Name -> String -> Editor
-editor name s = Editor s (length s) name 0 (HScroll 0 0 name)
+editor name s = Editor s (length s) name (HScroll 0 0 name)
 
 edit :: Editor -> Prim
 edit e =
