@@ -18,6 +18,7 @@ import Data.Monoid
 import Graphics.Vty hiding ((<|>))
 
 newtype Location = Location (Int, Int)
+                 deriving Show
 
 origin :: Location
 origin = Location (0, 0)
@@ -33,9 +34,10 @@ data CursorLocation =
     CursorLocation { cursorLocation :: !Location
                    , cursorLocationName :: !(Maybe Name)
                    }
+                   deriving Show
 
 data Priority = High | Low
-              deriving Eq
+              deriving (Show, Eq)
 
 data Prim = Txt !String
           | HPad !Char
@@ -57,6 +59,7 @@ data Prim = Txt !String
           | GetSize !Name !Prim
           | HRelease !Prim
           | VRelease !Prim
+          deriving Show
 
 instance IsString Prim where
     fromString = Txt
@@ -66,6 +69,7 @@ data Render =
            , cursors :: [CursorLocation]
            , sizes :: [(Name, DisplayRegion)]
            }
+           deriving Show
 
 data App a e =
     App { appDraw :: a -> [Prim]
