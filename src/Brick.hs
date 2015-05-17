@@ -313,13 +313,13 @@ data List a =
          , listName :: !Name
          }
 
-newList :: Name -> (Bool -> a -> Prim) -> [a] -> List a
-newList name draw es =
+list :: Name -> (Bool -> a -> Prim) -> [a] -> List a
+list name draw es =
     let selIndex = if null es then Nothing else Just 0
     in List es draw selIndex (VScroll 0 0 name) name
 
-list :: List a -> Prim
-list l =
+drawList :: List a -> Prim
+drawList l =
     let es = listElements l
         drawn = for (zip [0..] es) $ \(i, e) ->
                   let isSelected = Just i == listSelected l
@@ -435,8 +435,8 @@ instance SetSize Editor where
 editor :: Name -> String -> Editor
 editor name s = Editor s (length s) name (HScroll 0 0 name)
 
-edit :: Editor -> Prim
-edit e =
+drawEditor :: Editor -> Prim
+drawEditor e =
     GetSize (editorName e) $
     ShowCursor (editorName e) (Location (editCursorPos e - hScrollLeft (editorScroll e), 0)) $
     hScroll (editorScroll e) $

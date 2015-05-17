@@ -25,13 +25,13 @@ drawUI st = [a]
             (VLimit 1 $
              HLimit 25 $
              UseAttr (cyan `on` blue) $
-             edit (st^.stEditor))
+             drawEditor (st^.stEditor))
             <<=
             HFill '-'
             =>>
             (VLimit 10 $
              HLimit 25 $
-             list (st^.stList))
+             drawList (st^.stList))
 
 appEvent :: Event -> St -> IO St
 appEvent e st =
@@ -44,7 +44,7 @@ appEvent e st =
 initialState :: St
 initialState =
     St { _stEditor = editor (Name "edit") ""
-       , _stList = newList (Name "list") listDrawElem [0..6]
+       , _stList = list (Name "list") listDrawElem [0..6]
        }
 
 listDrawElem :: Bool -> Int -> Prim
