@@ -15,7 +15,7 @@ import Data.Default
 import Data.Maybe
 import Data.String
 import Data.Monoid
-import Graphics.Vty
+import Graphics.Vty hiding ((<|>))
 
 newtype Location = Location (Int, Int)
 
@@ -257,6 +257,28 @@ bordered_ label wrapped = total
         middle = VFill '|' +>> wrapped <<+ VFill '|'
         total = top =>> middle <<= bottom
 
+data VScroll =
+    VScroll { vScrollTop :: !Int
+            , vScrollHeight :: !Int
+            , vScrollName :: !Name
+            }
+
+instance SetSize VScroll where
+    setSize (_, h) vs = vs { vScrollHeight = h }
+
+vScroll :: VScroll -> Prim -> Prim
+vScroll vs p = Translate 0 (-1 * vScrollTop vs) $ VRelease p
+
+vScrollToView :: Int -> VScroll -> VScroll
+vScrollToView row vs =
+    vs { vScrollTop = newTop }
+    where
+        newTop = if row < vScrollTop vs
+                 then row
+                 else if row >= vScrollTop vs + vScrollHeight vs
+                      then row - vScrollHeight vs + 1
+                      else vScrollTop vs
+
 data HScroll =
     HScroll { hScrollLeft :: !Int
             , hScrollWidth :: !Int
@@ -278,6 +300,58 @@ hScrollToView col hs =
                   else if col >= hScrollLeft hs + hScrollWidth hs
                        then col - hScrollWidth hs + 1
                        else hScrollLeft hs
+
+data List a =
+    List { listElements :: ![a]
+         , listElementDraw :: Bool -> a -> Prim
+         , listSelected :: !(Maybe Int)
+         , listScroll :: !VScroll
+         , listName :: !Name
+         }
+
+newList :: Name -> (Bool -> a -> Prim) -> [a] -> List a
+newList name draw es =
+    let selIndex = if null es then Nothing else Just 0
+    in List es draw selIndex (VScroll 0 0 name) name
+
+list :: List a -> Prim
+list l =
+    let es = listElements l
+        drawn = for (zip [0..] es) $ \(i, e) ->
+                  let isSelected = Just i == listSelected l
+                  in (listElementDraw l isSelected e, High)
+    in GetSize (listName l) $
+       vScroll (listScroll l) $
+       VBox drawn <<= VPad ' '
+
+listEvent :: Event -> List a -> List a
+listEvent e theList = f theList
+    where
+        f = case e of
+              EvKey KUp [] -> moveUp
+              EvKey KDown [] -> moveDown
+              _ -> id
+
+instance SetSize (List a) where
+    setSize sz l =
+        let updatedScroll = setSize sz $ listScroll l
+            Just scrollTo = listSelected l <|> Just 0
+        in l { listScroll = vScrollToView scrollTo updatedScroll
+             }
+
+moveUp :: List a -> List a
+moveUp = moveBy (-1)
+
+moveDown :: List a -> List a
+moveDown = moveBy 1
+
+moveBy :: Int -> List a -> List a
+moveBy amt l =
+    let newSel = clamp 0 (length (listElements l) - 1) <$> (amt +) <$> listSelected l
+        Just scrollTo = newSel <|> Just 0
+    in l { listSelected = newSel
+         , listScroll = vScrollToView scrollTo (listScroll l)
+         }
 
 data Editor =
     Editor { editStr :: !String
