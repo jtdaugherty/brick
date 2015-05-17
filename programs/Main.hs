@@ -12,7 +12,6 @@ import Brick
 
 data St =
     St { _stEditor :: Editor
-       , _trans :: Location
        }
 
 makeLenses ''St
@@ -32,16 +31,11 @@ handleEvent e st =
     case e of
         EvKey KEsc []         -> exitSuccess
         EvKey KEnter []       -> error $ editStr $ st^.stEditor
-        EvKey KLeft [MCtrl]   -> return $ st & trans %~ (<> (Location (-1, 0)))
-        EvKey KRight [MCtrl]  -> return $ st & trans %~ (<> (Location (1, 0)))
-        EvKey KUp [MCtrl]     -> return $ st & trans %~ (<> (Location (0, -1)))
-        EvKey KDown [MCtrl]   -> return $ st & trans %~ (<> (Location (0, 1)))
         ev                    -> return $ st & stEditor %~ (editEvent ev)
 
 initialState :: St
 initialState =
     St { _stEditor = editor (Name "edit") ""
-       , _trans = Location (0, 0)
        }
 
 theApp :: App St Event
