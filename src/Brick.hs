@@ -107,79 +107,79 @@ setImage i r = r { image = i }
 unrestricted :: Int
 unrestricted = 1000
 
-mkImage :: DisplayRegion -> Attr -> Prim -> Render
-mkImage (w, h) a (Fixed s) =
+render :: DisplayRegion -> Attr -> Prim -> Render
+render (w, h) a (Fixed s) =
     if w > 0 && h > 0
     then Render (crop w h $ string a s) [] []
     else Render emptyImage [] []
-mkImage (w, h) _ (Raw img) =
+render (w, h) _ (Raw img) =
     if w > 0 && h > 0
     then Render (crop w h img) [] []
     else Render emptyImage [] []
-mkImage (w, h) a (CropLeftBy c p) =
-    let result = mkImage (w, h) a p
+render (w, h) a (CropLeftBy c p) =
+    let result = render (w, h) a p
         img = image result
         amt = imageWidth img - c
         cropped = if amt < 0 then emptyImage else cropLeft amt img
     in addCursorOffset (Location (-1 * c, 0)) $
        setImage cropped result
-mkImage (w, h) a (CropRightBy c p) =
-    let result = mkImage (w, h) a p
+render (w, h) a (CropRightBy c p) =
+    let result = render (w, h) a p
         img = image result
         amt = imageWidth img - c
         cropped = if amt < 0 then emptyImage else cropRight amt img
     -- xxx cursors
     in setImage cropped result
-mkImage (w, h) a (CropTopBy c p) =
-    let result = mkImage (w, h) a p
+render (w, h) a (CropTopBy c p) =
+    let result = render (w, h) a p
         img = image result
         amt = imageHeight img - c
         cropped = if amt < 0 then emptyImage else cropTop amt img
     in addCursorOffset (Location (0, -1 * c)) $
        setImage cropped result
-mkImage (w, h) a (CropBottomBy c p) =
-    let result = mkImage (w, h) a p
+render (w, h) a (CropBottomBy c p) =
+    let result = render (w, h) a p
         img = image result
         amt = imageHeight img - c
         cropped = if amt < 0 then emptyImage else cropBottom amt img
     -- xxx crop cursors
     in setImage cropped result
-mkImage (w, h) a (HPad c) = Render (charFill a c w (max 1 h)) [] []
-mkImage (w, h) a (VPad c) = Render (charFill a c (max 1 w) h) [] []
-mkImage (w, h) a (HFill c) = Render (charFill a c w (min h 1)) [] []
-mkImage (w, h) a (VFill c) = Render (charFill a c (min w 1) h) [] []
-mkImage (_, h) a (HLimit w p) =
+render (w, h) a (HPad c) = Render (charFill a c w (max 1 h)) [] []
+render (w, h) a (VPad c) = Render (charFill a c (max 1 w) h) [] []
+render (w, h) a (HFill c) = Render (charFill a c w (min h 1)) [] []
+render (w, h) a (VFill c) = Render (charFill a c (min w 1) h) [] []
+render (_, h) a (HLimit w p) =
     -- xxx crop cursors
-    mkImage (w, h) a p
-mkImage (w, _) a (VLimit h p) =
+    render (w, h) a p
+render (w, _) a (VLimit h p) =
     -- xxx crop cursors
-    mkImage (w, h) a p
-mkImage (_, h) a (HRelease p) = mkImage (unrestricted, h) a p --- NB
-mkImage (w, _) a (VRelease p) = mkImage (w, unrestricted) a p --- NB
-mkImage (w, h) _ (UseAttr a p) = mkImage (w, h) a p
-mkImage (w, h) a (Translate tw th p) =
-    let result = mkImage (w, h) a p
+    render (w, h) a p
+render (_, h) a (HRelease p) = render (unrestricted, h) a p --- NB
+render (w, _) a (VRelease p) = render (w, unrestricted) a p --- NB
+render (w, h) _ (UseAttr a p) = render (w, h) a p
+render (w, h) a (Translate tw th p) =
+    let result = render (w, h) a p
         img = image result
     in addCursorOffset (Location (tw, th)) $
        setImage (crop w h $ translate tw th img) result
-mkImage sz a (ShowCursor n loc p) =
-    let result = mkImage sz a p
+render sz a (ShowCursor n loc p) =
+    let result = render sz a p
     in result { cursors = (CursorLocation loc (Just n)):cursors result }
-mkImage sz a (GetSize name p) =
-    let result = mkImage sz a p
+render sz a (GetSize name p) =
+    let result = render sz a p
         img = image result
         imgSz = (imageWidth img, imageHeight img)
     in result { sizes = (name, imgSz) : sizes result
               }
-mkImage (w, h) a (HBox pairs) =
+render (w, h) a (HBox pairs) =
     let pairsIndexed = zip [(0::Int)..] pairs
         his = filter (\p -> (snd $ snd p) == High) pairsIndexed
         lows = filter (\p -> (snd $ snd p) == Low) pairsIndexed
-        renderedHis = (\(i, (prim, _)) -> (i, mkImage (w, h) a prim)) <$> his
+        renderedHis = (\(i, (prim, _)) -> (i, render (w, h) a prim)) <$> his
         remainingWidth = w - (sum $ (imageWidth . image . snd) <$> renderedHis)
         widthPerLow = remainingWidth `div` length lows
         heightPerLow = maximum $ (imageHeight . image . snd) <$> renderedHis
-        renderedLows = (\(i, (prim, _)) -> (i, mkImage (widthPerLow, heightPerLow) a prim)) <$> lows
+        renderedLows = (\(i, (prim, _)) -> (i, render (widthPerLow, heightPerLow) a prim)) <$> lows
         rendered = sortBy (compare `DF.on` fst) $ renderedHis ++ renderedLows
 
         allResults = snd <$> rendered
@@ -193,15 +193,15 @@ mkImage (w, h) a (HBox pairs) =
 
     in Render (horizCat allImages) (concat allTranslatedCursors) (concat allSizes)
 
-mkImage (w, h) a (VBox pairs) =
+render (w, h) a (VBox pairs) =
     let pairsIndexed = zip [(0::Int)..] pairs
         his = filter (\p -> (snd $ snd p) == High) pairsIndexed
         lows = filter (\p -> (snd $ snd p) == Low) pairsIndexed
-        renderedHis = (\(i, (prim, _)) -> (i, mkImage (w, h) a prim)) <$> his
+        renderedHis = (\(i, (prim, _)) -> (i, render (w, h) a prim)) <$> his
         remainingHeight = h - (sum $ (imageHeight . image . snd) <$> renderedHis)
         heightPerLow = remainingHeight `div` length lows
         widthPerLow = maximum $ (imageWidth . image . snd) <$> renderedHis
-        renderedLows = (\(i, (prim, _)) -> (i, mkImage (widthPerLow, heightPerLow) a prim)) <$> lows
+        renderedLows = (\(i, (prim, _)) -> (i, render (widthPerLow, heightPerLow) a prim)) <$> lows
         rendered = sortBy (compare `DF.on` fst) $ renderedHis ++ renderedLows
 
         allResults = snd <$> rendered
@@ -369,7 +369,7 @@ renderFinal :: [Prim]
             -> (Picture, Maybe CursorLocation, [(Name, DisplayRegion)])
 renderFinal layerPrims sz chooseCursor = (pic, theCursor, theSizes)
     where
-        layerResults = mkImage sz defAttr <$> layerPrims
+        layerResults = render sz defAttr <$> layerPrims
         pic = picForLayers $ uncurry resize sz <$> image <$> layerResults
         layerCursors = cursors <$> layerResults
         theCursor = chooseCursor $ concat layerCursors
