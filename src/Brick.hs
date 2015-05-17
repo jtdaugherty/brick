@@ -98,6 +98,9 @@ addCursorOffset off r =
 for :: [a] -> (a -> b) -> [b]
 for = flip map
 
+clamp :: (Ord a) => a -> a -> a -> a
+clamp mn mx val = max mn (min val mx)
+
 setImage :: Image -> Render -> Render
 setImage i r = r { image = i }
 
@@ -280,22 +283,17 @@ editEvent e theEdit = f theEdit
               EvKey KBS [] -> deletePreviousChar
               _ -> id
 
-ensureEditCursorVisible :: Editor -> Editor
-ensureEditCursorVisible e =
+editSetCursorPos :: Int -> Editor -> Editor
+editSetCursorPos pos e =
     e { editorScroll = hScrollToView (editCursorPos e) (editorScroll e)
+      , editCursorPos = clamp 0 (length $ editStr e) pos
       }
 
 moveLeft :: Editor -> Editor
-moveLeft e =
-    ensureEditCursorVisible $
-    e { editCursorPos = max 0 (editCursorPos e - 1)
-      }
+moveLeft e = editSetCursorPos (editCursorPos e - 1) e
 
 moveRight :: Editor -> Editor
-moveRight e =
-    ensureEditCursorVisible $
-    e { editCursorPos = min (editCursorPos e + 1) (length $ editStr e)
-      }
+moveRight e = editSetCursorPos (editCursorPos e + 1) e
 
 deletePreviousChar :: Editor -> Editor
 deletePreviousChar e
@@ -303,10 +301,10 @@ deletePreviousChar e
   | otherwise = deleteChar $ moveLeft e
 
 gotoBOL :: Editor -> Editor
-gotoBOL e = e { editCursorPos = 0 }
+gotoBOL = editSetCursorPos 0
 
 gotoEOL :: Editor -> Editor
-gotoEOL e = e { editCursorPos = length (editStr e) }
+gotoEOL e = editSetCursorPos (length $ editStr e) e
 
 deleteChar :: Editor -> Editor
 deleteChar e = e { editStr = s'
