@@ -15,7 +15,7 @@ import Data.Default
 import Data.Maybe
 import Data.String
 import Data.Monoid
-import Graphics.Vty hiding ((<|>))
+import Graphics.Vty
 
 newtype Location = Location (Int, Int)
 
