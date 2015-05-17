@@ -88,6 +88,9 @@ instance Default (App a e) where
 data FocusRing = FocusRingEmpty
                | FocusRingNonempty ![Name] !Int
 
+class HandleEvent a where
+    handleEvent :: Event -> a -> a
+
 class SetSize a where
     setSize :: DisplayRegion -> a -> a
 
@@ -342,9 +345,6 @@ listInsert pos e l =
          , listElements = front ++ (e : back)
          , listScroll = vScrollToView newSel (listScroll l)
          }
-
-class HandleEvent a where
-    handleEvent :: Event -> a -> a
 
 instance HandleEvent (List a) where
     handleEvent e theList = f theList
