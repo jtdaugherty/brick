@@ -285,9 +285,10 @@ editEvent e theEdit = f theEdit
 
 editSetCursorPos :: Int -> Editor -> Editor
 editSetCursorPos pos e =
-    e { editorScroll = hScrollToView (editCursorPos e) (editorScroll e)
-      , editCursorPos = clamp 0 (length $ editStr e) pos
-      }
+    let newCP = clamp 0 (length $ editStr e) pos
+    in e { editorScroll = hScrollToView newCP (editorScroll e)
+         , editCursorPos = newCP
+         }
 
 moveLeft :: Editor -> Editor
 moveLeft e = editSetCursorPos (editCursorPos e - 1) e
