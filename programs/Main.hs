@@ -50,7 +50,7 @@ initialState =
 listDraw :: Bool -> Int -> Prim
 listDraw sel i =
     let selAttr = white `on` blue
-        p = hCentered (Fixed $ "Number " <> show i)
+        p = hCentered (Txt $ "Number " <> show i)
     in if sel
        then UseAttr selAttr p
        else p

@@ -37,7 +37,7 @@ data CursorLocation =
 data Priority = High | Low
               deriving Eq
 
-data Prim = Fixed !String
+data Prim = Txt !String
           | HPad !Char
           | VPad !Char
           | HFill !Char
@@ -59,7 +59,7 @@ data Prim = Fixed !String
           | VRelease !Prim
 
 instance IsString Prim where
-    fromString = Fixed
+    fromString = Txt
 
 data Render =
     Render { image :: Image
@@ -111,7 +111,7 @@ unrestricted :: Int
 unrestricted = 1000
 
 render :: DisplayRegion -> Attr -> Prim -> Render
-render (w, h) a (Fixed s) =
+render (w, h) a (Txt s) =
     if w > 0 && h > 0
     then Render (crop w h $ string a s) [] []
     else Render emptyImage [] []
@@ -251,7 +251,7 @@ borderedWithLabel label = bordered_ (Just label)
 bordered_ :: Maybe String -> Prim -> Prim
 bordered_ label wrapped = total
     where
-        labelStr = maybe (Fixed "") txt label
+        labelStr = maybe (Txt "") Txt label
         top = "+" <<+ hCenteredWith '-' labelStr +>> "+"
         bottom = "+" <<+ HFill '-' +>> "+"
         middle = VFill '|' +>> wrapped <<+ VFill '|'
@@ -434,10 +434,7 @@ edit e =
     GetSize (editorName e) $
     ShowCursor (editorName e) (Location (editCursorPos e - hScrollLeft (editorScroll e), 0)) $
     hScroll (editorScroll e) $
-    txt (editStr e) <<+ HPad ' '
-
-txt :: String -> Prim
-txt = Fixed
+    Txt (editStr e) <<+ HPad ' '
 
 hCentered :: Prim -> Prim
 hCentered = hCenteredWith ' '
