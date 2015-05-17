@@ -260,7 +260,6 @@ data Editor =
     Editor { editStr :: !String
            , editCursorPos :: !Int
            , editorName :: !Name
-           , editWidth :: !Int
            , editorScroll :: !HScroll
            }
 
@@ -329,8 +328,7 @@ insertChar c theEdit = theEdit { editStr = s
         oldStr = editStr theEdit
 
 resizeEdit :: DisplayRegion -> Editor -> Editor
-resizeEdit (w, _) e = e { editWidth = w
-                        , editorScroll = (editorScroll e) { hScrollWidth = w }
+resizeEdit (w, _) e = e { editorScroll = (editorScroll e) { hScrollWidth = w }
                         }
 
 editor :: Name -> String -> Editor
