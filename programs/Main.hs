@@ -20,8 +20,12 @@ makeLenses ''St
 drawUI :: St -> [Prim]
 drawUI st = [a]
     where
-        a = centered box
-        box = bordered $ VLimit 1 $ HLimit 25 $ UseAttr (cyan `on` blue) $ edit (st^.stEditor)
+        a = centered $
+            bordered $
+            VLimit 1 $
+            HLimit 25 $
+            UseAttr (cyan `on` blue) $
+            edit (st^.stEditor)
 
 handleEvent :: Event -> St -> IO St
 handleEvent e st =
