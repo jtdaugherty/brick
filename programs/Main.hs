@@ -43,7 +43,7 @@ theApp =
         , appChooseCursor = showFirstCursor
         , appHandleEvent = handleEvent
         , appHandleResize =
-            \_ sz st -> st & stEditor %~ resizeEdit sz
+            \_ sz st -> st & stEditor %~ setSize sz
         }
 
 main :: IO ()

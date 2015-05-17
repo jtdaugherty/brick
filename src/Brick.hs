@@ -84,6 +84,9 @@ instance Default (App a e) where
 data FocusRing = FocusRingEmpty
                | FocusRingNonempty ![Name] !Int
 
+class SetSize a where
+    setSize :: DisplayRegion -> a -> a
+
 addCursor :: Name -> Location -> Render -> Render
 addCursor n loc r =
     r { cursors = CursorLocation loc (Just n) : cursors r }
@@ -260,6 +263,9 @@ data HScroll =
             , hScrollName :: !Name
             }
 
+instance SetSize HScroll where
+    setSize (w, _) hs = hs { hScrollWidth = w }
+
 hScroll :: HScroll -> Prim -> Prim
 hScroll hs p = Translate (-1 * hScrollLeft hs) 0 $ HRelease p
 
@@ -340,11 +346,11 @@ insertChar c theEdit = theEdit { editStr = s
         newCursorPos = n + 1
         oldStr = editStr theEdit
 
-resizeEdit :: DisplayRegion -> Editor -> Editor
-resizeEdit (w, _) e =
-    let updatedScroll = (editorScroll e) { hScrollWidth = w }
-    in e { editorScroll = hScrollToView (editCursorPos e) updatedScroll
-         }
+instance SetSize Editor where
+    setSize sz e =
+        let updatedScroll = setSize sz $ editorScroll e
+        in e { editorScroll = hScrollToView (editCursorPos e) updatedScroll
+             }
 
 editor :: Name -> String -> Editor
 editor name s = Editor s (length s) name (HScroll 0 0 name)
