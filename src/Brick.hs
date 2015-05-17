@@ -8,7 +8,7 @@ import Control.Applicative
 import Control.Arrow ((>>>))
 import Control.Concurrent
 import Control.Exception (finally)
-import Control.Monad (forever)
+import Control.Monad (forever, when)
 import qualified Data.Function as DF
 import Data.List (sortBy)
 import Data.Default
@@ -393,10 +393,17 @@ defaultMainWithVty buildVty app initialState = do
         forkIO $ supplyVtyEvents vty id chan
         runVty vty chan app initialState
 
+isResizeEvent :: Event -> Bool
+isResizeEvent (EvResize _ _) = True
+isResizeEvent _ = False
+
 supplyVtyEvents :: Vty -> (Event -> e) -> Chan e -> IO ()
 supplyVtyEvents vty mkEvent chan =
     forever $ do
         e <- nextEvent vty
+        -- On resize, send two events to force two redraws to force all
+        -- state updates to get flushed to the display
+        when (isResizeEvent e) $ writeChan chan $ mkEvent e
         writeChan chan $ mkEvent e
 
 runVty :: Vty -> Chan e -> App a e -> a -> IO ()
