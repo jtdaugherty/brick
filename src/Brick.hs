@@ -240,11 +240,19 @@ render (w, h) a (VBox pairs) =
 (=>>) a b = VBox [(a, Low), (b, High)]
 
 bordered :: Prim -> Prim
-bordered wrapped = total
+bordered = bordered_ Nothing
+
+borderedWithLabel :: String -> Prim -> Prim
+borderedWithLabel label = bordered_ (Just label)
+
+bordered_ :: Maybe String -> Prim -> Prim
+bordered_ label wrapped = total
     where
-        topBottom = "+" <<+ HFill '-' +>> "+"
+        labelStr = maybe (Fixed "") txt label
+        top = "+" <<+ hCenteredWith '-' labelStr +>> "+"
+        bottom = "+" <<+ HFill '-' +>> "+"
         middle = VFill '|' +>> wrapped <<+ VFill '|'
-        total = topBottom =>> middle <<= topBottom
+        total = top =>> middle <<= bottom
 
 data HScroll =
     HScroll { hScrollLeft :: !Int
@@ -352,16 +360,24 @@ txt :: String -> Prim
 txt = Fixed
 
 hCentered :: Prim -> Prim
-hCentered p = HBox [ (HPad ' ', Low)
-                   , (p, High)
-                   , (HPad ' ', Low)
-                   ]
+hCentered = hCenteredWith ' '
+
+hCenteredWith :: Char -> Prim -> Prim
+hCenteredWith c p =
+    HBox [ (HPad c, Low)
+         , (p, High)
+         , (HPad c, Low)
+         ]
 
 vCentered :: Prim -> Prim
-vCentered p = VBox [ (VPad ' ', Low)
-                   , (p, High)
-                   , (VPad ' ', Low)
-                   ]
+vCentered = vCenteredWith ' '
+
+vCenteredWith :: Char -> Prim -> Prim
+vCenteredWith c p =
+    VBox [ (VPad c, Low)
+         , (p, High)
+         , (VPad c, Low)
+         ]
 
 centered :: Prim -> Prim
 centered = vCentered . hCentered
