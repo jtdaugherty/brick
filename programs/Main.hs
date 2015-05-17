@@ -46,7 +46,7 @@ appEvent e st =
 initialState :: St
 initialState =
     St { _stEditor = editor (Name "edit") ""
-       , _stList = list (Name "list") listDrawElem [0..6]
+       , _stList = list (Name "list") listDrawElem []
        }
 
 listDrawElem :: Bool -> Int -> Prim
