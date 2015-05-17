@@ -55,6 +55,8 @@ data Prim = Fixed !String
           | CropBottomBy !Int !Prim
           | ShowCursor !Name !Location !Prim
           | GetSize !Name !Prim
+          | HRelease !Prim
+          | VRelease !Prim
 
 instance IsString Prim where
     fromString = Fixed
@@ -98,6 +100,9 @@ for = flip map
 
 setImage :: Image -> Render -> Render
 setImage i r = r { image = i }
+
+unrestricted :: Int
+unrestricted = 1000
 
 mkImage :: DisplayRegion -> Attr -> Prim -> Render
 mkImage (w, h) a (Fixed s) =
@@ -146,6 +151,8 @@ mkImage (_, h) a (HLimit w p) =
 mkImage (w, _) a (VLimit h p) =
     -- xxx crop cursors
     mkImage (w, h) a p
+mkImage (_, h) a (HRelease p) = mkImage (unrestricted, h) a p --- NB
+mkImage (w, _) a (VRelease p) = mkImage (w, unrestricted) a p --- NB
 mkImage (w, h) _ (UseAttr a p) = mkImage (w, h) a p
 mkImage (w, h) a (Translate tw th p) =
     let result = mkImage (w, h) a p
@@ -230,12 +237,31 @@ bordered wrapped = total
         middle = VFill '|' +>> wrapped <<+ VFill '|'
         total = topBottom =>> middle <<= topBottom
 
+data HScroll =
+    HScroll { hScrollLeft :: !Int
+            , hScrollWidth :: !Int
+            , hScrollName :: !Name
+            }
+
+hScroll :: HScroll -> Prim -> Prim
+hScroll hs p = Translate (-1 * hScrollLeft hs) 0 $ HRelease p
+
+hScrollToView :: Int -> HScroll -> HScroll
+hScrollToView col hs =
+    hs { hScrollLeft = newLeft }
+    where
+        newLeft = if col < hScrollLeft hs
+                  then col
+                  else if col >= hScrollLeft hs + hScrollWidth hs
+                       then col - hScrollWidth hs + 1
+                       else hScrollLeft hs
+
 data Editor =
     Editor { editStr :: !String
            , editCursorPos :: !Int
            , editorName :: !Name
-           , editLeft :: !Int
            , editWidth :: !Int
+           , editorScroll :: !HScroll
            }
 
 clOffset :: CursorLocation -> Location -> CursorLocation
@@ -255,13 +281,22 @@ editEvent e theEdit = f theEdit
               EvKey KBS [] -> deletePreviousChar
               _ -> id
 
+ensureEditCursorVisible :: Editor -> Editor
+ensureEditCursorVisible e =
+    e { editorScroll = hScrollToView (editCursorPos e) (editorScroll e)
+      }
+
 moveLeft :: Editor -> Editor
-moveLeft e = e { editCursorPos = max 0 (editCursorPos e - 1)
-               }
+moveLeft e =
+    ensureEditCursorVisible $
+    e { editCursorPos = max 0 (editCursorPos e - 1)
+      }
 
 moveRight :: Editor -> Editor
-moveRight e = e { editCursorPos = min (editCursorPos e + 1) (length $ editStr e)
-                }
+moveRight e =
+    ensureEditCursorVisible $
+    e { editCursorPos = min (editCursorPos e + 1) (length $ editStr e)
+      }
 
 deletePreviousChar :: Editor -> Editor
 deletePreviousChar e
@@ -285,28 +320,28 @@ deleteChar e = e { editStr = s'
 insertChar :: Char -> Editor -> Editor
 insertChar c theEdit = theEdit { editStr = s
                                , editCursorPos = newCursorPos
-                               , editLeft = newLeft
+                               , editorScroll = hScrollToView newCursorPos (editorScroll theEdit)
                                }
     where
         s = take n oldStr ++ [c] ++ drop n oldStr
         n = editCursorPos theEdit
         newCursorPos = n + 1
         oldStr = editStr theEdit
-        newLeft = if newCursorPos > editLeft theEdit + editWidth theEdit
-                  then editLeft theEdit + 1
-                  else editLeft theEdit
 
 resizeEdit :: DisplayRegion -> Editor -> Editor
-resizeEdit (w, _) e = e { editWidth = w }
+resizeEdit (w, _) e = e { editWidth = w
+                        , editorScroll = (editorScroll e) { hScrollWidth = w }
+                        }
 
 editor :: Name -> String -> Editor
-editor name s = Editor s (length s) name 0 0
+editor name s = Editor s (length s) name 0 (HScroll 0 0 name)
 
 edit :: Editor -> Prim
 edit e =
     GetSize (editorName e) $
-    ShowCursor (editorName e) (Location (editCursorPos e - editLeft e, 0)) $
-    txt (drop (editLeft e) $ editStr e) <<+ HPad ' '
+    ShowCursor (editorName e) (Location (editCursorPos e - hScrollLeft (editorScroll e), 0)) $
+    hScroll (editorScroll e) $
+    txt (editStr e) <<+ HPad ' '
 
 txt :: String -> Prim
 txt = Fixed
