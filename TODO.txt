@@ -1,0 +1,5 @@
+- Use lenses in core library
+- Fix cursor cropping in render function where missing
+- Deal with multi-column characters everywhere
+- Implement 2-d text editing
+- Implement region-to-view scrolling instead of point-to-view
