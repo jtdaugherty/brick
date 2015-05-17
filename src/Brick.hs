@@ -327,8 +327,10 @@ insertChar c theEdit = theEdit { editStr = s
         oldStr = editStr theEdit
 
 resizeEdit :: DisplayRegion -> Editor -> Editor
-resizeEdit (w, _) e = e { editorScroll = (editorScroll e) { hScrollWidth = w }
-                        }
+resizeEdit (w, _) e =
+    let updatedScroll = (editorScroll e) { hScrollWidth = w }
+    in e { editorScroll = hScrollToView (editCursorPos e) updatedScroll
+         }
 
 editor :: Name -> String -> Editor
 editor name s = Editor s (length s) name (HScroll 0 0 name)
