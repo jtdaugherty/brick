@@ -65,9 +65,9 @@ instance IsString Prim where
     fromString = Txt
 
 data Render =
-    Render { image :: Image
-           , cursors :: [CursorLocation]
-           , sizes :: [(Name, DisplayRegion)]
+    Render { image :: !Image
+           , cursors :: ![CursorLocation]
+           , sizes :: ![(Name, DisplayRegion)]
            }
            deriving Show
 
