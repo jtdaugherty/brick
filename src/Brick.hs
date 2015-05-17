@@ -330,13 +330,14 @@ drawList l =
 
 listInsert :: Int -> a -> List a -> List a
 listInsert pos e l =
-    let es = listElements l
+    let safePos = clamp 0 (length es) pos
+        es = listElements l
         newSel = case listSelected l of
           Nothing -> 0
-          Just s -> if pos < s
+          Just s -> if safePos < s
                     then s + 1
                     else s
-        (front, back) = splitAt pos es
+        (front, back) = splitAt safePos es
     in l { listSelected = Just newSel
          , listElements = front ++ (e : back)
          , listScroll = vScrollToView newSel (listScroll l)
