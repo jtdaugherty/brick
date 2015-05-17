@@ -328,13 +328,16 @@ list l =
        vScroll (listScroll l) $
        VBox drawn <<= VPad ' '
 
-listEvent :: Event -> List a -> List a
-listEvent e theList = f theList
-    where
-        f = case e of
-              EvKey KUp [] -> moveUp
-              EvKey KDown [] -> moveDown
-              _ -> id
+class HandleEvent a where
+    handleEvent :: Event -> a -> a
+
+instance HandleEvent (List a) where
+    handleEvent e theList = f theList
+        where
+            f = case e of
+                  EvKey KUp [] -> moveUp
+                  EvKey KDown [] -> moveDown
+                  _ -> id
 
 instance SetSize (List a) where
     setSize sz l =
@@ -367,19 +370,18 @@ data Editor =
 clOffset :: CursorLocation -> Location -> CursorLocation
 clOffset cl loc = cl { cursorLocation = (cursorLocation cl) <> loc }
 
-editEvent :: Event -> Editor -> Editor
-editEvent e theEdit = f theEdit
-    where
-        f = case e of
-              EvKey (KChar 'a') [MCtrl] -> gotoBOL
-              EvKey (KChar 'e') [MCtrl] -> gotoEOL
-              EvKey (KChar 'd') [MCtrl] -> deleteChar
-              EvKey (KChar c) [] | c /= '\t' -> insertChar c
-              EvKey KDel [] -> deleteChar
-              EvKey KLeft [] -> moveLeft
-              EvKey KRight [] -> moveRight
-              EvKey KBS [] -> deletePreviousChar
-              _ -> id
+instance HandleEvent Editor where
+    handleEvent e =
+        case e of
+            EvKey (KChar 'a') [MCtrl] -> gotoBOL
+            EvKey (KChar 'e') [MCtrl] -> gotoEOL
+            EvKey (KChar 'd') [MCtrl] -> deleteChar
+            EvKey (KChar c) [] | c /= '\t' -> insertChar c
+            EvKey KDel [] -> deleteChar
+            EvKey KLeft [] -> moveLeft
+            EvKey KRight [] -> moveRight
+            EvKey KBS [] -> deletePreviousChar
+            _ -> id
 
 editSetCursorPos :: Int -> Editor -> Editor
 editSetCursorPos pos e =

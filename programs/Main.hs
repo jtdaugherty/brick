@@ -33,13 +33,13 @@ drawUI st = [a]
              HLimit 25 $
              list (st^.stList))
 
-handleEvent :: Event -> St -> IO St
-handleEvent e st =
+appEvent :: Event -> St -> IO St
+appEvent e st =
     case e of
         EvKey KEsc [] -> exitSuccess
         EvKey KEnter [] -> error $ editStr $ st^.stEditor
-        ev -> return $ st & stEditor %~ (editEvent ev)
-                          & stList %~ (listEvent ev)
+        ev -> return $ st & stEditor %~ (handleEvent ev)
+                          & stList %~ (handleEvent ev)
 
 initialState :: St
 initialState =
@@ -59,7 +59,7 @@ theApp :: App St Event
 theApp =
     def { appDraw = drawUI
         , appChooseCursor = showFirstCursor
-        , appHandleEvent = handleEvent
+        , appHandleEvent = appEvent
         , appHandleSize =
             \name sz st ->
                 case name of
