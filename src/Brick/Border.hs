@@ -8,13 +8,13 @@ where
 import Brick.Prim
 import Brick.Center (hCenteredWith)
 
-bordered :: Prim -> Prim
+bordered :: Prim a -> Prim a
 bordered = bordered_ Nothing
 
-borderedWithLabel :: String -> Prim -> Prim
+borderedWithLabel :: String -> Prim a -> Prim a
 borderedWithLabel label = bordered_ (Just label)
 
-bordered_ :: Maybe String -> Prim -> Prim
+bordered_ :: Maybe String -> Prim a -> Prim a
 bordered_ label wrapped = total
     where
         labelStr = maybe (Txt "") Txt label

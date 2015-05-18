@@ -19,21 +19,22 @@ import Brick.Util
 
 data St =
     St { _stEditor :: Editor
-       , _stList :: List Int
+       , _stList :: List Int St
        }
 
 makeLenses ''St
 
-drawUI :: St -> [Prim]
-drawUI st = [a]
+drawUI :: St -> [Prim St]
+drawUI _ = [a]
     where
         a = centered $
               bordered $
-                (VLimit 1 $ HLimit 25 $ UseAttr (cyan `on` blue) $ drawEditor (st^.stEditor))
+                (VLimit 1 $ HLimit 25 $ UseAttr (cyan `on` blue) $
+                  WithState stEditor drawEditor)
                 <<=
                 HFill '-'
                 =>>
-                (VLimit 10 $ HLimit 25 $ drawList (st^.stList))
+                (VLimit 10 $ HLimit 25 $ WithState stList drawList)
 
 appEvent :: Event -> St -> IO St
 appEvent e st =
@@ -53,7 +54,7 @@ initialState =
        , _stList = list (Name "list") listDrawElem []
        }
 
-listDrawElem :: Bool -> Int -> Prim
+listDrawElem :: Bool -> Int -> Prim St
 listDrawElem sel i =
     let selAttr = white `on` blue
         maybeSelect = if sel

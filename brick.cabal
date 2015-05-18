@@ -32,7 +32,8 @@ library
   build-depends:       base >=4.7 && <4.8,
                        vty >= 5.2.9,
                        transformers,
-                       data-default
+                       data-default,
+                       lens
 
 executable brick
   hs-source-dirs:      programs

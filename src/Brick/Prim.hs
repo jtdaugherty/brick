@@ -1,4 +1,6 @@
 {-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ExistentialQuantification #-}
 module Brick.Prim
   ( Prim(..)
   , Priority(..)
@@ -7,6 +9,7 @@ module Brick.Prim
   )
 where
 
+import Control.Lens (Lens')
 import Data.String (IsString(..))
 import Graphics.Vty (Image, Attr)
 
@@ -15,45 +18,45 @@ import Brick.Core (Location(..), Name(..))
 data Priority = High | Low
               deriving (Show, Eq)
 
-data Prim = Txt !String
-          | HPad !Char
-          | VPad !Char
-          | HFill !Char
-          | VFill !Char
-          | HBox ![(Prim, Priority)]
-          | VBox ![(Prim, Priority)]
-          | HLimit !Int !Prim
-          | VLimit !Int !Prim
-          | UseAttr !Attr !Prim
-          | Raw !Image
-          | Translate !Int !Int !Prim
-          | CropLeftBy !Int !Prim
-          | CropRightBy !Int !Prim
-          | CropTopBy !Int !Prim
-          | CropBottomBy !Int !Prim
-          | ShowCursor !Name !Location !Prim
-          | GetSize !Name !Prim
-          | HRelease !Prim
-          | VRelease !Prim
-          deriving Show
+data Prim a = Txt !String
+            | HPad !Char
+            | VPad !Char
+            | HFill !Char
+            | VFill !Char
+            | HBox ![(Prim a, Priority)]
+            | VBox ![(Prim a, Priority)]
+            | HLimit !Int !(Prim a)
+            | VLimit !Int !(Prim a)
+            | UseAttr !Attr !(Prim a)
+            | Raw !Image
+            | Translate !Int !Int !(Prim a)
+            | CropLeftBy !Int !(Prim a)
+            | CropRightBy !Int !(Prim a)
+            | CropTopBy !Int !(Prim a)
+            | CropBottomBy !Int !(Prim a)
+            | ShowCursor !Name !Location !(Prim a)
+            | GetSize !Name !(Prim a)
+            | HRelease !(Prim a)
+            | VRelease !(Prim a)
+            | forall b. WithState (Lens' a b) (b -> (Prim a))
 
-instance IsString Prim where
+instance IsString (Prim a) where
     fromString = Txt
 
-(<+>) :: Prim -> Prim -> Prim
+(<+>) :: Prim a -> Prim a -> Prim a
 (<+>) a b = HBox [(a, High), (b, High)]
 
-(<<+) :: Prim -> Prim -> Prim
+(<<+) :: Prim a -> Prim a -> Prim a
 (<<+) a b = HBox [(a, High), (b, Low)]
 
-(+>>) :: Prim -> Prim -> Prim
+(+>>) :: Prim a -> Prim a -> Prim a
 (+>>) a b = HBox [(a, Low), (b, High)]
 
-(<=>) :: Prim -> Prim -> Prim
+(<=>) :: Prim a -> Prim a -> Prim a
 (<=>) a b = VBox [(a, High), (b, High)]
 
-(<<=) :: Prim -> Prim -> Prim
+(<<=) :: Prim a -> Prim a -> Prim a
 (<<=) a b = VBox [(a, High), (b, Low)]
 
-(=>>) :: Prim -> Prim -> Prim
+(=>>) :: Prim a -> Prim a -> Prim a
 (=>>) a b = VBox [(a, Low), (b, High)]

@@ -9,25 +9,25 @@ where
 
 import Brick.Prim (Prim(..), Priority(..))
 
-hCentered :: Prim -> Prim
+hCentered :: Prim a -> Prim a
 hCentered = hCenteredWith ' '
 
-hCenteredWith :: Char -> Prim -> Prim
+hCenteredWith :: Char -> Prim a -> Prim a
 hCenteredWith c p =
     HBox [ (HPad c, Low)
          , (p, High)
          , (HPad c, Low)
          ]
 
-vCentered :: Prim -> Prim
+vCentered :: Prim a -> Prim a
 vCentered = vCenteredWith ' '
 
-vCenteredWith :: Char -> Prim -> Prim
+vCenteredWith :: Char -> Prim a -> Prim a
 vCenteredWith c p =
     VBox [ (VPad c, Low)
          , (p, High)
          , (VPad c, Low)
          ]
 
-centered :: Prim -> Prim
+centered :: Prim a -> Prim a
 centered = vCentered . hCentered

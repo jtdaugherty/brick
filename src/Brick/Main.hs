@@ -39,7 +39,7 @@ import Brick.Prim.Internal (renderFinal)
 import Brick.Core (Name(..), Location(..), CursorLocation(..))
 
 data App a e =
-    App { appDraw :: a -> [Prim]
+    App { appDraw :: a -> [Prim a]
         , appChooseCursor :: a -> [CursorLocation] -> Maybe CursorLocation
         , appHandleEvent :: e -> a -> IO a
         , appHandleSize :: Name -> DisplayRegion -> a -> a
@@ -89,7 +89,7 @@ withVty buildVty useVty = do
 renderApp :: Vty -> App a e -> a -> IO a
 renderApp vty app appState = do
     sz <- displayBounds $ outputIface vty
-    let (pic, theCursor, theSizes) = renderFinal (appDraw app appState) sz (appChooseCursor app appState)
+    let (pic, theCursor, theSizes) = renderFinal appState (appDraw app appState) sz (appChooseCursor app appState)
         picWithCursor = case theCursor of
             Nothing -> pic { picCursor = NoCursor }
             Just (CursorLocation (Location (w, h)) _) -> pic { picCursor = Cursor w h }

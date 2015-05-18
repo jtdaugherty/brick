@@ -20,7 +20,7 @@ data VScroll =
 instance SetSize VScroll where
     setSize (_, h) vs = vs { vScrollHeight = h }
 
-vScroll :: VScroll -> Prim -> Prim
+vScroll :: VScroll -> Prim a -> Prim a
 vScroll vs p = Translate 0 (-1 * vScrollTop vs) $ VRelease p
 
 vScrollToView :: Int -> VScroll -> VScroll
@@ -41,7 +41,7 @@ data HScroll =
 instance SetSize HScroll where
     setSize (w, _) hs = hs { hScrollWidth = w }
 
-hScroll :: HScroll -> Prim -> Prim
+hScroll :: HScroll -> Prim a -> Prim a
 hScroll hs p = Translate (-1 * hScrollLeft hs) 0 $ HRelease p
 
 hScrollToView :: Int -> HScroll -> HScroll
