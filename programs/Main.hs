@@ -13,7 +13,7 @@ import Brick.Edit
 import Brick.List
 import Brick.Core
 import Brick.Prim
-import Brick.Centering
+import Brick.Center
 import Brick.Border
 import Brick.Util
 

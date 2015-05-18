@@ -6,7 +6,7 @@ module Brick.Border
 where
 
 import Brick.Prim
-import Brick.Centering (hCenteredWith)
+import Brick.Center (hCenteredWith)
 
 bordered :: Prim -> Prim
 bordered = bordered_ Nothing
