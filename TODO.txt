@@ -15,3 +15,4 @@
 - Support "suggested" vs "forced" attributes in Prim rendering
 - List: add listGetSelected :: List a -> Maybe (Int, a)
 - Make width and height values newtypes
+- Do we need CropLeftBy and CropTopBy if we just Translate negatively?
