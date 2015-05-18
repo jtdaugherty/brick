@@ -2,7 +2,50 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TupleSections #-}
-module Brick where
+module Brick
+  ( App(..)
+  , Prim(..)
+  , (=>>), (<<=), (<=>)
+  , (+>>), (<<+), (<+>)
+  , showFirstCursor
+  , neverShowCursor
+
+  , Name(..)
+  , HandleEvent(..)
+
+  , List(listElements)
+  , list
+  , listInsert
+  , drawList
+
+  , Editor
+  , editor
+  , drawEditor
+
+  , defaultMain
+
+  , setSize
+  , on
+  , fg
+  , bg
+
+  , centered
+  , hCenteredWith
+  , hCentered
+  , vCenteredWith
+  , vCentered
+
+  , bordered
+  , borderedWithLabel
+
+  , FocusRing
+  , focusRing
+  , focusNext
+  , focusPrev
+  , focusGetCurrent
+  , focusRingCursor
+  )
+where
 
 import Control.Applicative
 import Control.Arrow ((>>>))
@@ -266,7 +309,6 @@ bordered_ label wrapped = total
 data VScroll =
     VScroll { vScrollTop :: !Int
             , vScrollHeight :: !Int
-            , vScrollName :: !Name
             }
 
 instance SetSize VScroll where
@@ -288,7 +330,6 @@ vScrollToView row vs =
 data HScroll =
     HScroll { hScrollLeft :: !Int
             , hScrollWidth :: !Int
-            , hScrollName :: !Name
             }
 
 instance SetSize HScroll where
@@ -318,7 +359,7 @@ data List a =
 list :: Name -> (Bool -> a -> Prim) -> [a] -> List a
 list name draw es =
     let selIndex = if null es then Nothing else Just 0
-    in List es draw selIndex (VScroll 0 0 name) name
+    in List es draw selIndex (VScroll 0 0) name
 
 drawList :: List a -> Prim
 drawList l =
@@ -447,7 +488,7 @@ instance SetSize Editor where
              }
 
 editor :: Name -> String -> Editor
-editor name s = Editor s (length s) name (HScroll 0 0 name)
+editor name s = Editor s (length s) name (HScroll 0 0)
 
 drawEditor :: Editor -> Prim
 drawEditor e =
@@ -478,9 +519,6 @@ vCenteredWith c p =
 
 centered :: Prim -> Prim
 centered = vCentered . hCentered
-
-translated :: Location -> Prim -> Prim
-translated (Location (wOff, hOff)) p = Translate wOff hOff p
 
 renderFinal :: [Prim]
             -> DisplayRegion
@@ -552,11 +590,6 @@ renderApp vty app appState = do
         !resizedState = applyResizes appState
 
     return resizedState
-
-getNextEvent :: Vty -> App a Event -> a -> IO a
-getNextEvent vty app appState = do
-    e <- nextEvent vty
-    appHandleEvent app e appState
 
 focusRing :: [Name] -> FocusRing
 focusRing [] = FocusRingEmpty
