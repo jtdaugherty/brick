@@ -97,10 +97,6 @@ class HandleEvent a where
 class SetSize a where
     setSize :: DisplayRegion -> a -> a
 
-addCursor :: Name -> Location -> Render -> Render
-addCursor n loc r =
-    r { cursors = CursorLocation loc (Just n) : cursors r }
-
 addCursorOffset :: Location -> Render -> Render
 addCursorOffset off r =
     let onlyVisible = filter isVisible
