@@ -34,7 +34,8 @@ import Graphics.Vty
   , mkVty
   )
 
-import Brick.Prim (Prim, renderFinal)
+import Brick.Prim (Prim)
+import Brick.Prim.Internal (renderFinal)
 import Brick.Core (Name(..), Location(..), CursorLocation(..))
 
 data App a e =

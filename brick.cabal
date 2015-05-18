@@ -26,6 +26,8 @@ library
     Brick.Prim
     Brick.Scroll
     Brick.Util
+  other-modules:
+    Brick.Prim.Internal
 
   build-depends:       base >=4.7 && <4.8,
                        vty >= 5.2.9,
