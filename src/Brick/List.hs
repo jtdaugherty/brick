@@ -22,6 +22,21 @@ data List a =
          , listName :: !Name
          }
 
+instance HandleEvent (List a) where
+    handleEvent e theList = f theList
+        where
+            f = case e of
+                  EvKey KUp [] -> moveUp
+                  EvKey KDown [] -> moveDown
+                  _ -> id
+
+instance SetSize (List a) where
+    setSize sz l =
+        let updatedScroll = setSize sz $ listScroll l
+            Just scrollTo = listSelected l <|> Just 0
+        in l { listScroll = vScrollToView scrollTo updatedScroll
+             }
+
 list :: Name -> (Bool -> a -> Prim) -> [a] -> List a
 list name draw es =
     let selIndex = if null es then Nothing else Just 0
@@ -51,21 +66,6 @@ listInsert pos e l =
          , listElements = front ++ (e : back)
          , listScroll = vScrollToView newSel (listScroll l)
          }
-
-instance HandleEvent (List a) where
-    handleEvent e theList = f theList
-        where
-            f = case e of
-                  EvKey KUp [] -> moveUp
-                  EvKey KDown [] -> moveDown
-                  _ -> id
-
-instance SetSize (List a) where
-    setSize sz l =
-        let updatedScroll = setSize sz $ listScroll l
-            Just scrollTo = listSelected l <|> Just 0
-        in l { listScroll = vScrollToView scrollTo updatedScroll
-             }
 
 moveUp :: List a -> List a
 moveUp = moveBy (-1)
