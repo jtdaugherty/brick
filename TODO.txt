@@ -7,3 +7,4 @@
 - Implement region-to-view scrolling instead of point-to-view
 - Think about porting some widgets from vty-ui
 - Think of better library name
+- Support "suggested" vs "forced" attributes in Prim rendering
