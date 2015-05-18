@@ -5,7 +5,5 @@
 - Write benchmarks for render on various primitive types
 - Use Vector instead of List where sensible
 - Implement region-to-view scrolling instead of point-to-view
-- Split up into modules
 - Think about porting some widgets from vty-ui
-- Make utility module
 - Think of better library name

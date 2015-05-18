@@ -16,7 +16,15 @@ library
   ghc-options:         -Wall -fno-warn-unused-do-bind
   hs-source-dirs:      src
   exposed-modules:
-    Brick
+    Brick.Border
+    Brick.Center
+    Brick.Core
+    Brick.Edit
+    Brick.Focus
+    Brick.List
+    Brick.Main
+    Brick.Prim
+    Brick.Scroll
     Brick.Util
 
   build-depends:       base >=4.7 && <4.8,

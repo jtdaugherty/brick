@@ -4,10 +4,14 @@ module Brick.Util
   , on
   , fg
   , bg
+  , clOffset
   )
 where
 
+import Data.Monoid ((<>))
 import Graphics.Vty
+
+import Brick.Core (Location(..), CursorLocation(..))
 
 for :: [a] -> (a -> b) -> [b]
 for = flip map
@@ -24,3 +28,6 @@ fg = (defAttr `withForeColor`)
 
 bg :: Color -> Attr
 bg = (defAttr `withBackColor`)
+
+clOffset :: CursorLocation -> Location -> CursorLocation
+clOffset cl loc = cl { cursorLocation = (cursorLocation cl) <> loc }

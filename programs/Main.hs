@@ -8,7 +8,14 @@ import Data.Monoid
 import Graphics.Vty
 import System.Exit
 
-import Brick
+import Brick.Main
+import Brick.Edit
+import Brick.List
+import Brick.Core
+import Brick.Prim
+import Brick.Centering
+import Brick.Border
+import Brick.Util
 
 data St =
     St { _stEditor :: Editor
