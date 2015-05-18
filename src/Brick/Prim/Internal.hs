@@ -52,7 +52,7 @@ unrestricted :: Int
 unrestricted = 1000
 
 render :: a -> DisplayRegion -> Attr -> Prim a -> Render
-render s sz a (WithState getter f) = render s sz a $ f $ s^.getter
+render s sz a (WithState getter f) = render (s^.getter) sz a $ f $ s^.getter
 render _ (w, h) a (Txt s) =
     if w > 0 && h > 0
     then setImage (crop w h $ string a s) def
@@ -165,4 +165,3 @@ render s (w, h) a (VBox pairs) =
             in cursors $ addCursorOffset off result
 
     in Render (vertCat allImages) (concat allTranslatedCursors) (concat allSizes)
-

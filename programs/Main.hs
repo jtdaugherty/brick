@@ -19,7 +19,7 @@ import Brick.Util
 
 data St =
     St { _stEditor :: Editor
-       , _stList :: List Int St
+       , _stList :: List Int
        }
 
 makeLenses ''St
@@ -54,7 +54,7 @@ initialState =
        , _stList = list (Name "list") listDrawElem []
        }
 
-listDrawElem :: Bool -> Int -> Prim St
+listDrawElem :: Bool -> Int -> Prim (List Int)
 listDrawElem sel i =
     let selAttr = white `on` blue
         maybeSelect = if sel
