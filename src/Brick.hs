@@ -60,6 +60,8 @@ import Data.String
 import Data.Monoid
 import Graphics.Vty hiding ((<|>))
 
+import Brick.Util
+
 newtype Location = Location (Int, Int)
                  deriving Show
 
@@ -146,12 +148,6 @@ addCursorOffset off r =
         isVisible (CursorLocation (Location (w, h)) _) = w >= 0 && h >= 0
     in r { cursors = onlyVisible $ (`clOffset` off) <$> cursors r
          }
-
-for :: [a] -> (a -> b) -> [b]
-for = flip map
-
-clamp :: (Ord a) => a -> a -> a -> a
-clamp mn mx val = max mn (min val mx)
 
 setImage :: Image -> Render -> Render
 setImage i r = r { image = i }
@@ -531,16 +527,6 @@ renderFinal layerPrims sz chooseCursor = (pic, theCursor, theSizes)
         layerCursors = cursors <$> layerResults
         theCursor = chooseCursor $ concat layerCursors
         theSizes = concat $ sizes <$> layerResults
-
-on :: Color -> Color -> Attr
-on f b = defAttr `withForeColor` f
-                 `withBackColor` b
-
-fg :: Color -> Attr
-fg = (defAttr `withForeColor`)
-
-bg :: Color -> Attr
-bg = (defAttr `withBackColor`)
 
 defaultMain :: App a Event -> a -> IO ()
 defaultMain = defaultMainWithVty (mkVty def)
