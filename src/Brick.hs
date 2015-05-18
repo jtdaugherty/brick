@@ -71,6 +71,9 @@ data Render =
            }
            deriving Show
 
+instance Default Render where
+    def = Render emptyImage [] []
+
 data App a e =
     App { appDraw :: a -> [Prim]
         , appChooseCursor :: a -> [CursorLocation] -> Maybe CursorLocation
@@ -120,12 +123,12 @@ unrestricted = 1000
 render :: DisplayRegion -> Attr -> Prim -> Render
 render (w, h) a (Txt s) =
     if w > 0 && h > 0
-    then Render (crop w h $ string a s) [] []
-    else Render emptyImage [] []
+    then setImage (crop w h $ string a s) def
+    else def
 render (w, h) _ (Raw img) =
     if w > 0 && h > 0
-    then Render (crop w h img) [] []
-    else Render emptyImage [] []
+    then setImage (crop w h img) def
+    else def
 render (w, h) a (CropLeftBy c p) =
     let result = render (w, h) a p
         img = image result
@@ -154,10 +157,10 @@ render (w, h) a (CropBottomBy c p) =
         cropped = if amt < 0 then emptyImage else cropBottom amt img
     -- xxx crop cursors
     in setImage cropped result
-render (w, h) a (HPad c) = Render (charFill a c w (max 1 h)) [] []
-render (w, h) a (VPad c) = Render (charFill a c (max 1 w) h) [] []
-render (w, h) a (HFill c) = Render (charFill a c w (min h 1)) [] []
-render (w, h) a (VFill c) = Render (charFill a c (min w 1) h) [] []
+render (w, h) a (HPad c) = setImage (charFill a c w (max 1 h)) def
+render (w, h) a (VPad c) = setImage (charFill a c (max 1 w) h) def
+render (w, h) a (HFill c) = setImage (charFill a c w (min h 1)) def
+render (w, h) a (VFill c) = setImage (charFill a c (min w 1) h) def
 render (_, h) a (HLimit w p) =
     -- xxx crop cursors
     render (w, h) a p
