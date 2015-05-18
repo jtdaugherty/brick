@@ -28,25 +28,22 @@ drawUI :: St -> [Prim]
 drawUI st = [a]
     where
         a = centered $
-            bordered $
-            (VLimit 1 $
-             HLimit 25 $
-             UseAttr (cyan `on` blue) $
-             drawEditor (st^.stEditor))
-            <<=
-            HFill '-'
-            =>>
-            (VLimit 10 $
-             HLimit 25 $
-             drawList (st^.stList))
+              bordered $
+                (VLimit 1 $ HLimit 25 $ UseAttr (cyan `on` blue) $ drawEditor (st^.stEditor))
+                <<=
+                HFill '-'
+                =>>
+                (VLimit 10 $ HLimit 25 $ drawList (st^.stList))
 
 appEvent :: Event -> St -> IO St
 appEvent e st =
     case e of
         EvKey KEsc [] -> exitSuccess
+
         EvKey KEnter [] ->
             let el = length $ listElements $ st^.stList
             in return $ st & stList %~ listInsert el el
+
         ev -> return $ st & stEditor %~ (handleEvent ev)
                           & stList %~ (handleEvent ev)
 
@@ -59,10 +56,10 @@ initialState =
 listDrawElem :: Bool -> Int -> Prim
 listDrawElem sel i =
     let selAttr = white `on` blue
-        p = hCentered (Txt $ "Number " <> show i)
-    in if sel
-       then UseAttr selAttr p
-       else p
+        maybeSelect = if sel
+                      then UseAttr selAttr
+                      else id
+    in maybeSelect $ hCentered (Txt $ "Number " <> show i)
 
 theApp :: App St Event
 theApp =
