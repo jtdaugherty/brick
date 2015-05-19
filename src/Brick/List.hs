@@ -19,7 +19,6 @@ data List e =
          , listElementDraw :: Bool -> e -> Prim (List e)
          , listSelected :: !(Maybe Int)
          , listScroll :: !VScroll
-         , listName :: !Name
          }
 
 instance HandleEvent (List e) where
@@ -37,10 +36,10 @@ instance SetSize (List e) where
         in l { listScroll = vScrollToView scrollTo updatedScroll
              }
 
-list :: Name -> (Bool -> e -> Prim (List e)) -> [e] -> List e
-list name draw es =
+list :: (Bool -> e -> Prim (List e)) -> [e] -> List e
+list draw es =
     let selIndex = if null es then Nothing else Just 0
-    in List es draw selIndex (VScroll 0 0) name
+    in List es draw selIndex (VScroll 0 0)
 
 drawList :: List e -> Prim (List e)
 drawList l =
