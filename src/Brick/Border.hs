@@ -7,10 +7,10 @@ module Brick.Border
   , vBorder
 
   , BorderStyle(..)
-  , asciiBorderStyle
-  , unicodeBorderStyle
-  , unicodeBoldBorderStyle
-  , unicodeRoundedBorderStyle
+  , ascii
+  , unicode
+  , unicodeBold
+  , unicodeRounded
   )
 where
 
@@ -57,11 +57,11 @@ data BorderStyle =
                 }
 
 instance Default BorderStyle where
-    def = unicodeBorderStyle
+    def = unicode
 
 -- |An ASCII bs which will work in any terminal.
-asciiBorderStyle :: BorderStyle
-asciiBorderStyle =
+ascii :: BorderStyle
+ascii =
     BorderStyle { bsCornerTL = '+'
                 , bsCornerTR = '+'
                 , bsCornerBR = '+'
@@ -75,8 +75,8 @@ asciiBorderStyle =
                 , bsVertical = '|'
                 }
 
-unicodeBorderStyle :: BorderStyle
-unicodeBorderStyle =
+unicode :: BorderStyle
+unicode =
     BorderStyle { bsCornerTL = '┌'
                 , bsCornerTR = '┐'
                 , bsCornerBR = '┘'
@@ -90,8 +90,8 @@ unicodeBorderStyle =
                 , bsVertical = '│'
                 }
 
-unicodeBoldBorderStyle :: BorderStyle
-unicodeBoldBorderStyle =
+unicodeBold :: BorderStyle
+unicodeBold =
     BorderStyle { bsCornerTL = '┏'
                 , bsCornerTR = '┓'
                 , bsCornerBR = '┛'
@@ -105,8 +105,8 @@ unicodeBoldBorderStyle =
                 , bsVertical = '┃'
                 }
 
-unicodeRoundedBorderStyle :: BorderStyle
-unicodeRoundedBorderStyle =
+unicodeRounded :: BorderStyle
+unicodeRounded =
     BorderStyle { bsCornerTL = '╭'
                 , bsCornerTR = '╮'
                 , bsCornerBR = '╯'

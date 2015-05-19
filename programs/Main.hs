@@ -19,10 +19,10 @@ import Brick.Util
 
 styles :: [(String, BorderStyle)]
 styles =
-    [ ("ascii", asciiBorderStyle)
-    , ("uni", unicodeBorderStyle)
-    , ("uni-bold", unicodeBoldBorderStyle)
-    , ("uni-rounded", unicodeRoundedBorderStyle)
+    [ ("ascii", ascii)
+    , ("uni", unicode)
+    , ("uni-bold", unicodeBold)
+    , ("uni-rounded", unicodeRounded)
     ]
 
 data St =
