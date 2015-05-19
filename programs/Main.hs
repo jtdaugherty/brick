@@ -28,11 +28,11 @@ drawUI :: St -> [Prim St]
 drawUI _ = [a]
     where
         a = centered $
-              bordered $
+              bordered def $
                 (VLimit 1 $ HLimit 25 $ UseAttr (cyan `on` blue) $
                   With stEditor drawEditor)
                 <<=
-                HFill '-'
+                hBorder def
                 =>>
                 (VLimit 10 $ HLimit 25 $ With stList drawList)
 
