@@ -2,3 +2,4 @@
 .cabal-sandbox
 dist
 cabal.sandbox.config
+.DS_Store
