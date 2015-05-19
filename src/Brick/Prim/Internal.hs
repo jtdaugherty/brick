@@ -6,7 +6,7 @@ module Brick.Prim.Internal
 where
 
 import Control.Applicative
-import Control.Lens ((^.), (&), (.~))
+import Control.Lens ((^.), (.=))
 import Control.Monad.Trans.State.Lazy
 import Data.Default
 import qualified Data.Function as DF
@@ -54,11 +54,10 @@ unrestricted = 1000
 render :: DisplayRegion -> Attr -> Prim a -> State a Render
 render sz a (With target f) = do
     outerState <- get
-
     let innerPrim = f oldInnerState
         oldInnerState = outerState^.target
         (innerRender, newInnerState) = runState (render sz a innerPrim) oldInnerState
-    modify $ \s -> s & target .~ newInnerState
+    target .= newInnerState
     return innerRender
 render (w, h) a (Txt s) =
     return $ if w > 0 && h > 0
