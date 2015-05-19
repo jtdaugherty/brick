@@ -85,7 +85,7 @@ listDrawElem sel i =
         maybeSelect = if sel
                       then UseAttr selAttr
                       else id
-    in maybeSelect $ hCentered (Txt $ "Number " <> show i)
+    in maybeSelect $ hCenter (Txt $ "Number " <> show i)
 
 theApp :: App St Event
 theApp =

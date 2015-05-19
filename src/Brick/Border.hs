@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Brick.Border
-  ( bordered
-  , borderedWithLabel
+  ( border
+  , borderWithLabel
 
   , hBorder
   , vBorder
@@ -17,19 +17,19 @@ where
 import Data.Default
 
 import Brick.Prim
-import Brick.Center (hCenteredWith)
+import Brick.Center (hCenterWith)
 
-bordered :: BorderStyle -> Prim a -> Prim a
-bordered bs = bordered_ bs Nothing
+border :: BorderStyle -> Prim a -> Prim a
+border bs = border_ bs Nothing
 
-borderedWithLabel :: BorderStyle -> String -> Prim a -> Prim a
-borderedWithLabel bs label = bordered_ bs (Just label)
+borderWithLabel :: BorderStyle -> String -> Prim a -> Prim a
+borderWithLabel bs label = border_ bs (Just label)
 
-bordered_ :: BorderStyle -> Maybe String -> Prim a -> Prim a
-bordered_ bs label wrapped = total
+border_ :: BorderStyle -> Maybe String -> Prim a -> Prim a
+border_ bs label wrapped = total
     where
         labelStr = maybe (Txt "") Txt label
-        top = Txt [bsCornerTL bs] <<+ hCenteredWith (bsHorizontal bs) labelStr +>> Txt [bsCornerTR bs]
+        top = Txt [bsCornerTL bs] <<+ hCenterWith (bsHorizontal bs) labelStr +>> Txt [bsCornerTR bs]
         bottom = Txt [bsCornerBL bs] <<+ hBorder bs +>> Txt [bsCornerBR bs]
         middle = vBorder bs +>> wrapped <<+ vBorder bs
         total = top =>> middle <<= bottom

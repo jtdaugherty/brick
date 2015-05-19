@@ -1,33 +1,33 @@
 module Brick.Center
-  ( hCentered
-  , hCenteredWith
-  , vCentered
-  , vCenteredWith
-  , centered
+  ( hCenter
+  , hCenterWith
+  , vCenter
+  , vCenterWith
+  , center
   )
 where
 
 import Brick.Prim (Prim(..), Priority(..))
 
-hCentered :: Prim a -> Prim a
-hCentered = hCenteredWith ' '
+hCenter :: Prim a -> Prim a
+hCenter = hCenterWith ' '
 
-hCenteredWith :: Char -> Prim a -> Prim a
-hCenteredWith c p =
+hCenterWith :: Char -> Prim a -> Prim a
+hCenterWith c p =
     HBox [ (HPad c, Low)
          , (p, High)
          , (HPad c, Low)
          ]
 
-vCentered :: Prim a -> Prim a
-vCentered = vCenteredWith ' '
+vCenter :: Prim a -> Prim a
+vCenter = vCenterWith ' '
 
-vCenteredWith :: Char -> Prim a -> Prim a
-vCenteredWith c p =
+vCenterWith :: Char -> Prim a -> Prim a
+vCenterWith c p =
     VBox [ (VPad c, Low)
          , (p, High)
          , (VPad c, Low)
          ]
 
-centered :: Prim a -> Prim a
-centered = vCentered . hCentered
+center :: Prim a -> Prim a
+center = vCenter . hCenter
