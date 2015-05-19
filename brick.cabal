@@ -46,6 +46,17 @@ executable brick
                        data-default,
                        lens
 
+executable brick-minimal
+  hs-source-dirs:      programs
+  ghc-options:         -threaded -Wall -fno-warn-unused-do-bind
+  default-language:    Haskell2010
+  main-is:             Minimal.hs
+  build-depends:       base,
+                       brick,
+                       vty >= 5.2.9,
+                       data-default,
+                       lens
+
 executable brick-rogue
   buildable:           False
   hs-source-dirs:      programs

@@ -4,6 +4,8 @@ module Brick.Main
   , defaultMain
   , defaultMainWithVty
 
+  , simpleMain
+
   , supplyVtyEvents
   , withVty
   , runVty
@@ -30,6 +32,7 @@ import Graphics.Vty
   , nextEvent
   , mkVty
   )
+import System.Exit (exitSuccess)
 
 import Brick.Prim (Prim)
 import Brick.Prim.Internal (renderFinal)
@@ -49,6 +52,13 @@ instance Default (App a e) where
 
 defaultMain :: App a Event -> a -> IO ()
 defaultMain = defaultMainWithVty (mkVty def)
+
+simpleMain :: [Prim ()] -> IO ()
+simpleMain ls =
+    let app = def { appDraw = const ls
+                  , appHandleEvent = const $ const exitSuccess
+                  }
+    in defaultMain app ()
 
 defaultMainWithVty :: IO Vty -> App a Event -> a -> IO ()
 defaultMainWithVty buildVty app initialState = do
