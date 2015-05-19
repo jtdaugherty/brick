@@ -1,4 +1,5 @@
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Brick.Prim.Internal
   ( Render(..)
   , renderFinal
@@ -6,7 +7,7 @@ module Brick.Prim.Internal
 where
 
 import Control.Applicative
-import Control.Lens ((^.), (.=))
+import Control.Lens (makeLenses, (^.), (.=), (.~), (&))
 import Control.Monad.Trans.State.Lazy
 import Data.Default
 import qualified Data.Function as DF
@@ -24,8 +25,10 @@ data Render =
            deriving Show
 
 data Context =
-    Context { attr :: Attr
+    Context { _attr :: Attr
             }
+
+makeLenses ''Context
 
 instance Default Render where
     def = Render emptyImage []
@@ -66,7 +69,7 @@ render sz ctx (With target f) = do
     return innerRender
 render (w, h) ctx (Txt s) =
     return $ if w > 0 && h > 0
-             then setImage (crop w h $ string (attr ctx) s) def
+             then setImage (crop w h $ string (ctx^.attr) s) def
              else def
 render (w, h) _ (Raw img) =
     return $ if w > 0 && h > 0
@@ -100,10 +103,10 @@ render (w, h) a (CropBottomBy c p) = do
         cropped = if amt < 0 then emptyImage else cropBottom amt img
     -- xxx crop cursors
     return $ setImage cropped result
-render (w, h) ctx (HPad c) = return $ setImage (charFill (attr ctx) c w (max 1 h)) def
-render (w, h) ctx (VPad c) = return $ setImage (charFill (attr ctx) c (max 1 w) h) def
-render (w, h) ctx (HFill c) = return $ setImage (charFill (attr ctx) c w (min h 1)) def
-render (w, h) ctx (VFill c) = return $ setImage (charFill (attr ctx) c (min w 1) h) def
+render (w, h) ctx (HPad c) = return $ setImage (charFill (ctx^.attr) c w (max 1 h)) def
+render (w, h) ctx (VPad c) = return $ setImage (charFill (ctx^.attr) c (max 1 w) h) def
+render (w, h) ctx (HFill c) = return $ setImage (charFill (ctx^.attr) c w (min h 1)) def
+render (w, h) ctx (VFill c) = return $ setImage (charFill (ctx^.attr) c (min w 1) h) def
 render (_, h) ctx (HLimit w p) =
     -- xxx crop cursors
     render (w, h) ctx p
@@ -112,7 +115,7 @@ render (w, _) ctx (VLimit h p) =
     render (w, h) ctx p
 render (_, h) ctx (HRelease p) = render (unrestricted, h) ctx p --- NB
 render (w, _) ctx (VRelease p) = render (w, unrestricted) ctx p --- NB
-render (w, h) ctx (UseAttr a p) = render (w, h) (ctx { attr = a }) p
+render (w, h) ctx (UseAttr a p) = render (w, h) (ctx & attr .~ a) p
 render (w, h) ctx (Translate tw th p) = do
     result <- render (w, h) ctx p
     let img = image result
