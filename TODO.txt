@@ -1,15 +1,12 @@
 - Use lenses in core library
+- Use With/SetSize to track list element sizes for variable element prim
+  heights
 - Fix cursor cropping in render function where missing
 - Deal with multi-column characters everywhere
 - Implement 2-d text editing
 - Write benchmarks for render on various primitive types
 - Use Vector instead of List where sensible
 - Implement region-to-view scrolling instead of point-to-view
-  - to do this with lists, we need to know the height of each prim in
-    the list so we can add them up to compute height ranges for each
-    item. we could just make the user specify this, although we could
-    also add a function to compute the (Maybe Int) height of a Prim and
-    require that to be Just in the case of list elements
 - Think about porting some widgets from vty-ui
 - Think of better library name
 - Support "suggested" vs "forced" attributes in Prim rendering
