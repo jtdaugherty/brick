@@ -49,10 +49,8 @@ drawUI st = [a]
 appEvent :: Event -> St -> IO St
 appEvent e st =
     case e of
-        EvKey (KChar '1') [] -> return $ st & stBorderStyle .~ 0
-        EvKey (KChar '2') [] -> return $ st & stBorderStyle .~ 1
-        EvKey (KChar '3') [] -> return $ st & stBorderStyle .~ 2
-        EvKey (KChar '4') [] -> return $ st & stBorderStyle .~ 3
+        EvKey (KChar '+') [] ->
+            return $ st & stBorderStyle %~ ((`mod` (length styles)) . (+ 1))
 
         EvKey KEsc [] -> exitSuccess
 
