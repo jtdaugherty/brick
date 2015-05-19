@@ -39,7 +39,7 @@ drawUI st = [a]
         bs = snd $ styles !! (st^.stBorderStyle)
         bsName = fst $ styles !! (st^.stBorderStyle)
         a = centered $
-              borderedWithLabel bsName bs $
+              borderedWithLabel bs bsName $
                 (VLimit 1 $ HLimit 25 $ UseAttr (cyan `on` blue) $
                   With stEditor drawEditor)
                 <<=

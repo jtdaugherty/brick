@@ -20,13 +20,13 @@ import Brick.Prim
 import Brick.Center (hCenteredWith)
 
 bordered :: BorderStyle -> Prim a -> Prim a
-bordered = bordered_ Nothing
+bordered bs = bordered_ bs Nothing
 
-borderedWithLabel :: String -> BorderStyle -> Prim a -> Prim a
-borderedWithLabel label = bordered_ (Just label)
+borderedWithLabel :: BorderStyle -> String -> Prim a -> Prim a
+borderedWithLabel bs label = bordered_ bs (Just label)
 
-bordered_ :: Maybe String -> BorderStyle -> Prim a -> Prim a
-bordered_ label bs wrapped = total
+bordered_ :: BorderStyle -> Maybe String -> Prim a -> Prim a
+bordered_ bs label wrapped = total
     where
         labelStr = maybe (Txt "") Txt label
         top = Txt [bsCornerTL bs] <<+ hCenteredWith (bsHorizontal bs) labelStr +>> Txt [bsCornerTR bs]
