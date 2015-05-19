@@ -17,28 +17,44 @@ import Brick.Center
 import Brick.Border
 import Brick.Util
 
+styles :: [(String, BorderStyle)]
+styles =
+    [ ("ascii", asciiBorderStyle)
+    , ("uni", unicodeBorderStyle)
+    , ("uni-bold", unicodeBoldBorderStyle)
+    , ("uni-rounded", unicodeRoundedBorderStyle)
+    ]
+
 data St =
     St { _stEditor :: Editor
        , _stList :: List Int
+       , _stBorderStyle :: Int
        }
 
 makeLenses ''St
 
 drawUI :: St -> [Prim St]
-drawUI _ = [a]
+drawUI st = [a]
     where
+        bs = snd $ styles !! (st^.stBorderStyle)
+        bsName = fst $ styles !! (st^.stBorderStyle)
         a = centered $
-              bordered def $
+              borderedWithLabel bsName bs $
                 (VLimit 1 $ HLimit 25 $ UseAttr (cyan `on` blue) $
                   With stEditor drawEditor)
                 <<=
-                hBorder def
+                hBorder bs
                 =>>
                 (VLimit 10 $ HLimit 25 $ With stList drawList)
 
 appEvent :: Event -> St -> IO St
 appEvent e st =
     case e of
+        EvKey (KChar '1') [] -> return $ st & stBorderStyle .~ 0
+        EvKey (KChar '2') [] -> return $ st & stBorderStyle .~ 1
+        EvKey (KChar '3') [] -> return $ st & stBorderStyle .~ 2
+        EvKey (KChar '4') [] -> return $ st & stBorderStyle .~ 3
+
         EvKey KEsc [] -> exitSuccess
 
         EvKey KEnter [] ->
@@ -52,6 +68,7 @@ initialState :: St
 initialState =
     St { _stEditor = editor (CursorName "edit") ""
        , _stList = list listDrawElem []
+       , _stBorderStyle = 0
        }
 
 listDrawElem :: Bool -> Int -> Prim (List Int)
