@@ -33,29 +33,30 @@ data St =
 
 makeLenses ''St
 
-kw :: Attr
-kw = fg blue
+kw :: String -> Prim a
+kw = UseAttr (fg blue) . Txt
 
 drawUI :: St -> [Prim St]
 drawUI st = [a]
     where
         (bsName, bs) = styles !! (st^.stBorderStyle)
-        a = centered $
-              (borderedWithLabel bs bsName $
-                (HLimit 25 (
-                  (VLimit 1 $ UseAttr (cyan `on` blue) $ With stEditor drawEditor)
-                  <<=
-                  hBorder bs
-                  =>>
-                  (VLimit 10 $ With stList drawList)
-                )))
+        a = vCenter $
+              (hCenter $ borderWithLabel bs bsName $
+                  (HLimit 25 (
+                    (VLimit 1 $ UseAttr (cyan `on` blue) $ With stEditor drawEditor)
+                    <<=
+                    hBorder bs
+                    =>>
+                    (VLimit 10 $ With stList drawList)
+                  )))
               <<=
-              (((UseAttr kw "Enter") <+> " adds a list item")
+              (VLimit 1 $ VPad ' ')
+              =>>
+              (hCenter (kw "Enter" <+> " adds a list item"))
               <=>
-              ((UseAttr kw "+") <+> " changes border styles")
+              (hCenter (kw "+" <+> " changes border styles"))
               <=>
-              ((UseAttr kw "Arrow keys") <+> " navigate the list")
-              )
+              (hCenter (kw "Arrow keys" <+> " navigates the list"))
 
 appEvent :: Event -> St -> IO St
 appEvent e st =
