@@ -1,6 +1,6 @@
 module Brick.Core
   ( Location(..)
-  , Name(..)
+  , CursorName(..)
   , CursorLocation(..)
   , HandleEvent(..)
   , SetSize(..)
@@ -20,12 +20,12 @@ instance Monoid Location where
     mempty = origin
     mappend (Location (w1, h1)) (Location (w2, h2)) = Location (w1+w2, h1+h2)
 
-newtype Name = Name String
-               deriving (Eq, Show)
+newtype CursorName = CursorName String
+                     deriving (Eq, Show)
 
 data CursorLocation =
     CursorLocation { cursorLocation :: !Location
-                   , cursorLocationName :: !(Maybe Name)
+                   , cursorLocationName :: !(Maybe CursorName)
                    }
                    deriving Show
 

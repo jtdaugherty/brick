@@ -13,7 +13,7 @@ import Control.Lens (Lens')
 import Data.String (IsString(..))
 import Graphics.Vty (DisplayRegion, Image, Attr)
 
-import Brick.Core (Location(..), Name(..))
+import Brick.Core (Location(..), CursorName(..))
 
 data Priority = High | Low
               deriving (Show, Eq)
@@ -34,7 +34,7 @@ data Prim a = Txt !String
             | CropRightBy !Int !(Prim a)
             | CropTopBy !Int !(Prim a)
             | CropBottomBy !Int !(Prim a)
-            | ShowCursor !Name !Location !(Prim a)
+            | ShowCursor !CursorName !Location !(Prim a)
             | SetSize (DisplayRegion -> a -> a) !(Prim a)
             | HRelease !(Prim a)
             | VRelease !(Prim a)

@@ -8,7 +8,7 @@ where
 import Data.Monoid ((<>))
 import Graphics.Vty (Event(..), Key(..), Modifier(..))
 
-import Brick.Core (Location(..), Name(..), HandleEvent(..), SetSize(..))
+import Brick.Core (Location(..), CursorName(..), HandleEvent(..), SetSize(..))
 import Brick.Prim
 import Brick.Scroll (HScroll(..), hScroll, hScrollToView)
 import Brick.Util (clamp)
@@ -16,7 +16,7 @@ import Brick.Util (clamp)
 data Editor =
     Editor { editStr :: !String
            , editCursorPos :: !Int
-           , editorName :: !Name
+           , editorCursorName :: !CursorName
            , editorScroll :: !HScroll
            }
 
@@ -82,12 +82,12 @@ instance SetSize Editor where
         in e { editorScroll = hScrollToView (editCursorPos e) updatedScroll
              }
 
-editor :: Name -> String -> Editor
-editor name s = Editor s (length s) name (HScroll 0 0)
+editor :: CursorName -> String -> Editor
+editor cName s = Editor s (length s) cName (HScroll 0 0)
 
 drawEditor :: Editor -> Prim Editor
 drawEditor e =
     SetSize setSize $
-    ShowCursor (editorName e) (Location (editCursorPos e - hScrollLeft (editorScroll e), 0)) $
+    ShowCursor (editorCursorName e) (Location (editCursorPos e - hScrollLeft (editorScroll e), 0)) $
     hScroll (editorScroll e) $
     Txt (editStr e) <<+ HPad ' '

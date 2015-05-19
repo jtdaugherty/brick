@@ -9,7 +9,7 @@ where
 import Control.Applicative ((<$>), (<|>))
 import Graphics.Vty (Event(..), Key(..))
 
-import Brick.Core (HandleEvent(..), SetSize(..), Name(..))
+import Brick.Core (HandleEvent(..), SetSize(..))
 import Brick.Prim (Prim(..), Priority(..), (<<=))
 import Brick.Scroll (VScroll(..), vScroll, vScrollToView)
 import Brick.Util (clamp, for)

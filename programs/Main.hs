@@ -50,7 +50,7 @@ appEvent e st =
 
 initialState :: St
 initialState =
-    St { _stEditor = editor (Name "edit") ""
+    St { _stEditor = editor (CursorName "edit") ""
        , _stList = list listDrawElem []
        }
 
