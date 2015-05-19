@@ -60,16 +60,16 @@ unrestricted :: Int
 unrestricted = 1000
 
 render :: DisplayRegion -> Context -> Prim a -> State a Render
-render sz ctx (With target f) = do
+render sz c (With target f) = do
     outerState <- get
     let innerPrim = f oldInnerState
         oldInnerState = outerState^.target
-        (innerRender, newInnerState) = runState (render sz ctx innerPrim) oldInnerState
+        (innerRender, newInnerState) = runState (render sz c innerPrim) oldInnerState
     target .= newInnerState
     return innerRender
-render (w, h) ctx (Txt s) =
+render (w, h) c (Txt s) =
     return $ if w > 0 && h > 0
-             then setImage (crop w h $ string (ctx^.attr) s) def
+             then setImage (crop w h $ string (c^.attr) s) def
              else def
 render (w, h) _ (Raw img) =
     return $ if w > 0 && h > 0
@@ -103,39 +103,39 @@ render (w, h) a (CropBottomBy c p) = do
         cropped = if amt < 0 then emptyImage else cropBottom amt img
     -- xxx crop cursors
     return $ setImage cropped result
-render (w, h) ctx (HPad c) = return $ setImage (charFill (ctx^.attr) c w (max 1 h)) def
-render (w, h) ctx (VPad c) = return $ setImage (charFill (ctx^.attr) c (max 1 w) h) def
-render (w, h) ctx (HFill c) = return $ setImage (charFill (ctx^.attr) c w (min h 1)) def
-render (w, h) ctx (VFill c) = return $ setImage (charFill (ctx^.attr) c (min w 1) h) def
-render (_, h) ctx (HLimit w p) =
+render (w, h) c (HPad ch) = return $ setImage (charFill (c^.attr) ch w (max 1 h)) def
+render (w, h) c (VPad ch) = return $ setImage (charFill (c^.attr) ch (max 1 w) h) def
+render (w, h) c (HFill ch) = return $ setImage (charFill (c^.attr) ch w (min h 1)) def
+render (w, h) c (VFill ch) = return $ setImage (charFill (c^.attr) ch (min w 1) h) def
+render (_, h) c (HLimit w p) =
     -- xxx crop cursors
-    render (w, h) ctx p
-render (w, _) ctx (VLimit h p) =
+    render (w, h) c p
+render (w, _) c (VLimit h p) =
     -- xxx crop cursors
-    render (w, h) ctx p
-render (_, h) ctx (HRelease p) = render (unrestricted, h) ctx p --- NB
-render (w, _) ctx (VRelease p) = render (w, unrestricted) ctx p --- NB
-render (w, h) ctx (UseAttr a p) = render (w, h) (ctx & attr .~ a) p
-render (w, h) ctx (Translate tw th p) = do
-    result <- render (w, h) ctx p
+    render (w, h) c p
+render (_, h) c (HRelease p) = render (unrestricted, h) c p --- NB
+render (w, _) c (VRelease p) = render (w, unrestricted) c p --- NB
+render (w, h) c (UseAttr a p) = render (w, h) (c & attr .~ a) p
+render (w, h) c (Translate tw th p) = do
+    result <- render (w, h) c p
     let img = image result
     return $ addCursorOffset (Location (tw, th)) $
              setImage (crop w h $ translate tw th img) result
-render sz ctx (ShowCursor n loc p) = do
-    result <- render sz ctx p
+render sz c (ShowCursor n loc p) = do
+    result <- render sz c p
     return $ result { cursors = (CursorLocation loc (Just n)):cursors result }
-render sz ctx (SetSize sizeSetter p) = do
-    result <- render sz ctx p
+render sz c (SetSize sizeSetter p) = do
+    result <- render sz c p
     let img = image result
         imgSz = (imageWidth img, imageHeight img)
     modify (sizeSetter imgSz)
     return result
-render (w, h) ctx (HBox pairs) = do
+render (w, h) c (HBox pairs) = do
     let pairsIndexed = zip [(0::Int)..] pairs
         his = filter (\p -> (snd $ snd p) == High) pairsIndexed
         lows = filter (\p -> (snd $ snd p) == Low) pairsIndexed
 
-    renderedHis <- mapM (\(i, (prim, _)) -> (i,) <$> render (w, h) ctx prim) his
+    renderedHis <- mapM (\(i, (prim, _)) -> (i,) <$> render (w, h) c prim) his
 
     let remainingWidth = w - (sum $ (imageWidth . image . snd) <$> renderedHis)
         widthPerLow = remainingWidth `div` length lows
@@ -144,7 +144,7 @@ render (w, h) ctx (HBox pairs) = do
                    else 0
         heightPerLow = maximum $ (imageHeight . image . snd) <$> renderedHis
 
-    renderedLows <- mapM (\(i, (prim, _)) -> (i,) <$> render (widthPerLow + (if i == 0 then padFirst else 0), heightPerLow) ctx prim) lows
+    renderedLows <- mapM (\(i, (prim, _)) -> (i,) <$> render (widthPerLow + (if i == 0 then padFirst else 0), heightPerLow) c prim) lows
 
     let rendered = sortBy (compare `DF.on` fst) $ renderedHis ++ renderedLows
         allResults = snd <$> rendered
@@ -157,12 +157,12 @@ render (w, h) ctx (HBox pairs) = do
 
     return $ Render (horizCat allImages) (concat allTranslatedCursors)
 
-render (w, h) ctx (VBox pairs) = do
+render (w, h) c (VBox pairs) = do
     let pairsIndexed = zip [(0::Int)..] pairs
         his = filter (\p -> (snd $ snd p) == High) pairsIndexed
         lows = filter (\p -> (snd $ snd p) == Low) pairsIndexed
 
-    renderedHis <- mapM (\(i, (prim, _)) -> (i,) <$> render (w, h) ctx prim) his
+    renderedHis <- mapM (\(i, (prim, _)) -> (i,) <$> render (w, h) c prim) his
 
     let remainingHeight = h - (sum $ (imageHeight . image . snd) <$> renderedHis)
         heightPerLow = remainingHeight `div` length lows
@@ -171,7 +171,7 @@ render (w, h) ctx (VBox pairs) = do
                    else 0
         widthPerLow = maximum $ (imageWidth . image . snd) <$> renderedHis
 
-    renderedLows <- mapM (\(i, (prim, _)) -> (i,) <$> render (widthPerLow, heightPerLow + if i == 0 then padFirst else 0) ctx prim) lows
+    renderedLows <- mapM (\(i, (prim, _)) -> (i,) <$> render (widthPerLow, heightPerLow + if i == 0 then padFirst else 0) c prim) lows
 
     let rendered = sortBy (compare `DF.on` fst) $ renderedHis ++ renderedLows
         allResults = snd <$> rendered
