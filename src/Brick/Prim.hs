@@ -38,7 +38,7 @@ data Prim a = Txt !String
             | SetSize (DisplayRegion -> a -> a) !(Prim a)
             | HRelease !(Prim a)
             | VRelease !(Prim a)
-            | forall b. WithState (Lens' a b) (b -> Prim b)
+            | forall b. With (Lens' a b) (b -> Prim b)
 
 instance IsString (Prim a) where
     fromString = Txt

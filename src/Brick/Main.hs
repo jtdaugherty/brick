@@ -13,8 +13,6 @@ module Brick.Main
   )
 where
 
-import Control.Applicative ((<$>))
-import Control.Arrow ((>>>))
 import Control.Exception (finally)
 import Control.Monad (when, forever)
 import Control.Concurrent (forkIO, Chan, newChan, readChan, writeChan)
@@ -22,7 +20,6 @@ import Data.Default
 import Data.Maybe (listToMaybe)
 import Graphics.Vty
   ( Vty
-  , DisplayRegion
   , Picture(..)
   , Cursor(..)
   , Event(..)
@@ -36,7 +33,7 @@ import Graphics.Vty
 
 import Brick.Prim (Prim)
 import Brick.Prim.Internal (renderFinal)
-import Brick.Core (Name(..), Location(..), CursorLocation(..))
+import Brick.Core (Location(..), CursorLocation(..))
 
 data App a e =
     App { appDraw :: a -> [Prim a]

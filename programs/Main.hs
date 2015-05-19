@@ -30,11 +30,11 @@ drawUI _ = [a]
         a = centered $
               bordered $
                 (VLimit 1 $ HLimit 25 $ UseAttr (cyan `on` blue) $
-                  WithState stEditor drawEditor)
+                  With stEditor drawEditor)
                 <<=
                 HFill '-'
                 =>>
-                (VLimit 10 $ HLimit 25 $ WithState stList drawList)
+                (VLimit 10 $ HLimit 25 $ With stList drawList)
 
 appEvent :: Event -> St -> IO St
 appEvent e st =

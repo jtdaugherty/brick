@@ -52,13 +52,13 @@ unrestricted :: Int
 unrestricted = 1000
 
 render :: DisplayRegion -> Attr -> Prim a -> State a Render
-render sz a (WithState getter f) = do
+render sz a (With target f) = do
     outerState <- get
 
     let innerPrim = f oldInnerState
-        oldInnerState = outerState^.getter
+        oldInnerState = outerState^.target
         (innerRender, newInnerState) = runState (render sz a innerPrim) oldInnerState
-    modify $ \s -> s & getter .~ newInnerState
+    modify $ \s -> s & target .~ newInnerState
     return innerRender
 render (w, h) a (Txt s) =
     return $ if w > 0 && h > 0
