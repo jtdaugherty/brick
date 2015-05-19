@@ -36,8 +36,7 @@ makeLenses ''St
 drawUI :: St -> [Prim St]
 drawUI st = [a]
     where
-        bs = snd $ styles !! (st^.stBorderStyle)
-        bsName = fst $ styles !! (st^.stBorderStyle)
+        (bsName, bs) = styles !! (st^.stBorderStyle)
         a = centered $
               borderedWithLabel bs bsName $
                 (VLimit 1 $ HLimit 25 $ UseAttr (cyan `on` blue) $
