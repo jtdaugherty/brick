@@ -59,6 +59,8 @@ drawUI st = [a]
               (hCenter (kw "+" <+> " changes border styles"))
               <=>
               (hCenter (kw "Arrow keys" <+> " navigates the list"))
+              <=>
+              (hCenter (kw "Ctrl-Arrow keys" <+> " move the interface"))
 
 appEvent :: Event -> St -> IO St
 appEvent e st =
