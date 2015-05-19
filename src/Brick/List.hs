@@ -10,7 +10,7 @@ import Control.Applicative ((<$>), (<|>))
 import Graphics.Vty (Event(..), Key(..))
 
 import Brick.Core (HandleEvent(..), SetSize(..))
-import Brick.Prim (Prim(..), Priority(..), (<<=))
+import Brick.Prim (Prim(..), Priority(..), (<<=), (<<+))
 import Brick.Scroll (VScroll(..), vScroll, vScrollToView)
 import Brick.Util (clamp, for)
 
@@ -49,7 +49,7 @@ drawList l =
                   in (listElementDraw l isSelected e, High)
     in SetSize setSize $
        vScroll (listScroll l) $
-       VBox drawn <<= VPad ' '
+       (VBox drawn <<= VPad ' ') <<+ HPad ' '
 
 listInsert :: Int -> e -> List e -> List e
 listInsert pos e l =
