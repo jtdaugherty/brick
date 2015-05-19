@@ -118,7 +118,7 @@ render c (VLimit h' p) =
 render c (HRelease p) = render (c & w .~ unrestricted) p --- NB
 render c (VRelease p) = render (c & h .~ unrestricted) p --- NB
 render c (UseAttr a p) = render (c & attr .~ a) p
-render c (Translate tw th p) = do
+render c (Translate (Location (tw,th)) p) = do
     result <- render c p
     let img = image result
     return $ addCursorOffset (Location (tw, th)) $

@@ -9,7 +9,7 @@ module Brick.Scroll
   )
 where
 
-import Brick.Core (SetSize(..))
+import Brick.Core (SetSize(..), Location(..))
 import Brick.Prim (Prim(..))
 
 data VScroll =
@@ -21,7 +21,7 @@ instance SetSize VScroll where
     setSize (_, h) vs = vs { vScrollHeight = h }
 
 vScroll :: VScroll -> Prim a -> Prim a
-vScroll vs p = Translate 0 (-1 * vScrollTop vs) $ VRelease p
+vScroll vs p = Translate (Location (0, -1 * vScrollTop vs)) $ VRelease p
 
 vScrollToView :: Int -> VScroll -> VScroll
 vScrollToView row vs =
@@ -42,7 +42,7 @@ instance SetSize HScroll where
     setSize (w, _) hs = hs { hScrollWidth = w }
 
 hScroll :: HScroll -> Prim a -> Prim a
-hScroll hs p = Translate (-1 * hScrollLeft hs) 0 $ HRelease p
+hScroll hs p = Translate (Location (-1 * hScrollLeft hs, 0)) $ HRelease p
 
 hScrollToView :: Int -> HScroll -> HScroll
 hScrollToView col hs =

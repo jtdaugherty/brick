@@ -29,6 +29,7 @@ data St =
     St { _stEditor :: Editor
        , _stList :: List Int
        , _stBorderStyle :: Int
+       , _stTrans :: Location
        }
 
 makeLenses ''St
@@ -40,7 +41,8 @@ drawUI :: St -> [Prim St]
 drawUI st = [a]
     where
         (bsName, bs) = styles !! (st^.stBorderStyle)
-        a = vCenter $
+        a = Translate (st^.stTrans) $
+            vCenter $
               (hCenter $ borderWithLabel bs bsName $
                   (HLimit 25 (
                     (VLimit 1 $ UseAttr (cyan `on` blue) $ With stEditor drawEditor)
@@ -66,6 +68,11 @@ appEvent e st =
 
         EvKey KEsc [] -> exitSuccess
 
+        EvKey KUp [MCtrl] -> return $ st & stTrans %~ (\(Location (w, h)) -> Location (w, h - 1))
+        EvKey KDown [MCtrl] -> return $ st & stTrans %~ (\(Location (w, h)) -> Location (w, h + 1))
+        EvKey KLeft [MCtrl] -> return $ st & stTrans %~ (\(Location (w, h)) -> Location (w - 1, h))
+        EvKey KRight [MCtrl] -> return $ st & stTrans %~ (\(Location (w, h)) -> Location (w + 1, h))
+
         EvKey KEnter [] ->
             let el = length $ listElements $ st^.stList
             in return $ st & stList %~ listInsert el el
@@ -78,6 +85,7 @@ initialState =
     St { _stEditor = editor (CursorName "edit") ""
        , _stList = list listDrawElem []
        , _stBorderStyle = 0
+       , _stTrans = Location (0, 0)
        }
 
 listDrawElem :: Bool -> Int -> Prim (List Int)

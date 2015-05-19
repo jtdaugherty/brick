@@ -29,7 +29,7 @@ data Prim a = Txt !String
             | VLimit !Int !(Prim a)
             | UseAttr !Attr !(Prim a)
             | Raw !Image
-            | Translate !Int !Int !(Prim a)
+            | Translate !Location !(Prim a)
             | CropLeftBy !Int !(Prim a)
             | CropRightBy !Int !(Prim a)
             | CropTopBy !Int !(Prim a)
