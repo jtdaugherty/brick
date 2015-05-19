@@ -11,7 +11,7 @@ where
 
 import Control.Lens (Lens')
 import Data.String (IsString(..))
-import Graphics.Vty (Image, Attr)
+import Graphics.Vty (DisplayRegion, Image, Attr)
 
 import Brick.Core (Location(..), Name(..))
 
@@ -35,7 +35,7 @@ data Prim a = Txt !String
             | CropTopBy !Int !(Prim a)
             | CropBottomBy !Int !(Prim a)
             | ShowCursor !Name !Location !(Prim a)
-            | GetSize !Name !(Prim a)
+            | SetSize (DisplayRegion -> a -> a) !(Prim a)
             | HRelease !(Prim a)
             | VRelease !(Prim a)
             | forall b. WithState (Lens' a b) (b -> Prim b)

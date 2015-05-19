@@ -85,9 +85,9 @@ instance SetSize Editor where
 editor :: Name -> String -> Editor
 editor name s = Editor s (length s) name (HScroll 0 0)
 
-drawEditor :: Editor -> Prim a
+drawEditor :: Editor -> Prim Editor
 drawEditor e =
-    GetSize (editorName e) $
+    SetSize setSize $
     ShowCursor (editorName e) (Location (editCursorPos e - hScrollLeft (editorScroll e), 0)) $
     hScroll (editorScroll e) $
     Txt (editStr e) <<+ HPad ' '

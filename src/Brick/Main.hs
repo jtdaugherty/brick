@@ -42,14 +42,12 @@ data App a e =
     App { appDraw :: a -> [Prim a]
         , appChooseCursor :: a -> [CursorLocation] -> Maybe CursorLocation
         , appHandleEvent :: e -> a -> IO a
-        , appHandleSize :: Name -> DisplayRegion -> a -> a
         }
 
 instance Default (App a e) where
     def = App { appDraw = const def
               , appChooseCursor = neverShowCursor
               , appHandleEvent = const return
-              , appHandleSize = const $ const id
               }
 
 defaultMain :: App a Event -> a -> IO ()
@@ -89,17 +87,14 @@ withVty buildVty useVty = do
 renderApp :: Vty -> App a e -> a -> IO a
 renderApp vty app appState = do
     sz <- displayBounds $ outputIface vty
-    let (pic, theCursor, theSizes) = renderFinal appState (appDraw app appState) sz (appChooseCursor app appState)
+    let (newAppState, pic, theCursor) = renderFinal (appDraw app appState) sz (appChooseCursor app appState) appState
         picWithCursor = case theCursor of
             Nothing -> pic { picCursor = NoCursor }
             Just (CursorLocation (Location (w, h)) _) -> pic { picCursor = Cursor w h }
 
     update vty picWithCursor
 
-    let !applyResizes = foldl (>>>) id $ (uncurry (appHandleSize app)) <$> theSizes
-        !resizedState = applyResizes appState
-
-    return resizedState
+    return newAppState
 
 neverShowCursor :: a -> [CursorLocation] -> Maybe CursorLocation
 neverShowCursor = const $ const Nothing

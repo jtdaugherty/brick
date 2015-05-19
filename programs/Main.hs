@@ -67,12 +67,6 @@ theApp =
     def { appDraw = drawUI
         , appChooseCursor = showFirstCursor
         , appHandleEvent = appEvent
-        , appHandleSize =
-            \name sz st ->
-                case name of
-                    Name "edit" -> st & stEditor %~ setSize sz
-                    Name "list" -> st & stList %~ setSize sz
-                    _ -> st
         }
 
 main :: IO ()
