@@ -7,7 +7,9 @@ module Brick.List
 where
 
 import Control.Applicative ((<$>), (<|>))
-import Graphics.Vty (Event(..), Key(..))
+import Data.Maybe (catMaybes)
+import Graphics.Vty (Event(..), Key(..), DisplayRegion)
+import qualified Data.Map as M
 
 import Brick.Core (HandleEvent(..), SetSize(..))
 import Brick.Prim (Prim(..), Priority(..), (<<=), (<<+))
@@ -19,6 +21,7 @@ data List e =
          , listElementDraw :: Bool -> e -> Prim (List e)
          , listSelected :: !(Maybe Int)
          , listScroll :: !VScroll
+         , listElementHeights :: M.Map Int Int
          }
 
 instance HandleEvent (List e) where
@@ -32,21 +35,24 @@ instance HandleEvent (List e) where
 instance SetSize (List e) where
     setSize sz l =
         let updatedScroll = setSize sz $ listScroll l
-            Just scrollTo = listSelected l <|> Just 0
-        in l { listScroll = vScrollToView scrollTo updatedScroll
-             }
+        in ensureSelectedVisible $ l { listScroll = updatedScroll }
 
 list :: (Bool -> e -> Prim (List e)) -> [e] -> List e
 list draw es =
     let selIndex = if null es then Nothing else Just 0
-    in List es draw selIndex (VScroll 0 0)
+    in List es draw selIndex (VScroll 0 0) M.empty
+
+listSetElementSize :: Int -> DisplayRegion -> List e -> List e
+listSetElementSize i sz l =
+    l { listElementHeights = M.insert i (snd sz) (listElementHeights l)
+      }
 
 drawList :: List e -> Prim (List e)
 drawList l =
     let es = listElements l
         drawn = for (zip [0..] es) $ \(i, e) ->
                   let isSelected = Just i == listSelected l
-                  in (listElementDraw l isSelected e, High)
+                  in (SetSize (listSetElementSize i) $ listElementDraw l isSelected e, High)
     in SetSize setSize $
        vScroll (listScroll l) $
        (VBox drawn <<= VPad ' ') <<+ HPad ' '
@@ -61,10 +67,9 @@ listInsert pos e l =
                     then s + 1
                     else s
         (front, back) = splitAt safePos es
-    in l { listSelected = Just newSel
-         , listElements = front ++ (e : back)
-         , listScroll = vScrollToView newSel (listScroll l)
-         }
+    in ensureSelectedVisible $ l { listSelected = Just newSel
+                                 , listElements = front ++ (e : back)
+                                 }
 
 moveUp :: List e -> List e
 moveUp = moveBy (-1)
@@ -75,7 +80,15 @@ moveDown = moveBy 1
 moveBy :: Int -> List e -> List e
 moveBy amt l =
     let newSel = clamp 0 (length (listElements l) - 1) <$> (amt +) <$> listSelected l
-        Just scrollTo = newSel <|> Just 0
-    in l { listSelected = newSel
-         , listScroll = vScrollToView scrollTo (listScroll l)
+    in ensureSelectedVisible $ l { listSelected = newSel }
+
+ensureSelectedVisible :: List e -> List e
+ensureSelectedVisible l =
+    let Just scrollTo = (listSelected l) <|> (Just 0)
+        heights = listElementHeights l
+        scrollTop = sum $ catMaybes $ (\k -> M.lookup k heights) <$> [0..scrollTo-1]
+        scrollBottom = case M.lookup scrollTo heights of
+            Nothing -> 1
+            Just k -> k
+    in l { listScroll = vScrollToView (scrollTop, scrollBottom) (listScroll l)
          }

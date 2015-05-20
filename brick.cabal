@@ -33,6 +33,7 @@ library
                        vty >= 5.2.9,
                        transformers,
                        data-default,
+                       containers,
                        lens
 
 executable brick

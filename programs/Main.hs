@@ -96,7 +96,8 @@ listDrawElem sel i =
         maybeSelect = if sel
                       then UseAttr selAttr
                       else id
-    in maybeSelect $ hCenter (Txt $ "Number " <> show i)
+    in maybeSelect $ hCenter $ VBox $ for [1..i+1] $ \j ->
+        (Txt $ "Item " <> show i <> " L" <> show j, High)
 
 theApp :: App St Event
 theApp =
