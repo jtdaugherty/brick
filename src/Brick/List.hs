@@ -7,13 +7,14 @@ module Brick.List
 where
 
 import Control.Applicative ((<$>), (<|>))
+import Data.Default
 import Data.Maybe (catMaybes)
 import Graphics.Vty (Event(..), Key(..), DisplayRegion)
 import qualified Data.Map as M
 
 import Brick.Core (HandleEvent(..), SetSize(..))
 import Brick.Prim (Prim(..), Priority(..), (<<=), (<<+))
-import Brick.Scroll (VScroll(..), vScroll, vScrollToView)
+import Brick.Scroll (VScroll, vScroll, scrollToView)
 import Brick.Util (clamp, for)
 
 data List e =
@@ -40,7 +41,7 @@ instance SetSize (List e) where
 list :: (Bool -> e -> Prim (List e)) -> [e] -> List e
 list draw es =
     let selIndex = if null es then Nothing else Just 0
-    in List es draw selIndex (VScroll 0 0) M.empty
+    in List es draw selIndex def M.empty
 
 listSetElementSize :: Int -> DisplayRegion -> List e -> List e
 listSetElementSize i sz l =
@@ -90,5 +91,5 @@ ensureSelectedVisible l =
         scrollBottom = case M.lookup scrollTo heights of
             Nothing -> 1
             Just k -> k
-    in l { listScroll = vScrollToView (scrollTop, scrollBottom) (listScroll l)
+    in l { listScroll = scrollToView (scrollTop, scrollBottom) (listScroll l)
          }

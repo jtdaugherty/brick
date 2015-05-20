@@ -5,12 +5,13 @@ module Brick.Edit
   )
 where
 
+import Data.Default
 import Data.Monoid ((<>))
 import Graphics.Vty (Event(..), Key(..), Modifier(..))
 
 import Brick.Core (Location(..), CursorName(..), HandleEvent(..), SetSize(..))
 import Brick.Prim
-import Brick.Scroll (HScroll(..), hScroll, hScrollToView)
+import Brick.Scroll (HScroll, hScroll, scrollStart, scrollToView)
 import Brick.Util (clamp)
 
 data Editor =
@@ -36,7 +37,7 @@ instance HandleEvent Editor where
 editSetCursorPos :: Int -> Editor -> Editor
 editSetCursorPos pos e =
     let newCP = clamp 0 (length $ editStr e) pos
-    in e { editorScroll = hScrollToView (newCP, 1) (editorScroll e)
+    in e { editorScroll = scrollToView (newCP, 1) (editorScroll e)
          , editCursorPos = newCP
          }
 
@@ -69,7 +70,7 @@ insertChar :: Char -> Editor -> Editor
 insertChar c theEdit =
     theEdit { editStr = s
             , editCursorPos = newCursorPos
-            , editorScroll = hScrollToView (newCursorPos, 1) (editorScroll theEdit)
+            , editorScroll = scrollToView (newCursorPos, 1) (editorScroll theEdit)
             }
     where
         s = take n oldStr ++ [c] ++ drop n oldStr
@@ -80,15 +81,15 @@ insertChar c theEdit =
 instance SetSize Editor where
     setSize sz e =
         let updatedScroll = setSize sz $ editorScroll e
-        in e { editorScroll = hScrollToView (editCursorPos e, 1) updatedScroll
+        in e { editorScroll = scrollToView (editCursorPos e, 1) updatedScroll
              }
 
 editor :: CursorName -> String -> Editor
-editor cName s = Editor s (length s) cName (HScroll 0 0)
+editor cName s = Editor s (length s) cName def
 
 drawEditor :: Editor -> Prim Editor
 drawEditor e =
-    let cursorLoc = Location (editCursorPos e - hScrollLeft (editorScroll e), 0)
+    let cursorLoc = Location (editCursorPos e - scrollStart (editorScroll e), 0)
     in SetSize setSize $
        ShowCursor (editorCursorName e) cursorLoc $
        hScroll (editorScroll e) $

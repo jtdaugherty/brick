@@ -1,68 +1,75 @@
 module Brick.Scroll
-  ( VScroll(..)
-  , vScroll
-  , vScrollToView
+  ( Scrollable(..)
 
-  , HScroll(..)
+  , VScroll
+  , vScroll
+
+  , HScroll
   , hScroll
-  , hScrollToView
+
+  , scrollToView
   )
 where
+
+import Data.Default
 
 import Brick.Core (SetSize(..), Location(..))
 import Brick.Prim (Prim(..))
 
+data HScroll =
+    HScroll { scrollLeft :: !Int
+            , scrollWidth :: !Int
+            }
+
 data VScroll =
-    VScroll { vScrollTop :: !Int
-            , vScrollHeight :: !Int
+    VScroll { scrollTop :: !Int
+            , scrollHeight :: !Int
             }
 
 instance SetSize VScroll where
-    setSize (_, h) vs = vs { vScrollHeight = h }
-
-vScroll :: VScroll -> Prim a -> Prim a
-vScroll vs p = Translate (Location (0, -1 * vScrollTop vs)) $ VRelease p
-
-vScrollToView :: (Int, Int) -> VScroll -> VScroll
-vScrollToView (reqTop, reqHeight) vs =
-    vs { vScrollTop = newTop }
-    where
-        -- cases:
-        -- window is bigger than visible area -> scroll to top of requested region
-        -- else
-        --   top is before current top -> top
-        --   top is below current bottom -> scroll so that requested bottom is new bottom
-        --   bottom is below current bottom -> scroll so that requested bottom is new bottom
-        --   else do nothing
-        curBottom = curTop + vScrollHeight vs -- XXX should be - 1 more, too?
-        curTop = vScrollTop vs
-        reqBottom = reqTop + reqHeight
-        newTop = if reqTop < curTop
-                 then reqTop
-                 else if reqTop > curBottom || reqBottom > curBottom
-                      then reqBottom - vScrollHeight vs
-                      else curTop
-
-data HScroll =
-    HScroll { hScrollLeft :: !Int
-            , hScrollWidth :: !Int
-            }
+    setSize (_, h) vs = vs { scrollHeight = h }
 
 instance SetSize HScroll where
-    setSize (w, _) hs = hs { hScrollWidth = w }
+    setSize (w, _) hs = hs { scrollWidth = w }
+
+instance Default HScroll where
+    def = HScroll 0 0
+
+instance Default VScroll where
+    def = VScroll 0 0
+
+class Scrollable a where
+    setScrollStart :: Int -> a -> a
+    scrollStart :: a -> Int
+    scrollSize :: a -> Int
+
+instance Scrollable HScroll where
+    setScrollStart col hs = hs { scrollLeft = col }
+    scrollStart = scrollLeft
+    scrollSize = scrollWidth
+
+instance Scrollable VScroll where
+    setScrollStart row vs = vs { scrollTop = row }
+    scrollStart = scrollTop
+    scrollSize = scrollHeight
+
+vScroll :: VScroll -> Prim a -> Prim a
+vScroll vs p =
+    Translate (Location (0, -1 * scrollStart vs)) $ VRelease p
 
 hScroll :: HScroll -> Prim a -> Prim a
-hScroll hs p = Translate (Location (-1 * hScrollLeft hs, 0)) $ HRelease p
+hScroll hs p =
+    Translate (Location (-1 * scrollStart hs, 0)) $ HRelease p
 
-hScrollToView :: (Int, Int) -> HScroll -> HScroll
-hScrollToView (reqLeft, reqWidth) hs =
-    hs { hScrollLeft = newLeft }
+scrollToView :: (Scrollable a) => (Int, Int) -> a -> a
+scrollToView (reqStart, reqSize) s =
+    setScrollStart newStart s
     where
-        curRight = curLeft + hScrollWidth hs
-        curLeft = hScrollLeft hs
-        reqRight = reqLeft + reqWidth
-        newLeft = if reqLeft < curLeft
-                  then reqLeft
-                  else if reqLeft > curRight || reqRight > curRight
-                       then reqRight - hScrollWidth hs
-                       else curLeft
+        curEnd = curStart + scrollSize s
+        curStart = scrollStart s
+        reqEnd = reqStart + reqSize
+        newStart = if reqStart < curStart
+                   then reqStart
+                   else if reqStart > curEnd || reqEnd > curEnd
+                        then reqEnd - scrollSize s
+                        else curStart
