@@ -1,3 +1,4 @@
+{-# LANGUAGE RankNTypes #-}
 module Brick.List
   ( List(listElements)
   , list
@@ -7,6 +8,7 @@ module Brick.List
 where
 
 import Control.Applicative ((<$>), (<|>))
+import Control.Lens (Lens')
 import Data.Default
 import Data.Maybe (catMaybes)
 import Graphics.Vty (Event(..), Key(..), DisplayRegion)
@@ -48,18 +50,19 @@ listSetElementSize i sz l =
     l { listElementHeights = M.insert i (snd sz) (listElementHeights l)
       }
 
-drawList :: List e -> Prim (List e)
-drawList l =
-    let es = listElements l
-        drawn = for (zip [0..] es) $ \(i, e) ->
-                  let isSelected = Just i == listSelected l
-                      elemPrim = listElementDraw l isSelected e
-                  in ( SetSize (listSetElementSize i) elemPrim
-                     , High
-                     )
-    in SetSize setSize $
-       vScroll (listScroll l) $
-       (VBox drawn <<= VPad ' ') <<+ HPad ' '
+drawList :: Lens' a (List e) -> Prim a
+drawList lens =
+    With lens $ \l ->
+      let es = listElements l
+          drawn = for (zip [0..] es) $ \(i, e) ->
+                    let isSelected = Just i == listSelected l
+                        elemPrim = listElementDraw l isSelected e
+                    in ( SetSize (listSetElementSize i) elemPrim
+                       , High
+                       )
+      in SetSize setSize $
+         vScroll (listScroll l) $
+         (VBox drawn <<= VPad ' ') <<+ HPad ' '
 
 listInsert :: Int -> e -> List e -> List e
 listInsert pos e l =

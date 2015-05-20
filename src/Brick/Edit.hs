@@ -1,3 +1,4 @@
+{-# LANGUAGE RankNTypes #-}
 module Brick.Edit
   ( Editor
   , editor
@@ -5,6 +6,7 @@ module Brick.Edit
   )
 where
 
+import Control.Lens (Lens')
 import Data.Default
 import Data.Monoid ((<>))
 import Graphics.Vty (Event(..), Key(..), Modifier(..))
@@ -87,10 +89,11 @@ instance SetSize Editor where
 editor :: CursorName -> String -> Editor
 editor cName s = Editor s (length s) cName def
 
-drawEditor :: Editor -> Prim Editor
-drawEditor e =
-    let cursorLoc = Location (editCursorPos e - scrollStart (editorScroll e), 0)
-    in SetSize setSize $
-       ShowCursor (editorCursorName e) cursorLoc $
-       hScroll (editorScroll e) $
-       Txt (editStr e) <<+ HPad ' '
+drawEditor :: Lens' a Editor -> Prim a
+drawEditor lens =
+    With lens $ \e ->
+      let cursorLoc = Location (editCursorPos e - scrollStart (editorScroll e), 0)
+      in SetSize setSize $
+         ShowCursor (editorCursorName e) cursorLoc $
+         hScroll (editorScroll e) $
+         Txt (editStr e) <<+ HPad ' '

@@ -45,11 +45,11 @@ drawUI st = [a]
             vCenter $
               (hCenter $ borderWithLabel bs bsName $
                   (HLimit 25 (
-                    (VLimit 1 $ UseAttr (cyan `on` blue) $ With stEditor drawEditor)
+                    (VLimit 1 $ UseAttr (cyan `on` blue) $ drawEditor stEditor)
                     <<=
                     hBorder bs
                     =>>
-                    (VLimit 10 $ With stList drawList)
+                    (VLimit 10 $ drawList stList)
                   )))
               <<=
               (VLimit 1 $ VPad ' ')
