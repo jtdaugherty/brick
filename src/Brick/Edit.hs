@@ -66,10 +66,11 @@ deleteChar e = e { editStr = s'
         s' = take n s <> drop (n+1) s
 
 insertChar :: Char -> Editor -> Editor
-insertChar c theEdit = theEdit { editStr = s
-                               , editCursorPos = newCursorPos
-                               , editorScroll = hScrollToView newCursorPos (editorScroll theEdit)
-                               }
+insertChar c theEdit =
+    theEdit { editStr = s
+            , editCursorPos = newCursorPos
+            , editorScroll = hScrollToView newCursorPos (editorScroll theEdit)
+            }
     where
         s = take n oldStr ++ [c] ++ drop n oldStr
         n = editCursorPos theEdit
@@ -87,7 +88,8 @@ editor cName s = Editor s (length s) cName (HScroll 0 0)
 
 drawEditor :: Editor -> Prim Editor
 drawEditor e =
-    SetSize setSize $
-    ShowCursor (editorCursorName e) (Location (editCursorPos e - hScrollLeft (editorScroll e), 0)) $
-    hScroll (editorScroll e) $
-    Txt (editStr e) <<+ HPad ' '
+    let cursorLoc = Location (editCursorPos e - hScrollLeft (editorScroll e), 0)
+    in SetSize setSize $
+       ShowCursor (editorCursorName e) cursorLoc $
+       hScroll (editorScroll e) $
+       Txt (editStr e) <<+ HPad ' '
