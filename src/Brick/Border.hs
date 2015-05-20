@@ -4,6 +4,7 @@ module Brick.Border
   , borderWithLabel
 
   , hBorder
+  , hBorderWithLabel
   , vBorder
 
   , BorderStyle(..)
@@ -28,14 +29,21 @@ borderWithLabel bs label = border_ bs (Just label)
 border_ :: BorderStyle -> Maybe String -> Prim a -> Prim a
 border_ bs label wrapped = total
     where
-        labelStr = maybe (Txt "") Txt label
-        top = Txt [bsCornerTL bs] <<+ hCenterWith (bsHorizontal bs) labelStr +>> Txt [bsCornerTR bs]
+        top = Txt [bsCornerTL bs] <<+ hBorder_ bs label +>> Txt [bsCornerTR bs]
         bottom = Txt [bsCornerBL bs] <<+ hBorder bs +>> Txt [bsCornerBR bs]
         middle = vBorder bs +>> wrapped <<+ vBorder bs
         total = top =>> middle <<= bottom
 
 hBorder :: BorderStyle -> Prim a
-hBorder = HFill . bsHorizontal
+hBorder bs = hBorder_ bs Nothing
+
+hBorderWithLabel :: BorderStyle -> String -> Prim a
+hBorderWithLabel bs label = hBorder_ bs (Just label)
+
+hBorder_ :: BorderStyle -> Maybe String -> Prim a
+hBorder_ bs label = hCenterWith (bsHorizontal bs) msg
+    where
+        msg = maybe (Txt "") Txt label
 
 vBorder :: BorderStyle -> Prim a
 vBorder = VFill . bsVertical
