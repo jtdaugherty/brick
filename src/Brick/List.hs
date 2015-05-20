@@ -53,7 +53,10 @@ drawList l =
     let es = listElements l
         drawn = for (zip [0..] es) $ \(i, e) ->
                   let isSelected = Just i == listSelected l
-                  in (SetSize (listSetElementSize i) $ listElementDraw l isSelected e, High)
+                      elemPrim = listElementDraw l isSelected e
+                  in ( SetSize (listSetElementSize i) elemPrim
+                     , High
+                     )
     in SetSize setSize $
        vScroll (listScroll l) $
        (VBox drawn <<= VPad ' ') <<+ HPad ' '
