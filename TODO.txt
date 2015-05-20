@@ -11,5 +11,6 @@
 - Think of better library name
 - Support "suggested" vs "forced" attributes in Prim rendering
 - List: add listGetSelected :: List a -> Maybe (Int, a)
-- Make width and height values newtypes
+- List: support a cursorless mode, where scrolling always scrolls up and
+  down as if the cursor was already at the top or bottom of the window
 - Do we need CropLeftBy and CropTopBy if we just Translate negatively?
