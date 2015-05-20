@@ -36,7 +36,7 @@ instance HandleEvent Editor where
 editSetCursorPos :: Int -> Editor -> Editor
 editSetCursorPos pos e =
     let newCP = clamp 0 (length $ editStr e) pos
-    in e { editorScroll = hScrollToView newCP (editorScroll e)
+    in e { editorScroll = hScrollToView (newCP, 1) (editorScroll e)
          , editCursorPos = newCP
          }
 
@@ -69,7 +69,7 @@ insertChar :: Char -> Editor -> Editor
 insertChar c theEdit =
     theEdit { editStr = s
             , editCursorPos = newCursorPos
-            , editorScroll = hScrollToView newCursorPos (editorScroll theEdit)
+            , editorScroll = hScrollToView (newCursorPos, 1) (editorScroll theEdit)
             }
     where
         s = take n oldStr ++ [c] ++ drop n oldStr
@@ -80,7 +80,7 @@ insertChar c theEdit =
 instance SetSize Editor where
     setSize sz e =
         let updatedScroll = setSize sz $ editorScroll e
-        in e { editorScroll = hScrollToView (editCursorPos e) updatedScroll
+        in e { editorScroll = hScrollToView (editCursorPos e, 1) updatedScroll
              }
 
 editor :: CursorName -> String -> Editor

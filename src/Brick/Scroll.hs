@@ -54,12 +54,15 @@ instance SetSize HScroll where
 hScroll :: HScroll -> Prim a -> Prim a
 hScroll hs p = Translate (Location (-1 * hScrollLeft hs, 0)) $ HRelease p
 
-hScrollToView :: Int -> HScroll -> HScroll
-hScrollToView col hs =
+hScrollToView :: (Int, Int) -> HScroll -> HScroll
+hScrollToView (reqLeft, reqWidth) hs =
     hs { hScrollLeft = newLeft }
     where
-        newLeft = if col < hScrollLeft hs
-                  then col
-                  else if col >= hScrollLeft hs + hScrollWidth hs
-                       then col - hScrollWidth hs + 1
-                       else hScrollLeft hs
+        curRight = curLeft + hScrollWidth hs
+        curLeft = hScrollLeft hs
+        reqRight = reqLeft + reqWidth
+        newLeft = if reqLeft < curLeft
+                  then reqLeft
+                  else if reqLeft > curRight || reqRight > curRight
+                       then reqRight - hScrollWidth hs
+                       else curLeft
