@@ -6,7 +6,6 @@
 - Implement 2-d text editing
 - Write benchmarks for render on various primitive types
 - Use Vector instead of List where sensible
-- Implement region-to-view scrolling instead of point-to-view
 - Think about porting some widgets from vty-ui
 - Think of better library name
 - Support "suggested" vs "forced" attributes in Prim rendering
