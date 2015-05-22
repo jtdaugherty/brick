@@ -13,3 +13,7 @@
 - List: support a cursorless mode, where scrolling always scrolls up and
   down as if the cursor was already at the top or bottom of the window
 - Do we need CropLeftBy and CropTopBy if we just Translate negatively?
+
+Bugs:
+- List element height maintenance breaks when we insert into the middle
+  of the list
