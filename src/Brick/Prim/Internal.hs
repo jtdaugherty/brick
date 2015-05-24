@@ -19,8 +19,8 @@ import Brick.Prim
 import Brick.Util (clOffset, for)
 
 data Render =
-    Render { image :: !Image
-           , cursors :: ![CursorLocation]
+    Render { image :: Image
+           , cursors :: [CursorLocation]
            }
            deriving Show
 
