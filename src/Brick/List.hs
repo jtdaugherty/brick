@@ -2,6 +2,7 @@
 module Brick.List
   ( List(listElements)
   , list
+  , moveBy
   , drawList
   , listInsert
   )

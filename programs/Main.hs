@@ -77,7 +77,7 @@ appEvent e st =
 
         EvKey KEnter [] ->
             let el = length $ listElements $ st^.stList
-            in return $ st & stList %~ listInsert el el
+            in return $ st & stList %~ (moveBy 1 . listInsert el el)
 
         ev -> return $ st & stEditor %~ (handleEvent ev)
                           & stList %~ (handleEvent ev)
