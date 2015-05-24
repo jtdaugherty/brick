@@ -145,8 +145,13 @@ render c (HBox pairs) = do
                    then remainingWidth - widthPerLow * length lows
                    else 0
         heightPerLow = maximum $ (imageHeight . image . snd) <$> renderedHis
+        renderLow (i, (prim, _)) =
+            let padding = (if i == 0 then padFirst else 0)
+            in (i,) <$> render (c & w .~ widthPerLow + padding
+                                  & h .~ heightPerLow)
+                               prim
 
-    renderedLows <- mapM (\(i, (prim, _)) -> (i,) <$> render (c & w .~ widthPerLow + (if i == 0 then padFirst else 0) & h .~ heightPerLow) prim) lows
+    renderedLows <- mapM renderLow lows
 
     let rendered = sortBy (compare `DF.on` fst) $ renderedHis ++ renderedLows
         allResults = snd <$> rendered
@@ -172,8 +177,13 @@ render c (VBox pairs) = do
                    then remainingHeight - heightPerLow * length lows
                    else 0
         widthPerLow = maximum $ (imageWidth . image . snd) <$> renderedHis
+        renderLow (i, (prim, _)) =
+            let padding = if i == 0 then padFirst else 0
+            in (i,) <$> render (c & w .~ widthPerLow
+                                  & h .~ (heightPerLow + padding))
+                               prim
 
-    renderedLows <- mapM (\(i, (prim, _)) -> (i,) <$> render (c & w .~ widthPerLow & h .~ (heightPerLow + if i == 0 then padFirst else 0)) prim) lows
+    renderedLows <- mapM renderLow lows
 
     let rendered = sortBy (compare `DF.on` fst) $ renderedHis ++ renderedLows
         allResults = snd <$> rendered
