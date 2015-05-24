@@ -58,10 +58,10 @@ drawList lens =
           drawn = for (zip [0..] es) $ \(i, e) ->
                     let isSelected = Just i == listSelected l
                         elemPrim = listElementDraw l isSelected e
-                    in ( SetSize (listSetElementSize i) elemPrim
+                    in ( SaveSize (listSetElementSize i) elemPrim
                        , High
                        )
-      in SetSize setSize $
+      in SaveSize setSize $
          vScroll (listScroll l) $
          (VBox drawn <<= VPad ' ') <<+ HPad ' '
 

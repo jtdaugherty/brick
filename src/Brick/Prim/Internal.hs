@@ -69,7 +69,7 @@ render c (With target f) = do
     -- inner state is transformed by the process of interpreting the
     -- newly-built prim. This means that the produced drawing is
     -- potentially stale with the respect to the returned state, since
-    -- the state was transformed by other Withs, or by SetSizes, and
+    -- the state was transformed by other Withs, or by SaveSizes, and
     -- is thus current while the returned prim generated _prior_ to
     -- interpretation is not.
     --
@@ -142,7 +142,7 @@ render c (Translate (Location (tw,th)) p) = do
 render c (ShowCursor n loc p) = do
     result <- render c p
     return $ result { cursors = (CursorLocation loc (Just n)):cursors result }
-render c (SetSize sizeSetter p) = do
+render c (SaveSize sizeSetter p) = do
     result <- render c p
     let img = image result
         imgSz = (imageWidth img, imageHeight img)

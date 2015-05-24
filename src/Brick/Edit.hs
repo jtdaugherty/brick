@@ -93,7 +93,7 @@ drawEditor :: Lens' a Editor -> Prim a
 drawEditor lens =
     With lens $ \e ->
       let cursorLoc = Location (editCursorPos e - scrollStart (editorScroll e), 0)
-      in SetSize setSize $
+      in SaveSize setSize $
          ShowCursor (editorCursorName e) cursorLoc $
          hScroll (editorScroll e) $
          Txt (editStr e) <<+ HPad ' '

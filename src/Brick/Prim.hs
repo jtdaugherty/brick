@@ -35,7 +35,7 @@ data Prim a = Txt !String
             | CropTopBy !Int !(Prim a)
             | CropBottomBy !Int !(Prim a)
             | ShowCursor !CursorName !Location !(Prim a)
-            | SetSize (DisplayRegion -> a -> a) !(Prim a)
+            | SaveSize (DisplayRegion -> a -> a) !(Prim a)
             | HRelease !(Prim a)
             | VRelease !(Prim a)
             | forall b. With (Lens' a b) (b -> Prim b)
