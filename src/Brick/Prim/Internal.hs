@@ -64,11 +64,27 @@ unrestricted = 1000
 render :: Context -> Prim a -> State a Render
 render c (With target f) = do
     outerState <- get
+    -- XXX The problem with this code is that the old inner state is
+    -- used to build a prim (via f) and then a copy of that same old
+    -- inner state is transformed by the process of interpreting the
+    -- newly-built prim. This means that the produced drawing is
+    -- potentially stale with the respect to the returned state, since
+    -- the state was transformed by other Withs, or by SetSizes, and
+    -- is thus current while the returned prim generated _prior_ to
+    -- interpretation is not.
+    --
+    -- As a result, a workaround is to render once to get the internal
+    -- state updated (e.g. with sizes) and then discard the result and
+    -- generate a new prim using the new inner state and return the
+    -- result of rendering that prim instead. This means we render every
+    -- With twice, which is potentially expensive.
     let innerPrim = f oldInnerState
         oldInnerState = outerState^.target
-        (innerRender, newInnerState) = runState (render c innerPrim) oldInnerState
+        (_, newInnerState) = runState (render c innerPrim) oldInnerState
     target .= newInnerState
-    return innerRender
+
+    let (secondRender, _) = runState (render c $ f newInnerState) newInnerState
+    return secondRender
 render c (Txt s) =
     return $ if c^.w > 0 && c^.h > 0
              then setImage (crop (c^.w) (c^.h) $ string (c^.attr) s) def
