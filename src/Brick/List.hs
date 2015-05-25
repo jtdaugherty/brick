@@ -5,6 +5,7 @@ module Brick.List
   , drawList
   , listInsert
   , listRemove
+  , listSelectedElement
   )
 where
 
@@ -110,6 +111,11 @@ moveBy :: Int -> List e -> List e
 moveBy amt l =
     let newSel = clamp 0 (length (listElements l) - 1) <$> (amt +) <$> listSelected l
     in ensureSelectedVisible $ l { listSelected = newSel }
+
+listSelectedElement :: List e -> Maybe (Int, e)
+listSelectedElement l = do
+  sel <- listSelected l
+  return (sel, listElements l !! sel)
 
 ensureSelectedVisible :: List e -> List e
 ensureSelectedVisible l =
