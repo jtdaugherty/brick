@@ -4,6 +4,7 @@ module Brick.List
   , moveBy
   , drawList
   , listInsert
+  , listRemove
   )
 where
 
@@ -79,6 +80,25 @@ listInsert pos e l =
     in ensureSelectedVisible $ l { listSelected = Just newSel
                                  , listElements = front ++ (e : back)
                                  }
+
+listRemove :: Int -> List e -> List e
+listRemove pos l | null es                            = l
+                 | pos /= clamp 0 (length es - 1) pos = l
+                 | otherwise =
+    let newSel = case listSelected l of
+          Nothing -> 0
+          Just s  -> if pos < s
+                     then s - 1
+                     else s
+        (front, back) = splitAt pos es
+        es' = front ++ tail back
+    in ensureSelectedVisible $ l { listSelected = if null es'
+                                                  then Nothing
+                                                  else Just newSel
+                                 , listElements = es'
+                                 }
+    where
+        es = listElements l
 
 moveUp :: List e -> List e
 moveUp = moveBy (-1)
