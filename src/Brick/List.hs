@@ -5,17 +5,19 @@ module Brick.List
   , drawList
   , listInsert
   , listRemove
+  , listReplace
   , listSelectedElement
   )
 where
 
 import Control.Applicative ((<$>), (<|>))
 import Data.Default
-import Data.Maybe (catMaybes)
+import Data.Maybe (fromMaybe, catMaybes)
 import Graphics.Vty (Event(..), Key(..), DisplayRegion)
 import qualified Data.Map as M
 
 import Brick.Core (HandleEvent(..), SetSize(..))
+import Brick.Merge (maintainSel)
 import Brick.Prim
 import Brick.Scroll (VScroll, vScroll, scrollToView)
 import Brick.Util (clamp, for)
@@ -96,6 +98,22 @@ listRemove pos l | null es                            = l
     in ensureSelectedVisible $ l { listSelected = if null es'
                                                   then Nothing
                                                   else Just newSel
+                                 , listElements = es'
+                                 }
+    where
+        es = listElements l
+
+-- Replaces entire list with a new set of elements, but preserves selected index
+-- using a two-way merge algorithm.
+listReplace :: Eq e => [e] -> List e -> List e
+listReplace es' l | es' == es = l
+                  | otherwise =
+    let sel = fromMaybe 0 (listSelected l)
+        newSel = case (null es, null es') of
+          (_, True)      -> Nothing
+          (True, False)  -> Just 0
+          (False, False) -> Just (maintainSel es es' sel)
+    in ensureSelectedVisible $ l { listSelected = newSel
                                  , listElements = es'
                                  }
     where
