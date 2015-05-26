@@ -59,7 +59,7 @@ drawList = theList
     where
         theList = saveSize setSize $
                   vScroll listScroll $
-                  body `apply` ensureSelectedVisible
+                  afterRendering body ensureSelectedVisible
 
         body = readState $ \l -> do
                 let es = listElements l

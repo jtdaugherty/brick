@@ -26,7 +26,7 @@ module Brick.Prim
   , vRelease
   , withLens
   , readState
-  , apply
+  , afterRendering
   )
 where
 
