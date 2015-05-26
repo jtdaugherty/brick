@@ -31,7 +31,7 @@ module Brick.Prim.Internal
   , saveSize
   , hRelease
   , vRelease
-  , with
+  , withLens
   , readState
   , apply
   )
@@ -279,8 +279,8 @@ hRelease = withReaderT (& w .~ unrestricted) --- NB
 vRelease :: Prim a -> Prim a
 vRelease = withReaderT (& h .~ unrestricted) --- NB
 
-with :: (Lens' a b) -> Prim b -> Prim a
-with target p = do
+withLens :: (Lens' a b) -> Prim b -> Prim a
+withLens target p = do
     outerState <- lift get
     let oldInnerState = outerState^.target
     c <- ask

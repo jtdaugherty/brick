@@ -24,7 +24,7 @@ module Brick.Prim
   , saveSize
   , hRelease
   , vRelease
-  , with
+  , withLens
   , readState
   , apply
   )
