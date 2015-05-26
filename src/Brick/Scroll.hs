@@ -55,15 +55,17 @@ instance Scrollable VScroll where
 
 vScroll :: (a -> VScroll) -> Prim a -> Prim a
 vScroll f p = do
+    result <- vRelease p
     readState $ \s ->
         let vs = f s
-        in translate (Location (0, -1 * scrollStart vs)) $ vRelease p
+        in translate (Location (0, -1 * scrollStart vs)) $ return result
 
 hScroll :: (a -> HScroll) -> Prim a -> Prim a
-hScroll f p =
+hScroll f p = do
+    result <- hRelease p
     readState $ \s ->
         let hs = f s
-        in translate (Location (-1 * scrollStart hs, 0)) $ hRelease p
+        in translate (Location (-1 * scrollStart hs, 0)) $ return result
 
 scrollToView :: (Scrollable a) => (Int, Int) -> a -> a
 scrollToView (reqStart, reqSize) s =

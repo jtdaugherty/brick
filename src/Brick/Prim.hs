@@ -26,6 +26,7 @@ module Brick.Prim
   , vRelease
   , with
   , readState
+  , apply
   )
 where
 

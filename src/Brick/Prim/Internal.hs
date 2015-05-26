@@ -33,6 +33,7 @@ module Brick.Prim.Internal
   , vRelease
   , with
   , readState
+  , apply
   )
 where
 
@@ -289,3 +290,9 @@ with target p = do
 
 readState :: (a -> Prim a) -> Prim a
 readState f = (lift get) >>= (\a -> f a)
+
+apply :: Prim a -> (a -> a) -> Prim a
+apply p f = do
+    result <- p
+    lift $ modify f
+    return result
