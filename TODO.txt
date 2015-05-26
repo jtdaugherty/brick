@@ -1,6 +1,4 @@
 - Use lenses in core library
-- Use With/SetSize to track list element sizes for variable element prim
-  heights
 - Fix cursor cropping in render function where missing
 - Deal with multi-column characters everywhere
 - Implement 2-d text editing
@@ -13,6 +11,9 @@
 - List: support a cursorless mode, where scrolling always scrolls up and
   down as if the cursor was already at the top or bottom of the window
 - Do we need CropLeftBy and CropTopBy if we just Translate negatively?
+- Deal with hRelease/vRelease differently, e.g. by using Maybe to
+contain width and height in the context, and behave differently if
+they're Nothing (same for boxes?)
 
 Bugs:
 - List element height maintenance breaks when we insert into the middle
