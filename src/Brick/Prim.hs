@@ -37,7 +37,6 @@ module Brick.Prim
 where
 
 import Control.Lens (Lens')
-import Control.Monad.Trans.State.Lazy
 import Data.String (IsString(..))
 import Graphics.Vty (DisplayRegion, Image, Attr)
 
@@ -46,7 +45,7 @@ import Brick.Core (Location(..), CursorName(..))
 data Priority = High | Low
               deriving (Show, Eq)
 
-type Prim a = State a (Primitive a)
+type Prim a = Primitive a
 
 data Primitive a = Txt !String
                  | HPad !Char
@@ -72,88 +71,88 @@ data Primitive a = Txt !String
                  | ReadState (a -> Prim a)
 
 instance IsString (Prim a) where
-    fromString = return . Txt
+    fromString = Txt
 
 (<+>) :: Prim a -> Prim a -> Prim a
-(<+>) a b = return $ HBox [(a, High), (b, High)]
+(<+>) a b = HBox [(a, High), (b, High)]
 
 (<<+) :: Prim a -> Prim a -> Prim a
-(<<+) a b = return $ HBox [(a, High), (b, Low)]
+(<<+) a b = HBox [(a, High), (b, Low)]
 
 (+>>) :: Prim a -> Prim a -> Prim a
-(+>>) a b = return $ HBox [(a, Low), (b, High)]
+(+>>) a b = HBox [(a, Low), (b, High)]
 
 (<=>) :: Prim a -> Prim a -> Prim a
-(<=>) a b = return $ VBox [(a, High), (b, High)]
+(<=>) a b = VBox [(a, High), (b, High)]
 
 (<<=) :: Prim a -> Prim a -> Prim a
-(<<=) a b = return $ VBox [(a, High), (b, Low)]
+(<<=) a b = VBox [(a, High), (b, Low)]
 
 (=>>) :: Prim a -> Prim a -> Prim a
-(=>>) a b = return $ VBox [(a, Low), (b, High)]
+(=>>) a b = VBox [(a, Low), (b, High)]
 
 txt :: String -> Prim a
-txt = return . Txt
+txt = Txt
 
 hPad :: Char -> Prim a
-hPad = return . HPad
+hPad = HPad
 
 vPad :: Char -> Prim a
-vPad = return . VPad
+vPad = VPad
 
 hFill :: Char -> Prim a
-hFill = return . HFill
+hFill = HFill
 
 vFill :: Char -> Prim a
-vFill = return . VFill
+vFill = VFill
 
 hBox :: [(Prim a, Priority)] -> Prim a
-hBox = return . HBox
+hBox = HBox
 
 vBox :: [(Prim a, Priority)] -> Prim a
-vBox = return . VBox
+vBox = VBox
 
 hLimit :: Int -> Prim a -> Prim a
-hLimit l p = return $ HLimit l p
+hLimit l p = HLimit l p
 
 vLimit :: Int -> Prim a -> Prim a
-vLimit l p = return $ VLimit l p
+vLimit l p = VLimit l p
 
 useAttr :: Attr -> Prim a -> Prim a
-useAttr a p = return $ UseAttr a p
+useAttr a p = UseAttr a p
 
 raw :: Image -> Prim a
-raw = return . Raw
+raw = Raw
 
 translate :: Location -> Prim a -> Prim a
-translate l p = return $ Translate l p
+translate l p = Translate l p
 
 cropLeftBy :: Int -> Prim a -> Prim a
-cropLeftBy a p = return $ CropLeftBy a p
+cropLeftBy a p = CropLeftBy a p
 
 cropRightBy :: Int -> Prim a -> Prim a
-cropRightBy a p = return $ CropRightBy a p
+cropRightBy a p = CropRightBy a p
 
 cropTopBy :: Int -> Prim a -> Prim a
-cropTopBy a p = return $ CropTopBy a p
+cropTopBy a p = CropTopBy a p
 
 cropBottomBy :: Int -> Prim a -> Prim a
-cropBottomBy a p = return $ CropBottomBy a p
+cropBottomBy a p = CropBottomBy a p
 
 showCursor :: CursorName -> Location -> Prim a -> Prim a
-showCursor n l p = return $ ShowCursor n l p
+showCursor n l p = ShowCursor n l p
 
 saveSize :: (DisplayRegion -> a -> a) -> Prim a -> Prim a
-saveSize f p = return $ SaveSize f p
+saveSize f p = SaveSize f p
 
 hRelease :: Prim a -> Prim a
-hRelease = return . HRelease
+hRelease = HRelease
 
 vRelease :: Prim a -> Prim a
-vRelease = return . VRelease
+vRelease = VRelease
 
 with :: (Lens' a b) -> Prim b -> Prim a
-with l p = return $ With l p
+with l p = With l p
 
 readState :: (a -> Prim a) -> Prim a
-readState = return . ReadState
+readState = ReadState

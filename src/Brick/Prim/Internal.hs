@@ -62,9 +62,7 @@ unrestricted :: Int
 unrestricted = 1000
 
 render :: Context -> Prim a -> State a Render
-render c p = do
-    thePrim <- p
-    renderPrim c thePrim
+render = renderPrim
 
 renderPrim :: Context -> Primitive a -> State a Render
 renderPrim c (ReadState f) = get >>= (render c . f)

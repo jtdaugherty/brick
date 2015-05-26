@@ -50,17 +50,17 @@ listSetElementSize i sz l =
       }
 
 drawList :: Prim (List e)
-drawList = do
-    lp <- readState $ \l ->
-      let es = listElements l
-          drawn = for (zip [0..] es) $ \(i, e) ->
-                    let isSelected = Just i == listSelected l
-                        elemPrim = listElementDraw l isSelected e
-                    in ( saveSize (listSetElementSize i) elemPrim
-                       , High
-                       )
-      in (vBox drawn <<= vPad ' ') <<+ hPad ' '
-    readState $ \l -> saveSize setSize $ vScroll listScroll $ return lp
+drawList =
+    readState $ \l ->
+      saveSize setSize $ vScroll listScroll $
+        let es = listElements l
+            drawn = for (zip [0..] es) $ \(i, e) ->
+                      let isSelected = Just i == listSelected l
+                          elemPrim = listElementDraw l isSelected e
+                      in ( saveSize (listSetElementSize i) elemPrim
+                         , High
+                         )
+        in (vBox drawn <<= vPad ' ') <<+ hPad ' '
 
 listInsert :: Int -> e -> List e -> List e
 listInsert pos e l =
