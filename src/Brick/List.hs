@@ -2,18 +2,23 @@ module Brick.List
   ( List(listElements)
   , list
   , moveBy
+  , moveTo
   , drawList
   , listInsert
+  , listRemove
+  , listReplace
+  , listSelectedElement
   )
 where
 
 import Control.Applicative ((<$>), (<|>))
 import Data.Default
-import Data.Maybe (catMaybes)
+import Data.Maybe (fromMaybe, catMaybes)
 import Graphics.Vty (Event(..), Key(..), DisplayRegion)
 import qualified Data.Map as M
 
 import Brick.Core (HandleEvent(..), SetSize(..))
+import Brick.Merge (maintainSel)
 import Brick.Prim
 import Brick.Scroll (VScroll, vScroll, scrollToView)
 import Brick.Util (clamp, for)
@@ -80,6 +85,41 @@ listInsert pos e l =
                                  , listElements = front ++ (e : back)
                                  }
 
+listRemove :: Int -> List e -> List e
+listRemove pos l | null es                            = l
+                 | pos /= clamp 0 (length es - 1) pos = l
+                 | otherwise =
+    let newSel = case listSelected l of
+          Nothing -> 0
+          Just s  -> if pos < s
+                     then s - 1
+                     else s
+        (front, back) = splitAt pos es
+        es' = front ++ tail back
+    in ensureSelectedVisible $ l { listSelected = if null es'
+                                                  then Nothing
+                                                  else Just newSel
+                                 , listElements = es'
+                                 }
+    where
+        es = listElements l
+
+-- Replaces entire list with a new set of elements, but preserves selected index
+-- using a two-way merge algorithm.
+listReplace :: Eq e => [e] -> List e -> List e
+listReplace es' l | es' == es = l
+                  | otherwise =
+    let sel = fromMaybe 0 (listSelected l)
+        newSel = case (null es, null es') of
+          (_, True)      -> Nothing
+          (True, False)  -> Just 0
+          (False, False) -> Just (maintainSel es es' sel)
+    in ensureSelectedVisible $ l { listSelected = newSel
+                                 , listElements = es'
+                                 }
+    where
+        es = listElements l
+
 moveUp :: List e -> List e
 moveUp = moveBy (-1)
 
@@ -90,6 +130,20 @@ moveBy :: Int -> List e -> List e
 moveBy amt l =
     let newSel = clamp 0 (length (listElements l) - 1) <$> (amt +) <$> listSelected l
     in ensureSelectedVisible $ l { listSelected = newSel }
+
+moveTo :: Int -> List e -> List e
+moveTo pos l =
+    let len = length (listElements l)
+        newSel = clamp 0 (len - 1) $ if pos < 0 then (len - pos) else pos
+    in ensureSelectedVisible $ l { listSelected = if len > 0
+                                                  then Just newSel
+                                                  else Nothing
+                                 }
+
+listSelectedElement :: List e -> Maybe (Int, e)
+listSelectedElement l = do
+  sel <- listSelected l
+  return (sel, listElements l !! sel)
 
 ensureSelectedVisible :: List e -> List e
 ensureSelectedVisible l =

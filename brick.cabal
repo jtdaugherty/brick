@@ -28,11 +28,13 @@ library
     Brick.Util
   other-modules:
     Brick.Prim.Internal
+    Brick.Merge
 
   build-depends:       base >=4.7 && <4.8,
                        vty >= 5.2.9,
                        transformers,
                        data-default,
+                       Diff,
                        containers,
                        lens
 
