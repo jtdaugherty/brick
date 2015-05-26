@@ -7,16 +7,16 @@ module Brick.Center
   )
 where
 
-import Brick.Prim (Prim(..), Priority(..))
+import Brick.Prim
 
 hCenter :: Prim a -> Prim a
 hCenter = hCenterWith ' '
 
 hCenterWith :: Char -> Prim a -> Prim a
 hCenterWith c p =
-    HBox [ (HPad c, Low)
+    hBox [ (hPad c, Low)
          , (p, High)
-         , (HPad c, Low)
+         , (hPad c, Low)
          ]
 
 vCenter :: Prim a -> Prim a
@@ -24,9 +24,9 @@ vCenter = vCenterWith ' '
 
 vCenterWith :: Char -> Prim a -> Prim a
 vCenterWith c p =
-    VBox [ (VPad c, Low)
+    vBox [ (vPad c, Low)
          , (p, High)
-         , (VPad c, Low)
+         , (vPad c, Low)
          ]
 
 center :: Prim a -> Prim a

@@ -5,7 +5,7 @@ module Main where
 import Control.Lens
 import Data.Default
 import Data.Monoid
-import Graphics.Vty
+import Graphics.Vty hiding (translate)
 import System.Exit
 
 import Brick.Main
@@ -35,24 +35,24 @@ data St =
 makeLenses ''St
 
 kw :: String -> Prim a
-kw = UseAttr (fg blue) . Txt
+kw = useAttr (fg blue) . txt
 
 drawUI :: St -> [Prim St]
 drawUI st = [a]
     where
         (bsName, bs) = styles !! (st^.stBorderStyle)
-        a = Translate (st^.stTrans) $
+        a = translate (st^.stTrans) $
             vCenter $
               (hCenter $ borderWithLabel bs bsName $
-                  (HLimit 25 (
-                    (VLimit 1 $ UseAttr (cyan `on` blue) $ drawEditor stEditor)
+                  (hLimit 25 (
+                    (vLimit 1 $ useAttr (cyan `on` blue) $ with stEditor drawEditor)
                     <<=
                     hBorder bs
                     =>>
-                    (VLimit 10 $ drawList stList)
+                    (vLimit 10 $ with stList drawList)
                   )))
               <<=
-              (VLimit 1 $ VPad ' ')
+              (vLimit 1 $ vPad ' ')
               =>>
               (hCenter (kw "Enter" <+> " adds a list item"))
               <=>
@@ -94,10 +94,10 @@ listDrawElem :: Bool -> Int -> Prim (List Int)
 listDrawElem sel i =
     let selAttr = white `on` blue
         maybeSelect = if sel
-                      then UseAttr selAttr
+                      then useAttr selAttr
                       else id
-    in maybeSelect $ hCenter $ VBox $ for [1..i+1] $ \j ->
-        (Txt $ "Item " <> show i <> " L" <> show j, High)
+    in maybeSelect $ hCenter $ vBox $ for [1..i+1] $ \j ->
+        (txt $ "Item " <> show i <> " L" <> show j, High)
 
 theApp :: App St Event
 theApp =

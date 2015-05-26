@@ -4,4 +4,4 @@ import Brick.Main
 import Brick.Prim
 
 main :: IO ()
-main = simpleMain [Txt "Hello, world!"]
+main = simpleMain [txt "Hello, world!"]

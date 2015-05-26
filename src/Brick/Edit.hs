@@ -89,11 +89,9 @@ instance SetSize Editor where
 editor :: CursorName -> String -> Editor
 editor cName s = Editor s (length s) cName def
 
-drawEditor :: Lens' a Editor -> Prim a
-drawEditor lens =
-    With lens $ \e ->
-      let cursorLoc = Location (editCursorPos e - scrollStart (editorScroll e), 0)
-      in SaveSize setSize $
-         ShowCursor (editorCursorName e) cursorLoc $
-         hScroll (editorScroll e) $
-         Txt (editStr e) <<+ HPad ' '
+drawEditor :: Prim Editor
+drawEditor = do
+    p <- readState $ \e ->
+      let cursorLoc = Location (editCursorPos e, 0)
+      in showCursor (editorCursorName e) cursorLoc $ txt (editStr e) <<+ hPad ' '
+    saveSize setSize $ readState $ \e -> (hScroll (editorScroll e) $ return p)

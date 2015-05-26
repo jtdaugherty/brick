@@ -16,7 +16,7 @@ import Graphics.Vty (Event(..), Key(..), DisplayRegion)
 import qualified Data.Map as M
 
 import Brick.Core (HandleEvent(..), SetSize(..))
-import Brick.Prim (Prim(..), Priority(..), (<<=), (<<+))
+import Brick.Prim
 import Brick.Scroll (VScroll, vScroll, scrollToView)
 import Brick.Util (clamp, for)
 
@@ -51,19 +51,18 @@ listSetElementSize i sz l =
     l { listElementHeights = M.insert i (snd sz) (listElementHeights l)
       }
 
-drawList :: Lens' a (List e) -> Prim a
-drawList lens =
-    With lens $ \l ->
+drawList :: Prim (List e)
+drawList = do
+    lp <- readState $ \l ->
       let es = listElements l
           drawn = for (zip [0..] es) $ \(i, e) ->
                     let isSelected = Just i == listSelected l
                         elemPrim = listElementDraw l isSelected e
-                    in ( SaveSize (listSetElementSize i) elemPrim
+                    in ( saveSize (listSetElementSize i) elemPrim
                        , High
                        )
-      in SaveSize setSize $
-         vScroll (listScroll l) $
-         (VBox drawn <<= VPad ' ') <<+ HPad ' '
+      in (vBox drawn <<= vPad ' ') <<+ hPad ' '
+    readState $ \l -> saveSize setSize $ vScroll (listScroll l) $ return lp
 
 listInsert :: Int -> e -> List e -> List e
 listInsert pos e l =

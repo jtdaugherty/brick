@@ -15,7 +15,7 @@ import Data.List (sortBy)
 import Graphics.Vty
 
 import Brick.Core (Location(..), CursorLocation(..))
-import Brick.Prim
+import Brick.Prim hiding (translate)
 import Brick.Util (clOffset, for)
 
 data Render =
@@ -62,93 +62,82 @@ unrestricted :: Int
 unrestricted = 1000
 
 render :: Context -> Prim a -> State a Render
-render c (With target f) = do
-    outerState <- get
-    -- XXX The problem with this code is that the old inner state is
-    -- used to build a prim (via f) and then a copy of that same old
-    -- inner state is transformed by the process of interpreting the
-    -- newly-built prim. This means that the produced drawing is
-    -- potentially stale with the respect to the returned state, since
-    -- the state was transformed by other Withs, or by SaveSizes, and
-    -- is thus current while the returned prim generated _prior_ to
-    -- interpretation is not.
-    --
-    -- As a result, a workaround is to render once to get the internal
-    -- state updated (e.g. with sizes) and then discard the result and
-    -- generate a new prim using the new inner state and return the
-    -- result of rendering that prim instead. This means we render every
-    -- With twice, which is potentially expensive.
-    let innerPrim = f oldInnerState
-        oldInnerState = outerState^.target
-        (_, newInnerState) = runState (render c innerPrim) oldInnerState
-    target .= newInnerState
+render c p = do
+    thePrim <- p
+    renderPrim c thePrim
 
-    let (secondRender, _) = runState (render c $ f newInnerState) newInnerState
-    return secondRender
-render c (Txt s) =
+renderPrim :: Context -> Primitive a -> State a Render
+renderPrim c (ReadState f) = get >>= (render c . f)
+renderPrim c (With target p) = do
+    outerState <- get
+    let oldInnerState = outerState^.target
+        (result, newInnerState) = runState (render c p) oldInnerState
+    target .= newInnerState
+    return result
+renderPrim c (Txt s) =
     return $ if c^.w > 0 && c^.h > 0
              then setImage (crop (c^.w) (c^.h) $ string (c^.attr) s) def
              else def
-render c (Raw img) =
+renderPrim c (Raw img) =
     return $ if c^.w > 0 && c^.h > 0
              then setImage (crop (c^.w) (c^.h) img) def
              else def
-render c (CropLeftBy cols p) = do
+renderPrim c (CropLeftBy cols p) = do
     result <- render c p
     let img = image result
         amt = imageWidth img - cols
         cropped = if amt < 0 then emptyImage else cropLeft amt img
     return $ addCursorOffset (Location (-1 * cols, 0)) $
              setImage cropped result
-render c (CropRightBy cols p) = do
+renderPrim c (CropRightBy cols p) = do
     result <- render c p
     let img = image result
         amt = imageWidth img - cols
         cropped = if amt < 0 then emptyImage else cropRight amt img
     -- xxx cursors
     return $ setImage cropped result
-render c (CropTopBy rows p) = do
+renderPrim c (CropTopBy rows p) = do
     result <- render c p
     let img = image result
         amt = imageHeight img - rows
         cropped = if amt < 0 then emptyImage else cropTop amt img
     return $ addCursorOffset (Location (0, -1 * rows)) $
              setImage cropped result
-render c (CropBottomBy rows p) = do
+renderPrim c (CropBottomBy rows p) = do
     result <- render c p
     let img = image result
         amt = imageHeight img - rows
         cropped = if amt < 0 then emptyImage else cropBottom amt img
     -- xxx crop cursors
     return $ setImage cropped result
-render c (HPad ch) = return $ setImage (charFill (c^.attr) ch (c^.w) (max 1 (c^.h))) def
-render c (VPad ch) = return $ setImage (charFill (c^.attr) ch (max 1 (c^.w)) (c^.h)) def
-render c (HFill ch) = return $ setImage (charFill (c^.attr) ch (c^.w) (min (c^.h) 1)) def
-render c (VFill ch) = return $ setImage (charFill (c^.attr) ch (min (c^.w) 1) (c^.h)) def
-render c (HLimit w' p) =
+renderPrim c (HPad ch) = return $ setImage (charFill (c^.attr) ch (c^.w) (max 1 (c^.h))) def
+renderPrim c (VPad ch) = return $ setImage (charFill (c^.attr) ch (max 1 (c^.w)) (c^.h)) def
+renderPrim c (HFill ch) = return $ setImage (charFill (c^.attr) ch (c^.w) (min (c^.h) 1)) def
+renderPrim c (VFill ch) = return $ setImage (charFill (c^.attr) ch (min (c^.w) 1) (c^.h)) def
+renderPrim c (HLimit w' p) =
     -- xxx crop cursors
     render (c & w .~ w') p
-render c (VLimit h' p) =
+renderPrim c (VLimit h' p) =
     -- xxx crop cursors
     render (c & h .~ h') p
-render c (HRelease p) = render (c & w .~ unrestricted) p --- NB
-render c (VRelease p) = render (c & h .~ unrestricted) p --- NB
-render c (UseAttr a p) = render (c & attr .~ a) p
-render c (Translate (Location (tw,th)) p) = do
+renderPrim c (HRelease p) = render (c & w .~ unrestricted) p --- NB
+renderPrim c (VRelease p) = render (c & h .~ unrestricted) p --- NB
+renderPrim c (UseAttr a p) = render (c & attr .~ a) p
+renderPrim c (Translate (Location (tw,th)) p) = do
     result <- render c p
     let img = image result
     return $ addCursorOffset (Location (tw, th)) $
              setImage (crop (c^.w) (c^.h) $ translate tw th img) result
-render c (ShowCursor n loc p) = do
+renderPrim c (ShowCursor n loc p) = do
     result <- render c p
     return $ result { cursors = (CursorLocation loc (Just n)):cursors result }
-render c (SaveSize sizeSetter p) = do
+renderPrim c (SaveSize sizeSetter p) = do
     result <- render c p
     let img = image result
         imgSz = (imageWidth img, imageHeight img)
     modify (sizeSetter imgSz)
     return result
-render c (HBox pairs) = do
+renderPrim c (HBox pairs) = do
     let pairsIndexed = zip [(0::Int)..] pairs
         his = filter (\p -> (snd $ snd p) == High) pairsIndexed
         lows = filter (\p -> (snd $ snd p) == Low) pairsIndexed
@@ -180,7 +169,7 @@ render c (HBox pairs) = do
 
     return $ Render (horizCat allImages) (concat allTranslatedCursors)
 
-render c (VBox pairs) = do
+renderPrim c (VBox pairs) = do
     let pairsIndexed = zip [(0::Int)..] pairs
         his = filter (\p -> (snd $ snd p) == High) pairsIndexed
         lows = filter (\p -> (snd $ snd p) == Low) pairsIndexed

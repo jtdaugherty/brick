@@ -14,7 +14,7 @@ where
 import Data.Default
 
 import Brick.Core (SetSize(..), Location(..))
-import Brick.Prim (Prim(..))
+import Brick.Prim
 
 data HScroll =
     HScroll { scrollLeft :: !Int
@@ -55,11 +55,11 @@ instance Scrollable VScroll where
 
 vScroll :: VScroll -> Prim a -> Prim a
 vScroll vs p =
-    Translate (Location (0, -1 * scrollStart vs)) $ VRelease p
+    translate (Location (0, -1 * scrollStart vs)) $ vRelease p
 
 hScroll :: HScroll -> Prim a -> Prim a
 hScroll hs p =
-    Translate (Location (-1 * scrollStart hs, 0)) $ HRelease p
+    translate (Location (-1 * scrollStart hs, 0)) $ hRelease p
 
 scrollToView :: (Scrollable a) => (Int, Int) -> a -> a
 scrollToView (reqStart, reqSize) s =

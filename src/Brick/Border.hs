@@ -29,8 +29,8 @@ borderWithLabel bs label = border_ bs (Just label)
 border_ :: BorderStyle -> Maybe String -> Prim a -> Prim a
 border_ bs label wrapped = total
     where
-        top = Txt [bsCornerTL bs] <<+ hBorder_ bs label +>> Txt [bsCornerTR bs]
-        bottom = Txt [bsCornerBL bs] <<+ hBorder bs +>> Txt [bsCornerBR bs]
+        top = txt [bsCornerTL bs] <<+ hBorder_ bs label +>> txt [bsCornerTR bs]
+        bottom = txt [bsCornerBL bs] <<+ hBorder bs +>> txt [bsCornerBR bs]
         middle = vBorder bs +>> wrapped <<+ vBorder bs
         total = top =>> middle <<= bottom
 
@@ -43,10 +43,10 @@ hBorderWithLabel bs label = hBorder_ bs (Just label)
 hBorder_ :: BorderStyle -> Maybe String -> Prim a
 hBorder_ bs label = hCenterWith (bsHorizontal bs) msg
     where
-        msg = maybe (Txt "") Txt label
+        msg = maybe (txt "") txt label
 
 vBorder :: BorderStyle -> Prim a
-vBorder = VFill . bsVertical
+vBorder = vFill . bsVertical
 
 -- Corners start from top left and go clockwise.  Intersections are:
 -- full, left, right, top, bottom.
