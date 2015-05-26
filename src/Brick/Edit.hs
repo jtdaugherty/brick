@@ -1,4 +1,3 @@
-{-# LANGUAGE RankNTypes #-}
 module Brick.Edit
   ( Editor
   , editor
@@ -6,14 +5,13 @@ module Brick.Edit
   )
 where
 
-import Control.Lens (Lens')
 import Data.Default
 import Data.Monoid ((<>))
 import Graphics.Vty (Event(..), Key(..), Modifier(..))
 
 import Brick.Core (Location(..), CursorName(..), HandleEvent(..), SetSize(..))
 import Brick.Prim
-import Brick.Scroll (HScroll, hScroll, scrollStart, scrollToView)
+import Brick.Scroll (HScroll, hScroll, scrollToView)
 import Brick.Util (clamp)
 
 data Editor =
@@ -90,8 +88,7 @@ editor :: CursorName -> String -> Editor
 editor cName s = Editor s (length s) cName def
 
 drawEditor :: Prim Editor
-drawEditor = do
-    p <- readState $ \e ->
+drawEditor =
+    saveSize setSize $ hScroll editorScroll $ readState $ \e ->
       let cursorLoc = Location (editCursorPos e, 0)
       in showCursor (editorCursorName e) cursorLoc $ txt (editStr e) <<+ hPad ' '
-    saveSize setSize $ readState $ \e -> (hScroll (editorScroll e) $ return p)

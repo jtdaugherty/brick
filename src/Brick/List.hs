@@ -1,4 +1,3 @@
-{-# LANGUAGE RankNTypes #-}
 module Brick.List
   ( List(listElements)
   , list
@@ -9,7 +8,6 @@ module Brick.List
 where
 
 import Control.Applicative ((<$>), (<|>))
-import Control.Lens (Lens')
 import Data.Default
 import Data.Maybe (catMaybes)
 import Graphics.Vty (Event(..), Key(..), DisplayRegion)
@@ -62,7 +60,7 @@ drawList = do
                        , High
                        )
       in (vBox drawn <<= vPad ' ') <<+ hPad ' '
-    readState $ \l -> saveSize setSize $ vScroll (listScroll l) $ return lp
+    readState $ \l -> saveSize setSize $ vScroll listScroll $ return lp
 
 listInsert :: Int -> e -> List e -> List e
 listInsert pos e l =
