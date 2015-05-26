@@ -2,6 +2,7 @@ module Brick.List
   ( List(listElements)
   , list
   , moveBy
+  , moveTo
   , drawList
   , listInsert
   , listRemove
@@ -129,6 +130,15 @@ moveBy :: Int -> List e -> List e
 moveBy amt l =
     let newSel = clamp 0 (length (listElements l) - 1) <$> (amt +) <$> listSelected l
     in ensureSelectedVisible $ l { listSelected = newSel }
+
+moveTo :: Int -> List e -> List e
+moveTo pos l =
+    let len = length (listElements l)
+        newSel = clamp 0 (len - 1) $ if pos < 0 then (len - pos) else pos
+    in ensureSelectedVisible $ l { listSelected = if len > 0
+                                                  then Just newSel
+                                                  else Nothing
+                                 }
 
 listSelectedElement :: List e -> Maybe (Int, e)
 listSelectedElement l = do
