@@ -4,7 +4,7 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TemplateHaskell #-}
 module Brick.Prim.Internal
-  ( Render(..)
+  ( Result(..)
   , Priority(..)
   , renderFinal
   , Prim
@@ -50,8 +50,8 @@ import qualified Graphics.Vty as V
 import Brick.Core (Location(..), CursorLocation(..), CursorName(..))
 import Brick.Util (clOffset, for)
 
-data Render =
-    Render { image :: V.Image
+data Result =
+    Result { image :: V.Image
            , cursors :: [CursorLocation]
            }
            deriving Show
@@ -67,13 +67,13 @@ makeLenses ''Context
 data Priority = High | Low
               deriving (Show, Eq)
 
-type Prim a = ReaderT Context (State a) Render
+type Prim a = ReaderT Context (State a) Result
 
 instance IsString (Prim a) where
     fromString = txt
 
-instance Default Render where
-    def = Render V.emptyImage []
+instance Default Result where
+    def = Result V.emptyImage []
 
 renderFinal :: [Prim a]
             -> V.DisplayRegion
@@ -88,14 +88,14 @@ renderFinal layerPrims sz chooseCursor st = (newState, pic, theCursor)
         layerCursors = cursors <$> layerResults
         theCursor = chooseCursor $ concat layerCursors
 
-addCursorOffset :: Location -> Render -> Render
+addCursorOffset :: Location -> Result -> Result
 addCursorOffset off r =
     let onlyVisible = filter isVisible
         isVisible (CursorLocation (Location (width, height)) _) = width >= 0 && height >= 0
     in r { cursors = onlyVisible $ (`clOffset` off) <$> cursors r
          }
 
-setImage :: V.Image -> Render -> Render
+setImage :: V.Image -> Result -> Result
 setImage i r = r { image = i }
 
 unrestricted :: Int
@@ -160,7 +160,7 @@ hBox pairs = do
                 offWidth = sum $ take i allWidths
             in cursors $ addCursorOffset off result
 
-    return $ Render (V.horizCat allImages) (concat allTranslatedCursors)
+    return $ Result (V.horizCat allImages) (concat allTranslatedCursors)
 
 vBox :: [(Prim a, Priority)] -> Prim a
 vBox pairs = do
@@ -194,7 +194,7 @@ vBox pairs = do
                 offHeight = sum $ take i allHeights
             in cursors $ addCursorOffset off result
 
-    return $ Render (V.vertCat allImages) (concat allTranslatedCursors)
+    return $ Result (V.vertCat allImages) (concat allTranslatedCursors)
 
 -- xxx crop cursors
 hLimit :: Int -> Prim a -> Prim a
