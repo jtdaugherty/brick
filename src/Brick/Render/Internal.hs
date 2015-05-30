@@ -5,6 +5,9 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Brick.Render.Internal
   ( Result(..)
+  , image
+  , cursors
+
   , Priority(..)
   , renderFinal
   , Render
@@ -36,7 +39,7 @@ module Brick.Render.Internal
 where
 
 import Control.Applicative
-import Control.Lens (makeLenses, (^.), (.=), (.~), (&))
+import Control.Lens (makeLenses, (^.), (.=), (.~), (&), (%~), to, _2)
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Reader
 import Control.Monad.Trans.Class (lift)
@@ -51,8 +54,8 @@ import Brick.Core (Location(..), CursorLocation(..), CursorName(..))
 import Brick.Util (clOffset, for)
 
 data Result =
-    Result { image :: V.Image
-           , cursors :: [CursorLocation]
+    Result { _image :: V.Image
+           , _cursors :: [CursorLocation]
            }
            deriving Show
 
@@ -62,6 +65,7 @@ data Context =
             , _h :: Int
             }
 
+makeLenses ''Result
 makeLenses ''Context
 
 data Priority = High | Low
@@ -84,19 +88,15 @@ renderFinal layerRenders sz chooseCursor st = (newState, pic, theCursor)
     where
         (layerResults, newState) = flip runState st $ sequence $ (\p -> runReaderT p ctx) <$> layerRenders
         ctx = Context V.defAttr (fst sz) (snd sz)
-        pic = V.picForLayers $ uncurry V.resize sz <$> image <$> layerResults
-        layerCursors = cursors <$> layerResults
+        pic = V.picForLayers $ uncurry V.resize sz <$> (^.image) <$> layerResults
+        layerCursors = (^.cursors) <$> layerResults
         theCursor = chooseCursor $ concat layerCursors
 
 addCursorOffset :: Location -> Result -> Result
 addCursorOffset off r =
     let onlyVisible = filter isVisible
         isVisible (CursorLocation (Location (width, height)) _) = width >= 0 && height >= 0
-    in r { cursors = onlyVisible $ (`clOffset` off) <$> cursors r
-         }
-
-setImage :: V.Image -> Result -> Result
-setImage i r = r { image = i }
+    in r & cursors %~ (\cs -> onlyVisible $ (`clOffset` off) <$> cs)
 
 unrestricted :: Int
 unrestricted = 1000
@@ -105,28 +105,28 @@ txt :: String -> Render a
 txt s = do
     c <- ask
     return $ if c^.w > 0 && c^.h > 0
-             then setImage (V.crop (c^.w) (c^.h) $ V.string (c^.attr) s) def
+             then def & image .~ (V.crop (c^.w) (c^.h) $ V.string (c^.attr) s)
              else def
 
 hPad :: Char -> Render a
 hPad ch = do
     c <- ask
-    return $ setImage (V.charFill (c^.attr) ch (c^.w) (max 1 (c^.h))) def
+    return $ def & image .~ (V.charFill (c^.attr) ch (c^.w) (max 1 (c^.h)))
 
 vPad :: Char -> Render a
 vPad ch = do
     c <- ask
-    return $ setImage (V.charFill (c^.attr) ch (max 1 (c^.w)) (c^.h)) def
+    return $ def & image .~ (V.charFill (c^.attr) ch (max 1 (c^.w)) (c^.h))
 
 hFill :: Char -> Render a
 hFill ch = do
     c <- ask
-    return $ setImage (V.charFill (c^.attr) ch (c^.w) (min (c^.h) 1)) def
+    return $ def & image .~ (V.charFill (c^.attr) ch (c^.w) (min (c^.h) 1))
 
 vFill :: Char -> Render a
 vFill ch = do
     c <- ask
-    return $ setImage (V.charFill (c^.attr) ch (min (c^.w) 1) (c^.h)) def
+    return $ def & image .~ (V.charFill (c^.attr) ch (min (c^.w) 1) (c^.h))
 
 hBox :: [(Render a, Priority)] -> Render a
 hBox pairs = do
@@ -138,12 +138,12 @@ hBox pairs = do
 
     renderedHis <- mapM (\(i, (prim, _)) -> (i,) <$> prim) his
 
-    let remainingWidth = c^.w - (sum $ (V.imageWidth . image . snd) <$> renderedHis)
+    let remainingWidth = c^.w - (sum $ (^._2.image.(to V.imageWidth)) <$> renderedHis)
         widthPerLow = remainingWidth `div` length lows
         padFirst = if widthPerLow * length lows < remainingWidth
                    then remainingWidth - widthPerLow * length lows
                    else 0
-        heightPerLow = maximum $ (V.imageHeight . image . snd) <$> renderedHis
+        heightPerLow = maximum $ (^._2.image.(to V.imageHeight)) <$> renderedHis
         renderLow (i, (prim, _)) =
             let padding = (if i == 0 then padFirst else 0)
             in (i,) <$> (withReaderT (\v -> v & w .~ widthPerLow + padding
@@ -153,12 +153,12 @@ hBox pairs = do
 
     let rendered = sortBy (compare `DF.on` fst) $ renderedHis ++ renderedLows
         allResults = snd <$> rendered
-        allImages = image <$> allResults
+        allImages = (^.image) <$> allResults
         allWidths = V.imageWidth <$> allImages
         allTranslatedCursors = for (zip [0..] allResults) $ \(i, result) ->
             let off = Location (offWidth, 0)
                 offWidth = sum $ take i allWidths
-            in cursors $ addCursorOffset off result
+            in (addCursorOffset off result)^.cursors
 
     return $ Result (V.horizCat allImages) (concat allTranslatedCursors)
 
@@ -172,12 +172,12 @@ vBox pairs = do
 
     renderedHis <- mapM (\(i, (prim, _)) -> (i,) <$> prim) his
 
-    let remainingHeight = c^.h - (sum $ (V.imageHeight . image . snd) <$> renderedHis)
+    let remainingHeight = c^.h - (sum $ (^._2.image.(to V.imageHeight)) <$> renderedHis)
         heightPerLow = remainingHeight `div` length lows
         padFirst = if heightPerLow * length lows < remainingHeight
                    then remainingHeight - heightPerLow * length lows
                    else 0
-        widthPerLow = maximum $ (V.imageWidth . image . snd) <$> renderedHis
+        widthPerLow = maximum $ (^._2.image.(to V.imageWidth)) <$> renderedHis
         renderLow (i, (prim, _)) =
             let padding = if i == 0 then padFirst else 0
             in (i,) <$> (withReaderT (\v -> v & w .~ widthPerLow
@@ -187,12 +187,12 @@ vBox pairs = do
 
     let rendered = sortBy (compare `DF.on` fst) $ renderedHis ++ renderedLows
         allResults = snd <$> rendered
-        allImages = image <$> allResults
+        allImages = (^.image) <$> allResults
         allHeights = V.imageHeight <$> allImages
         allTranslatedCursors = for (zip [0..] allResults) $ \(i, result) ->
             let off = Location (0, offHeight)
                 offHeight = sum $ take i allHeights
-            in cursors $ addCursorOffset off result
+            in (addCursorOffset off result)^.cursors
 
     return $ Result (V.vertCat allImages) (concat allTranslatedCursors)
 
@@ -211,62 +211,55 @@ raw :: V.Image -> Render a
 raw img = do
     c <- ask
     return $ if c^.w > 0 && c^.h > 0
-             then setImage (V.crop (c^.w) (c^.h) img) def
+             then def & image .~ (V.crop (c^.w) (c^.h) img)
              else def
 
 translate :: Location -> Render a -> Render a
 translate (Location (tw,th)) p = do
     result <- p
     c <- ask
-    let img = image result
     return $ addCursorOffset (Location (tw, th)) $
-             setImage (V.crop (c^.w) (c^.h) $ V.translate tw th img) result
+             result & image %~ (V.crop (c^.w) (c^.h) . V.translate tw th)
 
 cropLeftBy :: Int -> Render a -> Render a
 cropLeftBy cols p = do
     result <- p
-    let img = image result
-        amt = V.imageWidth img - cols
-        cropped = if amt < 0 then V.emptyImage else V.cropLeft amt img
-    return $ addCursorOffset (Location (-1 * cols, 0)) $
-             setImage cropped result
+    let amt = V.imageWidth (result^.image) - cols
+        cropped img = if amt < 0 then V.emptyImage else V.cropLeft amt img
+    return $ addCursorOffset (Location (-1 * cols, 0)) $ result & image %~ cropped
 
 cropRightBy :: Int -> Render a -> Render a
 cropRightBy cols p = do
     result <- p
-    let img = image result
-        amt = V.imageWidth img - cols
-        cropped = if amt < 0 then V.emptyImage else V.cropRight amt img
+    let amt = V.imageWidth (result^.image) - cols
+        cropped img = if amt < 0 then V.emptyImage else V.cropRight amt img
     -- xxx cursors
-    return $ setImage cropped result
+    return $ result & image %~ cropped
 
 cropTopBy :: Int -> Render a -> Render a
 cropTopBy rows p = do
     result <- p
-    let img = image result
-        amt = V.imageHeight img - rows
-        cropped = if amt < 0 then V.emptyImage else V.cropTop amt img
-    return $ addCursorOffset (Location (0, -1 * rows)) $
-             setImage cropped result
+    let amt = V.imageHeight (result^.image) - rows
+        cropped img = if amt < 0 then V.emptyImage else V.cropTop amt img
+    return $ addCursorOffset (Location (0, -1 * rows)) $ result & image %~ cropped
 
 cropBottomBy :: Int -> Render a -> Render a
 cropBottomBy rows p = do
     result <- p
-    let img = image result
-        amt = V.imageHeight img - rows
-        cropped = if amt < 0 then V.emptyImage else V.cropBottom amt img
+    let amt = V.imageHeight (result^.image) - rows
+        cropped img = if amt < 0 then V.emptyImage else V.cropBottom amt img
     -- xxx crop cursors
-    return $ setImage cropped result
+    return $ result & image %~ cropped
 
 showCursor :: CursorName -> Location -> Render a -> Render a
 showCursor n loc p = do
     result <- p
-    return $ result { cursors = (CursorLocation loc (Just n)):cursors result }
+    return $ result & cursors %~ (CursorLocation loc (Just n):)
 
 saveSize :: (V.DisplayRegion -> a -> a) -> Render a -> Render a
 saveSize sizeSetter p = do
     result <- p
-    let img = image result
+    let img = result^.image
         imgSz = (V.imageWidth img, V.imageHeight img)
     lift $ modify (sizeSetter imgSz)
     return result
