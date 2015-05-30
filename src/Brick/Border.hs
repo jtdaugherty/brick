@@ -17,7 +17,7 @@ where
 
 import Data.Default
 
-import Brick.Prim
+import Brick.Render
 import Brick.Center (hCenterWith)
 
 border :: BorderStyle -> Render a -> Render a

@@ -7,7 +7,7 @@ module Brick.Center
   )
 where
 
-import Brick.Prim
+import Brick.Render
 
 hCenter :: Render a -> Render a
 hCenter = hCenterWith ' '

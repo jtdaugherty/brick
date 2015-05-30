@@ -3,7 +3,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TemplateHaskell #-}
-module Brick.Prim.Internal
+module Brick.Render.Internal
   ( Result(..)
   , Priority(..)
   , renderFinal

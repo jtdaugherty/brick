@@ -34,8 +34,8 @@ import Graphics.Vty
   )
 import System.Exit (exitSuccess)
 
-import Brick.Prim (Render)
-import Brick.Prim.Internal (renderFinal)
+import Brick.Render (Render)
+import Brick.Render.Internal (renderFinal)
 import Brick.Core (Location(..), CursorLocation(..))
 
 data App a e =

@@ -23,11 +23,11 @@ library
     Brick.Focus
     Brick.List
     Brick.Main
-    Brick.Prim
+    Brick.Render
     Brick.Scroll
     Brick.Util
   other-modules:
-    Brick.Prim.Internal
+    Brick.Render.Internal
     Brick.Merge
 
   build-depends:       base >=4.7 && <4.8,

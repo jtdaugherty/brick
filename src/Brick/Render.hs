@@ -1,4 +1,4 @@
-module Brick.Prim
+module Brick.Render
   ( Render
   , Priority(..)
   , (=>>), (<<=), (<=>)
@@ -30,7 +30,7 @@ module Brick.Prim
   )
 where
 
-import Brick.Prim.Internal
+import Brick.Render.Internal
 
 (<+>) :: Render a -> Render a -> Render a
 (<+>) a b = hBox [(a, High), (b, High)]

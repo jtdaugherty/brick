@@ -19,7 +19,7 @@ import qualified Data.Map as M
 
 import Brick.Core (HandleEvent(..), SetSize(..))
 import Brick.Merge (maintainSel)
-import Brick.Prim
+import Brick.Render
 import Brick.Scroll (VScroll, vScroll, scrollToView)
 import Brick.Util (clamp, for)
 

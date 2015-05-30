@@ -10,7 +10,7 @@ import Data.Monoid ((<>))
 import Graphics.Vty (Event(..), Key(..), Modifier(..))
 
 import Brick.Core (Location(..), CursorName(..), HandleEvent(..), SetSize(..))
-import Brick.Prim
+import Brick.Render
 import Brick.Scroll (HScroll, hScroll, scrollToView)
 import Brick.Util (clamp)
 

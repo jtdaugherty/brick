@@ -14,7 +14,7 @@ where
 import Data.Default
 
 import Brick.Core (SetSize(..), Location(..))
-import Brick.Prim
+import Brick.Render
 
 data HScroll =
     HScroll { scrollLeft :: !Int
