@@ -34,12 +34,12 @@ import Graphics.Vty
   )
 import System.Exit (exitSuccess)
 
-import Brick.Prim (Prim)
+import Brick.Prim (Render)
 import Brick.Prim.Internal (renderFinal)
 import Brick.Core (Location(..), CursorLocation(..))
 
 data App a e =
-    App { appDraw :: a -> [Prim a]
+    App { appDraw :: a -> [Render a]
         , appChooseCursor :: a -> [CursorLocation] -> Maybe CursorLocation
         , appHandleEvent :: e -> a -> IO a
         }
@@ -53,7 +53,7 @@ instance Default (App a e) where
 defaultMain :: App a Event -> a -> IO ()
 defaultMain = defaultMainWithVty (mkVty def)
 
-simpleMain :: [Prim ()] -> IO ()
+simpleMain :: [Render ()] -> IO ()
 simpleMain ls =
     let app = def { appDraw = const ls
                   , appHandleEvent = const $ const exitSuccess

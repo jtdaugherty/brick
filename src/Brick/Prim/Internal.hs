@@ -7,7 +7,7 @@ module Brick.Prim.Internal
   ( Result(..)
   , Priority(..)
   , renderFinal
-  , Prim
+  , Render
 
   , txt
   , hPad
@@ -67,22 +67,22 @@ makeLenses ''Context
 data Priority = High | Low
               deriving (Show, Eq)
 
-type Prim a = ReaderT Context (State a) Result
+type Render a = ReaderT Context (State a) Result
 
-instance IsString (Prim a) where
+instance IsString (Render a) where
     fromString = txt
 
 instance Default Result where
     def = Result V.emptyImage []
 
-renderFinal :: [Prim a]
+renderFinal :: [Render a]
             -> V.DisplayRegion
             -> ([CursorLocation] -> Maybe CursorLocation)
             -> a
             -> (a, V.Picture, Maybe CursorLocation)
-renderFinal layerPrims sz chooseCursor st = (newState, pic, theCursor)
+renderFinal layerRenders sz chooseCursor st = (newState, pic, theCursor)
     where
-        (layerResults, newState) = flip runState st $ sequence $ (\p -> runReaderT p ctx) <$> layerPrims
+        (layerResults, newState) = flip runState st $ sequence $ (\p -> runReaderT p ctx) <$> layerRenders
         ctx = Context V.defAttr (fst sz) (snd sz)
         pic = V.picForLayers $ uncurry V.resize sz <$> image <$> layerResults
         layerCursors = cursors <$> layerResults
@@ -101,34 +101,34 @@ setImage i r = r { image = i }
 unrestricted :: Int
 unrestricted = 1000
 
-txt :: String -> Prim a
+txt :: String -> Render a
 txt s = do
     c <- ask
     return $ if c^.w > 0 && c^.h > 0
              then setImage (V.crop (c^.w) (c^.h) $ V.string (c^.attr) s) def
              else def
 
-hPad :: Char -> Prim a
+hPad :: Char -> Render a
 hPad ch = do
     c <- ask
     return $ setImage (V.charFill (c^.attr) ch (c^.w) (max 1 (c^.h))) def
 
-vPad :: Char -> Prim a
+vPad :: Char -> Render a
 vPad ch = do
     c <- ask
     return $ setImage (V.charFill (c^.attr) ch (max 1 (c^.w)) (c^.h)) def
 
-hFill :: Char -> Prim a
+hFill :: Char -> Render a
 hFill ch = do
     c <- ask
     return $ setImage (V.charFill (c^.attr) ch (c^.w) (min (c^.h) 1)) def
 
-vFill :: Char -> Prim a
+vFill :: Char -> Render a
 vFill ch = do
     c <- ask
     return $ setImage (V.charFill (c^.attr) ch (min (c^.w) 1) (c^.h)) def
 
-hBox :: [(Prim a, Priority)] -> Prim a
+hBox :: [(Render a, Priority)] -> Render a
 hBox pairs = do
     c <- ask
 
@@ -162,7 +162,7 @@ hBox pairs = do
 
     return $ Result (V.horizCat allImages) (concat allTranslatedCursors)
 
-vBox :: [(Prim a, Priority)] -> Prim a
+vBox :: [(Render a, Priority)] -> Render a
 vBox pairs = do
     c <- ask
 
@@ -197,24 +197,24 @@ vBox pairs = do
     return $ Result (V.vertCat allImages) (concat allTranslatedCursors)
 
 -- xxx crop cursors
-hLimit :: Int -> Prim a -> Prim a
+hLimit :: Int -> Render a -> Render a
 hLimit w' = withReaderT (& w .~ w')
 
 -- xxx crop cursors
-vLimit :: Int -> Prim a -> Prim a
+vLimit :: Int -> Render a -> Render a
 vLimit h' = withReaderT (& h .~ h')
 
-useAttr :: V.Attr -> Prim a -> Prim a
+useAttr :: V.Attr -> Render a -> Render a
 useAttr a = withReaderT (& attr .~ a)
 
-raw :: V.Image -> Prim a
+raw :: V.Image -> Render a
 raw img = do
     c <- ask
     return $ if c^.w > 0 && c^.h > 0
              then setImage (V.crop (c^.w) (c^.h) img) def
              else def
 
-translate :: Location -> Prim a -> Prim a
+translate :: Location -> Render a -> Render a
 translate (Location (tw,th)) p = do
     result <- p
     c <- ask
@@ -222,7 +222,7 @@ translate (Location (tw,th)) p = do
     return $ addCursorOffset (Location (tw, th)) $
              setImage (V.crop (c^.w) (c^.h) $ V.translate tw th img) result
 
-cropLeftBy :: Int -> Prim a -> Prim a
+cropLeftBy :: Int -> Render a -> Render a
 cropLeftBy cols p = do
     result <- p
     let img = image result
@@ -231,7 +231,7 @@ cropLeftBy cols p = do
     return $ addCursorOffset (Location (-1 * cols, 0)) $
              setImage cropped result
 
-cropRightBy :: Int -> Prim a -> Prim a
+cropRightBy :: Int -> Render a -> Render a
 cropRightBy cols p = do
     result <- p
     let img = image result
@@ -240,7 +240,7 @@ cropRightBy cols p = do
     -- xxx cursors
     return $ setImage cropped result
 
-cropTopBy :: Int -> Prim a -> Prim a
+cropTopBy :: Int -> Render a -> Render a
 cropTopBy rows p = do
     result <- p
     let img = image result
@@ -249,7 +249,7 @@ cropTopBy rows p = do
     return $ addCursorOffset (Location (0, -1 * rows)) $
              setImage cropped result
 
-cropBottomBy :: Int -> Prim a -> Prim a
+cropBottomBy :: Int -> Render a -> Render a
 cropBottomBy rows p = do
     result <- p
     let img = image result
@@ -258,12 +258,12 @@ cropBottomBy rows p = do
     -- xxx crop cursors
     return $ setImage cropped result
 
-showCursor :: CursorName -> Location -> Prim a -> Prim a
+showCursor :: CursorName -> Location -> Render a -> Render a
 showCursor n loc p = do
     result <- p
     return $ result { cursors = (CursorLocation loc (Just n)):cursors result }
 
-saveSize :: (V.DisplayRegion -> a -> a) -> Prim a -> Prim a
+saveSize :: (V.DisplayRegion -> a -> a) -> Render a -> Render a
 saveSize sizeSetter p = do
     result <- p
     let img = image result
@@ -271,13 +271,13 @@ saveSize sizeSetter p = do
     lift $ modify (sizeSetter imgSz)
     return result
 
-hRelease :: Prim a -> Prim a
+hRelease :: Render a -> Render a
 hRelease = withReaderT (& w .~ unrestricted) --- NB
 
-vRelease :: Prim a -> Prim a
+vRelease :: Render a -> Render a
 vRelease = withReaderT (& h .~ unrestricted) --- NB
 
-withLens :: (Lens' a b) -> Prim b -> Prim a
+withLens :: (Lens' a b) -> Render b -> Render a
 withLens target p = do
     outerState <- lift get
     let oldInnerState = outerState^.target
@@ -286,10 +286,10 @@ withLens target p = do
     target .= newInnerState
     return result
 
-readState :: (a -> Prim a) -> Prim a
+readState :: (a -> Render a) -> Render a
 readState f = (lift get) >>= (\a -> f a)
 
-afterRendering :: Prim a -> (a -> a) -> Prim a
+afterRendering :: Render a -> (a -> a) -> Render a
 afterRendering p f = do
     result <- p
     lift $ modify f

@@ -87,7 +87,7 @@ instance SetSize Editor where
 editor :: CursorName -> String -> Editor
 editor cName s = Editor s (length s) cName def
 
-drawEditor :: Prim Editor
+drawEditor :: Render Editor
 drawEditor =
     saveSize setSize $ hScroll editorScroll $ readState $ \e ->
       let cursorLoc = Location (editCursorPos e, 0)

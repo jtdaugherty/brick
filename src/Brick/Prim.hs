@@ -1,5 +1,5 @@
 module Brick.Prim
-  ( Prim
+  ( Render
   , Priority(..)
   , (=>>), (<<=), (<=>)
   , (+>>), (<<+), (<+>)
@@ -32,20 +32,20 @@ where
 
 import Brick.Prim.Internal
 
-(<+>) :: Prim a -> Prim a -> Prim a
+(<+>) :: Render a -> Render a -> Render a
 (<+>) a b = hBox [(a, High), (b, High)]
 
-(<<+) :: Prim a -> Prim a -> Prim a
+(<<+) :: Render a -> Render a -> Render a
 (<<+) a b = hBox [(a, High), (b, Low)]
 
-(+>>) :: Prim a -> Prim a -> Prim a
+(+>>) :: Render a -> Render a -> Render a
 (+>>) a b = hBox [(a, Low), (b, High)]
 
-(<=>) :: Prim a -> Prim a -> Prim a
+(<=>) :: Render a -> Render a -> Render a
 (<=>) a b = vBox [(a, High), (b, High)]
 
-(<<=) :: Prim a -> Prim a -> Prim a
+(<<=) :: Render a -> Render a -> Render a
 (<<=) a b = vBox [(a, High), (b, Low)]
 
-(=>>) :: Prim a -> Prim a -> Prim a
+(=>>) :: Render a -> Render a -> Render a
 (=>>) a b = vBox [(a, Low), (b, High)]

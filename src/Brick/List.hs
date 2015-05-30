@@ -25,7 +25,7 @@ import Brick.Util (clamp, for)
 
 data List e =
     List { listElements :: ![e]
-         , listElementDraw :: Bool -> e -> Prim (List e)
+         , listElementDraw :: Bool -> e -> Render (List e)
          , listSelected :: !(Maybe Int)
          , listScroll :: !VScroll
          , listElementHeights :: M.Map Int Int
@@ -44,7 +44,7 @@ instance SetSize (List e) where
         let updatedScroll = setSize sz $ listScroll l
         in ensureSelectedVisible $ l { listScroll = updatedScroll }
 
-list :: (Bool -> e -> Prim (List e)) -> [e] -> List e
+list :: (Bool -> e -> Render (List e)) -> [e] -> List e
 list draw es =
     let selIndex = if null es then Nothing else Just 0
     in List es draw selIndex def M.empty
@@ -54,7 +54,7 @@ listSetElementSize i sz l =
     l { listElementHeights = M.insert i (snd sz) (listElementHeights l)
       }
 
-drawList :: Prim (List e)
+drawList :: Render (List e)
 drawList = theList
     where
         theList = saveSize setSize $
@@ -65,8 +65,8 @@ drawList = theList
                 let es = listElements l
                     drawn = for (zip [0..] es) $ \(i, e) ->
                               let isSelected = Just i == listSelected l
-                                  elemPrim = listElementDraw l isSelected e
-                              in ( saveSize (listSetElementSize i) elemPrim
+                                  elemRender = listElementDraw l isSelected e
+                              in ( saveSize (listSetElementSize i) elemRender
                                  , High
                                  )
                 (vBox drawn <<= vPad ' ') <<+ hPad ' '
