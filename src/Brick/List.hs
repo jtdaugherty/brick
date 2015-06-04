@@ -42,7 +42,7 @@ instance HandleEvent (List e) where
 instance SetSize (List e) where
     setSize sz l =
         let updatedScroll = setSize sz $ listScroll l
-        in ensureSelectedVisible $ l { listScroll = updatedScroll }
+        in makeSelectedVisible $ l { listScroll = updatedScroll }
 
 list :: (Bool -> e -> Render (List e)) -> [e] -> List e
 list draw es =
@@ -59,9 +59,9 @@ drawList = theList
     where
         theList = saveSize setSize $
                   vScroll listScroll $
-                  afterRendering body ensureSelectedVisible
+                  ensure makeSelectedVisible body
 
-        body = readState $ \l -> do
+        body = usingState $ \l -> do
                 let es = listElements l
                     drawn = for (zip [0..] es) $ \(i, e) ->
                               let isSelected = Just i == listSelected l
@@ -81,9 +81,9 @@ listInsert pos e l =
                     then s + 1
                     else s
         (front, back) = splitAt safePos es
-    in ensureSelectedVisible $ l { listSelected = Just newSel
-                                 , listElements = front ++ (e : back)
-                                 }
+    in makeSelectedVisible $ l { listSelected = Just newSel
+                               , listElements = front ++ (e : back)
+                               }
 
 listRemove :: Int -> List e -> List e
 listRemove pos l | null es                            = l
@@ -96,11 +96,11 @@ listRemove pos l | null es                            = l
                      else s
         (front, back) = splitAt pos es
         es' = front ++ tail back
-    in ensureSelectedVisible $ l { listSelected = if null es'
-                                                  then Nothing
-                                                  else Just newSel
-                                 , listElements = es'
-                                 }
+    in makeSelectedVisible $ l { listSelected = if null es'
+                                                then Nothing
+                                                else Just newSel
+                               , listElements = es'
+                               }
     where
         es = listElements l
 
@@ -114,9 +114,9 @@ listReplace es' l | es' == es = l
           (_, True)      -> Nothing
           (True, False)  -> Just 0
           (False, False) -> Just (maintainSel es es' sel)
-    in ensureSelectedVisible $ l { listSelected = newSel
-                                 , listElements = es'
-                                 }
+    in makeSelectedVisible $ l { listSelected = newSel
+                               , listElements = es'
+                               }
     where
         es = listElements l
 
@@ -129,24 +129,24 @@ moveDown = moveBy 1
 moveBy :: Int -> List e -> List e
 moveBy amt l =
     let newSel = clamp 0 (length (listElements l) - 1) <$> (amt +) <$> listSelected l
-    in ensureSelectedVisible $ l { listSelected = newSel }
+    in makeSelectedVisible $ l { listSelected = newSel }
 
 moveTo :: Int -> List e -> List e
 moveTo pos l =
     let len = length (listElements l)
         newSel = clamp 0 (len - 1) $ if pos < 0 then (len - pos) else pos
-    in ensureSelectedVisible $ l { listSelected = if len > 0
-                                                  then Just newSel
-                                                  else Nothing
-                                 }
+    in makeSelectedVisible $ l { listSelected = if len > 0
+                                                then Just newSel
+                                                else Nothing
+                               }
 
 listSelectedElement :: List e -> Maybe (Int, e)
 listSelectedElement l = do
   sel <- listSelected l
   return (sel, listElements l !! sel)
 
-ensureSelectedVisible :: List e -> List e
-ensureSelectedVisible l =
+makeSelectedVisible :: List e -> List e
+makeSelectedVisible l =
     let Just scrollTo = (listSelected l) <|> (Just 0)
         heights = listElementHeights l
         scrollTop = sum $ catMaybes $ (\k -> M.lookup k heights) <$> [0..scrollTo-1]

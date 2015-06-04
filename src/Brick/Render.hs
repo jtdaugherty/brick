@@ -25,8 +25,8 @@ module Brick.Render
   , hRelease
   , vRelease
   , withLens
-  , readState
-  , afterRendering
+  , usingState
+  , ensure
   )
 where
 

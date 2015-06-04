@@ -33,8 +33,8 @@ module Brick.Render.Internal
   , hRelease
   , vRelease
   , withLens
-  , readState
-  , afterRendering
+  , usingState
+  , ensure
   )
 where
 
@@ -279,11 +279,11 @@ withLens target p = do
     target .= newInnerState
     return result
 
-readState :: (a -> Render a) -> Render a
-readState f = (lift get) >>= (\a -> f a)
+usingState :: (a -> Render a) -> Render a
+usingState f = (lift get) >>= (\a -> f a)
 
-afterRendering :: Render a -> (a -> a) -> Render a
-afterRendering p f = do
+ensure :: (a -> a) -> Render a -> Render a
+ensure f p = do
     result <- p
     lift $ modify f
     return result

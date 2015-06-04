@@ -89,6 +89,6 @@ editor cName s = Editor s (length s) cName def
 
 drawEditor :: Render Editor
 drawEditor =
-    saveSize setSize $ hScroll editorScroll $ readState $ \e ->
+    saveSize setSize $ hScroll editorScroll $ usingState $ \e ->
       let cursorLoc = Location (editCursorPos e, 0)
       in showCursor (editorCursorName e) cursorLoc $ txt (editStr e) <<+ hPad ' '

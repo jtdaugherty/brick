@@ -56,14 +56,14 @@ instance Scrollable VScroll where
 vScroll :: (a -> VScroll) -> Render a -> Render a
 vScroll f p = do
     result <- vRelease p
-    readState $ \s ->
+    usingState $ \s ->
         let vs = f s
         in translate (Location (0, -1 * scrollStart vs)) $ return result
 
 hScroll :: (a -> HScroll) -> Render a -> Render a
 hScroll f p = do
     result <- hRelease p
-    readState $ \s ->
+    usingState $ \s ->
         let hs = f s
         in translate (Location (-1 * scrollStart hs, 0)) $ return result
 
