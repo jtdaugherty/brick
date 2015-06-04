@@ -86,7 +86,7 @@ listInsert pos e l =
                                }
 
 listRemove :: Int -> List e -> List e
-listRemove pos l | null es                            = l
+listRemove pos l | null es = l
                  | pos /= clamp 0 (length es - 1) pos = l
                  | otherwise =
     let newSel = case listSelected l of
