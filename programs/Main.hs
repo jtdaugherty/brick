@@ -45,7 +45,7 @@ drawUI st = [a]
                   (hLimit 25 (
                     vBox [ (vLimit 1 $ useAttr (cyan `on` blue) $ drawEditor (st^.stEditor), High)
                          , (hBorder bs, Low)
-                         , (vLimit 10 $ drawList (st^.stList), High)
+                         , (vLimit 10 $ renderList (st^.stList), High)
                          ]
                   ))
         a = translateBy (st^.stTrans) $
@@ -77,7 +77,7 @@ appEvent e st =
 
         EvKey KEnter [] ->
             let el = length $ listElements $ st^.stList
-            in return $ st & stList %~ (moveBy 1 . listInsert el el)
+            in return $ st & stList %~ (listMoveBy 1 . listInsert el el)
 
         ev -> return $ st & stEditor %~ (handleEvent ev)
                           & stList %~ (handleEvent ev)

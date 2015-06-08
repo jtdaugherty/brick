@@ -2,9 +2,11 @@
 module Brick.List
   ( List(listElements)
   , list
-  , moveBy
-  , moveTo
-  , drawList
+  , renderList
+  , listMoveBy
+  , listMoveTo
+  , listMoveUp
+  , listMoveDown
   , listInsert
   , listRemove
   , listReplace
@@ -32,8 +34,8 @@ instance HandleEvent (List e) where
     handleEvent e theList = f theList
         where
             f = case e of
-                  EvKey KUp [] -> moveUp
-                  EvKey KDown [] -> moveDown
+                  EvKey KUp [] -> listMoveUp
+                  EvKey KDown [] -> listMoveDown
                   _ -> id
 
 list :: Name -> (Bool -> e -> Render) -> [e] -> List e
@@ -41,8 +43,8 @@ list name draw es =
     let selIndex = if null es then Nothing else Just 0
     in List es draw selIndex name
 
-drawList :: List e -> Render
-drawList l = theList
+renderList :: List e -> Render
+renderList l = theList
     where
         theList = viewport (listName l) Vertical $ vBox pairs
         pairs = (, High) <$> (drawListElements l)
@@ -106,19 +108,19 @@ listReplace es' l | es' == es = l
     where
         es = listElements l
 
-moveUp :: List e -> List e
-moveUp = moveBy (-1)
+listMoveUp :: List e -> List e
+listMoveUp = listMoveBy (-1)
 
-moveDown :: List e -> List e
-moveDown = moveBy 1
+listMoveDown :: List e -> List e
+listMoveDown = listMoveBy 1
 
-moveBy :: Int -> List e -> List e
-moveBy amt l =
+listMoveBy :: Int -> List e -> List e
+listMoveBy amt l =
     let newSel = clamp 0 (length (listElements l) - 1) <$> (amt +) <$> listSelected l
     in l { listSelected = newSel }
 
-moveTo :: Int -> List e -> List e
-moveTo pos l =
+listMoveTo :: Int -> List e -> List e
+listMoveTo pos l =
     let len = length (listElements l)
         newSel = clamp 0 (len - 1) $ if pos < 0 then (len - pos) else pos
     in l { listSelected = if len > 0
