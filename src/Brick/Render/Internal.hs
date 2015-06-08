@@ -8,9 +8,13 @@ module Brick.Render.Internal
   , image
   , cursors
 
+  , RenderState(..)
+
   , Priority(..)
   , renderFinal
   , Render
+
+  , ViewportType(..)
 
   , txt
   , hPad
@@ -29,33 +33,52 @@ module Brick.Render.Internal
   , cropTopBy
   , cropBottomBy
   , showCursor
-  , saveSize
   , hRelease
   , vRelease
-  , withLens
-  , usingState
-  , ensure
+  , viewport
+  , visible
   )
 where
 
 import Control.Applicative
-import Control.Lens (makeLenses, (^.), (.=), (.~), (&), (%~), to, _2)
+import Control.Lens (makeLenses, (^.), (.~), (&), (%~), to, _1, _2)
+import Control.Monad (when)
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Reader
 import Control.Monad.Trans.Class (lift)
 import Data.Default
+import Data.Monoid ((<>), mempty)
+import qualified Data.Map as M
 import qualified Data.Function as DF
 import Data.List (sortBy)
 import Control.Lens (Lens')
 import Data.String (IsString(..))
 import qualified Graphics.Vty as V
 
-import Brick.Core (Location(..), CursorLocation(..), CursorName(..))
+import Brick.Core (Location(..), loc, CursorLocation(..), CursorName(..))
 import Brick.Util (clOffset, for)
+
+import qualified Debug.Trace as D
+
+data VisibilityRequest =
+    VR { _vrPosition :: Location
+       , _vrSize :: V.DisplayRegion
+       }
+       deriving Show
+
+data ViewportType = Vertical | Horizontal deriving Show
+
+data Viewport =
+    VP { _vpLeft :: Int
+       , _vpTop :: Int
+       , _vpSize :: V.DisplayRegion
+       }
+       deriving Show
 
 data Result =
     Result { _image :: V.Image
            , _cursors :: [CursorLocation]
+           , _visibilityRequests :: [VisibilityRequest]
            }
            deriving Show
 
@@ -65,32 +88,44 @@ data Context =
             , _h :: Int
             }
 
-makeLenses ''Result
-makeLenses ''Context
-
 data Priority = High | Low
               deriving (Show, Eq)
 
-type Render a = ReaderT Context (State a) Result
+type Render a = ReaderT Context (State RenderState) Result
+
+data RenderState =
+    RS { _viewportMap :: M.Map String Viewport
+       }
+
+makeLenses ''Result
+makeLenses ''Context
+makeLenses ''VisibilityRequest
+makeLenses ''Viewport
+makeLenses ''RenderState
 
 instance IsString (Render a) where
     fromString = txt
 
 instance Default Result where
-    def = Result V.emptyImage []
+    def = Result V.emptyImage [] []
 
 renderFinal :: [Render a]
             -> V.DisplayRegion
             -> ([CursorLocation] -> Maybe CursorLocation)
-            -> a
-            -> (a, V.Picture, Maybe CursorLocation)
-renderFinal layerRenders sz chooseCursor st = (newState, pic, theCursor)
+            -> RenderState
+            -> (RenderState, V.Picture, Maybe CursorLocation)
+renderFinal layerRenders sz chooseCursor rs = (newRS, pic, theCursor)
     where
-        (layerResults, newState) = flip runState st $ sequence $ (\p -> runReaderT p ctx) <$> layerRenders
+        (layerResults, newRS) = flip runState rs $ sequence $ (\p -> runReaderT p ctx) <$> layerRenders
         ctx = Context V.defAttr (fst sz) (snd sz)
         pic = V.picForLayers $ uncurry V.resize sz <$> (^.image) <$> layerResults
         layerCursors = (^.cursors) <$> layerResults
         theCursor = chooseCursor $ concat layerCursors
+
+addVisibilityOffset :: Location -> Result -> Result
+addVisibilityOffset off r =
+    let addOffset vrs = (& vrPosition %~ (off <>)) <$> vrs
+    in r & visibilityRequests %~ addOffset
 
 addCursorOffset :: Location -> Result -> Result
 addCursorOffset off r =
@@ -155,12 +190,16 @@ hBox pairs = do
         allResults = snd <$> rendered
         allImages = (^.image) <$> allResults
         allWidths = V.imageWidth <$> allImages
+        allTranslatedVRs = for (zip [0..] allResults) $ \(i, result) ->
+            let off = Location (offWidth, 0)
+                offWidth = sum $ take i allWidths
+            in (addVisibilityOffset off result)^.visibilityRequests
         allTranslatedCursors = for (zip [0..] allResults) $ \(i, result) ->
             let off = Location (offWidth, 0)
                 offWidth = sum $ take i allWidths
             in (addCursorOffset off result)^.cursors
 
-    return $ Result (V.horizCat allImages) (concat allTranslatedCursors)
+    return $ Result (V.horizCat allImages) (concat allTranslatedCursors) (concat allTranslatedVRs)
 
 vBox :: [(Render a, Priority)] -> Render a
 vBox pairs = do
@@ -189,18 +228,22 @@ vBox pairs = do
         allResults = snd <$> rendered
         allImages = (^.image) <$> allResults
         allHeights = V.imageHeight <$> allImages
+        allTranslatedVRs = for (zip [0..] allResults) $ \(i, result) ->
+            let off = Location (0, offHeight)
+                offHeight = sum $ take i allHeights
+            in (addVisibilityOffset off result)^.visibilityRequests
         allTranslatedCursors = for (zip [0..] allResults) $ \(i, result) ->
             let off = Location (0, offHeight)
                 offHeight = sum $ take i allHeights
             in (addCursorOffset off result)^.cursors
 
-    return $ Result (V.vertCat allImages) (concat allTranslatedCursors)
+    return $ Result (V.vertCat allImages) (concat allTranslatedCursors) (concat allTranslatedVRs)
 
--- xxx crop cursors
+-- xxx crop cursors and VRs
 hLimit :: Int -> Render a -> Render a
 hLimit w' = withReaderT (& w .~ w')
 
--- xxx crop cursors
+-- xxx crop cursors and VRs
 vLimit :: Int -> Render a -> Render a
 vLimit h' = withReaderT (& h .~ h')
 
@@ -219,6 +262,7 @@ translate (Location (tw,th)) p = do
     result <- p
     c <- ask
     return $ addCursorOffset (Location (tw, th)) $
+             addVisibilityOffset (Location (tw, th)) $
              result & image %~ (V.crop (c^.w) (c^.h) . V.translate tw th)
 
 cropLeftBy :: Int -> Render a -> Render a
@@ -226,14 +270,16 @@ cropLeftBy cols p = do
     result <- p
     let amt = V.imageWidth (result^.image) - cols
         cropped img = if amt < 0 then V.emptyImage else V.cropLeft amt img
-    return $ addCursorOffset (Location (-1 * cols, 0)) $ result & image %~ cropped
+    return $ addCursorOffset (Location (-1 * cols, 0)) $
+             addVisibilityOffset (Location (-1 * cols, 0)) $
+             result & image %~ cropped
 
 cropRightBy :: Int -> Render a -> Render a
 cropRightBy cols p = do
     result <- p
     let amt = V.imageWidth (result^.image) - cols
         cropped img = if amt < 0 then V.emptyImage else V.cropRight amt img
-    -- xxx cursors
+    -- xxx cursors / VRs
     return $ result & image %~ cropped
 
 cropTopBy :: Int -> Render a -> Render a
@@ -241,28 +287,22 @@ cropTopBy rows p = do
     result <- p
     let amt = V.imageHeight (result^.image) - rows
         cropped img = if amt < 0 then V.emptyImage else V.cropTop amt img
-    return $ addCursorOffset (Location (0, -1 * rows)) $ result & image %~ cropped
+    return $ addCursorOffset (Location (0, -1 * rows)) $
+             addVisibilityOffset (Location (0, -1 * rows)) $
+             result & image %~ cropped
 
 cropBottomBy :: Int -> Render a -> Render a
 cropBottomBy rows p = do
     result <- p
     let amt = V.imageHeight (result^.image) - rows
         cropped img = if amt < 0 then V.emptyImage else V.cropBottom amt img
-    -- xxx crop cursors
+    -- xxx crop cursors / VRs
     return $ result & image %~ cropped
 
 showCursor :: CursorName -> Location -> Render a -> Render a
-showCursor n loc p = do
+showCursor n cloc p = do
     result <- p
-    return $ result & cursors %~ (CursorLocation loc (Just n):)
-
-saveSize :: (V.DisplayRegion -> a -> a) -> Render a -> Render a
-saveSize sizeSetter p = do
-    result <- p
-    let img = result^.image
-        imgSz = (V.imageWidth img, V.imageHeight img)
-    lift $ modify (sizeSetter imgSz)
-    return result
+    return $ result & cursors %~ (CursorLocation cloc (Just n):)
 
 hRelease :: Render a -> Render a
 hRelease = withReaderT (& w .~ unrestricted) --- NB
@@ -270,20 +310,79 @@ hRelease = withReaderT (& w .~ unrestricted) --- NB
 vRelease :: Render a -> Render a
 vRelease = withReaderT (& h .~ unrestricted) --- NB
 
-withLens :: (Lens' a b) -> Render b -> Render a
-withLens target p = do
-    outerState <- lift get
-    let oldInnerState = outerState^.target
+viewport :: String -> ViewportType -> Render a -> Render a
+viewport vpname typ p = do
+    -- First, update the viewport size.
     c <- ask
-    let (result, newInnerState) = runState (runReaderT p c) oldInnerState
-    target .= newInnerState
-    return result
+    let newVp = VP 0 0 newSize
+        newSize = (c^.w, c^.h)
+        doInsert (Just vp) = Just $ vp & vpSize .~ newSize
+        doInsert Nothing = Just newVp
 
-usingState :: (a -> Render a) -> Render a
-usingState f = (lift get) >>= (\a -> f a)
+    lift $ modify (& viewportMap %~ (M.alter doInsert vpname))
 
-ensure :: (a -> a) -> Render a -> Render a
-ensure f p = do
+    -- Then render the sub-rendering with the rendering layout
+    -- constraint released
+    let release = case typ of
+          Vertical -> vRelease
+          Horizontal -> hRelease
+
+    initialResult <- release p
+
+    -- If the sub-rendering requested visibility, update the scroll
+    -- state accordingly
+    when (not $ null $ initialResult^.visibilityRequests) $ do
+        Just vp <- lift $ gets $ (^.viewportMap.to (M.lookup vpname))
+        -- XXX for now, just permit one request but we could permit
+        -- many by computing the bounding rectangle over the submitted
+        -- requests.
+        let [rq] = initialResult^.visibilityRequests
+            updatedVp = scrollToView typ rq vp
+        lift $ D.trace (show (vpname, rq, newVp)) $ modify (& viewportMap %~ (M.insert vpname updatedVp))
+
+    -- Get the viewport state now that it has been updated.
+    Just vp <- lift $ gets (M.lookup vpname . (^.viewportMap))
+
+    -- Then perform a translation of the sub-rendering to fit into the
+    -- viewport
+    translated <- translate (Location (-1 * vp^.vpLeft, -1 * vp^.vpTop)) $ return initialResult
+
+    -- Return the translated result with the visibility requests
+    -- discarded
+    return $ translated & visibilityRequests .~ mempty
+
+scrollToView :: ViewportType -> VisibilityRequest -> Viewport -> Viewport
+scrollToView typ rq vp = vp & theStart .~ newStart
+    where
+        theStart :: Lens' Viewport Int
+        theStart = case typ of
+            Horizontal -> vpLeft
+            Vertical -> vpTop
+        theSize = case typ of
+            Horizontal -> vpSize._1
+            Vertical -> vpSize._2
+        reqStart = case typ of
+            Horizontal -> rq^.vrPosition.loc._1
+            Vertical -> rq^.vrPosition.loc._2
+        reqSize = case typ of
+            Horizontal -> rq^.vrSize._1
+            Vertical -> rq^.vrSize._2
+
+        curStart = vp^.theStart
+        curEnd = curStart + vp^.theSize
+
+        reqEnd = reqStart + reqSize
+        newStart :: Int
+        newStart = if reqStart < curStart
+                   then reqStart
+                   else if reqStart > curEnd || reqEnd > curEnd
+                        then reqEnd - vp^.theSize
+                        else curStart
+
+visible :: Render a -> Render a
+visible p = do
     result <- p
-    lift $ modify f
-    return result
+    let imageSize = ( result^.image.to V.imageWidth
+                    , result^.image.to V.imageHeight
+                    )
+    return $ result & visibilityRequests %~ (VR (Location (0, 0)) imageSize :)

@@ -3,6 +3,7 @@ module Brick.Render
   , Priority(..)
   , (=>>), (<<=), (<=>)
   , (+>>), (<<+), (<+>)
+  , ViewportType(..)
 
   , txt
   , hPad
@@ -21,12 +22,10 @@ module Brick.Render
   , cropTopBy
   , cropBottomBy
   , showCursor
-  , saveSize
   , hRelease
   , vRelease
-  , withLens
-  , usingState
-  , ensure
+  , viewport
+  , visible
   )
 where
 

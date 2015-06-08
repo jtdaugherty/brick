@@ -24,7 +24,6 @@ library
     Brick.List
     Brick.Main
     Brick.Render
-    Brick.Scroll
     Brick.Util
   other-modules:
     Brick.Render.Internal

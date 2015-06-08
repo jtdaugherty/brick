@@ -1,17 +1,22 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Brick.Core
-  ( Location(..)
+  ( Location(Location)
+  , loc
   , CursorName(..)
   , CursorLocation(..)
   , HandleEvent(..)
-  , SetSize(..)
   )
 where
 
+import Control.Lens
 import Data.Monoid (Monoid(..))
 import Graphics.Vty (Event, DisplayRegion)
 
-newtype Location = Location (Int, Int)
-                 deriving Show
+data Location = Location { _loc :: (Int, Int)
+                         }
+                deriving Show
+
+makeLenses ''Location
 
 origin :: Location
 origin = Location (0, 0)
@@ -31,6 +36,3 @@ data CursorLocation =
 
 class HandleEvent a where
     handleEvent :: Event -> a -> a
-
-class SetSize a where
-    setSize :: DisplayRegion -> a -> a

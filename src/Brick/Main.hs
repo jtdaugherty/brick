@@ -20,6 +20,7 @@ import Control.Monad (when, forever)
 import Control.Concurrent (forkIO, Chan, newChan, readChan, writeChan)
 import Data.Default
 import Data.Maybe (listToMaybe)
+import qualified Data.Map as M
 import Graphics.Vty
   ( Vty
   , Picture(..)
@@ -35,7 +36,7 @@ import Graphics.Vty
 import System.Exit (exitSuccess)
 
 import Brick.Render (Render)
-import Brick.Render.Internal (renderFinal)
+import Brick.Render.Internal (renderFinal, RenderState(..))
 import Brick.Core (Location(..), CursorLocation(..))
 
 data App a e =
@@ -61,11 +62,12 @@ simpleMain ls =
     in defaultMain app ()
 
 defaultMainWithVty :: IO Vty -> App a Event -> a -> IO ()
-defaultMainWithVty buildVty app initialState = do
+defaultMainWithVty buildVty app initialAppState = do
+    let initialRS = RS M.empty
     chan <- newChan
     withVty buildVty $ \vty -> do
         forkIO $ supplyVtyEvents vty id chan
-        runVty vty chan app initialState
+        runVty vty chan app initialAppState initialRS
 
 isResizeEvent :: Event -> Bool
 isResizeEvent (EvResize _ _) = True
@@ -80,28 +82,29 @@ supplyVtyEvents vty mkEvent chan =
         when (isResizeEvent e) $ writeChan chan $ mkEvent e
         writeChan chan $ mkEvent e
 
-runVty :: Vty -> Chan e -> App a e -> a -> IO ()
-runVty vty chan app appState = do
-    state' <- renderApp vty app appState
+runVty :: Vty -> Chan e -> App a e -> a -> RenderState -> IO ()
+runVty vty chan app appState rs = do
+    newRS <- renderApp vty app appState rs
     e <- readChan chan
-    appHandleEvent app e state' >>= runVty vty chan app
+    newAppState <- appHandleEvent app e appState
+    runVty vty chan app newAppState newRS
 
 withVty :: IO Vty -> (Vty -> IO a) -> IO a
 withVty buildVty useVty = do
     vty <- buildVty
     useVty vty `finally` shutdown vty
 
-renderApp :: Vty -> App a e -> a -> IO a
-renderApp vty app appState = do
+renderApp :: Vty -> App a e -> a -> RenderState -> IO RenderState
+renderApp vty app appState rs = do
     sz <- displayBounds $ outputIface vty
-    let (newAppState, pic, theCursor) = renderFinal (appDraw app appState) sz (appChooseCursor app appState) appState
+    let (newRS, pic, theCursor) = renderFinal (appDraw app appState) sz (appChooseCursor app appState) rs
         picWithCursor = case theCursor of
             Nothing -> pic { picCursor = NoCursor }
             Just (CursorLocation (Location (w, h)) _) -> pic { picCursor = Cursor w h }
 
     update vty picWithCursor
 
-    return newAppState
+    return newRS
 
 neverShowCursor :: a -> [CursorLocation] -> Maybe CursorLocation
 neverShowCursor = const $ const Nothing

@@ -11,24 +11,19 @@ module Brick.List
   )
 where
 
-import Control.Applicative ((<$>), (<|>))
-import Data.Default
-import Data.Maybe (fromMaybe, catMaybes)
-import Graphics.Vty (Event(..), Key(..), DisplayRegion)
-import qualified Data.Map as M
+import Control.Applicative ((<$>))
+import Data.Maybe (fromMaybe)
+import Graphics.Vty (Event(..), Key(..))
 
-import Brick.Core (HandleEvent(..), SetSize(..))
+import Brick.Core (HandleEvent(..))
 import Brick.Merge (maintainSel)
 import Brick.Render
-import Brick.Scroll (VScroll, vScroll, scrollToView)
 import Brick.Util (clamp, for)
 
 data List e =
     List { listElements :: ![e]
          , listElementDraw :: Bool -> e -> Render (List e)
          , listSelected :: !(Maybe Int)
-         , listScroll :: !VScroll
-         , listElementHeights :: M.Map Int Int
          }
 
 instance HandleEvent (List e) where
@@ -39,37 +34,25 @@ instance HandleEvent (List e) where
                   EvKey KDown [] -> moveDown
                   _ -> id
 
-instance SetSize (List e) where
-    setSize sz l =
-        let updatedScroll = setSize sz $ listScroll l
-        in makeSelectedVisible $ l { listScroll = updatedScroll }
-
 list :: (Bool -> e -> Render (List e)) -> [e] -> List e
 list draw es =
     let selIndex = if null es then Nothing else Just 0
-    in List es draw selIndex def M.empty
+    in List es draw selIndex
 
-listSetElementSize :: Int -> DisplayRegion -> List e -> List e
-listSetElementSize i sz l =
-    l { listElementHeights = M.insert i (snd sz) (listElementHeights l)
-      }
-
-drawList :: Render (List e)
-drawList = theList
+drawList :: List e -> Render (List e)
+drawList l = theList
     where
-        theList = saveSize setSize $
-                  vScroll listScroll $
-                  ensure makeSelectedVisible body
+        theList = viewport "list" Vertical $ body
 
-        body = usingState $ \l -> do
-                let es = listElements l
-                    drawn = for (zip [0..] es) $ \(i, e) ->
-                              let isSelected = Just i == listSelected l
-                                  elemRender = listElementDraw l isSelected e
-                              in ( saveSize (listSetElementSize i) elemRender
-                                 , High
-                                 )
-                (vBox drawn <<= vPad ' ') <<+ hPad ' '
+        body = (vBox drawn <<= vPad ' ') <<+ hPad ' '
+        es = listElements l
+        drawn = for (zip [0..] es) $ \(i, e) ->
+            let isSelected = Just i == listSelected l
+                elemRender = listElementDraw l isSelected e
+                makeVisible = if isSelected then visible else id
+            in ( makeVisible elemRender
+               , High
+               )
 
 listInsert :: Int -> e -> List e -> List e
 listInsert pos e l =
@@ -81,9 +64,9 @@ listInsert pos e l =
                     then s + 1
                     else s
         (front, back) = splitAt safePos es
-    in makeSelectedVisible $ l { listSelected = Just newSel
-                               , listElements = front ++ (e : back)
-                               }
+    in l { listSelected = Just newSel
+         , listElements = front ++ (e : back)
+         }
 
 listRemove :: Int -> List e -> List e
 listRemove pos l | null es = l
@@ -96,11 +79,11 @@ listRemove pos l | null es = l
                      else s
         (front, back) = splitAt pos es
         es' = front ++ tail back
-    in makeSelectedVisible $ l { listSelected = if null es'
-                                                then Nothing
-                                                else Just newSel
-                               , listElements = es'
-                               }
+    in l { listSelected = if null es'
+                          then Nothing
+                          else Just newSel
+         , listElements = es'
+         }
     where
         es = listElements l
 
@@ -114,9 +97,9 @@ listReplace es' l | es' == es = l
           (_, True)      -> Nothing
           (True, False)  -> Just 0
           (False, False) -> Just (maintainSel es es' sel)
-    in makeSelectedVisible $ l { listSelected = newSel
-                               , listElements = es'
-                               }
+    in l { listSelected = newSel
+         , listElements = es'
+         }
     where
         es = listElements l
 
@@ -129,29 +112,18 @@ moveDown = moveBy 1
 moveBy :: Int -> List e -> List e
 moveBy amt l =
     let newSel = clamp 0 (length (listElements l) - 1) <$> (amt +) <$> listSelected l
-    in makeSelectedVisible $ l { listSelected = newSel }
+    in l { listSelected = newSel }
 
 moveTo :: Int -> List e -> List e
 moveTo pos l =
     let len = length (listElements l)
         newSel = clamp 0 (len - 1) $ if pos < 0 then (len - pos) else pos
-    in makeSelectedVisible $ l { listSelected = if len > 0
-                                                then Just newSel
-                                                else Nothing
-                               }
+    in l { listSelected = if len > 0
+                          then Just newSel
+                          else Nothing
+         }
 
 listSelectedElement :: List e -> Maybe (Int, e)
 listSelectedElement l = do
   sel <- listSelected l
   return (sel, listElements l !! sel)
-
-makeSelectedVisible :: List e -> List e
-makeSelectedVisible l =
-    let Just scrollTo = (listSelected l) <|> (Just 0)
-        heights = listElementHeights l
-        scrollTop = sum $ catMaybes $ (\k -> M.lookup k heights) <$> [0..scrollTo-1]
-        scrollBottom = case M.lookup scrollTo heights of
-            Nothing -> 1
-            Just k -> k
-    in l { listScroll = scrollToView (scrollTop, scrollBottom) (listScroll l)
-         }

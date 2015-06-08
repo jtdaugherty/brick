@@ -5,20 +5,17 @@ module Brick.Edit
   )
 where
 
-import Data.Default
 import Data.Monoid ((<>))
 import Graphics.Vty (Event(..), Key(..), Modifier(..))
 
-import Brick.Core (Location(..), CursorName(..), HandleEvent(..), SetSize(..))
+import Brick.Core (Location(..), CursorName(..), HandleEvent(..))
 import Brick.Render
-import Brick.Scroll (HScroll, hScroll, scrollToView)
 import Brick.Util (clamp)
 
 data Editor =
     Editor { editStr :: !String
            , editCursorPos :: !Int
            , editorCursorName :: !CursorName
-           , editorScroll :: !HScroll
            }
 
 instance HandleEvent Editor where
@@ -37,8 +34,7 @@ instance HandleEvent Editor where
 editSetCursorPos :: Int -> Editor -> Editor
 editSetCursorPos pos e =
     let newCP = clamp 0 (length $ editStr e) pos
-    in e { editorScroll = scrollToView (newCP, 1) (editorScroll e)
-         , editCursorPos = newCP
+    in e { editCursorPos = newCP
          }
 
 moveLeft :: Editor -> Editor
@@ -70,7 +66,6 @@ insertChar :: Char -> Editor -> Editor
 insertChar c theEdit =
     theEdit { editStr = s
             , editCursorPos = newCursorPos
-            , editorScroll = scrollToView (newCursorPos, 1) (editorScroll theEdit)
             }
     where
         s = take n oldStr ++ [c] ++ drop n oldStr
@@ -78,17 +73,22 @@ insertChar c theEdit =
         newCursorPos = n + 1
         oldStr = editStr theEdit
 
-instance SetSize Editor where
-    setSize sz e =
-        let updatedScroll = setSize sz $ editorScroll e
-        in e { editorScroll = scrollToView (editCursorPos e, 1) updatedScroll
-             }
-
 editor :: CursorName -> String -> Editor
-editor cName s = Editor s (length s) cName def
+editor cName s = Editor s (length s) cName
 
-drawEditor :: Render Editor
-drawEditor =
-    saveSize setSize $ hScroll editorScroll $ usingState $ \e ->
-      let cursorLoc = Location (editCursorPos e, 0)
-      in showCursor (editorCursorName e) cursorLoc $ txt (editStr e) <<+ hPad ' '
+drawEditor :: Editor -> Render Editor
+drawEditor e =
+    let cursorLoc = Location (cp, 0)
+        cp = editCursorPos e
+        s = editStr e
+        beforeCursor = take cp s
+        onCursor' = take 1 $ drop cp s
+        onCursor = if null onCursor' then " " else onCursor'
+        afterCursor = drop (cp + 1) s
+    in viewport "edit" Horizontal $
+       showCursor (editorCursorName e) cursorLoc $
+       hBox [ ( txt beforeCursor,         High )
+            , ( visible $ txt onCursor,   High )
+            , ( txt afterCursor,          High )
+            , ( hPad ' ',                 Low  )
+            ]
