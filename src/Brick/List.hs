@@ -43,7 +43,6 @@ drawList :: List e -> Render
 drawList l = theList
     where
         theList = viewport "list" Vertical $ body
-
         body = (vBox drawn <<= vPad ' ') <<+ hPad ' '
         es = listElements l
         drawn = for (zip [0..] es) $ \(i, e) ->
