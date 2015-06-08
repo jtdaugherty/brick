@@ -4,7 +4,6 @@ module Brick.Render
   , Context
   , availW
   , availH
-  , activeBorderStyle
   , getActiveBorderStyle
   , getContext
   , Priority(..)

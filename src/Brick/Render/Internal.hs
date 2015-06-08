@@ -18,7 +18,6 @@ module Brick.Render.Internal
   , Context
   , availW
   , availH
-  , activeBorderStyle
   , getActiveBorderStyle
   , getContext
 
