@@ -13,10 +13,12 @@ module Brick.Render.Internal
   , Priority(..)
   , renderFinal
   , Render
+  , RenderM
 
   , Context
   , availW
   , availH
+  , getContext
 
   , ViewportType(..)
 
@@ -93,7 +95,8 @@ data Context =
 data Priority = High | Low
               deriving (Show, Eq)
 
-type Render = ReaderT Context (State RenderState) Result
+type RenderM a = ReaderT Context (State RenderState) a
+type Render = RenderM Result
 
 data RenderState =
     RS { _viewportMap :: M.Map String Viewport
@@ -110,6 +113,9 @@ instance IsString Render where
 
 instance Default Result where
     def = Result V.emptyImage [] []
+
+getContext :: RenderM Context
+getContext = ask
 
 renderFinal :: [Render]
             -> V.DisplayRegion
@@ -140,32 +146,32 @@ unrestricted = 1000
 
 txt :: String -> Render
 txt s = do
-    c <- ask
+    c <- getContext
     return $ def & image .~ (V.string (c^.attr) s)
 
 hPad :: Char -> Render
 hPad ch = do
-    c <- ask
+    c <- getContext
     return $ def & image .~ (V.charFill (c^.attr) ch (c^.availW) (max 1 (c^.availH)))
 
 vPad :: Char -> Render
 vPad ch = do
-    c <- ask
+    c <- getContext
     return $ def & image .~ (V.charFill (c^.attr) ch (max 1 (c^.availW)) (c^.availH))
 
 hFill :: Char -> Render
 hFill ch = do
-    c <- ask
+    c <- getContext
     return $ def & image .~ (V.charFill (c^.attr) ch (c^.availW) (min (c^.availH) 1))
 
 vFill :: Char -> Render
 vFill ch = do
-    c <- ask
+    c <- getContext
     return $ def & image .~ (V.charFill (c^.attr) ch (min (c^.availW) 1) (c^.availH))
 
 hBox :: [(Render, Priority)] -> Render
 hBox pairs = do
-    c <- ask
+    c <- getContext
 
     let pairsIndexed = zip [(0::Int)..] pairs
         his = filter (\p -> (snd $ snd p) == High) pairsIndexed
@@ -202,7 +208,7 @@ hBox pairs = do
 
 vBox :: [(Render, Priority)] -> Render
 vBox pairs = do
-    c <- ask
+    c <- getContext
 
     let pairsIndexed = zip [(0::Int)..] pairs
         his = filter (\p -> (snd $ snd p) == High) pairsIndexed
@@ -249,11 +255,7 @@ useAttr :: V.Attr -> Render -> Render
 useAttr a = withReaderT (& attr .~ a)
 
 raw :: V.Image -> Render
-raw img = do
-    c <- ask
-    return $ if c^.availW > 0 && c^.availH > 0
-             then def & image .~ img
-             else def
+raw img = return $ def & image .~ img
 
 -- xxx find another name that doesn't clash with Vty's translate function
 translate :: Location -> Render -> Render
@@ -266,7 +268,7 @@ translate (Location (tw,th)) p = do
 cropToContext :: Render -> Render
 cropToContext p = do
     result <- p
-    c <- ask
+    c <- getContext
     return $ result & image %~ (V.crop (c^.availW) (c^.availH))
 
 cropLeftBy :: Int -> Render -> Render
@@ -317,7 +319,7 @@ vRelease = withReaderT (& availH .~ unrestricted) --- NB
 viewport :: String -> ViewportType -> Render -> Render
 viewport vpname typ p = do
     -- First, update the viewport size.
-    c <- ask
+    c <- getContext
     let newVp = VP 0 0 newSize
         newSize = (c^.availW, c^.availH)
         doInsert (Just vp) = Just $ vp & vpSize .~ newSize

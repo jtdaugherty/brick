@@ -9,7 +9,6 @@ module Brick.Center
 where
 
 import Control.Lens ((^.))
-import Control.Monad.Trans.Reader
 
 import Brick.Render
 import Brick.Core
@@ -41,7 +40,7 @@ centerAbout :: Location -> Render -> Render
 centerAbout (Location (offW, offH)) p = do
     -- Compute translation offset so that loc is in the middle of the
     -- rendering area
-    c <- ask
+    c <- getContext
     let centerW = c^.availW `div` 2
         centerH = c^.availH `div` 2
         off = Location ( centerW - offW
