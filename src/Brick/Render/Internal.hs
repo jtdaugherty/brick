@@ -385,4 +385,8 @@ visible p = do
     let imageSize = ( result^.image.to V.imageWidth
                     , result^.image.to V.imageHeight
                     )
-    return $ result & visibilityRequests %~ (VR (Location (0, 0)) imageSize :)
+    -- The size of the image to be made visible in a viewport must have
+    -- non-zero size in both dimensions.
+    return $ if imageSize^._1 > 0 && imageSize^._2 > 0
+             then result & visibilityRequests %~ (VR (Location (0, 0)) imageSize :)
+             else result
