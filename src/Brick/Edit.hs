@@ -87,7 +87,6 @@ drawEditor e =
         afterCursor = drop (cp + 1) s
     in viewport (editorName e) Horizontal $
        showCursor (editorName e) cursorLoc $
-       hBox [ ( txt beforeCursor,         High )
-            , ( visible $ txt onCursor,   High )
-            , ( txt afterCursor,          High )
-            ]
+       (txt beforeCursor)
+       <+> (visible $ txt onCursor)
+       <+> (txt afterCursor)

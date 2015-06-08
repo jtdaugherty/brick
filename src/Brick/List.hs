@@ -44,8 +44,7 @@ list name draw es =
 drawList :: List e -> Render
 drawList l = theList
     where
-        theList = viewport (listName l) Vertical $ body
-        body = vBox pairs
+        theList = viewport (listName l) Vertical $ vBox pairs
         pairs = (, High) <$> (drawListElements l)
 
 drawListElements :: List e -> [Render]
