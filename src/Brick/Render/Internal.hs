@@ -37,7 +37,7 @@ module Brick.Render.Internal
   , vLimit
   , useAttr
   , raw
-  , translate
+  , translateBy
   , cropLeftBy
   , cropRightBy
   , cropTopBy
@@ -259,9 +259,8 @@ useAttr a = withReaderT (& attr .~ a)
 raw :: V.Image -> Render
 raw img = return $ def & image .~ img
 
--- xxx find another name that doesn't clash with Vty's translate function
-translate :: Location -> Render -> Render
-translate (Location (tw,th)) p = do
+translateBy :: Location -> Render -> Render
+translateBy (Location (tw,th)) p = do
     result <- p
     return $ addCursorOffset (Location (tw, th)) $
              addVisibilityOffset (Location (tw, th)) $
@@ -353,7 +352,7 @@ viewport vpname typ p = do
 
     -- Then perform a translation of the sub-rendering to fit into the
     -- viewport
-    translated <- translate (Location (-1 * vp^.vpLeft, -1 * vp^.vpTop)) $ return initialResult
+    translated <- translateBy (Location (-1 * vp^.vpLeft, -1 * vp^.vpTop)) $ return initialResult
 
     -- Return the translated result with the visibility requests
     -- discarded

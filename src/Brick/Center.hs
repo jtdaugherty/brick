@@ -46,4 +46,4 @@ centerAbout (Location (offW, offH)) p = do
         off = Location ( centerW - offW
                        , centerH - offH
                        )
-    translate off p
+    translateBy off p

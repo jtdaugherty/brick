@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Main where
 
-import Graphics.Vty hiding (translate)
+import Graphics.Vty
 
 import Data.Array
 import Data.Default (def)
@@ -126,7 +126,7 @@ updateDisplay world = [ info, playerLayer, geoLayer ]
         (px, py) = playerCoord $ player world
         playerLoc = Location (px, py)
         theLevel = level world
-        playerLayer = centerAbout playerLoc $ translate playerLoc $ raw (char pieceA '@')
+        playerLayer = centerAbout playerLoc $ translateBy playerLoc $ raw (char pieceA '@')
         geoLayer = centerAbout playerLoc $ raw $ levelGeoImage theLevel
 
 imageForGeo :: LevelPiece -> Image

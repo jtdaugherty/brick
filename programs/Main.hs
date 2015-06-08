@@ -48,7 +48,7 @@ drawUI st = [a]
                          , (vLimit 10 $ drawList (st^.stList), High)
                          ]
                   ))
-        a = translate (st^.stTrans) $
+        a = translateBy (st^.stTrans) $
             vCenter $
               (hCenter box)
               <<=

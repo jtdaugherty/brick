@@ -21,7 +21,7 @@ module Brick.Render
   , vLimit
   , useAttr
   , raw
-  , translate
+  , translateBy
   , cropLeftBy
   , cropRightBy
   , cropTopBy
