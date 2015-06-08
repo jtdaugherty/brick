@@ -2,21 +2,24 @@
 module Brick.Core
   ( Location(Location)
   , loc
-  , CursorName(..)
   , CursorLocation(..)
   , HandleEvent(..)
+  , Name(..)
   )
 where
 
 import Control.Lens
 import Data.Monoid (Monoid(..))
-import Graphics.Vty (Event, DisplayRegion)
+import Graphics.Vty (Event)
 
 data Location = Location { _loc :: (Int, Int)
                          }
                 deriving Show
 
 makeLenses ''Location
+
+newtype Name = Name String
+             deriving (Eq, Show, Ord)
 
 origin :: Location
 origin = Location (0, 0)
@@ -25,12 +28,9 @@ instance Monoid Location where
     mempty = origin
     mappend (Location (w1, h1)) (Location (w2, h2)) = Location (w1+w2, h1+h2)
 
-newtype CursorName = CursorName String
-                     deriving (Eq, Show)
-
 data CursorLocation =
     CursorLocation { cursorLocation :: !Location
-                   , cursorLocationName :: !(Maybe CursorName)
+                   , cursorLocationName :: !(Maybe Name)
                    }
                    deriving Show
 

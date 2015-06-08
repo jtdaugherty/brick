@@ -16,7 +16,7 @@ import Control.Applicative ((<$>))
 import Data.Maybe (fromMaybe)
 import Graphics.Vty (Event(..), Key(..))
 
-import Brick.Core (HandleEvent(..))
+import Brick.Core (HandleEvent(..), Name)
 import Brick.Merge (maintainSel)
 import Brick.Render
 import Brick.Util (clamp, for)
@@ -25,6 +25,7 @@ data List e =
     List { listElements :: ![e]
          , listElementDraw :: Bool -> e -> Render
          , listSelected :: !(Maybe Int)
+         , listName :: Name
          }
 
 instance HandleEvent (List e) where
@@ -35,15 +36,15 @@ instance HandleEvent (List e) where
                   EvKey KDown [] -> moveDown
                   _ -> id
 
-list :: (Bool -> e -> Render) -> [e] -> List e
-list draw es =
+list :: Name -> (Bool -> e -> Render) -> [e] -> List e
+list name draw es =
     let selIndex = if null es then Nothing else Just 0
-    in List es draw selIndex
+    in List es draw selIndex name
 
 drawList :: List e -> Render
 drawList l = theList
     where
-        theList = viewport "list" Vertical $ body
+        theList = viewport (listName l) Vertical $ body
         body = (vBox pairs <=> vPad ' ') <+> hPad ' '
         pairs = (, High) <$> (drawListElements l)
 

@@ -59,7 +59,7 @@ import Control.Lens (Lens')
 import Data.String (IsString(..))
 import qualified Graphics.Vty as V
 
-import Brick.Core (Location(..), loc, CursorLocation(..), CursorName(..))
+import Brick.Core
 import Brick.Util (clOffset, for)
 
 import qualified Debug.Trace as D
@@ -99,7 +99,7 @@ type RenderM a = ReaderT Context (State RenderState) a
 type Render = RenderM Result
 
 data RenderState =
-    RS { _viewportMap :: M.Map String Viewport
+    RS { _viewportMap :: M.Map Name Viewport
        }
 
 makeLenses ''Result
@@ -305,7 +305,7 @@ cropBottomBy rows p = do
     -- xxx crop cursors / VRs
     return $ result & image %~ cropped
 
-showCursor :: CursorName -> Location -> Render -> Render
+showCursor :: Name -> Location -> Render -> Render
 showCursor n cloc p = do
     result <- p
     return $ result & cursors %~ (CursorLocation cloc (Just n):)
@@ -316,7 +316,7 @@ hRelease = withReaderT (& availW .~ unrestricted) --- NB
 vRelease :: Render -> Render
 vRelease = withReaderT (& availH .~ unrestricted) --- NB
 
-viewport :: String -> ViewportType -> Render -> Render
+viewport :: Name -> ViewportType -> Render -> Render
 viewport vpname typ p = do
     -- First, update the viewport size.
     c <- getContext

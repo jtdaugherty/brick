@@ -8,14 +8,14 @@ where
 import Data.Monoid ((<>))
 import Graphics.Vty (Event(..), Key(..), Modifier(..))
 
-import Brick.Core (Location(..), CursorName(..), HandleEvent(..))
+import Brick.Core (Name, Location(..), HandleEvent(..))
 import Brick.Render
 import Brick.Util (clamp)
 
 data Editor =
     Editor { editStr :: !String
            , editCursorPos :: !Int
-           , editorCursorName :: !CursorName
+           , editorName :: Name
            }
 
 instance HandleEvent Editor where
@@ -73,8 +73,8 @@ insertChar c theEdit =
         newCursorPos = n + 1
         oldStr = editStr theEdit
 
-editor :: CursorName -> String -> Editor
-editor cName s = Editor s (length s) cName
+editor :: Name -> String -> Editor
+editor name s = Editor s (length s) name
 
 drawEditor :: Editor -> Render
 drawEditor e =
@@ -85,8 +85,8 @@ drawEditor e =
         onCursor' = take 1 $ drop cp s
         onCursor = if null onCursor' then " " else onCursor'
         afterCursor = drop (cp + 1) s
-    in viewport "edit" Horizontal $
-       showCursor (editorCursorName e) cursorLoc $
+    in viewport (editorName e) Horizontal $
+       showCursor (editorName e) cursorLoc $
        hBox [ ( txt beforeCursor,         High )
             , ( visible $ txt onCursor,   High )
             , ( txt afterCursor,          High )

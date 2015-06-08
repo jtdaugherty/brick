@@ -10,12 +10,12 @@ where
 
 import Data.Maybe (listToMaybe)
 
-import Brick.Core (CursorName(..), CursorLocation(..))
+import Brick.Core (Name(..), CursorLocation(..))
 
 data FocusRing = FocusRingEmpty
-               | FocusRingNonempty ![CursorName] !Int
+               | FocusRingNonempty ![Name] !Int
 
-focusRing :: [CursorName] -> FocusRing
+focusRing :: [Name] -> FocusRing
 focusRing [] = FocusRingEmpty
 focusRing names = FocusRingNonempty names 0
 
@@ -31,7 +31,7 @@ focusPrev (FocusRingNonempty ns i) = FocusRingNonempty ns i'
     where
         i' = (i + (length ns) - 1) `mod` (length ns)
 
-focusGetCurrent :: FocusRing -> Maybe CursorName
+focusGetCurrent :: FocusRing -> Maybe Name
 focusGetCurrent FocusRingEmpty = Nothing
 focusGetCurrent (FocusRingNonempty ns i) = Just $ ns !! i
 
