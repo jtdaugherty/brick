@@ -44,7 +44,7 @@ drawList :: List e -> Render
 drawList l = theList
     where
         theList = viewport "list" Vertical $ body
-        body = (vBox pairs <<= vPad ' ') <<+ hPad ' '
+        body = (vBox pairs <=> vPad ' ') <+> hPad ' '
         pairs = (, High) <$> (drawListElements l)
 
 drawListElements :: List e -> [Render]

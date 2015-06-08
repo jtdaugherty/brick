@@ -4,10 +4,15 @@ module Brick.Center
   , vCenter
   , vCenterWith
   , center
+  , centerAbout
   )
 where
 
+import Control.Lens ((^.))
+import Control.Monad.Trans.Reader
+
 import Brick.Render
+import Brick.Core
 
 hCenter :: Render -> Render
 hCenter = hCenterWith ' '
@@ -31,3 +36,15 @@ vCenterWith c p =
 
 center :: Render -> Render
 center = vCenter . hCenter
+
+centerAbout :: Location -> Render -> Render
+centerAbout (Location (offW, offH)) p = do
+    -- Compute translation offset so that loc is in the middle of the
+    -- rendering area
+    c <- ask
+    let centerW = c^.w `div` 2
+        centerH = c^.h `div` 2
+        off = Location ( centerW - offW
+                       , centerH - offH
+                       )
+    translate off p

@@ -1,5 +1,6 @@
 module Brick.Render
   ( Render
+  , Context, w, h
   , Priority(..)
   , (=>>), (<<=), (<=>)
   , (+>>), (<<+), (<+>)

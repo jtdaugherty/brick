@@ -41,16 +41,16 @@ drawUI :: St -> [Render]
 drawUI st = [a]
     where
         (bsName, bs) = styles !! (st^.stBorderStyle)
+        box = borderWithLabel bs bsName $
+                  (hLimit 25 (
+                    vBox [ (vLimit 1 $ useAttr (cyan `on` blue) $ drawEditor (st^.stEditor), High)
+                         , (hBorder bs, Low)
+                         , (vLimit 10 $ drawList (st^.stList), High)
+                         ]
+                  ))
         a = translate (st^.stTrans) $
             vCenter $
-              (hCenter $ borderWithLabel bs bsName $
-                  (hLimit 25 (
-                    (vLimit 1 $ useAttr (cyan `on` blue) $ drawEditor (st^.stEditor))
-                    <<=
-                    hBorder bs
-                    =>>
-                    (vLimit 10 $ drawList (st^.stList))
-                  )))
+              (hCenter box)
               <<=
               (vLimit 1 $ vPad ' ')
               =>>

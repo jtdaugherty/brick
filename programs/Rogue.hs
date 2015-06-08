@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Main where
 
-import Graphics.Vty
+import Graphics.Vty hiding (translate)
 
 import Data.Array
 import Data.Default (def)
@@ -12,7 +12,11 @@ import Control.Monad
 import System.Random
 import System.Exit
 
-import Brick
+import Brick.Main
+import Brick.Render
+import Brick.Border
+import Brick.Core
+import Brick.Center
 
 data Player = Player
     { playerCoord :: Coord
@@ -113,17 +117,17 @@ movePlayer world dx dy = do
         EmptySpace -> world { player = Player (x',y') }
         _          -> world
 
-updateDisplay :: World -> [Widget]
+updateDisplay :: World -> [Render]
 updateDisplay world = [ info, playerLayer, geoLayer ]
     where
-        info = vBox [ hCentered $ txt "Move with the arrows keys. Press ESC to exit."
-                    , hBorder '-'
+        info = vBox [ (hCenter $ txt "Move with the arrows keys. Press ESC to exit.", High)
+                    , (hBorder ascii, High)
                     ]
         (px, py) = playerCoord $ player world
         playerLoc = Location (px, py)
         theLevel = level world
-        playerLayer = centeredAbout playerLoc $ translated playerLoc $ liftVty (char pieceA '@')
-        geoLayer = centeredAbout playerLoc $ liftVty $ levelGeoImage theLevel
+        playerLayer = centerAbout playerLoc $ translate playerLoc $ raw (char pieceA '@')
+        geoLayer = centerAbout playerLoc $ raw $ levelGeoImage theLevel
 
 imageForGeo :: LevelPiece -> Image
 imageForGeo EmptySpace = char (defAttr `withBackColor` green) ' '

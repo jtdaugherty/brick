@@ -13,6 +13,7 @@ module Brick.Render.Internal
   , Priority(..)
   , renderFinal
   , Render
+  , Context, w, h
 
   , ViewportType(..)
 
@@ -114,7 +115,7 @@ renderFinal :: [Render]
             -> (RenderState, V.Picture, Maybe CursorLocation)
 renderFinal layerRenders sz chooseCursor rs = (newRS, pic, theCursor)
     where
-        (layerResults, newRS) = flip runState rs $ sequence $ (\p -> runReaderT p ctx) <$> layerRenders
+        (layerResults, newRS) = flip runState rs $ sequence $ (\p -> runReaderT p ctx) <$> (cropToContext <$> layerRenders)
         ctx = Context V.defAttr (fst sz) (snd sz)
         pic = V.picForLayers $ uncurry V.resize sz <$> (^.image) <$> layerResults
         layerCursors = (^.cursors) <$> layerResults
@@ -137,9 +138,7 @@ unrestricted = 1000
 txt :: String -> Render
 txt s = do
     c <- ask
-    return $ if c^.w > 0 && c^.h > 0
-             then def & image .~ (V.crop (c^.w) (c^.h) $ V.string (c^.attr) s)
-             else def
+    return $ def & image .~ (V.string (c^.attr) s)
 
 hPad :: Char -> Render
 hPad ch = do
@@ -179,8 +178,7 @@ hBox pairs = do
         heightPerLow = maximum $ (^._2.image.(to V.imageHeight)) <$> renderedHis
         renderLow (i, (prim, _)) =
             let padding = (if i == 0 then padFirst else 0)
-            in (i,) <$> (withReaderT (\v -> v & w .~ widthPerLow + padding
-                                              & h .~ heightPerLow) prim)
+            in (i,) <$> (vLimit heightPerLow $ hLimit (widthPerLow + padding) $ cropToContext prim)
 
     renderedLows <- mapM renderLow lows
 
@@ -197,7 +195,7 @@ hBox pairs = do
                 offWidth = sum $ take i allWidths
             in (addCursorOffset off result)^.cursors
 
-    return $ Result (V.horizCat allImages) (concat allTranslatedCursors) (concat allTranslatedVRs)
+    cropToContext $ return $ Result (V.horizCat allImages) (concat allTranslatedCursors) (concat allTranslatedVRs)
 
 vBox :: [(Render, Priority)] -> Render
 vBox pairs = do
@@ -217,8 +215,7 @@ vBox pairs = do
         widthPerLow = maximum $ (^._2.image.(to V.imageWidth)) <$> renderedHis
         renderLow (i, (prim, _)) =
             let padding = if i == 0 then padFirst else 0
-            in (i,) <$> (withReaderT (\v -> v & w .~ widthPerLow
-                                              & h .~ (heightPerLow + padding)) prim)
+            in (i,) <$> (vLimit (heightPerLow + padding) $ hLimit widthPerLow $ cropToContext prim)
 
     renderedLows <- mapM renderLow lows
 
@@ -235,15 +232,15 @@ vBox pairs = do
                 offHeight = sum $ take i allHeights
             in (addCursorOffset off result)^.cursors
 
-    return $ Result (V.vertCat allImages) (concat allTranslatedCursors) (concat allTranslatedVRs)
+    cropToContext $ return $ Result (V.vertCat allImages) (concat allTranslatedCursors) (concat allTranslatedVRs)
 
 -- xxx crop cursors and VRs
 hLimit :: Int -> Render -> Render
-hLimit w' = withReaderT (& w .~ w')
+hLimit w' p = withReaderT (& w .~ w') $ cropToContext p
 
 -- xxx crop cursors and VRs
 vLimit :: Int -> Render -> Render
-vLimit h' = withReaderT (& h .~ h')
+vLimit h' p = withReaderT (& h .~ h') $ cropToContext p
 
 useAttr :: V.Attr -> Render -> Render
 useAttr a = withReaderT (& attr .~ a)
@@ -252,16 +249,22 @@ raw :: V.Image -> Render
 raw img = do
     c <- ask
     return $ if c^.w > 0 && c^.h > 0
-             then def & image .~ (V.crop (c^.w) (c^.h) img)
+             then def & image .~ img
              else def
 
+-- xxx find another name that doesn't clash with Vty's translate function
 translate :: Location -> Render -> Render
 translate (Location (tw,th)) p = do
     result <- p
-    c <- ask
     return $ addCursorOffset (Location (tw, th)) $
              addVisibilityOffset (Location (tw, th)) $
-             result & image %~ (V.crop (c^.w) (c^.h) . V.translate tw th)
+             result & image %~ (V.translate tw th)
+
+cropToContext :: Render -> Render
+cropToContext p = do
+    result <- p
+    c <- ask
+    return $ result & image %~ (V.crop (c^.w) (c^.h))
 
 cropLeftBy :: Int -> Render -> Render
 cropLeftBy cols p = do
@@ -347,7 +350,7 @@ viewport vpname typ p = do
 
     -- Return the translated result with the visibility requests
     -- discarded
-    return $ translated & visibilityRequests .~ mempty
+    cropToContext $ return $ translated & visibilityRequests .~ mempty
 
 scrollToView :: ViewportType -> VisibilityRequest -> Viewport -> Viewport
 scrollToView typ rq vp = vp & theStart .~ newStart
