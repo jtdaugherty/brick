@@ -22,8 +22,6 @@ module Brick.Render
   , cropTopBy
   , cropBottomBy
   , showCursor
-  , hRelease
-  , vRelease
   , viewport
   , visible
   )

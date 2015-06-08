@@ -33,8 +33,6 @@ module Brick.Render.Internal
   , cropTopBy
   , cropBottomBy
   , showCursor
-  , hRelease
-  , vRelease
   , viewport
   , visible
   )
