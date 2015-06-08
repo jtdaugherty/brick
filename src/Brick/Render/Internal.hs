@@ -62,8 +62,6 @@ import qualified Graphics.Vty as V
 import Brick.Core
 import Brick.Util (clOffset, for)
 
-import qualified Debug.Trace as D
-
 data VisibilityRequest =
     VR { _vrPosition :: Location
        , _vrSize :: V.DisplayRegion
@@ -344,7 +342,7 @@ viewport vpname typ p = do
         -- requests.
         let [rq] = initialResult^.visibilityRequests
             updatedVp = scrollToView typ rq vp
-        lift $ D.trace (show (vpname, rq, newVp)) $ modify (& viewportMap %~ (M.insert vpname updatedVp))
+        lift $ modify (& viewportMap %~ (M.insert vpname updatedVp))
 
     -- Get the viewport state now that it has been updated.
     Just vp <- lift $ gets (M.lookup vpname . (^.viewportMap))
