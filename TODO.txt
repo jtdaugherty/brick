@@ -8,6 +8,8 @@ they're Nothing (same for boxes?)
 functions needed to perform the layout and combine the results
 
 Features:
+- Default and override attributes in rendering context, plus combinators
+to manage them
 - Think of better library name
 - Implement 2-d text editing
 - Deal with multi-column characters everywhere
