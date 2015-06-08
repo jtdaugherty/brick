@@ -4,6 +4,8 @@ module Brick.Render
   , Context
   , availW
   , availH
+  , activeBorderStyle
+  , getActiveBorderStyle
   , getContext
   , Priority(..)
   , (=>>), (<<=), (<=>)
@@ -21,6 +23,7 @@ module Brick.Render
   , vLimit
   , useAttr
   , raw
+  , withBorderStyle
   , translateBy
   , cropLeftBy
   , cropRightBy

@@ -121,7 +121,7 @@ updateDisplay :: World -> [Render]
 updateDisplay world = [ info, playerLayer, geoLayer ]
     where
         info = vBox [ (hCenter $ txt "Move with the arrows keys. Press ESC to exit.", High)
-                    , (hBorder ascii, High)
+                    , (hBorder, High)
                     ]
         (px, py) = playerCoord $ player world
         playerLoc = Location (px, py)

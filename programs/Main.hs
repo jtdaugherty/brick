@@ -15,6 +15,7 @@ import Brick.Core
 import Brick.Render
 import Brick.Center
 import Brick.Border
+import Brick.Border.Style
 import Brick.Util
 
 styles :: [(String, BorderStyle)]
@@ -38,13 +39,13 @@ kw :: String -> Render
 kw = useAttr (fg blue) . txt
 
 drawUI :: St -> [Render]
-drawUI st = [a]
+drawUI st = [withBorderStyle bs a]
     where
         (bsName, bs) = styles !! (st^.stBorderStyle)
-        box = borderWithLabel bs bsName $
+        box = borderWithLabel bsName $
                   (hLimit 25 (
                     vBox [ (vLimit 1 $ useAttr (cyan `on` blue) $ renderEditor (st^.stEditor), High)
-                         , (hBorder bs, Low)
+                         , (hBorder, Low)
                          , (vLimit 10 $ renderList (st^.stList), High)
                          ]
                   ))

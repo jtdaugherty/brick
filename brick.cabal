@@ -17,6 +17,7 @@ library
   hs-source-dirs:      src
   exposed-modules:
     Brick.Border
+    Brick.Border.Style
     Brick.Center
     Brick.Core
     Brick.Edit

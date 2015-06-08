@@ -18,7 +18,11 @@ module Brick.Render.Internal
   , Context
   , availW
   , availH
+  , activeBorderStyle
+  , getActiveBorderStyle
   , getContext
+
+  , withBorderStyle
 
   , ViewportType(..)
 
@@ -49,7 +53,7 @@ module Brick.Render.Internal
 where
 
 import Control.Applicative
-import Control.Lens (makeLenses, (^.), (.~), (&), (%~), to, _1, _2)
+import Control.Lens (makeLenses, (^.), (.~), (&), (%~), to, _1, _2, view)
 import Control.Monad (when)
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Reader
@@ -64,6 +68,7 @@ import Data.String (IsString(..))
 import qualified Graphics.Vty as V
 
 import Brick.Core
+import Brick.Border.Style
 import Brick.Util (clOffset, for)
 
 data VisibilityRequest =
@@ -92,6 +97,7 @@ data Context =
     Context { _attr :: V.Attr
             , _availW :: Int
             , _availH :: Int
+            , _activeBorderStyle :: BorderStyle
             }
 
 data Priority = High | Low
@@ -119,6 +125,12 @@ instance Default Result where
 getContext :: RenderM Context
 getContext = ask
 
+withBorderStyle :: BorderStyle -> Render -> Render
+withBorderStyle bs = withReaderT (& activeBorderStyle .~ bs)
+
+getActiveBorderStyle :: RenderM BorderStyle
+getActiveBorderStyle = view activeBorderStyle
+
 renderFinal :: [Render]
             -> V.DisplayRegion
             -> ([CursorLocation] -> Maybe CursorLocation)
@@ -127,7 +139,7 @@ renderFinal :: [Render]
 renderFinal layerRenders sz chooseCursor rs = (newRS, pic, theCursor)
     where
         (layerResults, newRS) = flip runState rs $ sequence $ (\p -> runReaderT p ctx) <$> (cropToContext <$> layerRenders)
-        ctx = Context V.defAttr (fst sz) (snd sz)
+        ctx = Context V.defAttr (fst sz) (snd sz) def
         pic = V.picForLayers $ uncurry V.resize sz <$> (^.image) <$> layerResults
         layerCursors = (^.cursors) <$> layerResults
         theCursor = chooseCursor $ concat layerCursors
