@@ -126,7 +126,7 @@ updateDisplay world = [ info, playerLayer, geoLayer ]
         (px, py) = playerCoord $ player world
         playerLoc = Location (px, py)
         theLevel = level world
-        playerLayer = centerAbout playerLoc $ translateBy playerLoc $ raw (char pieceA '@')
+        playerLayer = center $ raw (char pieceA '@')
         geoLayer = centerAbout playerLoc $ raw $ levelGeoImage theLevel
 
 imageForGeo :: LevelPiece -> Image

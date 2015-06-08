@@ -91,7 +91,7 @@ listDrawElem sel i =
         maybeSelect = if sel
                       then useAttr selAttr
                       else id
-    in maybeSelect $ hCenter $ vBox $ for [1..i+1] $ \j ->
+    in maybeSelect $ hCenterWith (Just ' ') $ vBox $ for [1..i+1] $ \j ->
         (txt $ "Item " <> show i <> " L" <> show j, High)
 
 theApp :: App St Event

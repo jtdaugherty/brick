@@ -37,7 +37,7 @@ hBorderWithLabel label = hBorder_ (Just label)
 hBorder_ :: Maybe String -> Render
 hBorder_ label = do
     bs <- getActiveBorderStyle
-    hCenterWith (bsHorizontal bs) msg
+    hCenterWith (Just $ bsHorizontal bs) msg
     where
         msg = maybe (txt "") txt label
 

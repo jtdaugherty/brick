@@ -7,6 +7,7 @@ module Brick.Render.Internal
   ( Result(..)
   , image
   , cursors
+  , visibilityRequests
 
   , RenderState(..)
 

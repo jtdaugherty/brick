@@ -1,6 +1,12 @@
 module Brick.Render
   ( Render
   , RenderM
+
+  , Result
+  , image
+  , cursors
+  , visibilityRequests
+
   , Context
   , availW
   , availH
