@@ -27,7 +27,7 @@ data BorderStyle =
                 }
 
 instance Default BorderStyle where
-    def = unicode
+    def = ascii
 
 -- |An ASCII bs which will work in any terminal.
 ascii :: BorderStyle
