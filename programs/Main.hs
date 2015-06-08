@@ -35,8 +35,8 @@ data St =
 
 makeLenses ''St
 
-kw :: String -> Render
-kw = useAttr (fg blue) . txt
+kw :: Render -> Render
+kw = (@@ (fg blue))
 
 drawUI :: St -> [Render]
 drawUI st = [withBorderStyle bs a]
@@ -44,7 +44,7 @@ drawUI st = [withBorderStyle bs a]
         (bsName, bs) = styles !! (st^.stBorderStyle)
         box = borderWithLabel bsName $
                   (hLimit 25 (
-                    (useAttr (cyan `on` blue) $ renderEditor (st^.stEditor))
+                    (withAttr (cyan `on` blue) $ renderEditor (st^.stEditor))
                     <=> hBorder
                     <=> (vLimit 10 $ renderList (st^.stList))
                   ))
@@ -88,7 +88,7 @@ listDrawElem :: Bool -> Int -> Render
 listDrawElem sel i =
     let selAttr = white `on` blue
         maybeSelect = if sel
-                      then useAttr selAttr
+                      then withAttr selAttr
                       else id
     in maybeSelect $ hCenterWith (Just ' ') $ vBox $ for [1..i+1] $ \j ->
         (txt $ "Item " <> show i <> " L" <> show j, High)

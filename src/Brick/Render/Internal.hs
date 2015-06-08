@@ -39,7 +39,8 @@ module Brick.Render.Internal
 
   , hLimit
   , vLimit
-  , useAttr
+  , withAttr
+  , (@@)
   , raw
   , translateBy
   , cropLeftBy
@@ -265,8 +266,11 @@ hLimit w p = withReaderT (& availW .~ w) $ cropToContext p
 vLimit :: Int -> Render -> Render
 vLimit h p = withReaderT (& availH .~ h) $ cropToContext p
 
-useAttr :: V.Attr -> Render -> Render
-useAttr a = withReaderT (& attr .~ a)
+withAttr :: V.Attr -> Render -> Render
+withAttr a = withReaderT (& attr .~ a)
+
+(@@) :: Render -> V.Attr -> Render
+(@@) = flip withAttr
 
 raw :: V.Image -> Render
 raw img = return $ def & image .~ img

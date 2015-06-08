@@ -26,7 +26,8 @@ module Brick.Render
   , vBox
   , hLimit
   , vLimit
-  , useAttr
+  , withAttr
+  , (@@)
   , raw
   , withBorderStyle
   , translateBy
