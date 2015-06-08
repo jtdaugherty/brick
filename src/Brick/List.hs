@@ -1,3 +1,4 @@
+{-# LANGUAGE TupleSections #-}
 module Brick.List
   ( List(listElements)
   , list
@@ -43,15 +44,18 @@ drawList :: List e -> Render
 drawList l = theList
     where
         theList = viewport "list" Vertical $ body
-        body = (vBox drawn <<= vPad ' ') <<+ hPad ' '
+        body = (vBox pairs <<= vPad ' ') <<+ hPad ' '
+        pairs = (, High) <$> (drawListElements l)
+
+drawListElements :: List e -> [Render]
+drawListElements l = drawnElements
+    where
         es = listElements l
-        drawn = for (zip [0..] es) $ \(i, e) ->
+        drawnElements = for (zip [0..] es) $ \(i, e) ->
             let isSelected = Just i == listSelected l
                 elemRender = listElementDraw l isSelected e
                 makeVisible = if isSelected then visible else id
-            in ( makeVisible elemRender
-               , High
-               )
+            in makeVisible elemRender
 
 listInsert :: Int -> e -> List e -> List e
 listInsert pos e l =
