@@ -34,10 +34,10 @@ data St =
 
 makeLenses ''St
 
-kw :: String -> Render a
+kw :: String -> Render
 kw = useAttr (fg blue) . txt
 
-drawUI :: St -> [Render St]
+drawUI :: St -> [Render]
 drawUI st = [a]
     where
         (bsName, bs) = styles !! (st^.stBorderStyle)
@@ -90,7 +90,7 @@ initialState =
        , _stTrans = Location (0, 0)
        }
 
-listDrawElem :: Bool -> Int -> Render (List Int)
+listDrawElem :: Bool -> Int -> Render
 listDrawElem sel i =
     let selAttr = white `on` blue
         maybeSelect = if sel

@@ -20,13 +20,13 @@ import Data.Default
 import Brick.Render
 import Brick.Center (hCenterWith)
 
-border :: BorderStyle -> Render a -> Render a
+border :: BorderStyle -> Render -> Render
 border bs = border_ bs Nothing
 
-borderWithLabel :: BorderStyle -> String -> Render a -> Render a
+borderWithLabel :: BorderStyle -> String -> Render -> Render
 borderWithLabel bs label = border_ bs (Just label)
 
-border_ :: BorderStyle -> Maybe String -> Render a -> Render a
+border_ :: BorderStyle -> Maybe String -> Render -> Render
 border_ bs label wrapped = total
     where
         top = txt [bsCornerTL bs] <<+ hBorder_ bs label +>> txt [bsCornerTR bs]
@@ -34,18 +34,18 @@ border_ bs label wrapped = total
         middle = vBorder bs +>> wrapped <<+ vBorder bs
         total = top =>> middle <<= bottom
 
-hBorder :: BorderStyle -> Render a
+hBorder :: BorderStyle -> Render
 hBorder bs = hBorder_ bs Nothing
 
-hBorderWithLabel :: BorderStyle -> String -> Render a
+hBorderWithLabel :: BorderStyle -> String -> Render
 hBorderWithLabel bs label = hBorder_ bs (Just label)
 
-hBorder_ :: BorderStyle -> Maybe String -> Render a
+hBorder_ :: BorderStyle -> Maybe String -> Render
 hBorder_ bs label = hCenterWith (bsHorizontal bs) msg
     where
         msg = maybe (txt "") txt label
 
-vBorder :: BorderStyle -> Render a
+vBorder :: BorderStyle -> Render
 vBorder = vFill . bsVertical
 
 -- Corners start from top left and go clockwise.  Intersections are:

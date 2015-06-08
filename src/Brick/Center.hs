@@ -9,25 +9,25 @@ where
 
 import Brick.Render
 
-hCenter :: Render a -> Render a
+hCenter :: Render -> Render
 hCenter = hCenterWith ' '
 
-hCenterWith :: Char -> Render a -> Render a
+hCenterWith :: Char -> Render -> Render
 hCenterWith c p =
     hBox [ (hPad c, Low)
          , (p, High)
          , (hPad c, Low)
          ]
 
-vCenter :: Render a -> Render a
+vCenter :: Render -> Render
 vCenter = vCenterWith ' '
 
-vCenterWith :: Char -> Render a -> Render a
+vCenterWith :: Char -> Render -> Render
 vCenterWith c p =
     vBox [ (vPad c, Low)
          , (p, High)
          , (vPad c, Low)
          ]
 
-center :: Render a -> Render a
+center :: Render -> Render
 center = vCenter . hCenter

@@ -91,7 +91,7 @@ data Context =
 data Priority = High | Low
               deriving (Show, Eq)
 
-type Render a = ReaderT Context (State RenderState) Result
+type Render = ReaderT Context (State RenderState) Result
 
 data RenderState =
     RS { _viewportMap :: M.Map String Viewport
@@ -103,13 +103,13 @@ makeLenses ''VisibilityRequest
 makeLenses ''Viewport
 makeLenses ''RenderState
 
-instance IsString (Render a) where
+instance IsString Render where
     fromString = txt
 
 instance Default Result where
     def = Result V.emptyImage [] []
 
-renderFinal :: [Render a]
+renderFinal :: [Render]
             -> V.DisplayRegion
             -> ([CursorLocation] -> Maybe CursorLocation)
             -> RenderState
@@ -136,34 +136,34 @@ addCursorOffset off r =
 unrestricted :: Int
 unrestricted = 1000
 
-txt :: String -> Render a
+txt :: String -> Render
 txt s = do
     c <- ask
     return $ if c^.w > 0 && c^.h > 0
              then def & image .~ (V.crop (c^.w) (c^.h) $ V.string (c^.attr) s)
              else def
 
-hPad :: Char -> Render a
+hPad :: Char -> Render
 hPad ch = do
     c <- ask
     return $ def & image .~ (V.charFill (c^.attr) ch (c^.w) (max 1 (c^.h)))
 
-vPad :: Char -> Render a
+vPad :: Char -> Render
 vPad ch = do
     c <- ask
     return $ def & image .~ (V.charFill (c^.attr) ch (max 1 (c^.w)) (c^.h))
 
-hFill :: Char -> Render a
+hFill :: Char -> Render
 hFill ch = do
     c <- ask
     return $ def & image .~ (V.charFill (c^.attr) ch (c^.w) (min (c^.h) 1))
 
-vFill :: Char -> Render a
+vFill :: Char -> Render
 vFill ch = do
     c <- ask
     return $ def & image .~ (V.charFill (c^.attr) ch (min (c^.w) 1) (c^.h))
 
-hBox :: [(Render a, Priority)] -> Render a
+hBox :: [(Render, Priority)] -> Render
 hBox pairs = do
     c <- ask
 
@@ -201,7 +201,7 @@ hBox pairs = do
 
     return $ Result (V.horizCat allImages) (concat allTranslatedCursors) (concat allTranslatedVRs)
 
-vBox :: [(Render a, Priority)] -> Render a
+vBox :: [(Render, Priority)] -> Render
 vBox pairs = do
     c <- ask
 
@@ -240,24 +240,24 @@ vBox pairs = do
     return $ Result (V.vertCat allImages) (concat allTranslatedCursors) (concat allTranslatedVRs)
 
 -- xxx crop cursors and VRs
-hLimit :: Int -> Render a -> Render a
+hLimit :: Int -> Render -> Render
 hLimit w' = withReaderT (& w .~ w')
 
 -- xxx crop cursors and VRs
-vLimit :: Int -> Render a -> Render a
+vLimit :: Int -> Render -> Render
 vLimit h' = withReaderT (& h .~ h')
 
-useAttr :: V.Attr -> Render a -> Render a
+useAttr :: V.Attr -> Render -> Render
 useAttr a = withReaderT (& attr .~ a)
 
-raw :: V.Image -> Render a
+raw :: V.Image -> Render
 raw img = do
     c <- ask
     return $ if c^.w > 0 && c^.h > 0
              then def & image .~ (V.crop (c^.w) (c^.h) img)
              else def
 
-translate :: Location -> Render a -> Render a
+translate :: Location -> Render -> Render
 translate (Location (tw,th)) p = do
     result <- p
     c <- ask
@@ -265,7 +265,7 @@ translate (Location (tw,th)) p = do
              addVisibilityOffset (Location (tw, th)) $
              result & image %~ (V.crop (c^.w) (c^.h) . V.translate tw th)
 
-cropLeftBy :: Int -> Render a -> Render a
+cropLeftBy :: Int -> Render -> Render
 cropLeftBy cols p = do
     result <- p
     let amt = V.imageWidth (result^.image) - cols
@@ -274,7 +274,7 @@ cropLeftBy cols p = do
              addVisibilityOffset (Location (-1 * cols, 0)) $
              result & image %~ cropped
 
-cropRightBy :: Int -> Render a -> Render a
+cropRightBy :: Int -> Render -> Render
 cropRightBy cols p = do
     result <- p
     let amt = V.imageWidth (result^.image) - cols
@@ -282,7 +282,7 @@ cropRightBy cols p = do
     -- xxx cursors / VRs
     return $ result & image %~ cropped
 
-cropTopBy :: Int -> Render a -> Render a
+cropTopBy :: Int -> Render -> Render
 cropTopBy rows p = do
     result <- p
     let amt = V.imageHeight (result^.image) - rows
@@ -291,7 +291,7 @@ cropTopBy rows p = do
              addVisibilityOffset (Location (0, -1 * rows)) $
              result & image %~ cropped
 
-cropBottomBy :: Int -> Render a -> Render a
+cropBottomBy :: Int -> Render -> Render
 cropBottomBy rows p = do
     result <- p
     let amt = V.imageHeight (result^.image) - rows
@@ -299,18 +299,18 @@ cropBottomBy rows p = do
     -- xxx crop cursors / VRs
     return $ result & image %~ cropped
 
-showCursor :: CursorName -> Location -> Render a -> Render a
+showCursor :: CursorName -> Location -> Render -> Render
 showCursor n cloc p = do
     result <- p
     return $ result & cursors %~ (CursorLocation cloc (Just n):)
 
-hRelease :: Render a -> Render a
+hRelease :: Render -> Render
 hRelease = withReaderT (& w .~ unrestricted) --- NB
 
-vRelease :: Render a -> Render a
+vRelease :: Render -> Render
 vRelease = withReaderT (& h .~ unrestricted) --- NB
 
-viewport :: String -> ViewportType -> Render a -> Render a
+viewport :: String -> ViewportType -> Render -> Render
 viewport vpname typ p = do
     -- First, update the viewport size.
     c <- ask
@@ -379,7 +379,7 @@ scrollToView typ rq vp = vp & theStart .~ newStart
                         then reqEnd - vp^.theSize
                         else curStart
 
-visible :: Render a -> Render a
+visible :: Render -> Render
 visible p = do
     result <- p
     let imageSize = ( result^.image.to V.imageWidth

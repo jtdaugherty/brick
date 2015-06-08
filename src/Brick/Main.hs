@@ -40,7 +40,7 @@ import Brick.Render.Internal (renderFinal, RenderState(..))
 import Brick.Core (Location(..), CursorLocation(..))
 
 data App a e =
-    App { appDraw :: a -> [Render a]
+    App { appDraw :: a -> [Render]
         , appChooseCursor :: a -> [CursorLocation] -> Maybe CursorLocation
         , appHandleEvent :: e -> a -> IO a
         }
@@ -54,7 +54,7 @@ instance Default (App a e) where
 defaultMain :: App a Event -> a -> IO ()
 defaultMain = defaultMainWithVty (mkVty def)
 
-simpleMain :: [Render ()] -> IO ()
+simpleMain :: [Render] -> IO ()
 simpleMain ls =
     let app = def { appDraw = const ls
                   , appHandleEvent = const $ const exitSuccess

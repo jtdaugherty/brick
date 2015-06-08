@@ -31,20 +31,20 @@ where
 
 import Brick.Render.Internal
 
-(<+>) :: Render a -> Render a -> Render a
+(<+>) :: Render -> Render -> Render
 (<+>) a b = hBox [(a, High), (b, High)]
 
-(<<+) :: Render a -> Render a -> Render a
+(<<+) :: Render -> Render -> Render
 (<<+) a b = hBox [(a, High), (b, Low)]
 
-(+>>) :: Render a -> Render a -> Render a
+(+>>) :: Render -> Render -> Render
 (+>>) a b = hBox [(a, Low), (b, High)]
 
-(<=>) :: Render a -> Render a -> Render a
+(<=>) :: Render -> Render -> Render
 (<=>) a b = vBox [(a, High), (b, High)]
 
-(<<=) :: Render a -> Render a -> Render a
+(<<=) :: Render -> Render -> Render
 (<<=) a b = vBox [(a, High), (b, Low)]
 
-(=>>) :: Render a -> Render a -> Render a
+(=>>) :: Render -> Render -> Render
 (=>>) a b = vBox [(a, Low), (b, High)]

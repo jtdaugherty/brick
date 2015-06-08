@@ -22,7 +22,7 @@ import Brick.Util (clamp, for)
 
 data List e =
     List { listElements :: ![e]
-         , listElementDraw :: Bool -> e -> Render (List e)
+         , listElementDraw :: Bool -> e -> Render
          , listSelected :: !(Maybe Int)
          }
 
@@ -34,12 +34,12 @@ instance HandleEvent (List e) where
                   EvKey KDown [] -> moveDown
                   _ -> id
 
-list :: (Bool -> e -> Render (List e)) -> [e] -> List e
+list :: (Bool -> e -> Render) -> [e] -> List e
 list draw es =
     let selIndex = if null es then Nothing else Just 0
     in List es draw selIndex
 
-drawList :: List e -> Render (List e)
+drawList :: List e -> Render
 drawList l = theList
     where
         theList = viewport "list" Vertical $ body

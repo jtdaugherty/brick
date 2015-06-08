@@ -76,7 +76,7 @@ insertChar c theEdit =
 editor :: CursorName -> String -> Editor
 editor cName s = Editor s (length s) cName
 
-drawEditor :: Editor -> Render Editor
+drawEditor :: Editor -> Render
 drawEditor e =
     let cursorLoc = Location (cp, 0)
         cp = editCursorPos e
