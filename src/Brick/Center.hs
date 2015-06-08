@@ -42,8 +42,8 @@ centerAbout (Location (offW, offH)) p = do
     -- Compute translation offset so that loc is in the middle of the
     -- rendering area
     c <- ask
-    let centerW = c^.w `div` 2
-        centerH = c^.h `div` 2
+    let centerW = c^.availW `div` 2
+        centerH = c^.availH `div` 2
         off = Location ( centerW - offW
                        , centerH - offH
                        )

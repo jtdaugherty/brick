@@ -13,7 +13,10 @@ module Brick.Render.Internal
   , Priority(..)
   , renderFinal
   , Render
-  , Context, w, h
+
+  , Context
+  , availW
+  , availH
 
   , ViewportType(..)
 
@@ -83,8 +86,8 @@ data Result =
 
 data Context =
     Context { _attr :: V.Attr
-            , _w :: Int
-            , _h :: Int
+            , _availW :: Int
+            , _availH :: Int
             }
 
 data Priority = High | Low
@@ -143,22 +146,22 @@ txt s = do
 hPad :: Char -> Render
 hPad ch = do
     c <- ask
-    return $ def & image .~ (V.charFill (c^.attr) ch (c^.w) (max 1 (c^.h)))
+    return $ def & image .~ (V.charFill (c^.attr) ch (c^.availW) (max 1 (c^.availH)))
 
 vPad :: Char -> Render
 vPad ch = do
     c <- ask
-    return $ def & image .~ (V.charFill (c^.attr) ch (max 1 (c^.w)) (c^.h))
+    return $ def & image .~ (V.charFill (c^.attr) ch (max 1 (c^.availW)) (c^.availH))
 
 hFill :: Char -> Render
 hFill ch = do
     c <- ask
-    return $ def & image .~ (V.charFill (c^.attr) ch (c^.w) (min (c^.h) 1))
+    return $ def & image .~ (V.charFill (c^.attr) ch (c^.availW) (min (c^.availH) 1))
 
 vFill :: Char -> Render
 vFill ch = do
     c <- ask
-    return $ def & image .~ (V.charFill (c^.attr) ch (min (c^.w) 1) (c^.h))
+    return $ def & image .~ (V.charFill (c^.attr) ch (min (c^.availW) 1) (c^.availH))
 
 hBox :: [(Render, Priority)] -> Render
 hBox pairs = do
@@ -170,7 +173,7 @@ hBox pairs = do
 
     renderedHis <- mapM (\(i, (prim, _)) -> (i,) <$> prim) his
 
-    let remainingWidth = c^.w - (sum $ (^._2.image.(to V.imageWidth)) <$> renderedHis)
+    let remainingWidth = c^.availW - (sum $ (^._2.image.(to V.imageWidth)) <$> renderedHis)
         widthPerLow = remainingWidth `div` length lows
         padFirst = if widthPerLow * length lows < remainingWidth
                    then remainingWidth - widthPerLow * length lows
@@ -207,7 +210,7 @@ vBox pairs = do
 
     renderedHis <- mapM (\(i, (prim, _)) -> (i,) <$> prim) his
 
-    let remainingHeight = c^.h - (sum $ (^._2.image.(to V.imageHeight)) <$> renderedHis)
+    let remainingHeight = c^.availH - (sum $ (^._2.image.(to V.imageHeight)) <$> renderedHis)
         heightPerLow = remainingHeight `div` length lows
         padFirst = if heightPerLow * length lows < remainingHeight
                    then remainingHeight - heightPerLow * length lows
@@ -236,11 +239,11 @@ vBox pairs = do
 
 -- xxx crop cursors and VRs
 hLimit :: Int -> Render -> Render
-hLimit w' p = withReaderT (& w .~ w') $ cropToContext p
+hLimit w p = withReaderT (& availW .~ w) $ cropToContext p
 
 -- xxx crop cursors and VRs
 vLimit :: Int -> Render -> Render
-vLimit h' p = withReaderT (& h .~ h') $ cropToContext p
+vLimit h p = withReaderT (& availH .~ h) $ cropToContext p
 
 useAttr :: V.Attr -> Render -> Render
 useAttr a = withReaderT (& attr .~ a)
@@ -248,7 +251,7 @@ useAttr a = withReaderT (& attr .~ a)
 raw :: V.Image -> Render
 raw img = do
     c <- ask
-    return $ if c^.w > 0 && c^.h > 0
+    return $ if c^.availW > 0 && c^.availH > 0
              then def & image .~ img
              else def
 
@@ -264,7 +267,7 @@ cropToContext :: Render -> Render
 cropToContext p = do
     result <- p
     c <- ask
-    return $ result & image %~ (V.crop (c^.w) (c^.h))
+    return $ result & image %~ (V.crop (c^.availW) (c^.availH))
 
 cropLeftBy :: Int -> Render -> Render
 cropLeftBy cols p = do
@@ -306,17 +309,17 @@ showCursor n cloc p = do
     return $ result & cursors %~ (CursorLocation cloc (Just n):)
 
 hRelease :: Render -> Render
-hRelease = withReaderT (& w .~ unrestricted) --- NB
+hRelease = withReaderT (& availW .~ unrestricted) --- NB
 
 vRelease :: Render -> Render
-vRelease = withReaderT (& h .~ unrestricted) --- NB
+vRelease = withReaderT (& availH .~ unrestricted) --- NB
 
 viewport :: String -> ViewportType -> Render -> Render
 viewport vpname typ p = do
     -- First, update the viewport size.
     c <- ask
     let newVp = VP 0 0 newSize
-        newSize = (c^.w, c^.h)
+        newSize = (c^.availW, c^.availH)
         doInsert (Just vp) = Just $ vp & vpSize .~ newSize
         doInsert Nothing = Just newVp
 
