@@ -4,12 +4,14 @@ Bugs / design issues:
 contain width and height in the context, and behave differently if
 they're Nothing (same for boxes?)
 - Do we need CropLeftBy and CropTopBy if we just Translate negatively?
+- Unify h/vbox implementation as one function configured by lenses and
+functions needed to perform the layout and combine the results
 
 Features:
 - Think of better library name
 - Implement 2-d text editing
 - Deal with multi-column characters everywhere
-- Think about porting some widgets from vty-ui
+- Port widgets from vty-ui
 - Support "suggested" vs "forced" attributes in Prim rendering
 - Viewports: support scrolling modes that don't require specific
 visibility requests (think scrolling through a text document with no
