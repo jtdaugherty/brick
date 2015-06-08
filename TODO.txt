@@ -1,20 +1,21 @@
-- Use lenses in core library
+Bugs / design issues:
 - Fix cursor cropping in render function where missing
-- Deal with multi-column characters everywhere
-- Implement 2-d text editing
-- Write benchmarks for render on various primitive types
-- Use Vector instead of List where sensible
-- Think about porting some widgets from vty-ui
-- Think of better library name
-- Support "suggested" vs "forced" attributes in Prim rendering
-- List: add listGetSelected :: List a -> Maybe (Int, a)
-- List: support a cursorless mode, where scrolling always scrolls up and
-  down as if the cursor was already at the top or bottom of the window
-- Do we need CropLeftBy and CropTopBy if we just Translate negatively?
 - Deal with hRelease/vRelease differently, e.g. by using Maybe to
 contain width and height in the context, and behave differently if
 they're Nothing (same for boxes?)
+- Do we need CropLeftBy and CropTopBy if we just Translate negatively?
 
-Bugs:
-- List element height maintenance breaks when we insert into the middle
-  of the list
+Features:
+- Think of better library name
+- Implement 2-d text editing
+- Deal with multi-column characters everywhere
+- Think about porting some widgets from vty-ui
+- Support "suggested" vs "forced" attributes in Prim rendering
+- Viewports: support scrolling modes that don't require specific
+visibility requests (think scrolling through a text document with no
+cursor)
+
+Performance:
+- Write benchmarks for render on various primitive types
+- Use a zipper for the list widget, use vectors for storage
+- Use Vector instead of List where sensible
