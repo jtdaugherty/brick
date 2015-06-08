@@ -85,7 +85,8 @@ renderEditor e =
         onCursor' = take 1 $ drop cp s
         onCursor = if null onCursor' then " " else onCursor'
         afterCursor = drop (cp + 1) s
-    in viewport (editorName e) Horizontal $
+    in vLimit 1 $
+       viewport (editorName e) Horizontal $
        showCursor (editorName e) cursorLoc $
        (txt beforeCursor)
        <+> (visible $ txt onCursor)

@@ -44,10 +44,9 @@ drawUI st = [withBorderStyle bs a]
         (bsName, bs) = styles !! (st^.stBorderStyle)
         box = borderWithLabel bsName $
                   (hLimit 25 (
-                    vBox [ (vLimit 1 $ useAttr (cyan `on` blue) $ renderEditor (st^.stEditor), High)
-                         , (hBorder, Low)
-                         , (vLimit 10 $ renderList (st^.stList), High)
-                         ]
+                    (useAttr (cyan `on` blue) $ renderEditor (st^.stEditor))
+                    <=> hBorder
+                    <=> (vLimit 10 $ renderList (st^.stList))
                   ))
         a = translateBy (st^.stTrans) $ vCenter $
               (hCenter box)
