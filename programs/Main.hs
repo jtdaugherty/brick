@@ -49,19 +49,13 @@ drawUI st = [withBorderStyle bs a]
                          , (vLimit 10 $ renderList (st^.stList), High)
                          ]
                   ))
-        a = translateBy (st^.stTrans) $
-            vCenter $
+        a = translateBy (st^.stTrans) $ vCenter $
               (hCenter box)
-              <<=
-              (vLimit 1 $ vPad ' ')
-              =>>
-              (hCenter (kw "Enter" <+> " adds a list item"))
-              <=>
-              (hCenter (kw "+" <+> " changes border styles"))
-              <=>
-              (hCenter (kw "Arrow keys" <+> " navigates the list"))
-              <=>
-              (hCenter (kw "Ctrl-Arrow keys" <+> " move the interface"))
+              <=> (vLimit 1 $ vPad ' ')
+              <=> (hCenter (kw "Enter" <+> " adds a list item"))
+              <=> (hCenter (kw "+" <+> " changes border styles"))
+              <=> (hCenter (kw "Arrow keys" <+> " navigates the list"))
+              <=> (hCenter (kw "Ctrl-Arrow keys" <+> " move the interface"))
 
 appEvent :: Event -> St -> IO St
 appEvent e st =
