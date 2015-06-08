@@ -90,5 +90,4 @@ drawEditor e =
        hBox [ ( txt beforeCursor,         High )
             , ( visible $ txt onCursor,   High )
             , ( txt afterCursor,          High )
-            , ( hPad ' ',                 Low  )
             ]

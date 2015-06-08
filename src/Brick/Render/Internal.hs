@@ -27,8 +27,12 @@ module Brick.Render.Internal
   , vPad
   , hFill
   , vFill
+
   , hBox
   , vBox
+  , (=>>), (<<=), (<=>)
+  , (+>>), (<<+), (<+>)
+
   , hLimit
   , vLimit
   , useAttr
@@ -140,7 +144,7 @@ addCursorOffset off r =
     in r & cursors %~ (\cs -> onlyVisible $ (`clOffset` off) <$> cs)
 
 unrestricted :: Int
-unrestricted = 1000
+unrestricted = 100000
 
 txt :: String -> Render
 txt s = do
@@ -353,7 +357,7 @@ viewport vpname typ p = do
 
     -- Return the translated result with the visibility requests
     -- discarded
-    cropToContext $ return $ translated & visibilityRequests .~ mempty
+    cropToContext $ ((return $ translated & visibilityRequests .~ mempty) <+> hPad ' ') <=> vPad ' '
 
 scrollToView :: ViewportType -> VisibilityRequest -> Viewport -> Viewport
 scrollToView typ rq vp = vp & theStart .~ newStart
@@ -394,3 +398,21 @@ visible p = do
     return $ if imageSize^._1 > 0 && imageSize^._2 > 0
              then result & visibilityRequests %~ (VR (Location (0, 0)) imageSize :)
              else result
+
+(<+>) :: Render -> Render -> Render
+(<+>) a b = hBox [(a, High), (b, High)]
+
+(<<+) :: Render -> Render -> Render
+(<<+) a b = hBox [(a, High), (b, Low)]
+
+(+>>) :: Render -> Render -> Render
+(+>>) a b = hBox [(a, Low), (b, High)]
+
+(<=>) :: Render -> Render -> Render
+(<=>) a b = vBox [(a, High), (b, High)]
+
+(<<=) :: Render -> Render -> Render
+(<<=) a b = vBox [(a, High), (b, Low)]
+
+(=>>) :: Render -> Render -> Render
+(=>>) a b = vBox [(a, Low), (b, High)]
