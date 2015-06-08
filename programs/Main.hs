@@ -43,7 +43,7 @@ drawUI st = [a]
         (bsName, bs) = styles !! (st^.stBorderStyle)
         box = borderWithLabel bs bsName $
                   (hLimit 25 (
-                    vBox [ (vLimit 1 $ useAttr (cyan `on` blue) $ drawEditor (st^.stEditor), High)
+                    vBox [ (vLimit 1 $ useAttr (cyan `on` blue) $ renderEditor (st^.stEditor), High)
                          , (hBorder bs, Low)
                          , (vLimit 10 $ renderList (st^.stList), High)
                          ]

@@ -1,7 +1,7 @@
 module Brick.Edit
   ( Editor
   , editor
-  , drawEditor
+  , renderEditor
   )
 where
 
@@ -76,8 +76,8 @@ insertChar c theEdit =
 editor :: Name -> String -> Editor
 editor name s = Editor s (length s) name
 
-drawEditor :: Editor -> Render
-drawEditor e =
+renderEditor :: Editor -> Render
+renderEditor e =
     let cursorLoc = Location (cp, 0)
         cp = editCursorPos e
         s = editStr e
