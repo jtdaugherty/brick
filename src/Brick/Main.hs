@@ -14,6 +14,7 @@ module Brick.Main
   , supplyVtyEvents
   , withVty
   , runVty
+  , stepVty
 
   , neverShowCursor
   , showFirstCursor
@@ -94,10 +95,15 @@ supplyVtyEvents vty mkEvent chan =
 
 runVty :: Vty -> Chan e -> App a e -> a -> RenderState -> IO ()
 runVty vty chan app appState rs = do
+    (newAppState, newRS) <- stepVty vty chan app appState rs
+    runVty vty chan app newAppState newRS
+
+stepVty :: Vty -> Chan e -> App a e -> a -> RenderState -> IO (a, RenderState)
+stepVty vty chan app appState rs = do
     newRS <- renderApp vty app appState rs
     e <- readChan chan
     (newAppState, scrollReqs) <- runStateT (appHandleEvent app e appState) []
-    runVty vty chan app newAppState $ newRS { _scrollRequests = scrollReqs }
+    return (newAppState, newRS { _scrollRequests = scrollReqs })
 
 withVty :: IO Vty -> (Vty -> IO a) -> IO a
 withVty buildVty useVty = do
