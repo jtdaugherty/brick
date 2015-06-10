@@ -50,6 +50,7 @@ module Brick.Render.Internal
   , showCursor
   , viewport
   , visible
+  , visibleRegion
   )
 where
 
@@ -412,6 +413,15 @@ visible p = do
     -- non-zero size in both dimensions.
     return $ if imageSize^._1 > 0 && imageSize^._2 > 0
              then result & visibilityRequests %~ (VR (Location (0, 0)) imageSize :)
+             else result
+
+visibleRegion :: Location -> V.DisplayRegion -> Render -> Render
+visibleRegion vrloc sz p = do
+    result <- p
+    -- The size of the image to be made visible in a viewport must have
+    -- non-zero size in both dimensions.
+    return $ if sz^._1 > 0 && sz^._2 > 0
+             then result & visibilityRequests %~ (VR vrloc sz :)
              else result
 
 (<+>) :: Render -> Render -> Render

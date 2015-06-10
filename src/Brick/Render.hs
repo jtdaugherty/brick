@@ -38,6 +38,7 @@ module Brick.Render
   , showCursor
   , viewport
   , visible
+  , visibleRegion
   )
 where
 

@@ -80,14 +80,9 @@ renderEditor :: Editor -> Render
 renderEditor e =
     let cursorLoc = Location (cp, 0)
         cp = editCursorPos e
-        s = editStr e
-        beforeCursor = take cp s
-        onCursor' = take 1 $ drop cp s
-        onCursor = if null onCursor' then " " else onCursor'
-        afterCursor = drop (cp + 1) s
     in vLimit 1 $
        viewport (editorName e) Horizontal $
        showCursor (editorName e) cursorLoc $
-       (txt beforeCursor)
-       <+> (visible $ txt onCursor)
-       <+> (txt afterCursor)
+       visibleRegion (Location (editCursorPos e, 0)) (1, 1) $
+       txt $
+       editStr e
