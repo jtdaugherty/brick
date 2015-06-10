@@ -78,11 +78,10 @@ editor name s = Editor s (length s) name
 
 renderEditor :: Editor -> Render
 renderEditor e =
-    let cursorLoc = Location (cp, 0)
-        cp = editCursorPos e
+    let cursorLoc = Location (editCursorPos e, 0)
     in vLimit 1 $
        viewport (editorName e) Horizontal $
        showCursor (editorName e) cursorLoc $
-       visibleRegion (Location (editCursorPos e, 0)) (1, 1) $
+       visibleRegion cursorLoc (1, 1) $
        txt $
        editStr e
