@@ -24,8 +24,10 @@ library
     Brick.Focus
     Brick.List
     Brick.Main
+    Brick.Markup
     Brick.Render
     Brick.Util
+    Data.Text.Markup
   other-modules:
     Brick.Render.Internal
     Brick.Merge
@@ -36,7 +38,9 @@ library
                        data-default,
                        Diff,
                        containers,
-                       lens
+                       lens,
+                       vector,
+                       text
 
 executable brick
   hs-source-dirs:      programs
@@ -58,6 +62,7 @@ executable brick-minimal
                        brick,
                        vty >= 5.2.9,
                        data-default,
+                       text,
                        lens
 
 executable brick-rogue

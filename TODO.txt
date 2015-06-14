@@ -8,6 +8,10 @@ they're Nothing (same for boxes?)
 functions needed to perform the layout and combine the results
 
 Features:
+- Text manipulation API
+  - monoid instance
+  - RLE attribute assignment with successive transformations?
+  - wrapping
 - Default and override attributes in rendering context, plus combinators
 to manage them
 - Think of better library name

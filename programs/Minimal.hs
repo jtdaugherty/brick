@@ -1,17 +1,18 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TupleSections #-}
 module Main where
 
-import Graphics.Vty (green, red)
+import Data.Monoid ((<>))
+import Graphics.Vty
+import Data.Text.Markup ((@@))
 
 import Brick.Main
 import Brick.Util
 import Brick.Render
+import Brick.Markup
 
 ui :: Render
-ui =
-    ("Hello" @@ (fg green))
-    <+> ", "
-    <+> ("world!" @@ (fg red))
+ui = markup $ ("Hello" @@ (green `on` blue)) <> ", " <> ("world!" @@ (red `on` black))
 
 main :: IO ()
 main = simpleMain [ui]
