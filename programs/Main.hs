@@ -36,7 +36,7 @@ data St =
 makeLenses ''St
 
 kw :: Render -> Render
-kw = (@@ (fg blue))
+kw = withAttr (fg blue)
 
 drawUI :: St -> [Render]
 drawUI st = [withBorderStyle bs a]
