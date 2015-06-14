@@ -54,7 +54,7 @@ module Brick.Render.Internal
 where
 
 import Control.Applicative
-import Control.Lens (makeLenses, (^.), (.~), (&), (%~), to, _1, _2, view)
+import Control.Lens (makeLenses, (^.), (.~), (&), (%~), to, _1, _2, view, each)
 import Control.Monad (when)
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Reader
@@ -146,9 +146,7 @@ renderFinal layerRenders sz chooseCursor rs = (newRS, pic, theCursor)
         theCursor = chooseCursor $ concat layerCursors
 
 addVisibilityOffset :: Location -> Result -> Result
-addVisibilityOffset off r =
-    let addOffset vrs = (& vrPosition %~ (off <>)) <$> vrs
-    in r & visibilityRequests %~ addOffset
+addVisibilityOffset off r = r & visibilityRequests.each.vrPosition %~ (off <>)
 
 addCursorOffset :: Location -> Result -> Result
 addCursorOffset off r =

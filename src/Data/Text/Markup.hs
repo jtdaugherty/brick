@@ -10,6 +10,7 @@ module Data.Text.Markup
 where
 
 import Control.Applicative ((<$>))
+import Control.Lens ((&), (%~), each, _1)
 import Data.Default (Default, def)
 import Data.Monoid
 import Data.String (IsString(..))
@@ -76,7 +77,7 @@ toList (Markup theText (RLE pairs)) = toList' theText pairs
 fromList :: [(T.Text, a)] -> Markup a
 fromList pairs = Markup (T.concat $ fst <$> pairs) (RLE $ V.fromList rlePairs)
     where
-        rlePairs = (\(t, v) -> (T.length t, v)) <$> pairs
+        rlePairs = pairs & each._1 %~ T.length
 
 splitMarkupAt :: Int -> Markup a -> (Markup a, Markup a)
 splitMarkupAt i (Markup t theRle) = (m1, m2)
