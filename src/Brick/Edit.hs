@@ -1,7 +1,9 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Brick.Edit
   ( Editor
   , editor
   , renderEditor
+  , editAttr
   )
 where
 
@@ -11,6 +13,7 @@ import Graphics.Vty (Event(..), Key(..), Modifier(..))
 import Brick.Core (Name, Location(..), HandleEvent(..))
 import Brick.Render
 import Brick.Util (clamp)
+import Brick.AttrMap
 
 data Editor =
     Editor { editStr :: !String
@@ -76,10 +79,14 @@ insertChar c theEdit =
 editor :: Name -> String -> Editor
 editor name s = Editor s (length s) name
 
+editAttr :: AttrName
+editAttr = "edit"
+
 renderEditor :: Editor -> Render
 renderEditor e =
     let cursorLoc = Location (editCursorPos e, 0)
-    in vLimit 1 $
+    in withAttrName editAttr $
+       vLimit 1 $
        viewport (editorName e) Horizontal $
        showCursor (editorName e) cursorLoc $
        visibleRegion cursorLoc (1, 1) $

@@ -1,21 +1,37 @@
 module Brick.Markup
-  ( markup
+  ( Markup
+  , markup
+  , (@?)
   )
 where
 
-import Control.Applicative ((<$>))
 import Control.Lens ((.~), (&))
+import Control.Monad (forM)
 import qualified Data.Text as T
 import Data.Text.Markup
 import Data.Default (def)
 
 import Graphics.Vty (Attr, horizCat, string)
 
-import Brick.Render (Render, image)
+import Brick.Render
+import Brick.AttrMap
 
-markup :: Markup Attr -> Render
-markup m =
+class GetAttr a where
+    getAttr :: a -> RenderM Attr
+
+instance GetAttr Attr where
+    getAttr = return
+
+instance GetAttr AttrName where
+    getAttr = lookupAttrName
+
+(@?) :: T.Text -> AttrName -> Markup AttrName
+(@?) = (@@)
+
+markup :: (GetAttr a) => Markup a -> Render
+markup m = do
     let pairs = toList m
-        imgs = mkImage <$> pairs
-        mkImage (t, a) = string a $ T.unpack t
-    in return $ def & image .~ horizCat imgs
+    imgs <- forM pairs $ \(t, aSrc) -> do
+        a <- getAttr aSrc
+        return $ string a $ T.unpack t
+    return $ def & image .~ horizCat imgs

@@ -26,6 +26,7 @@ library
     Brick.Main
     Brick.Markup
     Brick.Render
+    Brick.AttrMap
     Brick.Util
     Data.Text.Markup
   other-modules:
@@ -40,6 +41,7 @@ library
                        containers,
                        lens,
                        vector,
+                       contravariant,
                        text
 
 executable brick

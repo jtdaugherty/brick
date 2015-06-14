@@ -1,4 +1,5 @@
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE OverloadedStrings #-}
 module Brick.List
   ( List(listElements)
   , list
@@ -11,10 +12,13 @@ module Brick.List
   , listRemove
   , listReplace
   , listSelectedElement
+
+  , listSelectedAttr
   )
 where
 
 import Control.Applicative ((<$>))
+import Data.Monoid ((<>))
 import Data.Maybe (fromMaybe)
 import Graphics.Vty (Event(..), Key(..))
 
@@ -22,6 +26,7 @@ import Brick.Core (HandleEvent(..), Name)
 import Brick.Merge (maintainSel)
 import Brick.Render
 import Brick.Util (clamp, for)
+import Brick.AttrMap
 
 data List e =
     List { listElements :: ![e]
@@ -37,6 +42,12 @@ instance HandleEvent (List e) where
                   EvKey KUp [] -> listMoveUp
                   EvKey KDown [] -> listMoveDown
                   _ -> id
+
+listAttr :: AttrName -> AttrName
+listAttr = ("list" <>)
+
+listSelectedAttr :: AttrName
+listSelectedAttr = listAttr "selected"
 
 list :: Name -> (Bool -> e -> Render) -> [e] -> List e
 list name draw es =
@@ -56,7 +67,9 @@ drawListElements l = drawnElements
         drawnElements = for (zip [0..] es) $ \(i, e) ->
             let isSelected = Just i == listSelected l
                 elemRender = listElementDraw l isSelected e
-                makeVisible = if isSelected then visible else id
+                makeVisible = if isSelected
+                              then (visible . withAttrName listSelectedAttr)
+                              else id
             in makeVisible elemRender
 
 listInsert :: Int -> e -> List e -> List e

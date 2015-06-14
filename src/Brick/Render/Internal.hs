@@ -7,6 +7,8 @@ module Brick.Render.Internal
   ( Result(..)
   , image
   , cursors
+  , attr
+  , lookupAttrName
   , visibilityRequests
 
   , RenderState(..)
@@ -39,7 +41,8 @@ module Brick.Render.Internal
 
   , hLimit
   , vLimit
-  , withAttr
+  , withDefaultAttr
+  , withAttrName
   , raw
   , translateBy
   , cropLeftBy
@@ -54,12 +57,13 @@ module Brick.Render.Internal
 where
 
 import Control.Applicative
-import Control.Lens (makeLenses, (^.), (.~), (&), (%~), to, _1, _2, view, each)
+import Control.Lens (makeLenses, (^.), (.~), (&), (%~), to, _1, _2, view, each, to)
 import Control.Monad (when)
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Reader
 import Control.Monad.Trans.Class (lift)
 import Data.Default
+import Data.Functor.Contravariant
 import Data.Monoid ((<>), mempty)
 import qualified Data.Map as M
 import qualified Data.Function as DF
@@ -71,6 +75,7 @@ import qualified Graphics.Vty as V
 import Brick.Core
 import Brick.Border.Style
 import Brick.Util (clOffset, for)
+import Brick.AttrMap
 
 data VisibilityRequest =
     VR { _vrPosition :: Location
@@ -95,10 +100,11 @@ data Result =
            deriving Show
 
 data Context =
-    Context { _attr :: V.Attr
+    Context { _attrName :: AttrName
             , _availW :: Int
             , _availH :: Int
             , _activeBorderStyle :: BorderStyle
+            , _ctxAttrs :: AttrMap
             }
 
 data Priority = High | Low
@@ -132,15 +138,16 @@ withBorderStyle bs = withReaderT (& activeBorderStyle .~ bs)
 getActiveBorderStyle :: RenderM BorderStyle
 getActiveBorderStyle = view activeBorderStyle
 
-renderFinal :: [Render]
+renderFinal :: AttrMap
+            -> [Render]
             -> V.DisplayRegion
             -> ([CursorLocation] -> Maybe CursorLocation)
             -> RenderState
             -> (RenderState, V.Picture, Maybe CursorLocation)
-renderFinal layerRenders sz chooseCursor rs = (newRS, pic, theCursor)
+renderFinal aMap layerRenders sz chooseCursor rs = (newRS, pic, theCursor)
     where
         (layerResults, newRS) = flip runState rs $ sequence $ (\p -> runReaderT p ctx) <$> (cropToContext <$> layerRenders)
-        ctx = Context V.defAttr (fst sz) (snd sz) def
+        ctx = Context def (fst sz) (snd sz) def aMap
         pic = V.picForLayers $ uncurry V.resize sz <$> (^.image) <$> layerResults
         layerCursors = (^.cursors) <$> layerResults
         theCursor = chooseCursor $ concat layerCursors
@@ -156,6 +163,14 @@ addCursorOffset off r =
 
 unrestricted :: Int
 unrestricted = 100000
+
+attr :: (Contravariant f, Functor f) => (V.Attr -> f V.Attr) -> Context -> f Context
+attr = to (\c -> attrMapLookup (c^.attrName) (c^.ctxAttrs))
+
+lookupAttrName :: AttrName -> RenderM V.Attr
+lookupAttrName n = do
+    c <- getContext
+    return $ attrMapLookup n (c^.ctxAttrs)
 
 txt :: String -> Render
 txt s = do
@@ -264,8 +279,11 @@ hLimit w p = withReaderT (& availW .~ w) $ cropToContext p
 vLimit :: Int -> Render -> Render
 vLimit h p = withReaderT (& availH .~ h) $ cropToContext p
 
-withAttr :: V.Attr -> Render -> Render
-withAttr a = withReaderT (& attr .~ a)
+withAttrName :: AttrName -> Render -> Render
+withAttrName an = withReaderT (& attrName .~ an)
+
+withDefaultAttr :: V.Attr -> Render -> Render
+withDefaultAttr a = withReaderT (& ctxAttrs %~ (setDefault a))
 
 raw :: V.Image -> Render
 raw img = return $ def & image .~ img

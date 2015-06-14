@@ -17,6 +17,7 @@ import Brick.Center
 import Brick.Border
 import Brick.Border.Style
 import Brick.Util
+import Brick.AttrMap
 
 styles :: [(String, BorderStyle)]
 styles =
@@ -35,8 +36,11 @@ data St =
 
 makeLenses ''St
 
+keywordAttr :: AttrName
+keywordAttr = "app" <> "keyword"
+
 kw :: Render -> Render
-kw = withAttr (fg blue)
+kw = withAttrName keywordAttr
 
 drawUI :: St -> [Render]
 drawUI st = [withBorderStyle bs a]
@@ -44,7 +48,7 @@ drawUI st = [withBorderStyle bs a]
         (bsName, bs) = styles !! (st^.stBorderStyle)
         box = borderWithLabel bsName $
                   (hLimit 25 (
-                    (withAttr (cyan `on` blue) $ renderEditor (st^.stEditor))
+                    (renderEditor (st^.stEditor))
                     <=> hBorder
                     <=> (vLimit 10 $ renderList (st^.stList))
                   ))
@@ -86,18 +90,23 @@ initialState =
 
 listDrawElem :: Bool -> Int -> Render
 listDrawElem sel i =
-    let selAttr = white `on` blue
-        maybeSelect = if sel
-                      then withAttr selAttr
-                      else id
-    in maybeSelect $ hCenterWith (Just ' ') $ vBox $ for [1..i+1] $ \j ->
-        (txt $ "Item " <> show i <> " L" <> show j, High)
+    let selStr s = if sel then "<" <> s <> ">" else s
+    in hCenterWith (Just ' ') $ vBox $ for [1..i+1] $ \j ->
+        (txt $ "Item " <> (selStr $ show i) <> " L" <> show j, High)
+
+theAttrMap :: AttrMap
+theAttrMap = attrMap defAttr
+    [ (listSelectedAttr,   white `on` blue)
+    , (editAttr,           green `on` white)
+    , (keywordAttr,        fg blue)
+    ]
 
 theApp :: App St Event
 theApp =
     def { appDraw = drawUI
         , appChooseCursor = showFirstCursor
         , appHandleEvent = appEvent
+        , appAttrMap = const theAttrMap
         }
 
 main :: IO ()

@@ -4,7 +4,9 @@ module Brick.Render
 
   , Result
   , image
+  , attr
   , cursors
+  , lookupAttrName
   , visibilityRequests
 
   , Context
@@ -26,7 +28,8 @@ module Brick.Render
   , vBox
   , hLimit
   , vLimit
-  , withAttr
+  , withDefaultAttr
+  , withAttrName
   , raw
   , withBorderStyle
   , translateBy

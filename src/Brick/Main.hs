@@ -26,6 +26,7 @@ import Graphics.Vty
   , Picture(..)
   , Cursor(..)
   , Event(..)
+  , Attr
   , update
   , outputIface
   , displayBounds
@@ -38,26 +39,30 @@ import System.Exit (exitSuccess)
 import Brick.Render (Render)
 import Brick.Render.Internal (renderFinal, RenderState(..))
 import Brick.Core (Location(..), CursorLocation(..))
+import Brick.AttrMap
 
 data App a e =
     App { appDraw :: a -> [Render]
         , appChooseCursor :: a -> [CursorLocation] -> Maybe CursorLocation
         , appHandleEvent :: e -> a -> IO a
+        , appAttrMap :: a -> AttrMap
         }
 
 instance Default (App a e) where
     def = App { appDraw = const def
               , appChooseCursor = neverShowCursor
               , appHandleEvent = const return
+              , appAttrMap = const def
               }
 
 defaultMain :: App a Event -> a -> IO ()
 defaultMain = defaultMainWithVty (mkVty def)
 
-simpleMain :: [Render] -> IO ()
-simpleMain ls =
+simpleMain :: [(AttrName, Attr)] -> [Render] -> IO ()
+simpleMain attrs ls =
     let app = def { appDraw = const ls
                   , appHandleEvent = const $ const exitSuccess
+                  , appAttrMap = const $ attrMap def attrs
                   }
     in defaultMain app ()
 
@@ -97,7 +102,7 @@ withVty buildVty useVty = do
 renderApp :: Vty -> App a e -> a -> RenderState -> IO RenderState
 renderApp vty app appState rs = do
     sz <- displayBounds $ outputIface vty
-    let (newRS, pic, theCursor) = renderFinal (appDraw app appState) sz (appChooseCursor app appState) rs
+    let (newRS, pic, theCursor) = renderFinal (appAttrMap app appState) (appDraw app appState) sz (appChooseCursor app appState) rs
         picWithCursor = case theCursor of
             Nothing -> pic { picCursor = NoCursor }
             Just (CursorLocation (Location (w, h)) _) -> pic { picCursor = Cursor w h }
