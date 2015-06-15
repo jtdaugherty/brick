@@ -43,6 +43,7 @@ module Brick.Render.Internal
   , vLimit
   , withDefaultAttr
   , withAttrName
+  , withAttrMappings
   , raw
   , translateBy
   , cropLeftBy
@@ -281,6 +282,10 @@ vLimit h p = withReaderT (& availH .~ h) $ cropToContext p
 
 withAttrName :: AttrName -> Render -> Render
 withAttrName an = withReaderT (& attrName .~ an)
+
+withAttrMappings :: [(AttrName, V.Attr)] -> Render -> Render
+withAttrMappings ms =
+    withReaderT (& ctxAttrs %~ applyAttrMappings ms)
 
 withDefaultAttr :: V.Attr -> Render -> Render
 withDefaultAttr a = withReaderT (& ctxAttrs %~ (setDefault a))

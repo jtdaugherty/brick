@@ -30,6 +30,7 @@ module Brick.Render
   , vLimit
   , withDefaultAttr
   , withAttrName
+  , withAttrMappings
   , raw
   , withBorderStyle
   , translateBy

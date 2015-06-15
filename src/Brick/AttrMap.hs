@@ -4,6 +4,7 @@ module Brick.AttrMap
   , attrMap
   , attrMapLookup
   , setDefault
+  , applyAttrMappings
   )
 where
 
@@ -58,3 +59,6 @@ combineMDs :: MaybeDefault a -> MaybeDefault a -> MaybeDefault a
 combineMDs _ (SetTo v) = SetTo v
 combineMDs (SetTo v) _ = SetTo v
 combineMDs _ v = v
+
+applyAttrMappings :: [(AttrName, Attr)] -> AttrMap -> AttrMap
+applyAttrMappings ms (AttrMap d m) = AttrMap d ((M.fromList ms) `M.union` m)
