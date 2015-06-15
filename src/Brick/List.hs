@@ -13,6 +13,7 @@ module Brick.List
   , listReplace
   , listSelectedElement
 
+  , listAttr
   , listSelectedAttr
   )
 where
@@ -43,11 +44,11 @@ instance HandleEvent (List e) where
                   EvKey KDown [] -> listMoveDown
                   _ -> id
 
-listAttr :: AttrName -> AttrName
-listAttr = ("list" <>)
+listAttr :: AttrName
+listAttr = "list"
 
 listSelectedAttr :: AttrName
-listSelectedAttr = listAttr "selected"
+listSelectedAttr = listAttr <> "selected"
 
 list :: Name -> (Bool -> e -> Render) -> [e] -> List e
 list name draw es =
@@ -57,7 +58,7 @@ list name draw es =
 renderList :: List e -> Render
 renderList l = theList
     where
-        theList = viewport (listName l) Vertical $ vBox pairs
+        theList = withAttrName listAttr $ viewport (listName l) Vertical $ vBox pairs
         pairs = (, High) <$> (drawListElements l)
 
 drawListElements :: List e -> [Render]

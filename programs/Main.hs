@@ -99,6 +99,7 @@ theAttrMap = attrMap defAttr
     [ (listSelectedAttr,   white `on` blue)
     , (editAttr,           green `on` white)
     , (keywordAttr,        fg blue)
+    , (borderAttr,         fg blue)
     ]
 
 theApp :: App St Event
