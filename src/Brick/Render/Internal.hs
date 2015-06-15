@@ -103,7 +103,7 @@ data Result =
            deriving Show
 
 data Context =
-    Context { _attrName :: AttrName
+    Context { _ctxAttrName :: AttrName
             , _availW :: Int
             , _availH :: Int
             , _activeBorderStyle :: BorderStyle
@@ -168,7 +168,7 @@ unrestricted :: Int
 unrestricted = 100000
 
 attr :: (Contravariant f, Functor f) => (V.Attr -> f V.Attr) -> Context -> f Context
-attr = to (\c -> attrMapLookup (c^.attrName) (c^.ctxAttrs))
+attr = to (\c -> attrMapLookup (c^.ctxAttrName) (c^.ctxAttrs))
 
 lookupAttrName :: AttrName -> RenderM V.Attr
 lookupAttrName n = do
@@ -283,7 +283,7 @@ vLimit :: Int -> Render -> Render
 vLimit h p = withReaderT (& availH .~ h) $ cropToContext p
 
 withAttrName :: AttrName -> Render -> Render
-withAttrName an = withReaderT (& attrName .~ an)
+withAttrName an = withReaderT (& ctxAttrName .~ an)
 
 withAttrMappings :: [(AttrName, V.Attr)] -> Render -> Render
 withAttrMappings ms =

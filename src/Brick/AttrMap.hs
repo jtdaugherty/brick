@@ -1,6 +1,7 @@
 module Brick.AttrMap
   ( AttrMap
   , AttrName
+  , attrName
   , attrMap
   , forceAttrMap
   , attrMapLookup
@@ -39,6 +40,9 @@ data AttrMap = AttrMap Attr (M.Map AttrName Attr)
 
 instance Default AttrMap where
     def = AttrMap def mempty
+
+attrName :: String -> AttrName
+attrName = AttrName . (:[])
 
 attrMap :: Attr -> [(AttrName, Attr)] -> AttrMap
 attrMap theDefault pairs = AttrMap theDefault (M.fromList pairs)
