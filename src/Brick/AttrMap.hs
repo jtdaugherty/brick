@@ -2,9 +2,11 @@ module Brick.AttrMap
   ( AttrMap
   , AttrName
   , attrMap
+  , forceAttrMap
   , attrMapLookup
   , setDefault
   , applyAttrMappings
+  , mergeWithDefault
   )
 where
 
@@ -32,6 +34,7 @@ instance IsString AttrName where
     fromString = AttrName . (:[])
 
 data AttrMap = AttrMap Attr (M.Map AttrName Attr)
+             | ForceAttr Attr
              deriving Show
 
 instance Default AttrMap where
@@ -40,13 +43,22 @@ instance Default AttrMap where
 attrMap :: Attr -> [(AttrName, Attr)] -> AttrMap
 attrMap theDefault pairs = AttrMap theDefault (M.fromList pairs)
 
+forceAttrMap :: Attr -> AttrMap
+forceAttrMap = ForceAttr
+
+mergeWithDefault :: Attr -> AttrMap -> Attr
+mergeWithDefault _ (ForceAttr a) = a
+mergeWithDefault a (AttrMap d _) = combineAttrs d a
+
 attrMapLookup :: AttrName -> AttrMap -> Attr
+attrMapLookup _ (ForceAttr a) = a
 attrMapLookup (AttrName []) (AttrMap theDefault _) = theDefault
 attrMapLookup (AttrName ns) (AttrMap theDefault m) =
     let results = catMaybes $ (\n -> M.lookup n m) <$> (AttrName <$> (inits ns))
     in foldl combineAttrs theDefault results
 
 setDefault :: Attr -> AttrMap -> AttrMap
+setDefault _ (ForceAttr a) = ForceAttr a
 setDefault newDefault (AttrMap _ m) = AttrMap newDefault m
 
 combineAttrs :: Attr -> Attr -> Attr
@@ -61,4 +73,5 @@ combineMDs (SetTo v) _ = SetTo v
 combineMDs _ v = v
 
 applyAttrMappings :: [(AttrName, Attr)] -> AttrMap -> AttrMap
+applyAttrMappings _ (ForceAttr a) = ForceAttr a
 applyAttrMappings ms (AttrMap d m) = AttrMap d ((M.fromList ms) `M.union` m)

@@ -8,6 +8,7 @@ module Brick.Render.Internal
   , image
   , cursors
   , attr
+  , ctxAttrs
   , lookupAttrName
   , visibilityRequests
 
@@ -44,6 +45,7 @@ module Brick.Render.Internal
   , withDefaultAttr
   , withAttrName
   , withAttrMappings
+  , forceAttr
   , raw
   , translateBy
   , cropLeftBy
@@ -289,6 +291,9 @@ withAttrMappings ms =
 
 withDefaultAttr :: V.Attr -> Render -> Render
 withDefaultAttr a = withReaderT (& ctxAttrs %~ (setDefault a))
+
+forceAttr :: V.Attr -> Render -> Render
+forceAttr a = withReaderT (& ctxAttrs .~ (forceAttrMap a))
 
 raw :: V.Image -> Render
 raw img = return $ def & image .~ img

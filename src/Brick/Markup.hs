@@ -5,7 +5,7 @@ module Brick.Markup
   )
 where
 
-import Control.Lens ((.~), (&))
+import Control.Lens ((.~), (&), (^.))
 import Control.Monad (forM)
 import qualified Data.Text as T
 import Data.Text.Markup
@@ -20,7 +20,9 @@ class GetAttr a where
     getAttr :: a -> RenderM Attr
 
 instance GetAttr Attr where
-    getAttr = return
+    getAttr a = do
+        c <- getContext
+        return $ mergeWithDefault a (c^.ctxAttrs)
 
 instance GetAttr AttrName where
     getAttr = lookupAttrName

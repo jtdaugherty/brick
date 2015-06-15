@@ -5,6 +5,7 @@ module Brick.Render
   , Result
   , image
   , attr
+  , ctxAttrs
   , cursors
   , lookupAttrName
   , visibilityRequests
@@ -31,6 +32,7 @@ module Brick.Render
   , withDefaultAttr
   , withAttrName
   , withAttrMappings
+  , forceAttr
   , raw
   , withBorderStyle
   , translateBy
