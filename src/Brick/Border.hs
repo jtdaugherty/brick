@@ -10,6 +10,7 @@ module Brick.Border
   , borderAttr
   , vBorderAttr
   , hBorderAttr
+  , hBorderLabelAttr
   , tlCornerAttr
   , trCornerAttr
   , blCornerAttr
@@ -32,6 +33,9 @@ vBorderAttr = borderAttr <> "vertical"
 
 hBorderAttr :: AttrName
 hBorderAttr = borderAttr <> "horizontal"
+
+hBorderLabelAttr :: AttrName
+hBorderLabelAttr = hBorderAttr <> "label"
 
 tlCornerAttr :: AttrName
 tlCornerAttr = borderAttr <> "corner" <> "tl"
@@ -75,7 +79,7 @@ hBorder_ label = do
     bs <- getActiveBorderStyle
     withAttrName hBorderAttr $ hCenterWith (Just $ bsHorizontal bs) msg
     where
-        msg = maybe (txt "") txt label
+        msg = maybe (txt "") (withAttrName hBorderLabelAttr . txt) label
 
 vBorder :: Render
 vBorder = do

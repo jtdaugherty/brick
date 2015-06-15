@@ -100,6 +100,7 @@ theAttrMap = attrMap defAttr
     , (editAttr,           green `on` white)
     , (keywordAttr,        fg blue)
     , (borderAttr,         fg blue)
+    , (hBorderLabelAttr,   fg cyan)
     ]
 
 theApp :: App St Event
