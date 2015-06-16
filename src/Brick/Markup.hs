@@ -30,9 +30,9 @@ instance GetAttr AttrName where
 (@?) :: T.Text -> AttrName -> Markup AttrName
 (@?) = (@@)
 
-markup :: (GetAttr a) => Markup a -> Render
+markup :: (Eq a, GetAttr a) => Markup a -> Render
 markup m = do
-    let pairs = toList m
+    let pairs = markupToList m
     imgs <- forM pairs $ \(t, aSrc) -> do
         a <- getAttr aSrc
         return $ string a $ T.unpack t

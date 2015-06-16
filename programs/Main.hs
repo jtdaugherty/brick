@@ -7,6 +7,7 @@ import Data.Default
 import Data.Monoid
 import Graphics.Vty hiding (translate)
 import System.Exit
+import qualified Data.Text as T
 
 import Brick.Main
 import Brick.Edit
@@ -18,6 +19,8 @@ import Brick.Border
 import Brick.Border.Style
 import Brick.Util
 import Brick.AttrMap
+import Brick.Markup
+import Data.Text.Markup
 
 styles :: [(String, BorderStyle)]
 styles =
@@ -39,8 +42,34 @@ makeLenses ''St
 keywordAttr :: AttrName
 keywordAttr = "app" <> "keyword"
 
+editHighlightedKw1Attr :: AttrName
+editHighlightedKw1Attr = editAttr <> "kw1"
+
+editHighlightedKw2Attr :: AttrName
+editHighlightedKw2Attr = editAttr <> "kw2"
+
 kw :: Render -> Render
 kw = withAttrName keywordAttr
+
+highlightWord :: (Eq a) => String -> a -> Markup a -> Markup a
+highlightWord w att mk = assignAttrs 0 chunks mk
+    where
+        wordLen = length w
+        s = toText mk
+        chunks = T.splitOn (T.pack w) s
+
+        assignAttrs _ [] m = m
+        assignAttrs _ [_] m = m
+        assignAttrs pos (t:ts) m = markupSet (pos + T.length t, wordLen) att $ assignAttrs (pos + T.length t + wordLen) ts m
+
+applyMarkup :: String -> Markup AttrName
+applyMarkup s =
+    highlightWord "foo" editHighlightedKw1Attr $
+    highlightWord "bar" editHighlightedKw2Attr $
+    (T.pack s) @? editAttr
+
+drawEditString :: String -> Render
+drawEditString = markup . applyMarkup
 
 drawUI :: St -> [Render]
 drawUI st = [withBorderStyle bs a]
@@ -48,7 +77,7 @@ drawUI st = [withBorderStyle bs a]
         (bsName, bs) = styles !! (st^.stBorderStyle)
         box = borderWithLabel bsName $
                   (hLimit 25 (
-                    (renderEditor (st^.stEditor))
+                    (renderEditor drawEditString (st^.stEditor))
                     <=> hBorder
                     <=> (vLimit 10 $ renderList (st^.stList))
                   ))
@@ -96,11 +125,13 @@ listDrawElem sel i =
 
 theAttrMap :: AttrMap
 theAttrMap = attrMap defAttr
-    [ (listSelectedAttr,   white `on` blue)
-    , (editAttr,           green `on` white)
-    , (keywordAttr,        fg blue)
-    , (borderAttr,         fg blue)
-    , (hBorderLabelAttr,   fg cyan)
+    [ (listSelectedAttr,          white `on` blue)
+    , (editAttr,                  white `on` blue)
+    , (editHighlightedKw1Attr,    fg magenta)
+    , (editHighlightedKw2Attr,    fg cyan)
+    , (keywordAttr,               fg blue)
+    , (borderAttr,                fg blue)
+    , (hBorderLabelAttr,          fg cyan)
     ]
 
 theApp :: App St Event

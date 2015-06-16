@@ -1,64 +1,57 @@
 module Data.Text.Markup
-  ( RLE
-  , Markup
-  , toList
+  ( Markup
+  , markupToList
+  , markupSet
   , fromList
   , fromText
+  , toText
   , (@@)
   )
 where
 
 import Control.Applicative ((<$>))
-import Control.Lens ((&), (%~), each, _1)
 import Data.Default (Default, def)
 import Data.Monoid
 import Data.String (IsString(..))
 import qualified Data.Text as T
-import qualified Data.Vector as V
 
-data RLE a = RLE (V.Vector (Int, a))
-           deriving Show
-
-rle :: Int -> a -> RLE a
-rle 0 _ = RLE V.empty
-rle n val = RLE (V.singleton (n, val))
-
-instance Monoid (RLE a) where
-    mempty = RLE mempty
-    mappend (RLE v1) (RLE v2) =
-        -- XXX combine last element of v1 and first element of v2 if the
-        -- 'a' values match, or build an "optimize" function that
-        -- combines adjacent pairs where this condition is met and call
-        -- it here
-        RLE $ v1 `mappend` v2
-
-data Markup a = Markup T.Text (RLE a)
+data Markup a = Markup [(Char, a)]
               deriving Show
 
 instance Monoid (Markup a) where
-    mempty = Markup mempty mempty
-    mappend (Markup t1 r1) (Markup t2 r2) =
-        Markup (t1 `mappend` t2) (r1 `mappend` r2)
+    mempty = Markup mempty
+    mappend (Markup t1) (Markup t2) =
+        Markup (t1 `mappend` t2)
 
 instance (Default a) => IsString (Markup a) where
     fromString = fromText . T.pack
 
 (@@) :: T.Text -> a -> Markup a
-t @@ val = Markup t (rle (T.length t) val)
+t @@ val = Markup [(c, val) | c <- T.unpack t]
 
 fromText :: (Default a) => T.Text -> Markup a
 fromText = (@@ def)
 
-toList :: Markup a -> [(T.Text, a)]
-toList (Markup theText (RLE pairs)) = toList' theText pairs
+toText :: (Eq a) => Markup a -> T.Text
+toText = T.concat . (fst <$>) . markupToList
+
+markupSet :: (Eq a) => (Int, Int) -> a -> Markup a -> Markup a
+markupSet (start, len) val m@(Markup l) = if start < 0 || start + len > length l
+                                          then m
+                                          else newM
     where
-        toList' _ vec | V.null vec = []
-        toList' t vec =
-            let (n, v) = V.head vec
-                rest = V.tail vec
-            in (T.take n t, v) : toList' (T.drop n t) rest
+        newM = Markup $ theHead ++ theNewEntries ++ theTail
+        (theHead, theLongTail) = splitAt start l
+        (theOldEntries, theTail) = splitAt len theLongTail
+        theNewEntries = zip (fst <$> theOldEntries) (repeat val)
+
+markupToList :: (Eq a) => Markup a -> [(T.Text, a)]
+markupToList (Markup thePairs) = toList thePairs
+    where
+        toList [] = []
+        toList ((ch, val):rest) = (T.pack $ ch : (fst <$> matching), val) : toList remaining
+            where
+                (matching, remaining) = break (\(_, v) -> v /= val) rest
 
 fromList :: [(T.Text, a)] -> Markup a
-fromList pairs = Markup (T.concat $ fst <$> pairs) (RLE $ V.fromList rlePairs)
-    where
-        rlePairs = pairs & each._1 %~ T.length
+fromList pairs = Markup $ concatMap (\(t, val) -> [(c, val) | c <- T.unpack t]) pairs

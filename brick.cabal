@@ -53,7 +53,8 @@ executable brick
                        brick,
                        vty >= 5.2.9,
                        data-default,
-                       lens
+                       lens,
+                       text
 
 executable brick-minimal
   hs-source-dirs:      programs
