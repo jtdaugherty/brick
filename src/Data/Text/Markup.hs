@@ -4,7 +4,6 @@ module Data.Text.Markup
   , toList
   , fromList
   , fromText
-  , splitMarkupAt
   , (@@)
   )
 where
@@ -23,21 +22,6 @@ data RLE a = RLE (V.Vector (Int, a))
 rle :: Int -> a -> RLE a
 rle 0 _ = RLE V.empty
 rle n val = RLE (V.singleton (n, val))
-
-rleSplitAt :: Int -> RLE a -> (RLE a, RLE a)
-rleSplitAt i (RLE vec) = (RLE v1, RLE v2)
-    -- Find out which pair, if any, needs to be broken up
-    where
-        (v1, v2) = vecSplitAt 0 V.empty vec
-        vecSplitAt _ prev v | V.null v = (prev, v)
-        vecSplitAt cnt prev v =
-            let (n, val) = V.head v
-                rest = V.tail v
-            in if cnt + n >= i
-               then ( prev `V.snoc` (i - cnt, val)
-                    , (cnt + n - i, val) `V.cons` rest
-                    )
-               else vecSplitAt (cnt + n) (prev `V.snoc` (n, val)) rest
 
 instance Monoid (RLE a) where
     mempty = RLE mempty
@@ -78,10 +62,3 @@ fromList :: [(T.Text, a)] -> Markup a
 fromList pairs = Markup (T.concat $ fst <$> pairs) (RLE $ V.fromList rlePairs)
     where
         rlePairs = pairs & each._1 %~ T.length
-
-splitMarkupAt :: Int -> Markup a -> (Markup a, Markup a)
-splitMarkupAt i (Markup t theRle) = (m1, m2)
-    where
-        (r1, r2) = rleSplitAt i theRle
-        m1 = Markup (T.take i t) r1
-        m2 = Markup (T.drop i t) r2
