@@ -3,6 +3,7 @@
 module Main where
 
 import Control.Lens
+import Control.Monad.IO.Class (liftIO)
 import Data.Default
 import Data.Monoid
 import Graphics.Vty hiding (translate)
@@ -89,13 +90,13 @@ drawUI st = [withBorderStyle bs a]
               <=> (hCenter (kw "Arrow keys" <+> " navigates the list"))
               <=> (hCenter (kw "Ctrl-Arrow keys" <+> " move the interface"))
 
-appEvent :: Event -> St -> IO St
+appEvent :: Event -> St -> EventM St
 appEvent e st =
     case e of
         EvKey (KChar '+') [] ->
             return $ st & stBorderStyle %~ ((`mod` (length styles)) . (+ 1))
 
-        EvKey KEsc [] -> exitSuccess
+        EvKey KEsc [] -> liftIO exitSuccess
 
         EvKey KUp [MCtrl] -> return $ st & stTrans %~ (\(Location (w, h)) -> Location (w, h - 1))
         EvKey KDown [MCtrl] -> return $ st & stTrans %~ (\(Location (w, h)) -> Location (w, h + 1))

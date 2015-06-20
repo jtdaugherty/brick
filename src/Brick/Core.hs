@@ -9,6 +9,7 @@ module Brick.Core
 where
 
 import Control.Lens
+import Data.String
 import Data.Monoid (Monoid(..))
 import Graphics.Vty (Event)
 
@@ -20,6 +21,9 @@ makeLenses ''Location
 
 newtype Name = Name String
              deriving (Eq, Show, Ord)
+
+instance IsString Name where
+    fromString = Name
 
 origin :: Location
 origin = Location (0, 0)

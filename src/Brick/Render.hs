@@ -19,6 +19,7 @@ module Brick.Render
   , (=>>), (<<=), (<=>)
   , (+>>), (<<+), (<+>)
   , ViewportType(..)
+  , Direction(..)
 
   , txt
   , hPad

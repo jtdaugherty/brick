@@ -8,6 +8,7 @@ import Data.Default (def)
 
 import Control.Applicative
 import Control.Monad
+import Control.Monad.IO.Class (liftIO)
 
 import System.Random
 import System.Exit
@@ -98,10 +99,10 @@ pieceA, dumpA :: Attr
 pieceA = defAttr `withForeColor` blue `withBackColor` green
 dumpA = defAttr `withStyle` reverseVideo
 
-processEvent :: Event -> World -> IO World
+processEvent :: Event -> World -> EventM World
 processEvent k world = do
     case k of
-        EvKey KEsc [] -> exitSuccess
+        EvKey KEsc [] -> liftIO exitSuccess
         EvKey KLeft  [] -> return $ movePlayer world (-1) 0
         EvKey KRight [] -> return $ movePlayer world 1 0
         EvKey KUp    [] -> return $ movePlayer world 0 (-1)

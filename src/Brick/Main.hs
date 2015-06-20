@@ -4,6 +4,10 @@ module Brick.Main
   , defaultMain
   , defaultMainWithVty
 
+  , EventM
+  , scrollBy
+  , scrollPage
+
   , simpleMain
 
   , supplyVtyEvents
@@ -17,8 +21,11 @@ where
 
 import Control.Exception (finally)
 import Control.Monad (when, forever)
+import Control.Monad.Trans.State
+import Control.Monad.IO.Class (liftIO)
 import Control.Concurrent (forkIO, Chan, newChan, readChan, writeChan)
 import Data.Default
+import Data.Monoid
 import Data.Maybe (listToMaybe)
 import qualified Data.Map as M
 import Graphics.Vty
@@ -37,14 +44,14 @@ import Graphics.Vty
 import System.Exit (exitSuccess)
 
 import Brick.Render (Render)
-import Brick.Render.Internal (renderFinal, RenderState(..))
-import Brick.Core (Location(..), CursorLocation(..))
+import Brick.Render.Internal (renderFinal, RenderState(..), ScrollRequest(..), Direction(..))
+import Brick.Core (Location(..), CursorLocation(..), Name(..))
 import Brick.AttrMap
 
 data App a e =
     App { appDraw :: a -> [Render]
         , appChooseCursor :: a -> [CursorLocation] -> Maybe CursorLocation
-        , appHandleEvent :: e -> a -> IO a
+        , appHandleEvent :: e -> a -> EventM a
         , appAttrMap :: a -> AttrMap
         }
 
@@ -55,20 +62,24 @@ instance Default (App a e) where
               , appAttrMap = const def
               }
 
+type EventM a = StateT EventState IO a
+
+type EventState = [(Name, ScrollRequest)]
+
 defaultMain :: App a Event -> a -> IO ()
 defaultMain = defaultMainWithVty (mkVty def)
 
 simpleMain :: [(AttrName, Attr)] -> [Render] -> IO ()
 simpleMain attrs ls =
     let app = def { appDraw = const ls
-                  , appHandleEvent = const $ const exitSuccess
+                  , appHandleEvent = const $ const $ liftIO exitSuccess
                   , appAttrMap = const $ attrMap def attrs
                   }
     in defaultMain app ()
 
 defaultMainWithVty :: IO Vty -> App a Event -> a -> IO ()
 defaultMainWithVty buildVty app initialAppState = do
-    let initialRS = RS M.empty
+    let initialRS = RS M.empty mempty
     chan <- newChan
     withVty buildVty $ \vty -> do
         forkIO $ supplyVtyEvents vty id chan
@@ -91,8 +102,8 @@ runVty :: Vty -> Chan e -> App a e -> a -> RenderState -> IO ()
 runVty vty chan app appState rs = do
     newRS <- renderApp vty app appState rs
     e <- readChan chan
-    newAppState <- appHandleEvent app e appState
-    runVty vty chan app newAppState newRS
+    (newAppState, scrollReqs) <- runStateT (appHandleEvent app e appState) []
+    runVty vty chan app newAppState $ newRS { _scrollRequests = scrollReqs }
 
 withVty :: IO Vty -> (Vty -> IO a) -> IO a
 withVty buildVty useVty = do
@@ -116,3 +127,9 @@ neverShowCursor = const $ const Nothing
 
 showFirstCursor :: a -> [CursorLocation] -> Maybe CursorLocation
 showFirstCursor = const $ listToMaybe
+
+scrollPage :: Name -> Direction -> EventM ()
+scrollPage n dir = modify ((n, ScrollPage dir) :)
+
+scrollBy :: Name -> Int -> EventM ()
+scrollBy n i = modify ((n, ScrollBy i) :)

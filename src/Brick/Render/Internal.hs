@@ -13,6 +13,8 @@ module Brick.Render.Internal
   , visibilityRequests
 
   , RenderState(..)
+  , ScrollRequest(..)
+  , Direction(..)
 
   , Priority(..)
   , renderFinal
@@ -79,6 +81,7 @@ import Brick.Core
 import Brick.Border.Style
 import Brick.Util (clOffset, for)
 import Brick.AttrMap
+import Brick.Util (clamp)
 
 data VisibilityRequest =
     VR { _vrPosition :: Location
@@ -116,8 +119,14 @@ data Priority = High | Low
 type RenderM a = ReaderT Context (State RenderState) a
 type Render = RenderM Result
 
+data Direction = Up | Down
+
+data ScrollRequest = ScrollBy Int
+                   | ScrollPage Direction
+
 data RenderState =
     RS { _viewportMap :: M.Map Name Viewport
+       , _scrollRequests :: [(Name, ScrollRequest)]
        }
 
 makeLenses ''Result
@@ -386,6 +395,17 @@ viewport vpname typ p = do
             updatedVp = scrollToView typ rq vp
         lift $ modify (& viewportMap %~ (M.insert vpname updatedVp))
 
+    -- If the rendering state includes any scrolling requests for this
+    -- viewport, apply those
+    reqs <- lift $ gets $ (^.scrollRequests)
+    let relevantRequests = snd <$> filter (\(n, _) -> n == vpname) reqs
+    when (not $ null relevantRequests) $ do
+        Just vp <- lift $ gets $ (^.viewportMap.to (M.lookup vpname))
+        let [rq] = relevantRequests
+            updatedVp = scrollTo typ rq (initialResult^.image) vp
+        lift $ modify (& viewportMap %~ (M.insert vpname updatedVp))
+        return ()
+
     -- Get the viewport state now that it has been updated.
     Just vp <- lift $ gets (M.lookup vpname . (^.viewportMap))
 
@@ -396,6 +416,26 @@ viewport vpname typ p = do
     -- Return the translated result with the visibility requests
     -- discarded
     cropToContext $ ((return $ translated & visibilityRequests .~ mempty) <+> hPad ' ') <=> vPad ' '
+
+scrollTo :: ViewportType -> ScrollRequest -> V.Image -> Viewport -> Viewport
+scrollTo typ req img vp = vp & theStart .~ newStart
+    where
+        theStart :: Lens' Viewport Int
+        theStart = case typ of
+            Horizontal -> vpLeft
+            Vertical -> vpTop
+        theSize = case typ of
+            Horizontal -> vpSize._1
+            Vertical -> vpSize._2
+        imgSize = case typ of
+            Horizontal -> V.imageWidth img
+            Vertical -> V.imageHeight img
+
+        newStart = clamp 0 (imgSize - vp^.theSize) adjustedAmt
+        adjustedAmt = case req of
+            ScrollBy amt -> (vp^.theStart) + amt
+            ScrollPage Up -> (vp^.theStart) - (vp^.theSize)
+            ScrollPage Down -> (vp^.theStart) + (vp^.theSize)
 
 scrollToView :: ViewportType -> VisibilityRequest -> Viewport -> Viewport
 scrollToView typ rq vp = vp & theStart .~ newStart

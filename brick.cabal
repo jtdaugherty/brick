@@ -51,6 +51,7 @@ executable brick
   main-is:             Main.hs
   build-depends:       base,
                        brick,
+                       transformers,
                        vty >= 5.2.9,
                        data-default,
                        lens,
@@ -75,6 +76,7 @@ executable brick-rogue
   main-is:             Rogue.hs
   build-depends:       base,
                        brick,
+                       transformers,
                        vty >= 5.2.9,
                        data-default,
                        array,
