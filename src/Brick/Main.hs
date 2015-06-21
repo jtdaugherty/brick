@@ -20,7 +20,7 @@ module Brick.Main
 where
 
 import Control.Exception (finally)
-import Control.Monad (when, forever)
+import Control.Monad (forever)
 import Control.Monad.Trans.State
 import Control.Monad.IO.Class (liftIO)
 import Control.Concurrent (forkIO, Chan, newChan, readChan, writeChan)
@@ -85,17 +85,10 @@ defaultMainWithVty buildVty app initialAppState = do
         forkIO $ supplyVtyEvents vty id chan
         runVty vty chan app initialAppState initialRS
 
-isResizeEvent :: Event -> Bool
-isResizeEvent (EvResize _ _) = True
-isResizeEvent _ = False
-
 supplyVtyEvents :: Vty -> (Event -> e) -> Chan e -> IO ()
 supplyVtyEvents vty mkEvent chan =
     forever $ do
         e <- nextEvent vty
-        -- On resize, send two events to force two redraws to force all
-        -- state updates to get flushed to the display
-        when (isResizeEvent e) $ writeChan chan $ mkEvent e
         writeChan chan $ mkEvent e
 
 runVty :: Vty -> Chan e -> App a e -> a -> RenderState -> IO ()
