@@ -76,7 +76,7 @@ drawUI :: St -> [Render]
 drawUI st = [withBorderStyle bs a]
     where
         (bsName, bs) = styles !! (st^.stBorderStyle)
-        box = borderWithLabel bsName $
+        box = borderWithLabel (txt bsName) $
                   (hLimit 25 (
                     (renderEditor drawEditString (st^.stEditor))
                     <=> hBorder
