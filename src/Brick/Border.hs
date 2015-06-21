@@ -19,6 +19,7 @@ module Brick.Border
 where
 
 import Data.Monoid ((<>))
+import qualified Data.Text as T
 
 import Brick.Render
 import Brick.AttrMap
@@ -52,18 +53,18 @@ brCornerAttr = borderAttr <> "corner" <> "br"
 border :: Render -> Render
 border = border_ Nothing
 
-borderWithLabel :: String -> Render -> Render
+borderWithLabel :: T.Text -> Render -> Render
 borderWithLabel label = border_ (Just label)
 
-border_ :: Maybe String -> Render -> Render
+border_ :: Maybe T.Text -> Render -> Render
 border_ label wrapped = do
     bs <- getActiveBorderStyle
-    let top = (withAttrName tlCornerAttr $ txt [bsCornerTL bs])
+    let top = (withAttrName tlCornerAttr $ str [bsCornerTL bs])
               <<+ hBorder_ label +>>
-              (withAttrName trCornerAttr $ txt [bsCornerTR bs])
-        bottom = (withAttrName blCornerAttr $ txt [bsCornerBL bs])
+              (withAttrName trCornerAttr $ str [bsCornerTR bs])
+        bottom = (withAttrName blCornerAttr $ str [bsCornerBL bs])
                  <<+ hBorder +>>
-                 (withAttrName brCornerAttr $ txt [bsCornerBR bs])
+                 (withAttrName brCornerAttr $ str [bsCornerBR bs])
         middle = vBorder +>> wrapped <<+ vBorder
         total = top =>> middle <<= bottom
     total
@@ -71,10 +72,10 @@ border_ label wrapped = do
 hBorder :: Render
 hBorder = hBorder_ Nothing
 
-hBorderWithLabel :: String -> Render
+hBorderWithLabel :: T.Text -> Render
 hBorderWithLabel label = hBorder_ (Just label)
 
-hBorder_ :: Maybe String -> Render
+hBorder_ :: Maybe T.Text -> Render
 hBorder_ label = do
     bs <- getActiveBorderStyle
     withAttrName hBorderAttr $ hCenterWith (Just $ bsHorizontal bs) msg

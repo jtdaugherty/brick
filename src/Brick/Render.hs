@@ -22,6 +22,7 @@ module Brick.Render
   , Direction(..)
 
   , txt
+  , str
   , hPad
   , vPad
   , hFill

@@ -32,6 +32,7 @@ module Brick.Render.Internal
   , ViewportType(..)
 
   , txt
+  , str
   , hPad
   , vPad
   , hFill
@@ -67,6 +68,7 @@ import Control.Monad (when)
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Reader
 import Control.Monad.Trans.Class (lift)
+import qualified Data.Text as T
 import Data.Default
 import Data.Functor.Contravariant
 import Data.Monoid ((<>), mempty)
@@ -138,7 +140,7 @@ makeLenses ''Viewport
 makeLenses ''RenderState
 
 instance IsString Render where
-    fromString = txt
+    fromString = str
 
 instance Default Result where
     def = Result V.emptyImage [] []
@@ -186,10 +188,13 @@ lookupAttrName n = do
     c <- getContext
     return $ attrMapLookup n (c^.ctxAttrs)
 
-txt :: String -> Render
-txt s = do
+str :: String -> Render
+str s = do
     c <- getContext
     return $ def & image .~ (V.string (c^.attr) s)
+
+txt :: T.Text -> Render
+txt = str . T.unpack
 
 hPad :: Char -> Render
 hPad ch = do

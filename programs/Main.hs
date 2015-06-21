@@ -23,7 +23,7 @@ import Brick.AttrMap
 import Brick.Markup
 import Data.Text.Markup
 
-styles :: [(String, BorderStyle)]
+styles :: [(T.Text, BorderStyle)]
 styles =
     [ ("ascii", ascii)
     , ("uni", unicode)
@@ -122,7 +122,7 @@ listDrawElem :: Bool -> Int -> Render
 listDrawElem sel i =
     let selStr s = if sel then "<" <> s <> ">" else s
     in hCenterWith (Just ' ') $ vBox $ for [1..i+1] $ \j ->
-        (txt $ "Item " <> (selStr $ show i) <> " L" <> show j, High)
+        (str $ "Item " <> (selStr $ show i) <> " L" <> show j, High)
 
 theAttrMap :: AttrMap
 theAttrMap = attrMap defAttr
