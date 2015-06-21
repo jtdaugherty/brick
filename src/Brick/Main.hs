@@ -7,6 +7,8 @@ module Brick.Main
   , EventM
   , scrollBy
   , scrollPage
+  , scrollToBeginning
+  , scrollToEnd
 
   , simpleMain
 
@@ -126,3 +128,9 @@ scrollPage n dir = modify ((n, ScrollPage dir) :)
 
 scrollBy :: Name -> Int -> EventM ()
 scrollBy n i = modify ((n, ScrollBy i) :)
+
+scrollToBeginning :: Name -> EventM ()
+scrollToBeginning n = modify ((n, ScrollToBeginning) :)
+
+scrollToEnd :: Name -> EventM ()
+scrollToEnd n = modify ((n, ScrollToEnd) :)

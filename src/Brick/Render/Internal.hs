@@ -123,6 +123,8 @@ data Direction = Up | Down
 
 data ScrollRequest = ScrollBy Int
                    | ScrollPage Direction
+                   | ScrollToBeginning
+                   | ScrollToEnd
 
 data RenderState =
     RS { _viewportMap :: M.Map Name Viewport
@@ -436,6 +438,8 @@ scrollTo typ req img vp = vp & theStart .~ newStart
             ScrollBy amt -> (vp^.theStart) + amt
             ScrollPage Up -> (vp^.theStart) - (vp^.theSize)
             ScrollPage Down -> (vp^.theStart) + (vp^.theSize)
+            ScrollToBeginning -> 0
+            ScrollToEnd -> imgSize - (vp^.theSize)
 
 scrollToView :: ViewportType -> VisibilityRequest -> Viewport -> Viewport
 scrollToView typ rq vp = vp & theStart .~ newStart
