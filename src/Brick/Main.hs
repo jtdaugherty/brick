@@ -1,4 +1,3 @@
-{-# LANGUAGE BangPatterns #-}
 module Brick.Main
   ( App(..)
   , defaultMain
