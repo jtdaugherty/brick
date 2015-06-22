@@ -1,6 +1,7 @@
 module Brick.Render
   ( Render
   , RenderM
+  , RenderState
 
   , Result
   , image
