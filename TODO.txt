@@ -27,3 +27,9 @@ Performance:
 - Write benchmarks for render on various primitive types
 - Use a zipper for the list widget, use vectors for storage
 - Use Vector instead of List where sensible
+
+Via Jesse:
+- Make it possible to exit/re-enter brick event loop to execute external
+programs
+- Make it possible to save and resupply rendering state when doing this
+to permit scrolling state preservation
