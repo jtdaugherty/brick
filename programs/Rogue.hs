@@ -15,10 +15,10 @@ import System.Random
 import System.Exit
 
 import Brick.Main
-import Brick.Widgets.Core
-import Brick.Border
 import Brick.Core
-import Brick.Center
+import Brick.Widgets.Core
+import Brick.Widgets.Border
+import Brick.Widgets.Center
 
 data Player = Player
     { playerCoord :: Coord

@@ -16,17 +16,17 @@ library
   ghc-options:         -Wall -fno-warn-unused-do-bind -O3
   hs-source-dirs:      src
   exposed-modules:
-    Brick.Border
-    Brick.Border.Style
-    Brick.Center
+    Brick.Widgets.Border
+    Brick.Widgets.Border.Style
+    Brick.Widgets.Center
+    Brick.Widgets.Core
+    Brick.Widgets.Edit
+    Brick.Widgets.List
+    Brick.AttrMap
     Brick.Core
-    Brick.Edit
     Brick.Focus
-    Brick.List
     Brick.Main
     Brick.Markup
-    Brick.Widgets.Core
-    Brick.AttrMap
     Brick.Util
     Data.Text.Markup
   other-modules:

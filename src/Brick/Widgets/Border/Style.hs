@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Brick.Border.Style
+module Brick.Widgets.Border.Style
   ( BorderStyle(..)
   , ascii
   , unicode

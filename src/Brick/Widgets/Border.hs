@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Brick.Border
+module Brick.Widgets.Border
   ( border
   , borderWithLabel
 
@@ -20,10 +20,10 @@ where
 
 import Data.Monoid ((<>))
 
-import Brick.Widgets.Core
 import Brick.AttrMap
-import Brick.Center (hCenterWith)
-import Brick.Border.Style (BorderStyle(..))
+import Brick.Widgets.Core
+import Brick.Widgets.Center (hCenterWith)
+import Brick.Widgets.Border.Style (BorderStyle(..))
 
 borderAttr :: AttrName
 borderAttr = "border"

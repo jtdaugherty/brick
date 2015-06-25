@@ -11,13 +11,13 @@ import System.Exit
 import qualified Data.Text as T
 
 import Brick.Main
-import Brick.Edit
-import Brick.List
 import Brick.Core
 import Brick.Widgets.Core
-import Brick.Center
-import Brick.Border
-import Brick.Border.Style
+import Brick.Widgets.Center
+import Brick.Widgets.Border
+import Brick.Widgets.Border.Style
+import Brick.Widgets.Edit
+import Brick.Widgets.List
 import Brick.Util
 import Brick.AttrMap
 import Brick.Markup

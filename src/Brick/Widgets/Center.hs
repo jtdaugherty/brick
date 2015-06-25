@@ -1,4 +1,4 @@
-module Brick.Center
+module Brick.Widgets.Center
   ( hCenter
   , hCenterWith
   , vCenter

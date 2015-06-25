@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Brick.Edit
+module Brick.Widgets.Edit
   ( Editor
   , editor
   , renderEditor

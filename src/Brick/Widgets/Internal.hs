@@ -80,7 +80,7 @@ import Data.String (IsString(..))
 import qualified Graphics.Vty as V
 
 import Brick.Core
-import Brick.Border.Style
+import Brick.Widgets.Border.Style
 import Brick.Util (clOffset, for)
 import Brick.AttrMap
 import Brick.Util (clamp)

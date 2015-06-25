@@ -1,6 +1,6 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE OverloadedStrings #-}
-module Brick.List
+module Brick.Widgets.List
   ( List(listElements)
   , list
   , renderList
