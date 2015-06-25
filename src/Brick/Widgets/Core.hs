@@ -1,5 +1,6 @@
 module Brick.Widgets.Core
   ( Widget(..)
+  , Size(..)
   , RenderM
 
   , Result

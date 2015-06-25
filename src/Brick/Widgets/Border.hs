@@ -57,7 +57,7 @@ borderWithLabel label = border_ (Just label)
 
 border_ :: Maybe Widget -> Widget -> Widget
 border_ label wrapped =
-    Widget $ do
+    Widget (hSize wrapped) (vSize wrapped) $ do
       bs <- getActiveBorderStyle
       let top = (withAttrName tlCornerAttr $ str [bsCornerTL bs])
                 <<+ hBorder_ label +>>
@@ -77,7 +77,7 @@ hBorderWithLabel label = hBorder_ (Just label)
 
 hBorder_ :: Maybe Widget -> Widget
 hBorder_ label =
-    Widget $ do
+    Widget Unlimited Fixed $ do
       bs <- getActiveBorderStyle
       render $ withAttrName hBorderAttr $ hCenterWith (Just $ bsHorizontal bs) msg
       where
@@ -85,6 +85,6 @@ hBorder_ label =
 
 vBorder :: Widget
 vBorder =
-    Widget $ do
+    Widget Fixed Unlimited $ do
       bs <- getActiveBorderStyle
       render $ withAttrName vBorderAttr $ vFill (bsVertical bs)

@@ -19,6 +19,7 @@ module Brick.Widgets.Internal
   , Priority(..)
   , renderFinal
   , Widget(..)
+  , Size(..)
   , RenderM
 
   , Context
@@ -120,8 +121,14 @@ data Priority = High | Low
 
 type RenderM a = ReaderT Context (State RenderState) a
 
+data Size = Fixed
+          | Unlimited
+          deriving (Show, Eq, Ord)
+
 data Widget =
-    Widget { render :: RenderM Result
+    Widget { hSize :: Size
+           , vSize :: Size
+           , render :: RenderM Result
            }
 
 data Direction = Up | Down
@@ -152,7 +159,7 @@ getContext :: RenderM Context
 getContext = ask
 
 withBorderStyle :: BorderStyle -> Widget -> Widget
-withBorderStyle bs p = Widget $ withReaderT (& activeBorderStyle .~ bs) (render p)
+withBorderStyle bs p = Widget (hSize p) (vSize p) $ withReaderT (& activeBorderStyle .~ bs) (render p)
 
 getActiveBorderStyle :: RenderM BorderStyle
 getActiveBorderStyle = view activeBorderStyle
@@ -195,7 +202,7 @@ lookupAttrName n = do
 
 str :: String -> Widget
 str s =
-    Widget $ do
+    Widget Fixed Fixed $ do
       c <- getContext
       return $ def & image .~ (V.string (c^.attr) s)
 
@@ -204,31 +211,31 @@ txt = str . T.unpack
 
 hPad :: Char -> Widget
 hPad ch =
-    Widget $ do
+    Widget Unlimited Fixed $ do
       c <- getContext
       return $ def & image .~ (V.charFill (c^.attr) ch (c^.availW) (max 1 (c^.availH)))
 
 vPad :: Char -> Widget
 vPad ch =
-    Widget $ do
+    Widget Fixed Unlimited $ do
       c <- getContext
       return $ def & image .~ (V.charFill (c^.attr) ch (max 1 (c^.availW)) (c^.availH))
 
 hFill :: Char -> Widget
 hFill ch =
-    Widget $ do
+    Widget Unlimited Fixed $ do
       c <- getContext
       return $ def & image .~ (V.charFill (c^.attr) ch (c^.availW) (min (c^.availH) 1))
 
 vFill :: Char -> Widget
 vFill ch =
-    Widget $ do
+    Widget Fixed Unlimited $ do
       c <- getContext
       return $ def & image .~ (V.charFill (c^.attr) ch (min (c^.availW) 1) (c^.availH))
 
 hBox :: [(Widget, Priority)] -> Widget
 hBox pairs =
-    Widget $ do
+    Widget (maximum $ hSize <$> fst <$> pairs) (maximum $ vSize <$> fst <$> pairs) $ do
       c <- getContext
 
       let pairsIndexed = zip [(0::Int)..] pairs
@@ -266,7 +273,7 @@ hBox pairs =
 
 vBox :: [(Widget, Priority)] -> Widget
 vBox pairs =
-    Widget $ do
+    Widget (maximum $ hSize <$> fst <$> pairs) (maximum $ vSize <$> fst <$> pairs) $ do
       c <- getContext
 
       let pairsIndexed = zip [(0::Int)..] pairs
@@ -305,41 +312,41 @@ vBox pairs =
 -- xxx crop cursors and VRs
 hLimit :: Int -> Widget -> Widget
 hLimit w p =
-    Widget $ do
+    Widget Fixed (vSize p) $ do
       withReaderT (& availW .~ w) $ render $ cropToContext p
 
 -- xxx crop cursors and VRs
 vLimit :: Int -> Widget -> Widget
 vLimit h p =
-    Widget $ do
+    Widget (hSize p) Fixed $ do
       withReaderT (& availH .~ h) $ render $ cropToContext p
 
 withAttrName :: AttrName -> Widget -> Widget
 withAttrName an p =
-    Widget $ do
+    Widget (hSize p) (vSize p) $ do
       withReaderT (& ctxAttrName .~ an) (render p)
 
 withAttrMappings :: [(AttrName, V.Attr)] -> Widget -> Widget
 withAttrMappings ms p =
-    Widget $ do
+    Widget (hSize p) (vSize p) $ do
       withReaderT (& ctxAttrs %~ applyAttrMappings ms) (render p)
 
 withDefaultAttr :: V.Attr -> Widget -> Widget
 withDefaultAttr a p =
-    Widget $ do
+    Widget (hSize p) (vSize p) $ do
         withReaderT (& ctxAttrs %~ (setDefault a)) (render p)
 
 forceAttr :: V.Attr -> Widget -> Widget
 forceAttr a p =
-    Widget $ do
+    Widget (hSize p) (vSize p) $ do
         withReaderT (& ctxAttrs .~ (forceAttrMap a)) (render p)
 
 raw :: V.Image -> Widget
-raw img = Widget $ return $ def & image .~ img
+raw img = Widget Fixed Fixed $ return $ def & image .~ img
 
 translateBy :: Location -> Widget -> Widget
 translateBy (Location (tw,th)) p =
-    Widget $ do
+    Widget (hSize p) (vSize p) $ do
       result <- render p
       return $ addCursorOffset (Location (tw, th)) $
                addVisibilityOffset (Location (tw, th)) $
@@ -352,11 +359,14 @@ cropResultToContext result = do
 
 cropToContext :: Widget -> Widget
 cropToContext p =
-    Widget $ (render p >>= cropResultToContext)
+    -- XXX should this be fixed/fixed? Seems like no, because these are
+    -- about how it fills space given regardless of cropping. This same
+    -- consideration applies to the other crop functions.
+    Widget (hSize p) (vSize p) $ (render p >>= cropResultToContext)
 
 cropLeftBy :: Int -> Widget -> Widget
 cropLeftBy cols p =
-    Widget $ do
+    Widget (hSize p) (vSize p) $ do
       result <- render p
       let amt = V.imageWidth (result^.image) - cols
           cropped img = if amt < 0 then V.emptyImage else V.cropLeft amt img
@@ -366,7 +376,7 @@ cropLeftBy cols p =
 
 cropRightBy :: Int -> Widget -> Widget
 cropRightBy cols p =
-    Widget $ do
+    Widget (hSize p) (vSize p) $ do
       result <- render p
       let amt = V.imageWidth (result^.image) - cols
           cropped img = if amt < 0 then V.emptyImage else V.cropRight amt img
@@ -375,7 +385,7 @@ cropRightBy cols p =
 
 cropTopBy :: Int -> Widget -> Widget
 cropTopBy rows p =
-    Widget $ do
+    Widget (hSize p) (vSize p) $ do
       result <- render p
       let amt = V.imageHeight (result^.image) - rows
           cropped img = if amt < 0 then V.emptyImage else V.cropTop amt img
@@ -385,7 +395,7 @@ cropTopBy rows p =
 
 cropBottomBy :: Int -> Widget -> Widget
 cropBottomBy rows p =
-    Widget $ do
+    Widget (hSize p) (vSize p) $ do
       result <- render p
       let amt = V.imageHeight (result^.image) - rows
           cropped img = if amt < 0 then V.emptyImage else V.cropBottom amt img
@@ -394,21 +404,21 @@ cropBottomBy rows p =
 
 showCursor :: Name -> Location -> Widget -> Widget
 showCursor n cloc p =
-    Widget $ do
+    Widget (hSize p) (vSize p) $ do
       result <- render p
       return $ result & cursors %~ (CursorLocation cloc (Just n):)
 
 hRelease :: Widget -> Widget
 hRelease p =
-    Widget $ withReaderT (& availW .~ unrestricted) (render p) --- NB
+    Widget Unlimited (vSize p) $ withReaderT (& availW .~ unrestricted) (render p) --- NB
 
 vRelease :: Widget -> Widget
 vRelease p =
-    Widget $ withReaderT (& availH .~ unrestricted) (render p) --- NB
+    Widget (hSize p) Unlimited $ withReaderT (& availH .~ unrestricted) (render p) --- NB
 
 viewport :: Name -> ViewportType -> Widget -> Widget
 viewport vpname typ p =
-    Widget $ do
+    Widget Unlimited Unlimited $ do
       -- First, update the viewport size.
       c <- getContext
       let newVp = VP 0 0 newSize
@@ -453,11 +463,11 @@ viewport vpname typ p =
 
       -- Then perform a translation of the sub-rendering to fit into the
       -- viewport
-      translated <- render $ translateBy (Location (-1 * vp^.vpLeft, -1 * vp^.vpTop)) $ Widget $ return initialResult
+      translated <- render $ translateBy (Location (-1 * vp^.vpLeft, -1 * vp^.vpTop)) $ Widget Fixed Fixed $ return initialResult
 
       -- Return the translated result with the visibility requests
       -- discarded
-      render $ cropToContext $ ((Widget $ return $ translated & visibilityRequests .~ mempty) <+> hPad ' ') <=> vPad ' '
+      render $ cropToContext $ ((Widget Fixed Fixed $ return $ translated & visibilityRequests .~ mempty) <+> hPad ' ') <=> vPad ' '
 
 scrollTo :: ViewportType -> ScrollRequest -> V.Image -> Viewport -> Viewport
 scrollTo typ req img vp = vp & theStart .~ newStart
@@ -511,7 +521,7 @@ scrollToView typ rq vp = vp & theStart .~ newStart
 
 visible :: Widget -> Widget
 visible p =
-    Widget $ do
+    Widget (hSize p) (vSize p) $ do
       result <- render p
       let imageSize = ( result^.image.to V.imageWidth
                       , result^.image.to V.imageHeight
@@ -524,7 +534,7 @@ visible p =
 
 visibleRegion :: Location -> V.DisplayRegion -> Widget -> Widget
 visibleRegion vrloc sz p =
-    Widget $ do
+    Widget (hSize p) (vSize p) $ do
       result <- render p
       -- The size of the image to be made visible in a viewport must have
       -- non-zero size in both dimensions.

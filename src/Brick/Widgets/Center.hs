@@ -20,11 +20,11 @@ hCenter = hCenterWith Nothing
 
 hCenterWith :: Maybe Char -> Widget -> Widget
 hCenterWith Nothing p =
-    Widget $ do
+    Widget Unlimited (vSize p) $ do
       result <- render p
       c <- getContext
       let offW = (c^.availW - (result^.image.to imageWidth)) `div` 2
-      render $ translateBy (Location (offW, 0)) $ Widget $ return result
+      render $ translateBy (Location (offW, 0)) $ Widget Fixed Fixed $ return result
 hCenterWith (Just c) p =
     hBox [ (hPad c, Low)
          , (p, High)
@@ -36,11 +36,11 @@ vCenter = vCenterWith Nothing
 
 vCenterWith :: (Maybe Char) -> Widget -> Widget
 vCenterWith Nothing p =
-    Widget $ do
+    Widget (hSize p) Unlimited $ do
       result <- render p
       c <- getContext
       let offH = (c^.availH - (result^.image.to imageHeight)) `div` 2
-      render $ translateBy (Location (0, offH)) $ Widget $ return result
+      render $ translateBy (Location (0, offH)) $ Widget Fixed Fixed $ return result
 vCenterWith (Just c) p =
     vBox [ (vPad c, Low)
          , (p, High)
@@ -55,7 +55,7 @@ centerWith c = vCenterWith c . hCenterWith c
 
 centerAbout :: Location -> Widget -> Widget
 centerAbout (Location (offW, offH)) p =
-    Widget $ do
+    Widget Unlimited Unlimited $ do
       -- Compute translation offset so that loc is in the middle of the
       -- rendering area
       c <- getContext

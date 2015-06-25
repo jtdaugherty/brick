@@ -32,7 +32,7 @@ instance GetAttr AttrName where
 
 markup :: (Eq a, GetAttr a) => Markup a -> Widget
 markup m =
-    Widget $ do
+    Widget Fixed Fixed $ do
       let pairs = markupToList m
       imgs <- forM pairs $ \(t, aSrc) -> do
           a <- getAttr aSrc
