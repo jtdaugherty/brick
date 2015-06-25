@@ -4,15 +4,17 @@ module Brick.Main
   , defaultMainWithVty
 
   , EventM
-  , Next(..)
+  , Next
+  , continue
+  , halt
+  , suspendAndResume
+
   , viewportScroll
   , ViewportScroll(scrollBy, scrollPage, scrollToBeginning, scrollToEnd)
 
   , simpleMain
 
   , supplyVtyEvents
-  , withVty
-  , runVty
 
   , neverShowCursor
   , showFirstCursor
@@ -22,7 +24,7 @@ where
 import Control.Exception (finally)
 import Control.Monad (forever)
 import Control.Monad.Trans.State
-import Control.Concurrent (forkIO, Chan, newChan, readChan, writeChan)
+import Control.Concurrent (forkIO, Chan, newChan, readChan, writeChan, killThread)
 import Data.Default
 import Data.Monoid
 import Data.Maybe (listToMaybe)
@@ -47,7 +49,8 @@ import Brick.Core (Location(..), CursorLocation(..), Name(..))
 import Brick.AttrMap
 
 data Next a = Continue a
-            | Shutdown a
+            | SuspendAndResume (IO a)
+            | Halt a
 
 data App a e =
     App { appDraw :: a -> [Widget]
@@ -73,18 +76,43 @@ defaultMain = defaultMainWithVty (mkVty def)
 simpleMain :: [(AttrName, Attr)] -> [Widget] -> IO ()
 simpleMain attrs ls =
     let app = def { appDraw = const ls
-                  , appHandleEvent = const (return . Shutdown)
+                  , appHandleEvent = const (return . Halt)
                   , appAttrMap = const $ attrMap def attrs
                   }
     in defaultMain app ()
 
+data InternalNext a = InternalSuspendAndResume RenderState (IO a)
+                    | InternalHalt a
+
+runWithNewVty :: IO Vty -> App a Event -> RenderState -> a -> IO (InternalNext a)
+runWithNewVty buildVty app initialRS initialSt = do
+    chan <- newChan
+    withVty buildVty $ \vty -> do
+        pid <- forkIO $ supplyVtyEvents vty id chan
+        let runInner rs st = do
+              (result, newRS) <- runVty vty chan app st rs
+              case result of
+                  SuspendAndResume act -> do
+                      killThread pid
+                      return $ InternalSuspendAndResume newRS act
+                  Halt s -> do
+                      killThread pid
+                      return $ InternalHalt s
+                  Continue s -> runInner newRS s
+        runInner initialRS initialSt
+
 defaultMainWithVty :: IO Vty -> App a Event -> a -> IO a
 defaultMainWithVty buildVty app initialAppState = do
     let initialRS = RS M.empty mempty
-    chan <- newChan
-    withVty buildVty $ \vty -> do
-        forkIO $ supplyVtyEvents vty id chan
-        runVty vty chan app initialAppState initialRS
+        run rs st = do
+            result <- runWithNewVty buildVty app rs st
+            case result of
+                InternalHalt s -> return s
+                InternalSuspendAndResume newRS action -> do
+                    newAppState <- action
+                    run newRS newAppState
+
+    run initialRS initialAppState
 
 supplyVtyEvents :: Vty -> (Event -> e) -> Chan e -> IO ()
 supplyVtyEvents vty mkEvent chan =
@@ -92,14 +120,12 @@ supplyVtyEvents vty mkEvent chan =
         e <- nextEvent vty
         writeChan chan $ mkEvent e
 
-runVty :: Vty -> Chan e -> App a e -> a -> RenderState -> IO a
+runVty :: Vty -> Chan e -> App a e -> a -> RenderState -> IO (Next a, RenderState)
 runVty vty chan app appState rs = do
-    newRS <- renderApp vty app appState rs
+    firstRS <- renderApp vty app appState rs
     e <- readChan chan
     (next, scrollReqs) <- runStateT (appHandleEvent app e appState) []
-    case next of
-        Shutdown finalAppState -> return finalAppState
-        Continue newAppState -> runVty vty chan app newAppState $ newRS { _scrollRequests = scrollReqs }
+    return (next, firstRS { _scrollRequests = scrollReqs })
 
 withVty :: IO Vty -> (Vty -> IO a) -> IO a
 withVty buildVty useVty = do
@@ -144,3 +170,12 @@ viewportScroll n =
                    , scrollToBeginning = modify ((n, ScrollToBeginning) :)
                    , scrollToEnd = modify ((n, ScrollToEnd) :)
                    }
+
+continue :: a -> EventM (Next a)
+continue = return . Continue
+
+halt :: a -> EventM (Next a)
+halt = return . Halt
+
+suspendAndResume :: IO a -> EventM (Next a)
+suspendAndResume = return . SuspendAndResume

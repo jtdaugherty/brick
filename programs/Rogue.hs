@@ -101,12 +101,12 @@ dumpA = defAttr `withStyle` reverseVideo
 processEvent :: Event -> World -> EventM (Next World)
 processEvent k world = do
     case k of
-        EvKey KEsc [] -> return $ Shutdown world
-        EvKey KLeft  [] -> return $ Continue $ movePlayer world (-1) 0
-        EvKey KRight [] -> return $ Continue $ movePlayer world 1 0
-        EvKey KUp    [] -> return $ Continue $ movePlayer world 0 (-1)
-        EvKey KDown  [] -> return $ Continue $ movePlayer world 0 1
-        _               -> return $ Continue world
+        EvKey KEsc [] -> halt world
+        EvKey KLeft  [] -> continue $ movePlayer world (-1) 0
+        EvKey KRight [] -> continue $ movePlayer world 1 0
+        EvKey KUp    [] -> continue $ movePlayer world 0 (-1)
+        EvKey KDown  [] -> continue $ movePlayer world 0 1
+        _               -> continue world
 
 movePlayer :: World -> Int -> Int -> World
 movePlayer world dx dy = do

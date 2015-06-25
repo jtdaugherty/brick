@@ -3,6 +3,7 @@
 module Main where
 
 import Control.Lens
+import Control.Monad (void)
 import Data.Default
 import Data.Monoid
 import Graphics.Vty hiding (translate)
@@ -92,21 +93,26 @@ appEvent :: Event -> St -> EventM (Next St)
 appEvent e st =
     case e of
         EvKey (KChar '+') [] ->
-            return $ Continue $ st & stBorderStyle %~ ((`mod` (length styles)) . (+ 1))
+            continue $ st & stBorderStyle %~ ((`mod` (length styles)) . (+ 1))
 
-        EvKey KEsc [] -> return $ Shutdown st
+        EvKey KEsc [] -> halt st
 
-        EvKey KUp [MCtrl] ->    return $ Continue $ st & stTrans %~ (\(Location (w, h)) -> Location (w, h - 1))
-        EvKey KDown [MCtrl] ->  return $ Continue $ st & stTrans %~ (\(Location (w, h)) -> Location (w, h + 1))
-        EvKey KLeft [MCtrl] ->  return $ Continue $ st & stTrans %~ (\(Location (w, h)) -> Location (w - 1, h))
-        EvKey KRight [MCtrl] -> return $ Continue $ st & stTrans %~ (\(Location (w, h)) -> Location (w + 1, h))
+        EvKey (KChar 'r') [] -> suspendAndResume $ do
+            putStrLn "Suspended. Press any key..."
+            void getChar
+            return st
+
+        EvKey KUp [MCtrl] ->    continue $ st & stTrans %~ (\(Location (w, h)) -> Location (w, h - 1))
+        EvKey KDown [MCtrl] ->  continue $ st & stTrans %~ (\(Location (w, h)) -> Location (w, h + 1))
+        EvKey KLeft [MCtrl] ->  continue $ st & stTrans %~ (\(Location (w, h)) -> Location (w - 1, h))
+        EvKey KRight [MCtrl] -> continue $ st & stTrans %~ (\(Location (w, h)) -> Location (w + 1, h))
 
         EvKey KEnter [] ->
             let el = length $ listElements $ st^.stList
-            in return $ Continue $ st & stList %~ (listMoveBy 1 . listInsert el el)
+            in continue $ st & stList %~ (listMoveBy 1 . listInsert el el)
 
-        ev -> return $ Continue $ st & stEditor %~ (handleEvent ev)
-                                     & stList %~ (handleEvent ev)
+        ev -> continue $ st & stEditor %~ (handleEvent ev)
+                            & stList %~ (handleEvent ev)
 
 initialState :: St
 initialState =
