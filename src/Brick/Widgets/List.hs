@@ -67,7 +67,10 @@ drawListElements l = drawnElements
         es = listElements l
         drawnElements = for (zip [0..] es) $ \(i, e) ->
             let isSelected = Just i == listSelected l
-                elemWidget = listElementDraw l isSelected e
+                elemWidget = let w = listElementDraw l isSelected e
+                             in if vSize w == Unlimited
+                                then error "Tried to add a list widget that has has an unlimited vertical size"
+                                else w
                 makeVisible = if isSelected
                               then (visible . withAttrName listSelectedAttr)
                               else id
