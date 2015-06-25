@@ -11,7 +11,7 @@ import Brick.Render
 import Brick.Markup
 import Brick.AttrMap
 
-ui :: Render
+ui :: Widget
 ui = m1 <=> m2
     where
         -- Two ways to assign attributes to text in markup: via

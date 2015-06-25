@@ -49,39 +49,42 @@ blCornerAttr = borderAttr <> "corner" <> "bl"
 brCornerAttr :: AttrName
 brCornerAttr = borderAttr <> "corner" <> "br"
 
-border :: Render -> Render
+border :: Widget -> Widget
 border = border_ Nothing
 
-borderWithLabel :: Render -> Render -> Render
+borderWithLabel :: Widget -> Widget -> Widget
 borderWithLabel label = border_ (Just label)
 
-border_ :: Maybe Render -> Render -> Render
-border_ label wrapped = do
-    bs <- getActiveBorderStyle
-    let top = (withAttrName tlCornerAttr $ str [bsCornerTL bs])
-              <<+ hBorder_ label +>>
-              (withAttrName trCornerAttr $ str [bsCornerTR bs])
-        bottom = (withAttrName blCornerAttr $ str [bsCornerBL bs])
-                 <<+ hBorder +>>
-                 (withAttrName brCornerAttr $ str [bsCornerBR bs])
-        middle = vBorder +>> wrapped <<+ vBorder
-        total = top =>> middle <<= bottom
-    total
+border_ :: Maybe Widget -> Widget -> Widget
+border_ label wrapped =
+    Widget $ do
+      bs <- getActiveBorderStyle
+      let top = (withAttrName tlCornerAttr $ str [bsCornerTL bs])
+                <<+ hBorder_ label +>>
+                (withAttrName trCornerAttr $ str [bsCornerTR bs])
+          bottom = (withAttrName blCornerAttr $ str [bsCornerBL bs])
+                   <<+ hBorder +>>
+                   (withAttrName brCornerAttr $ str [bsCornerBR bs])
+          middle = vBorder +>> wrapped <<+ vBorder
+          total = top =>> middle <<= bottom
+      render total
 
-hBorder :: Render
+hBorder :: Widget
 hBorder = hBorder_ Nothing
 
-hBorderWithLabel :: Render -> Render
+hBorderWithLabel :: Widget -> Widget
 hBorderWithLabel label = hBorder_ (Just label)
 
-hBorder_ :: Maybe Render -> Render
-hBorder_ label = do
-    bs <- getActiveBorderStyle
-    withAttrName hBorderAttr $ hCenterWith (Just $ bsHorizontal bs) msg
-    where
-        msg = maybe (txt "") (withAttrName hBorderLabelAttr) label
+hBorder_ :: Maybe Widget -> Widget
+hBorder_ label =
+    Widget $ do
+      bs <- getActiveBorderStyle
+      render $ withAttrName hBorderAttr $ hCenterWith (Just $ bsHorizontal bs) msg
+      where
+          msg = maybe (txt "") (withAttrName hBorderLabelAttr) label
 
-vBorder :: Render
-vBorder = do
-    bs <- getActiveBorderStyle
-    withAttrName vBorderAttr $ vFill (bsVertical bs)
+vBorder :: Widget
+vBorder =
+    Widget $ do
+      bs <- getActiveBorderStyle
+      render $ withAttrName vBorderAttr $ vFill (bsVertical bs)

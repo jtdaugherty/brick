@@ -119,7 +119,7 @@ movePlayer world dx dy = do
         EmptySpace -> world { player = Player (x',y') }
         _          -> world
 
-updateDisplay :: World -> [Render]
+updateDisplay :: World -> [Widget]
 updateDisplay world = [ info, playerLayer, geoLayer ]
     where
         info = vBox [ (hCenter $ txt "Move with the arrows keys. Press ESC to exit.", High)

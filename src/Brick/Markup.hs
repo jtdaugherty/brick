@@ -30,10 +30,11 @@ instance GetAttr AttrName where
 (@?) :: T.Text -> AttrName -> Markup AttrName
 (@?) = (@@)
 
-markup :: (Eq a, GetAttr a) => Markup a -> Render
-markup m = do
-    let pairs = markupToList m
-    imgs <- forM pairs $ \(t, aSrc) -> do
-        a <- getAttr aSrc
-        return $ string a $ T.unpack t
-    return $ def & image .~ horizCat imgs
+markup :: (Eq a, GetAttr a) => Markup a -> Widget
+markup m =
+    Widget $ do
+      let pairs = markupToList m
+      imgs <- forM pairs $ \(t, aSrc) -> do
+          a <- getAttr aSrc
+          return $ string a $ T.unpack t
+      return $ def & image .~ horizCat imgs

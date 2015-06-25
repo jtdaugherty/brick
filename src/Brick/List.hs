@@ -31,7 +31,7 @@ import Brick.AttrMap
 
 data List e =
     List { listElements :: ![e]
-         , listElementDraw :: Bool -> e -> Render
+         , listElementDraw :: Bool -> e -> Widget
          , listSelected :: !(Maybe Int)
          , listName :: Name
          }
@@ -50,18 +50,18 @@ listAttr = "list"
 listSelectedAttr :: AttrName
 listSelectedAttr = listAttr <> "selected"
 
-list :: Name -> (Bool -> e -> Render) -> [e] -> List e
+list :: Name -> (Bool -> e -> Widget) -> [e] -> List e
 list name draw es =
     let selIndex = if null es then Nothing else Just 0
     in List es draw selIndex name
 
-renderList :: List e -> Render
+renderList :: List e -> Widget
 renderList l = theList
     where
         theList = withAttrName listAttr $ viewport (listName l) Vertical $ vBox pairs
         pairs = (, High) <$> (drawListElements l)
 
-drawListElements :: List e -> [Render]
+drawListElements :: List e -> [Widget]
 drawListElements l = drawnElements
     where
         es = listElements l

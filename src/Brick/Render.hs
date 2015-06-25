@@ -1,5 +1,5 @@
 module Brick.Render
-  ( Render
+  ( Widget(..)
   , RenderM
 
   , Result

@@ -15,50 +15,53 @@ import Graphics.Vty (imageWidth, imageHeight)
 import Brick.Render
 import Brick.Core
 
-hCenter :: Render -> Render
+hCenter :: Widget -> Widget
 hCenter = hCenterWith Nothing
 
-hCenterWith :: Maybe Char -> Render -> Render
-hCenterWith Nothing p = do
-    result <- p
-    c <- getContext
-    let offW = (c^.availW - (result^.image.to imageWidth)) `div` 2
-    translateBy (Location (offW, 0)) $ return result
+hCenterWith :: Maybe Char -> Widget -> Widget
+hCenterWith Nothing p =
+    Widget $ do
+      result <- render p
+      c <- getContext
+      let offW = (c^.availW - (result^.image.to imageWidth)) `div` 2
+      render $ translateBy (Location (offW, 0)) $ Widget $ return result
 hCenterWith (Just c) p =
     hBox [ (hPad c, Low)
          , (p, High)
          , (hPad c, Low)
          ]
 
-vCenter :: Render -> Render
+vCenter :: Widget -> Widget
 vCenter = vCenterWith Nothing
 
-vCenterWith :: (Maybe Char) -> Render -> Render
-vCenterWith Nothing p = do
-    result <- p
-    c <- getContext
-    let offH = (c^.availH - (result^.image.to imageHeight)) `div` 2
-    translateBy (Location (0, offH)) $ return result
+vCenterWith :: (Maybe Char) -> Widget -> Widget
+vCenterWith Nothing p =
+    Widget $ do
+      result <- render p
+      c <- getContext
+      let offH = (c^.availH - (result^.image.to imageHeight)) `div` 2
+      render $ translateBy (Location (0, offH)) $ Widget $ return result
 vCenterWith (Just c) p =
     vBox [ (vPad c, Low)
          , (p, High)
          , (vPad c, Low)
          ]
 
-center :: Render -> Render
+center :: Widget -> Widget
 center = centerWith Nothing
 
-centerWith :: Maybe Char -> Render -> Render
+centerWith :: Maybe Char -> Widget -> Widget
 centerWith c = vCenterWith c . hCenterWith c
 
-centerAbout :: Location -> Render -> Render
-centerAbout (Location (offW, offH)) p = do
-    -- Compute translation offset so that loc is in the middle of the
-    -- rendering area
-    c <- getContext
-    let centerW = c^.availW `div` 2
-        centerH = c^.availH `div` 2
-        off = Location ( centerW - offW
-                       , centerH - offH
-                       )
-    translateBy off p
+centerAbout :: Location -> Widget -> Widget
+centerAbout (Location (offW, offH)) p =
+    Widget $ do
+      -- Compute translation offset so that loc is in the middle of the
+      -- rendering area
+      c <- getContext
+      let centerW = c^.availW `div` 2
+          centerH = c^.availH `div` 2
+          off = Location ( centerW - offW
+                         , centerH - offH
+                         )
+      render $ translateBy off p

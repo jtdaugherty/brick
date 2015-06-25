@@ -82,13 +82,13 @@ editor name s = Editor s (length s) name
 editAttr :: AttrName
 editAttr = "edit"
 
-renderEditor :: (String -> Render) -> Editor -> Render
-renderEditor render e =
+renderEditor :: (String -> Widget) -> Editor -> Widget
+renderEditor renderContents e =
     let cursorLoc = Location (editCursorPos e, 0)
     in withAttrName editAttr $
        vLimit 1 $
        viewport (editorName e) Horizontal $
        showCursor (editorName e) cursorLoc $
        visibleRegion cursorLoc (1, 1) $
-       render $
+       renderContents $
        editStr e

@@ -49,7 +49,7 @@ editHighlightedKw1Attr = editAttr <> "kw1"
 editHighlightedKw2Attr :: AttrName
 editHighlightedKw2Attr = editAttr <> "kw2"
 
-kw :: Render -> Render
+kw :: Widget -> Widget
 kw = withAttrName keywordAttr
 
 highlightWord :: (Eq a) => String -> a -> Markup a -> Markup a
@@ -69,10 +69,10 @@ applyMarkup s =
     highlightWord "bar" editHighlightedKw2Attr $
     (T.pack s) @? editAttr
 
-drawEditString :: String -> Render
+drawEditString :: String -> Widget
 drawEditString = markup . applyMarkup
 
-drawUI :: St -> [Render]
+drawUI :: St -> [Widget]
 drawUI st = [withBorderStyle bs a]
     where
         (bsName, bs) = styles !! (st^.stBorderStyle)
@@ -118,7 +118,7 @@ initialState =
        , _stTrans = Location (0, 0)
        }
 
-listDrawElem :: Bool -> Int -> Render
+listDrawElem :: Bool -> Int -> Widget
 listDrawElem sel i =
     let selStr s = if sel then "<" <> s <> ">" else s
     in hCenterWith (Just ' ') $ vBox $ for [1..i+1] $ \j ->

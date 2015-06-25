@@ -44,13 +44,13 @@ import Graphics.Vty
   )
 import System.Exit (exitSuccess)
 
-import Brick.Render (Render)
+import Brick.Render (Widget)
 import Brick.Render.Internal (renderFinal, RenderState(..), ScrollRequest(..), Direction(..))
 import Brick.Core (Location(..), CursorLocation(..), Name(..))
 import Brick.AttrMap
 
 data App a e =
-    App { appDraw :: a -> [Render]
+    App { appDraw :: a -> [Widget]
         , appChooseCursor :: a -> [CursorLocation] -> Maybe CursorLocation
         , appHandleEvent :: e -> a -> EventM a
         , appAttrMap :: a -> AttrMap
@@ -70,7 +70,7 @@ type EventState = [(Name, ScrollRequest)]
 defaultMain :: App a Event -> a -> IO ()
 defaultMain = defaultMainWithVty (mkVty def)
 
-simpleMain :: [(AttrName, Attr)] -> [Render] -> IO ()
+simpleMain :: [(AttrName, Attr)] -> [Widget] -> IO ()
 simpleMain attrs ls =
     let app = def { appDraw = const ls
                   , appHandleEvent = const $ const $ liftIO exitSuccess
