@@ -42,8 +42,8 @@ import Graphics.Vty
   )
 import System.Exit (exitSuccess)
 
-import Brick.Render (Widget)
-import Brick.Render.Internal (renderFinal, RenderState(..), ScrollRequest(..), Direction(..))
+import Brick.Widgets.Core (Widget)
+import Brick.Widgets.Internal (renderFinal, RenderState(..), ScrollRequest(..), Direction(..))
 import Brick.Core (Location(..), CursorLocation(..), Name(..))
 import Brick.AttrMap
 

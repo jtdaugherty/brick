@@ -12,7 +12,7 @@ where
 import Control.Lens ((^.), to)
 import Graphics.Vty (imageWidth, imageHeight)
 
-import Brick.Render
+import Brick.Widgets.Core
 import Brick.Core
 
 hCenter :: Widget -> Widget

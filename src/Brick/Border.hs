@@ -20,7 +20,7 @@ where
 
 import Data.Monoid ((<>))
 
-import Brick.Render
+import Brick.Widgets.Core
 import Brick.AttrMap
 import Brick.Center (hCenterWith)
 import Brick.Border.Style (BorderStyle(..))

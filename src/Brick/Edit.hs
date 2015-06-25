@@ -11,7 +11,7 @@ import Data.Monoid ((<>))
 import Graphics.Vty (Event(..), Key(..), Modifier(..))
 
 import Brick.Core (Name, Location(..), HandleEvent(..))
-import Brick.Render
+import Brick.Widgets.Core
 import Brick.Util (clamp)
 import Brick.AttrMap
 

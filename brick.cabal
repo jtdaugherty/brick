@@ -25,12 +25,12 @@ library
     Brick.List
     Brick.Main
     Brick.Markup
-    Brick.Render
+    Brick.Widgets.Core
     Brick.AttrMap
     Brick.Util
     Data.Text.Markup
   other-modules:
-    Brick.Render.Internal
+    Brick.Widgets.Internal
     Brick.Merge
 
   build-depends:       base >=4.7 && <4.8,

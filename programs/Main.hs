@@ -14,7 +14,7 @@ import Brick.Main
 import Brick.Edit
 import Brick.List
 import Brick.Core
-import Brick.Render
+import Brick.Widgets.Core
 import Brick.Center
 import Brick.Border
 import Brick.Border.Style

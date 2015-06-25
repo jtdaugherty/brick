@@ -3,7 +3,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TemplateHaskell #-}
-module Brick.Render.Internal
+module Brick.Widgets.Internal
   ( Result(..)
   , image
   , cursors

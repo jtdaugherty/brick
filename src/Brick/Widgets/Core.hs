@@ -1,4 +1,4 @@
-module Brick.Render
+module Brick.Widgets.Core
   ( Widget(..)
   , RenderM
 
@@ -49,4 +49,4 @@ module Brick.Render
   )
 where
 
-import Brick.Render.Internal
+import Brick.Widgets.Internal

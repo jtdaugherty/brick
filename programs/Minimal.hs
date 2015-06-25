@@ -7,7 +7,7 @@ import Data.Text.Markup ((@@))
 
 import Brick.Main
 import Brick.Util
-import Brick.Render
+import Brick.Widgets.Core
 import Brick.Markup
 import Brick.AttrMap
 

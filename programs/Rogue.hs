@@ -15,7 +15,7 @@ import System.Random
 import System.Exit
 
 import Brick.Main
-import Brick.Render
+import Brick.Widgets.Core
 import Brick.Border
 import Brick.Core
 import Brick.Center

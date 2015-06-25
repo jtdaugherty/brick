@@ -25,7 +25,7 @@ import Graphics.Vty (Event(..), Key(..))
 
 import Brick.Core (HandleEvent(..), Name)
 import Brick.Merge (maintainSel)
-import Brick.Render
+import Brick.Widgets.Core
 import Brick.Util (clamp, for)
 import Brick.AttrMap
 

@@ -13,7 +13,7 @@ import Data.Default (def)
 
 import Graphics.Vty (Attr, horizCat, string)
 
-import Brick.Render
+import Brick.Widgets.Core
 import Brick.AttrMap
 
 class GetAttr a where
