@@ -3,11 +3,10 @@
 module Main where
 
 import Control.Lens
-import Control.Monad.IO.Class (liftIO)
+import Control.Monad (void)
 import Data.Default
 import Data.Monoid
 import Graphics.Vty hiding (translate)
-import System.Exit
 import qualified Data.Text as T
 
 import Brick.Main
@@ -90,25 +89,25 @@ drawUI st = [withBorderStyle bs a]
               <=> (hCenter (kw "Arrow keys" <+> " navigates the list"))
               <=> (hCenter (kw "Ctrl-Arrow keys" <+> " move the interface"))
 
-appEvent :: Event -> St -> EventM St
+appEvent :: Event -> St -> EventM (Next St)
 appEvent e st =
     case e of
         EvKey (KChar '+') [] ->
-            return $ st & stBorderStyle %~ ((`mod` (length styles)) . (+ 1))
+            return $ Continue $ st & stBorderStyle %~ ((`mod` (length styles)) . (+ 1))
 
-        EvKey KEsc [] -> liftIO exitSuccess
+        EvKey KEsc [] -> return $ Shutdown st
 
-        EvKey KUp [MCtrl] -> return $ st & stTrans %~ (\(Location (w, h)) -> Location (w, h - 1))
-        EvKey KDown [MCtrl] -> return $ st & stTrans %~ (\(Location (w, h)) -> Location (w, h + 1))
-        EvKey KLeft [MCtrl] -> return $ st & stTrans %~ (\(Location (w, h)) -> Location (w - 1, h))
-        EvKey KRight [MCtrl] -> return $ st & stTrans %~ (\(Location (w, h)) -> Location (w + 1, h))
+        EvKey KUp [MCtrl] ->    return $ Continue $ st & stTrans %~ (\(Location (w, h)) -> Location (w, h - 1))
+        EvKey KDown [MCtrl] ->  return $ Continue $ st & stTrans %~ (\(Location (w, h)) -> Location (w, h + 1))
+        EvKey KLeft [MCtrl] ->  return $ Continue $ st & stTrans %~ (\(Location (w, h)) -> Location (w - 1, h))
+        EvKey KRight [MCtrl] -> return $ Continue $ st & stTrans %~ (\(Location (w, h)) -> Location (w + 1, h))
 
         EvKey KEnter [] ->
             let el = length $ listElements $ st^.stList
-            in return $ st & stList %~ (listMoveBy 1 . listInsert el el)
+            in return $ Continue $ st & stList %~ (listMoveBy 1 . listInsert el el)
 
-        ev -> return $ st & stEditor %~ (handleEvent ev)
-                          & stList %~ (handleEvent ev)
+        ev -> return $ Continue $ st & stEditor %~ (handleEvent ev)
+                                     & stList %~ (handleEvent ev)
 
 initialState :: St
 initialState =
@@ -144,4 +143,4 @@ theApp =
         }
 
 main :: IO ()
-main = defaultMain theApp initialState
+main = void $ defaultMain theApp initialState

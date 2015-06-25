@@ -4,6 +4,7 @@ module Brick.Main
   , defaultMainWithVty
 
   , EventM
+  , Next(..)
   , viewportScroll
   , ViewportScroll(scrollBy, scrollPage, scrollToBeginning, scrollToEnd)
 
@@ -21,7 +22,6 @@ where
 import Control.Exception (finally)
 import Control.Monad (forever)
 import Control.Monad.Trans.State
-import Control.Monad.IO.Class (liftIO)
 import Control.Concurrent (forkIO, Chan, newChan, readChan, writeChan)
 import Data.Default
 import Data.Monoid
@@ -40,24 +40,26 @@ import Graphics.Vty
   , nextEvent
   , mkVty
   )
-import System.Exit (exitSuccess)
 
 import Brick.Widgets.Core (Widget)
 import Brick.Widgets.Internal (renderFinal, RenderState(..), ScrollRequest(..), Direction(..))
 import Brick.Core (Location(..), CursorLocation(..), Name(..))
 import Brick.AttrMap
 
+data Next a = Continue a
+            | Shutdown a
+
 data App a e =
     App { appDraw :: a -> [Widget]
         , appChooseCursor :: a -> [CursorLocation] -> Maybe CursorLocation
-        , appHandleEvent :: e -> a -> EventM a
+        , appHandleEvent :: e -> a -> EventM (Next a)
         , appAttrMap :: a -> AttrMap
         }
 
 instance Default (App a e) where
     def = App { appDraw = const def
               , appChooseCursor = neverShowCursor
-              , appHandleEvent = const return
+              , appHandleEvent = const (return . Continue)
               , appAttrMap = const def
               }
 
@@ -65,18 +67,18 @@ type EventM a = StateT EventState IO a
 
 type EventState = [(Name, ScrollRequest)]
 
-defaultMain :: App a Event -> a -> IO ()
+defaultMain :: App a Event -> a -> IO a
 defaultMain = defaultMainWithVty (mkVty def)
 
 simpleMain :: [(AttrName, Attr)] -> [Widget] -> IO ()
 simpleMain attrs ls =
     let app = def { appDraw = const ls
-                  , appHandleEvent = const $ const $ liftIO exitSuccess
+                  , appHandleEvent = const (return . Shutdown)
                   , appAttrMap = const $ attrMap def attrs
                   }
     in defaultMain app ()
 
-defaultMainWithVty :: IO Vty -> App a Event -> a -> IO ()
+defaultMainWithVty :: IO Vty -> App a Event -> a -> IO a
 defaultMainWithVty buildVty app initialAppState = do
     let initialRS = RS M.empty mempty
     chan <- newChan
@@ -90,12 +92,14 @@ supplyVtyEvents vty mkEvent chan =
         e <- nextEvent vty
         writeChan chan $ mkEvent e
 
-runVty :: Vty -> Chan e -> App a e -> a -> RenderState -> IO ()
+runVty :: Vty -> Chan e -> App a e -> a -> RenderState -> IO a
 runVty vty chan app appState rs = do
     newRS <- renderApp vty app appState rs
     e <- readChan chan
-    (newAppState, scrollReqs) <- runStateT (appHandleEvent app e appState) []
-    runVty vty chan app newAppState $ newRS { _scrollRequests = scrollReqs }
+    (next, scrollReqs) <- runStateT (appHandleEvent app e appState) []
+    case next of
+        Shutdown finalAppState -> return finalAppState
+        Continue newAppState -> runVty vty chan app newAppState $ newRS { _scrollRequests = scrollReqs }
 
 withVty :: IO Vty -> (Vty -> IO a) -> IO a
 withVty buildVty useVty = do

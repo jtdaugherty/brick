@@ -9,10 +9,8 @@ import Data.Default (def)
 
 import Control.Applicative
 import Control.Monad
-import Control.Monad.IO.Class (liftIO)
 
 import System.Random
-import System.Exit
 
 import Brick.Main
 import Brick.Core
@@ -56,7 +54,7 @@ main = do
                   , appHandleEvent = processEvent
                   , appChooseCursor = neverShowCursor
                   }
-    defaultMain app world0
+    void $ defaultMain app world0
 
 -- |Generate a level randomly using the specified difficulty.  Higher
 -- difficulty means the level will have more rooms and cover a larger area.
@@ -100,15 +98,15 @@ pieceA, dumpA :: Attr
 pieceA = defAttr `withForeColor` blue `withBackColor` green
 dumpA = defAttr `withStyle` reverseVideo
 
-processEvent :: Event -> World -> EventM World
+processEvent :: Event -> World -> EventM (Next World)
 processEvent k world = do
     case k of
-        EvKey KEsc [] -> liftIO exitSuccess
-        EvKey KLeft  [] -> return $ movePlayer world (-1) 0
-        EvKey KRight [] -> return $ movePlayer world 1 0
-        EvKey KUp    [] -> return $ movePlayer world 0 (-1)
-        EvKey KDown  [] -> return $ movePlayer world 0 1
-        _               -> return world
+        EvKey KEsc [] -> return $ Shutdown world
+        EvKey KLeft  [] -> return $ Continue $ movePlayer world (-1) 0
+        EvKey KRight [] -> return $ Continue $ movePlayer world 1 0
+        EvKey KUp    [] -> return $ Continue $ movePlayer world 0 (-1)
+        EvKey KDown  [] -> return $ Continue $ movePlayer world 0 1
+        _               -> return $ Continue world
 
 movePlayer :: World -> Int -> Int -> World
 movePlayer world dx dy = do
