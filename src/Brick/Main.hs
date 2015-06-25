@@ -109,7 +109,11 @@ withVty buildVty useVty = do
 renderApp :: Vty -> App a e -> a -> RenderState -> IO RenderState
 renderApp vty app appState rs = do
     sz <- displayBounds $ outputIface vty
-    let (newRS, pic, theCursor) = renderFinal (appAttrMap app appState) (appDraw app appState) sz (appChooseCursor app appState) rs
+    let (newRS, pic, theCursor) = renderFinal (appAttrMap app appState)
+                                    (appDraw app appState)
+                                    sz
+                                    (appChooseCursor app appState)
+                                    rs
         picWithCursor = case theCursor of
             Nothing -> pic { picCursor = NoCursor }
             Just (CursorLocation (Location (w, h)) _) -> pic { picCursor = Cursor w h }
