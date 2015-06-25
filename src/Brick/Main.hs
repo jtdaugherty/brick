@@ -4,10 +4,8 @@ module Brick.Main
   , defaultMainWithVty
 
   , EventM
-  , scrollBy
-  , scrollPage
-  , scrollToBeginning
-  , scrollToEnd
+  , viewportScroll
+  , ViewportScroll(scrollBy, scrollPage, scrollToBeginning, scrollToEnd)
 
   , simpleMain
 
@@ -122,14 +120,19 @@ neverShowCursor = const $ const Nothing
 showFirstCursor :: a -> [CursorLocation] -> Maybe CursorLocation
 showFirstCursor = const $ listToMaybe
 
-scrollPage :: Name -> Direction -> EventM ()
-scrollPage n dir = modify ((n, ScrollPage dir) :)
+data ViewportScroll =
+    ViewportScroll { viewportName :: Name
+                   , scrollPage :: Direction -> EventM ()
+                   , scrollBy :: Int -> EventM ()
+                   , scrollToBeginning :: EventM ()
+                   , scrollToEnd :: EventM ()
+                   }
 
-scrollBy :: Name -> Int -> EventM ()
-scrollBy n i = modify ((n, ScrollBy i) :)
-
-scrollToBeginning :: Name -> EventM ()
-scrollToBeginning n = modify ((n, ScrollToBeginning) :)
-
-scrollToEnd :: Name -> EventM ()
-scrollToEnd n = modify ((n, ScrollToEnd) :)
+viewportScroll :: Name -> ViewportScroll
+viewportScroll n =
+    ViewportScroll { viewportName = n
+                   , scrollPage = \dir -> modify ((n, ScrollPage dir) :)
+                   , scrollBy = \i -> modify ((n, ScrollBy i) :)
+                   , scrollToBeginning = modify ((n, ScrollToBeginning) :)
+                   , scrollToEnd = modify ((n, ScrollToEnd) :)
+                   }
