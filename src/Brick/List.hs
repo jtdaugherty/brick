@@ -67,11 +67,11 @@ drawListElements l = drawnElements
         es = listElements l
         drawnElements = for (zip [0..] es) $ \(i, e) ->
             let isSelected = Just i == listSelected l
-                elemRender = listElementDraw l isSelected e
+                elemWidget = listElementDraw l isSelected e
                 makeVisible = if isSelected
                               then (visible . withAttrName listSelectedAttr)
                               else id
-            in makeVisible elemRender
+            in makeVisible elemWidget
 
 listInsert :: Int -> e -> List e -> List e
 listInsert pos e l =
