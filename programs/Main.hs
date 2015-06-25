@@ -3,7 +3,6 @@
 module Main where
 
 import Control.Lens
-import Control.Monad (void)
 import Data.Default
 import Data.Monoid
 import Graphics.Vty hiding (translate)
@@ -143,4 +142,6 @@ theApp =
         }
 
 main :: IO ()
-main = void $ defaultMain theApp initialState
+main = do
+    st <- defaultMain theApp initialState
+    putStrLn $ "You entered: " <> (editStr $ st^.stEditor)

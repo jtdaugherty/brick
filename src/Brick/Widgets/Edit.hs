@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Brick.Widgets.Edit
-  ( Editor
+  ( Editor(editStr)
   , editor
   , renderEditor
   , editAttr
