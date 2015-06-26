@@ -48,7 +48,7 @@ theApp =
         , appChooseCursor = showFirstCursor
         , appHandleEvent = appEvent
         , appAttrMap = def
-        , appMakeEvent = VtyEvent
+        , appMakeVtyEvent = VtyEvent
         }
 
 main :: IO ()

@@ -53,7 +53,7 @@ main = do
         app = App { appDraw = updateDisplay
                   , appHandleEvent = processEvent
                   , appChooseCursor = neverShowCursor
-                  , appMakeEvent = id
+                  , appMakeVtyEvent = id
                   , appAttrMap = const $ attrMap defAttr []
                   }
     void $ defaultMain app world0

@@ -144,7 +144,7 @@ theApp =
         , appChooseCursor = showFirstCursor
         , appHandleEvent = appEvent
         , appAttrMap = const theAttrMap
-        , appMakeEvent = id
+        , appMakeVtyEvent = id
         }
 
 main :: IO ()

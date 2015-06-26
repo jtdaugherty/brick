@@ -56,7 +56,7 @@ data App a e =
         , appChooseCursor :: a -> [CursorLocation] -> Maybe CursorLocation
         , appHandleEvent :: e -> a -> EventM (Next a)
         , appAttrMap :: a -> AttrMap
-        , appMakeEvent :: Event -> e
+        , appMakeVtyEvent :: Event -> e
         }
 
 type EventM a = StateT EventState IO a
@@ -73,7 +73,7 @@ simpleMain attrs ls =
     let app = App { appDraw = const ls
                   , appHandleEvent = const (return . Halt)
                   , appAttrMap = const $ attrMap def attrs
-                  , appMakeEvent = id
+                  , appMakeVtyEvent = id
                   , appChooseCursor = neverShowCursor
                   }
     in defaultMain app ()
@@ -84,7 +84,7 @@ data InternalNext a = InternalSuspendAndResume RenderState (IO a)
 runWithNewVty :: IO Vty -> Chan e -> App a e -> RenderState -> a -> IO (InternalNext a)
 runWithNewVty buildVty chan app initialRS initialSt = do
     withVty buildVty $ \vty -> do
-        pid <- forkIO $ supplyVtyEvents vty (appMakeEvent app) chan
+        pid <- forkIO $ supplyVtyEvents vty (appMakeVtyEvent app) chan
         let runInner rs st = do
               (result, newRS) <- runVty vty chan app st rs
               case result of
