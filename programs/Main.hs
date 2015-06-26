@@ -4,7 +4,6 @@ module Main where
 
 import Control.Lens
 import Control.Monad (void)
-import Data.Default
 import Data.Monoid
 import Graphics.Vty hiding (translate)
 import qualified Data.Text as T
@@ -141,10 +140,11 @@ theAttrMap = attrMap defAttr
 
 theApp :: App St Event
 theApp =
-    def { appDraw = drawUI
+    App { appDraw = drawUI
         , appChooseCursor = showFirstCursor
         , appHandleEvent = appEvent
         , appAttrMap = const theAttrMap
+        , appMakeEvent = id
         }
 
 main :: IO ()

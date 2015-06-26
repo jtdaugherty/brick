@@ -5,7 +5,6 @@ module Main where
 import Graphics.Vty
 
 import Data.Array
-import Data.Default (def)
 
 import Control.Applicative
 import Control.Monad
@@ -14,6 +13,7 @@ import System.Random
 
 import Brick.Main
 import Brick.Core
+import Brick.AttrMap
 import Brick.Widgets.Core
 import Brick.Widgets.Border
 import Brick.Widgets.Center
@@ -50,9 +50,11 @@ main :: IO ()
 main = do
     level0 <- mkLevel 1
     let world0 = World (Player (levelStart level0)) level0
-        app = def { appDraw = updateDisplay
+        app = App { appDraw = updateDisplay
                   , appHandleEvent = processEvent
                   , appChooseCursor = neverShowCursor
+                  , appMakeEvent = id
+                  , appAttrMap = const $ attrMap defAttr []
                   }
     void $ defaultMain app world0
 

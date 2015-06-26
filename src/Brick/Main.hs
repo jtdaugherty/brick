@@ -1,7 +1,8 @@
 module Brick.Main
   ( App(..)
   , defaultMain
-  , defaultMainWithVty
+  , customMain
+  , simpleMain
 
   , EventM
   , Next
@@ -11,8 +12,6 @@ module Brick.Main
 
   , viewportScroll
   , ViewportScroll(scrollBy, scrollPage, scrollToBeginning, scrollToEnd)
-
-  , simpleMain
 
   , supplyVtyEvents
 
@@ -25,8 +24,8 @@ import Control.Exception (finally)
 import Control.Monad (forever)
 import Control.Monad.Trans.State
 import Control.Concurrent (forkIO, Chan, newChan, readChan, writeChan, killThread)
-import Data.Default
 import Data.Monoid
+import Data.Default
 import Data.Maybe (listToMaybe)
 import qualified Data.Map as M
 import Graphics.Vty
@@ -57,38 +56,35 @@ data App a e =
         , appChooseCursor :: a -> [CursorLocation] -> Maybe CursorLocation
         , appHandleEvent :: e -> a -> EventM (Next a)
         , appAttrMap :: a -> AttrMap
+        , appMakeEvent :: Event -> e
         }
-
-instance Default (App a e) where
-    def = App { appDraw = const def
-              , appChooseCursor = neverShowCursor
-              , appHandleEvent = const (return . Continue)
-              , appAttrMap = const def
-              }
 
 type EventM a = StateT EventState IO a
 
 type EventState = [(Name, ScrollRequest)]
 
 defaultMain :: App a Event -> a -> IO a
-defaultMain = defaultMainWithVty (mkVty def)
+defaultMain app st = do
+    chan <- newChan
+    customMain (mkVty def) chan app st
 
 simpleMain :: [(AttrName, Attr)] -> [Widget] -> IO ()
 simpleMain attrs ls =
-    let app = def { appDraw = const ls
+    let app = App { appDraw = const ls
                   , appHandleEvent = const (return . Halt)
                   , appAttrMap = const $ attrMap def attrs
+                  , appMakeEvent = id
+                  , appChooseCursor = neverShowCursor
                   }
     in defaultMain app ()
 
 data InternalNext a = InternalSuspendAndResume RenderState (IO a)
                     | InternalHalt a
 
-runWithNewVty :: IO Vty -> App a Event -> RenderState -> a -> IO (InternalNext a)
-runWithNewVty buildVty app initialRS initialSt = do
-    chan <- newChan
+runWithNewVty :: IO Vty -> Chan e -> App a e -> RenderState -> a -> IO (InternalNext a)
+runWithNewVty buildVty chan app initialRS initialSt = do
     withVty buildVty $ \vty -> do
-        pid <- forkIO $ supplyVtyEvents vty id chan
+        pid <- forkIO $ supplyVtyEvents vty (appMakeEvent app) chan
         let runInner rs st = do
               (result, newRS) <- runVty vty chan app st rs
               case result of
@@ -101,11 +97,11 @@ runWithNewVty buildVty app initialRS initialSt = do
                   Continue s -> runInner newRS s
         runInner initialRS initialSt
 
-defaultMainWithVty :: IO Vty -> App a Event -> a -> IO a
-defaultMainWithVty buildVty app initialAppState = do
+customMain :: IO Vty -> Chan e -> App a e -> a -> IO a
+customMain buildVty chan app initialAppState = do
     let initialRS = RS M.empty mempty
         run rs st = do
-            result <- runWithNewVty buildVty app rs st
+            result <- runWithNewVty buildVty chan app rs st
             case result of
                 InternalHalt s -> return s
                 InternalSuspendAndResume newRS action -> do
