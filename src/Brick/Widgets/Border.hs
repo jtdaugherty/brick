@@ -79,7 +79,7 @@ hBorder_ :: Maybe Widget -> Widget
 hBorder_ label =
     Widget Unlimited Fixed $ do
       bs <- getActiveBorderStyle
-      render $ withAttrName hBorderAttr $ hCenterWith (Just $ bsHorizontal bs) msg
+      render $ vLimit 1 $ withAttrName hBorderAttr $ hCenterWith (Just $ bsHorizontal bs) msg
       where
           msg = maybe (txt "") (withAttrName hBorderLabelAttr) label
 
@@ -87,4 +87,4 @@ vBorder :: Widget
 vBorder =
     Widget Fixed Unlimited $ do
       bs <- getActiveBorderStyle
-      render $ withAttrName vBorderAttr $ vFill (bsVertical bs)
+      render $ hLimit 1 $ withAttrName vBorderAttr $ fill (bsVertical bs)
