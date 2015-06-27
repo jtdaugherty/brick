@@ -122,8 +122,8 @@ movePlayer world dx dy = do
 updateDisplay :: World -> [Widget]
 updateDisplay world = [ info, playerLayer, geoLayer ]
     where
-        info = vBox [ (hCenter $ txt "Move with the arrows keys. Press ESC to exit.", High)
-                    , (hBorder, High)
+        info = vBox [ hCenter $ txt "Move with the arrows keys. Press ESC to exit."
+                    , hBorder
                     ]
         (px, py) = playerCoord $ player world
         playerLoc = Location (px, py)

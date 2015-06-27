@@ -11,12 +11,12 @@ module Brick.Widgets.Internal
   , ctxAttrs
   , lookupAttrName
   , visibilityRequests
+  , withContext
 
   , RenderState(..)
   , ScrollRequest(..)
   , Direction(..)
 
-  , Priority(..)
   , renderFinal
   , Widget(..)
   , Size(..)
@@ -38,8 +38,8 @@ module Brick.Widgets.Internal
 
   , hBox
   , vBox
-  , (=>>), (<<=), (<=>)
-  , (+>>), (<<+), (<+>)
+  , (<=>)
+  , (<+>)
 
   , hLimit
   , vLimit
@@ -61,7 +61,7 @@ module Brick.Widgets.Internal
 where
 
 import Control.Applicative
-import Control.Lens (makeLenses, (^.), (.~), (&), (%~), to, _1, _2, view, each, to)
+import Control.Lens (makeLenses, (^.), (.~), (&), (%~), to, _1, _2, view, each, to, ix)
 import Control.Monad (when)
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Reader
@@ -72,7 +72,7 @@ import Data.Functor.Contravariant
 import Data.Monoid ((<>), mempty)
 import qualified Data.Map as M
 import qualified Data.Function as DF
-import Data.List (sortBy)
+import Data.List (sortBy, partition)
 import Control.Lens (Lens')
 import Data.String (IsString(..))
 import qualified Graphics.Vty as V
@@ -112,9 +112,6 @@ data Context =
             , _activeBorderStyle :: BorderStyle
             , _ctxAttrs :: AttrMap
             }
-
-data Priority = High | Low
-              deriving (Show, Eq)
 
 type RenderM a = ReaderT Context (State RenderState) a
 
@@ -180,6 +177,9 @@ renderFinal aMap layerRenders sz chooseCursor rs = (newRS, pic, theCursor)
 addVisibilityOffset :: Location -> Result -> Result
 addVisibilityOffset off r = r & visibilityRequests.each.vrPosition %~ (off <>)
 
+withContext :: (Context -> Context) -> Widget -> Widget
+withContext f w = w { render = withReaderT f (render w) }
+
 addCursorOffset :: Location -> Result -> Result
 addCursorOffset off r =
     let onlyVisible = filter isVisible
@@ -213,50 +213,55 @@ fill ch =
       -- XXX should this be max 0?
       return $ def & image .~ (V.charFill (c^.attr) ch (max 1 (c^.availW)) (max 1 (c^.availH)))
 
-vBox :: [(Widget, Priority)] -> Widget
+vBox :: [Widget] -> Widget
 vBox = renderBox vBoxRenderer
 
-hBox :: [(Widget, Priority)] -> Widget
+hBox :: [Widget] -> Widget
 hBox = renderBox hBoxRenderer
 
 data BoxRenderer =
     BoxRenderer { contextPrimary :: Lens' Context Int
+                , contextSecondary :: Lens' Context Int
                 , imagePrimary :: V.Image -> Int
                 , imageSecondary :: V.Image -> Int
                 , limitPrimary :: Int -> Widget -> Widget
                 , limitSecondary :: Int -> Widget -> Widget
+                , primarySize :: Widget -> Size
                 , concatenate :: [V.Image] -> V.Image
                 , locationFromOffset :: Int -> Location
                 }
 
 vBoxRenderer :: BoxRenderer
-vBoxRenderer = BoxRenderer availH V.imageHeight V.imageWidth vLimit hLimit V.vertCat (Location . (0 ,))
+vBoxRenderer = BoxRenderer availH availW V.imageHeight V.imageWidth vLimit hLimit vSize V.vertCat (Location . (0 ,))
 
 hBoxRenderer :: BoxRenderer
-hBoxRenderer = BoxRenderer availW V.imageWidth V.imageHeight hLimit vLimit V.horizCat (Location . (, 0))
+hBoxRenderer = BoxRenderer availW availH V.imageWidth V.imageHeight hLimit vLimit hSize V.horizCat (Location . (, 0))
 
-renderBox :: BoxRenderer -> [(Widget, Priority)] -> Widget
-renderBox br pairs = do
-    Widget (maximum $ hSize <$> fst <$> pairs) (maximum $ vSize <$> fst <$> pairs) $ do
+renderBox :: BoxRenderer -> [Widget] -> Widget
+renderBox br ws = do
+    Widget (maximum $ hSize <$> ws) (maximum $ vSize <$> ws) $ do
       c <- getContext
 
-      let pairsIndexed = zip [(0::Int)..] pairs
-          his = filter (\p -> (snd $ snd p) == High) pairsIndexed
-          lows = filter (\p -> (snd $ snd p) == Low) pairsIndexed
+      let pairsIndexed = zip [(0::Int)..] ws
+          (his, lows) = partition (\p -> (primarySize br $ snd p) == Fixed) pairsIndexed
 
-      renderedHis <- mapM (\(i, (prim, _)) -> (i,) <$> render prim) his
+      renderedHis <- mapM (\(i, prim) -> (i,) <$> render prim) his
 
-      let remainingPrimary = c^.(contextPrimary br) - (sum $ (^._2.image.(to $ imagePrimary br)) <$> renderedHis)
-          primaryPerLow = remainingPrimary `div` length lows
-          padFirst = if primaryPerLow * length lows < remainingPrimary
-                     then remainingPrimary - primaryPerLow * length lows
-                     else 0
-          secondaryPerLow = maximum $ (^._2.image.(to (imageSecondary br))) <$> renderedHis
-          renderLow (i, (prim, _)) =
-              let padding = if i == 0 then padFirst else 0
-              in (i,) <$> (render $ limitPrimary br (primaryPerLow + padding) $ limitSecondary br secondaryPerLow $ cropToContext prim)
+      renderedLows <- case lows of
+          [] -> return []
+          ls -> do
+              let remainingPrimary = c^.(contextPrimary br) - (sum $ (^._2.image.(to $ imagePrimary br)) <$> renderedHis)
+                  primaryPerLow = remainingPrimary `div` length ls
+                  padFirst = remainingPrimary - (primaryPerLow * length ls)
+                  secondaryPerLow = c^.(contextSecondary br)
+                  primaries = replicate (length ls) primaryPerLow & ix 0 %~ (+ padFirst)
 
-      renderedLows <- mapM renderLow lows
+              let renderLow ((i, prim), pri) =
+                      (i,) <$> (render $ limitPrimary br pri
+                                       $ limitSecondary br secondaryPerLow
+                                       $ cropToContext prim)
+
+              if remainingPrimary > 0 then mapM renderLow (zip ls primaries) else return []
 
       let rendered = sortBy (compare `DF.on` fst) $ renderedHis ++ renderedLows
           allResults = snd <$> rendered
@@ -431,7 +436,8 @@ viewport vpname typ p =
 
       -- Return the translated result with the visibility requests
       -- discarded
-      render $ cropToContext $ ((Widget Fixed Fixed $ return $ translated & visibilityRequests .~ mempty) <+> fill ' ') <=> fill ' '
+      render $ cropToContext $ ((Widget Fixed Fixed $ return $ translated & visibilityRequests .~ mempty) <+> (vLimit 1 $ fill ' '))
+                               <=> (hLimit 1 $ fill ' ')
 
 scrollTo :: ViewportType -> ScrollRequest -> V.Image -> Viewport -> Viewport
 scrollTo typ req img vp = vp & theStart .~ newStart
@@ -507,19 +513,7 @@ visibleRegion vrloc sz p =
                else result
 
 (<+>) :: Widget -> Widget -> Widget
-(<+>) a b = hBox [(a, High), (b, High)]
-
-(<<+) :: Widget -> Widget -> Widget
-(<<+) a b = hBox [(a, High), (b, Low)]
-
-(+>>) :: Widget -> Widget -> Widget
-(+>>) a b = hBox [(a, Low), (b, High)]
+(<+>) a b = hBox [a, b]
 
 (<=>) :: Widget -> Widget -> Widget
-(<=>) a b = vBox [(a, High), (b, High)]
-
-(<<=) :: Widget -> Widget -> Widget
-(<<=) a b = vBox [(a, High), (b, Low)]
-
-(=>>) :: Widget -> Widget -> Widget
-(=>>) a b = vBox [(a, Low), (b, High)]
+(<=>) a b = vBox [a, b]

@@ -18,7 +18,9 @@ module Brick.Widgets.Border
   )
 where
 
+import Control.Lens ((&), (%~), (^.), (.~), to)
 import Data.Monoid ((<>))
+import Graphics.Vty (imageHeight, imageWidth)
 
 import Brick.AttrMap
 import Brick.Widgets.Core
@@ -59,15 +61,23 @@ border_ :: Maybe Widget -> Widget -> Widget
 border_ label wrapped =
     Widget (hSize wrapped) (vSize wrapped) $ do
       bs <- getActiveBorderStyle
+
+      middleResult <- render $ withContext (\c -> c & availW %~ (subtract 2)
+                                                    & availH %~ (subtract 2))
+                                           wrapped
+
       let top = (withAttrName tlCornerAttr $ str [bsCornerTL bs])
-                <<+ hBorder_ label +>>
+                <+> hBorder_ label <+>
                 (withAttrName trCornerAttr $ str [bsCornerTR bs])
           bottom = (withAttrName blCornerAttr $ str [bsCornerBL bs])
-                   <<+ hBorder +>>
+                   <+> hBorder <+>
                    (withAttrName brCornerAttr $ str [bsCornerBR bs])
-          middle = vBorder +>> wrapped <<+ vBorder
-          total = top =>> middle <<= bottom
-      render total
+          middle = vBorder <+> (Widget Fixed Fixed $ return middleResult) <+> vBorder
+          total = top <=> middle <=> bottom
+
+      render $ withContext (\c -> c & availW .~ (middleResult^.image.to imageWidth + 2)
+                                    & availH .~ (middleResult^.image.to imageHeight + 2))
+                           total
 
 hBorder :: Widget
 hBorder = hBorder_ Nothing

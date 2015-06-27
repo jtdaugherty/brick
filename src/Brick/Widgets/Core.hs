@@ -10,15 +10,15 @@ module Brick.Widgets.Core
   , cursors
   , lookupAttrName
   , visibilityRequests
+  , withContext
 
   , Context
   , availW
   , availH
   , getActiveBorderStyle
   , getContext
-  , Priority(..)
-  , (=>>), (<<=), (<=>)
-  , (+>>), (<<+), (<+>)
+  , (<=>)
+  , (<+>)
   , ViewportType(..)
   , Direction(..)
 

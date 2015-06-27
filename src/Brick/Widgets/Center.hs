@@ -9,7 +9,7 @@ module Brick.Widgets.Center
   )
 where
 
-import Control.Lens ((^.), to)
+import Control.Lens ((^.), to, (&), (.~))
 import Graphics.Vty (imageWidth, imageHeight)
 
 import Brick.Widgets.Core
