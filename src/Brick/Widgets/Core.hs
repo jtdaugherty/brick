@@ -25,6 +25,8 @@ module Brick.Widgets.Core
   , txt
   , str
   , fill
+  , hFill
+  , vFill
   , hBox
   , vBox
   , hLimit
