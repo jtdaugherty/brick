@@ -34,9 +34,7 @@ module Brick.Widgets.Internal
 
   , txt
   , str
-  , pad
-  , hFill
-  , vFill
+  , fill
 
   , hBox
   , vBox
@@ -208,23 +206,12 @@ str s =
 txt :: T.Text -> Widget
 txt = str . T.unpack
 
-pad :: Char -> Widget
-pad ch =
+fill :: Char -> Widget
+fill ch =
     Widget Unlimited Unlimited $ do
       c <- getContext
+      -- XXX should this be max 0?
       return $ def & image .~ (V.charFill (c^.attr) ch (max 1 (c^.availW)) (max 1 (c^.availH)))
-
-hFill :: Char -> Widget
-hFill ch =
-    Widget Unlimited Fixed $ do
-      c <- getContext
-      return $ def & image .~ (V.charFill (c^.attr) ch (c^.availW) (min (c^.availH) 1))
-
-vFill :: Char -> Widget
-vFill ch =
-    Widget Fixed Unlimited $ do
-      c <- getContext
-      return $ def & image .~ (V.charFill (c^.attr) ch (min (c^.availW) 1) (c^.availH))
 
 vBox :: [(Widget, Priority)] -> Widget
 vBox = renderBox vBoxRenderer
@@ -444,7 +431,7 @@ viewport vpname typ p =
 
       -- Return the translated result with the visibility requests
       -- discarded
-      render $ cropToContext $ ((Widget Fixed Fixed $ return $ translated & visibilityRequests .~ mempty) <+> pad ' ') <=> pad ' '
+      render $ cropToContext $ ((Widget Fixed Fixed $ return $ translated & visibilityRequests .~ mempty) <+> fill ' ') <=> fill ' '
 
 scrollTo :: ViewportType -> ScrollRequest -> V.Image -> Viewport -> Viewport
 scrollTo typ req img vp = vp & theStart .~ newStart

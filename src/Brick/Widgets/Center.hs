@@ -30,9 +30,9 @@ hCenterWith mChar p =
                leftPaddingAmount = (c^.availW - rWidth) `div` 2
                rightPaddingAmount = leftPaddingAmount + remainder
            render $ vLimit rHeight $
-               (hLimit leftPaddingAmount $ pad ch) <+>
+               (hLimit leftPaddingAmount $ fill ch) <+>
                (Widget Fixed Fixed $ return result) <+>
-               (hLimit rightPaddingAmount $ pad ch)
+               (hLimit rightPaddingAmount $ fill ch)
 
 vCenter :: Widget -> Widget
 vCenter = vCenterWith Nothing
@@ -49,9 +49,9 @@ vCenterWith mChar p =
                topPaddingAmount = (c^.availH - rHeight) `div` 2
                bottomPaddingAmount = topPaddingAmount + remainder
            render $ hLimit rWidth $
-               (vLimit topPaddingAmount $ pad ch) <=>
+               (vLimit topPaddingAmount $ fill ch) <=>
                (Widget Fixed Fixed $ return result) <=>
-               (vLimit topPaddingAmount $ pad ch)
+               (vLimit topPaddingAmount $ fill ch)
 
 center :: Widget -> Widget
 center = centerWith Nothing
