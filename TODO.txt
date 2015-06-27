@@ -12,24 +12,11 @@ Features:
   - monoid instance
   - RLE attribute assignment with successive transformations?
   - wrapping
-- Default and override attributes in rendering context, plus combinators
-to manage them
 - Think of better library name
-- Implement 2-d text editing
 - Deal with multi-column characters everywhere
 - Port widgets from vty-ui
-- Support "suggested" vs "forced" attributes in Prim rendering
-- Viewports: support scrolling modes that don't require specific
-visibility requests (think scrolling through a text document with no
-cursor)
 
 Performance:
 - Write benchmarks for render on various primitive types
 - Use a zipper for the list widget, use vectors for storage
 - Use Vector instead of List where sensible
-
-Via Jesse:
-- Make it possible to exit/re-enter brick event loop to execute external
-programs
-- Make it possible to save and resupply rendering state when doing this
-to permit scrolling state preservation
