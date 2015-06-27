@@ -233,46 +233,30 @@ vFill ch =
       c <- getContext
       return $ def & image .~ (V.charFill (c^.attr) ch (min (c^.availW) 1) (c^.availH))
 
-hBox :: [(Widget, Priority)] -> Widget
-hBox pairs =
-    Widget (maximum $ hSize <$> fst <$> pairs) (maximum $ vSize <$> fst <$> pairs) $ do
-      c <- getContext
-
-      let pairsIndexed = zip [(0::Int)..] pairs
-          his = filter (\p -> (snd $ snd p) == High) pairsIndexed
-          lows = filter (\p -> (snd $ snd p) == Low) pairsIndexed
-
-      renderedHis <- mapM (\(i, (prim, _)) -> (i,) <$> (render prim)) his
-
-      let remainingWidth = c^.availW - (sum $ (^._2.image.(to V.imageWidth)) <$> renderedHis)
-          widthPerLow = remainingWidth `div` length lows
-          padFirst = if widthPerLow * length lows < remainingWidth
-                     then remainingWidth - widthPerLow * length lows
-                     else 0
-          heightPerLow = maximum $ (^._2.image.(to V.imageHeight)) <$> renderedHis
-          renderLow (i, (prim, _)) =
-              let padding = (if i == 0 then padFirst else 0)
-              in (i,) <$> (render $ vLimit heightPerLow $ hLimit (widthPerLow + padding) $ cropToContext prim)
-
-      renderedLows <- mapM renderLow lows
-
-      let rendered = sortBy (compare `DF.on` fst) $ renderedHis ++ renderedLows
-          allResults = snd <$> rendered
-          allImages = (^.image) <$> allResults
-          allWidths = V.imageWidth <$> allImages
-          allTranslatedVRs = for (zip [0..] allResults) $ \(i, result) ->
-              let off = Location (offWidth, 0)
-                  offWidth = sum $ take i allWidths
-              in (addVisibilityOffset off result)^.visibilityRequests
-          allTranslatedCursors = for (zip [0..] allResults) $ \(i, result) ->
-              let off = Location (offWidth, 0)
-                  offWidth = sum $ take i allWidths
-              in (addCursorOffset off result)^.cursors
-
-      cropResultToContext $ Result (V.horizCat allImages) (concat allTranslatedCursors) (concat allTranslatedVRs)
-
 vBox :: [(Widget, Priority)] -> Widget
-vBox pairs =
+vBox = renderBox vBoxRenderer
+
+hBox :: [(Widget, Priority)] -> Widget
+hBox = renderBox hBoxRenderer
+
+data BoxRenderer =
+    BoxRenderer { contextPrimary :: Lens' Context Int
+                , imagePrimary :: V.Image -> Int
+                , imageSecondary :: V.Image -> Int
+                , limitPrimary :: Int -> Widget -> Widget
+                , limitSecondary :: Int -> Widget -> Widget
+                , concatenate :: [V.Image] -> V.Image
+                , locationFromOffset :: Int -> Location
+                }
+
+vBoxRenderer :: BoxRenderer
+vBoxRenderer = BoxRenderer availH V.imageHeight V.imageWidth vLimit hLimit V.vertCat (Location . (0 ,))
+
+hBoxRenderer :: BoxRenderer
+hBoxRenderer = BoxRenderer availW V.imageWidth V.imageHeight hLimit vLimit V.horizCat (Location . (, 0))
+
+renderBox :: BoxRenderer -> [(Widget, Priority)] -> Widget
+renderBox br pairs = do
     Widget (maximum $ hSize <$> fst <$> pairs) (maximum $ vSize <$> fst <$> pairs) $ do
       c <- getContext
 
@@ -282,32 +266,32 @@ vBox pairs =
 
       renderedHis <- mapM (\(i, (prim, _)) -> (i,) <$> render prim) his
 
-      let remainingHeight = c^.availH - (sum $ (^._2.image.(to V.imageHeight)) <$> renderedHis)
-          heightPerLow = remainingHeight `div` length lows
-          padFirst = if heightPerLow * length lows < remainingHeight
-                     then remainingHeight - heightPerLow * length lows
+      let remainingPrimary = c^.(contextPrimary br) - (sum $ (^._2.image.(to $ imagePrimary br)) <$> renderedHis)
+          primaryPerLow = remainingPrimary `div` length lows
+          padFirst = if primaryPerLow * length lows < remainingPrimary
+                     then remainingPrimary - primaryPerLow * length lows
                      else 0
-          widthPerLow = maximum $ (^._2.image.(to V.imageWidth)) <$> renderedHis
+          secondaryPerLow = maximum $ (^._2.image.(to (imageSecondary br))) <$> renderedHis
           renderLow (i, (prim, _)) =
               let padding = if i == 0 then padFirst else 0
-              in (i,) <$> (render $ vLimit (heightPerLow + padding) $ hLimit widthPerLow $ cropToContext prim)
+              in (i,) <$> (render $ limitPrimary br (primaryPerLow + padding) $ limitSecondary br secondaryPerLow $ cropToContext prim)
 
       renderedLows <- mapM renderLow lows
 
       let rendered = sortBy (compare `DF.on` fst) $ renderedHis ++ renderedLows
           allResults = snd <$> rendered
           allImages = (^.image) <$> allResults
-          allHeights = V.imageHeight <$> allImages
+          allPrimaries = imagePrimary br <$> allImages
           allTranslatedVRs = for (zip [0..] allResults) $ \(i, result) ->
-              let off = Location (0, offHeight)
-                  offHeight = sum $ take i allHeights
+              let off = locationFromOffset br offPrimary
+                  offPrimary = sum $ take i allPrimaries
               in (addVisibilityOffset off result)^.visibilityRequests
           allTranslatedCursors = for (zip [0..] allResults) $ \(i, result) ->
-              let off = Location (0, offHeight)
-                  offHeight = sum $ take i allHeights
+              let off = locationFromOffset br offPrimary
+                  offPrimary = sum $ take i allPrimaries
               in (addCursorOffset off result)^.cursors
 
-      cropResultToContext $ Result (V.vertCat allImages) (concat allTranslatedCursors) (concat allTranslatedVRs)
+      cropResultToContext $ Result (concatenate br allImages) (concat allTranslatedCursors) (concat allTranslatedVRs)
 
 -- xxx crop cursors and VRs
 hLimit :: Int -> Widget -> Widget
