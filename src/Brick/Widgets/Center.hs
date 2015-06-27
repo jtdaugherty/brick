@@ -19,33 +19,39 @@ hCenter :: Widget -> Widget
 hCenter = hCenterWith Nothing
 
 hCenterWith :: Maybe Char -> Widget -> Widget
-hCenterWith Nothing p =
-    Widget Unlimited (vSize p) $ do
-      result <- render p
-      c <- getContext
-      let offW = (c^.availW - (result^.image.to imageWidth)) `div` 2
-      render $ translateBy (Location (offW, 0)) $ Widget Fixed Fixed $ return result
-hCenterWith (Just c) p =
-    hBox [ (hPad c, Low)
-         , (p, High)
-         , (hPad c, Low)
-         ]
+hCenterWith mChar p =
+    let ch = maybe ' ' id mChar
+    in Widget Unlimited (vSize p) $ do
+           result <- render p
+           c <- getContext
+           let rWidth = result^.image.to imageWidth
+               rHeight = result^.image.to imageHeight
+               remainder = c^.availW - (leftPaddingAmount * 2)
+               leftPaddingAmount = (c^.availW - rWidth) `div` 2
+               rightPaddingAmount = leftPaddingAmount + remainder
+           render $ vLimit rHeight $
+               (hLimit leftPaddingAmount $ pad ch) <+>
+               (Widget Fixed Fixed $ return result) <+>
+               (hLimit rightPaddingAmount $ pad ch)
 
 vCenter :: Widget -> Widget
 vCenter = vCenterWith Nothing
 
-vCenterWith :: (Maybe Char) -> Widget -> Widget
-vCenterWith Nothing p =
-    Widget (hSize p) Unlimited $ do
-      result <- render p
-      c <- getContext
-      let offH = (c^.availH - (result^.image.to imageHeight)) `div` 2
-      render $ translateBy (Location (0, offH)) $ Widget Fixed Fixed $ return result
-vCenterWith (Just c) p =
-    vBox [ (vPad c, Low)
-         , (p, High)
-         , (vPad c, Low)
-         ]
+vCenterWith :: Maybe Char -> Widget -> Widget
+vCenterWith mChar p =
+    let ch = maybe ' ' id mChar
+    in Widget (hSize p) Unlimited $ do
+           result <- render p
+           c <- getContext
+           let rWidth = result^.image.to imageWidth
+               rHeight = result^.image.to imageHeight
+               remainder = c^.availH - (topPaddingAmount * 2)
+               topPaddingAmount = (c^.availH - rHeight) `div` 2
+               bottomPaddingAmount = topPaddingAmount + remainder
+           render $ hLimit rWidth $
+               (vLimit topPaddingAmount $ pad ch) <=>
+               (Widget Fixed Fixed $ return result) <=>
+               (vLimit topPaddingAmount $ pad ch)
 
 center :: Widget -> Widget
 center = centerWith Nothing

@@ -24,8 +24,7 @@ module Brick.Widgets.Core
 
   , txt
   , str
-  , hPad
-  , vPad
+  , pad
   , hFill
   , vFill
   , hBox

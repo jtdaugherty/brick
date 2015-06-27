@@ -34,8 +34,7 @@ module Brick.Widgets.Internal
 
   , txt
   , str
-  , hPad
-  , vPad
+  , pad
   , hFill
   , vFill
 
@@ -209,17 +208,11 @@ str s =
 txt :: T.Text -> Widget
 txt = str . T.unpack
 
-hPad :: Char -> Widget
-hPad ch =
-    Widget Unlimited Fixed $ do
+pad :: Char -> Widget
+pad ch =
+    Widget Unlimited Unlimited $ do
       c <- getContext
-      return $ def & image .~ (V.charFill (c^.attr) ch (c^.availW) (max 1 (c^.availH)))
-
-vPad :: Char -> Widget
-vPad ch =
-    Widget Fixed Unlimited $ do
-      c <- getContext
-      return $ def & image .~ (V.charFill (c^.attr) ch (max 1 (c^.availW)) (c^.availH))
+      return $ def & image .~ (V.charFill (c^.attr) ch (max 1 (c^.availW)) (max 1 (c^.availH)))
 
 hFill :: Char -> Widget
 hFill ch =
@@ -451,7 +444,7 @@ viewport vpname typ p =
 
       -- Return the translated result with the visibility requests
       -- discarded
-      render $ cropToContext $ ((Widget Fixed Fixed $ return $ translated & visibilityRequests .~ mempty) <+> hPad ' ') <=> vPad ' '
+      render $ cropToContext $ ((Widget Fixed Fixed $ return $ translated & visibilityRequests .~ mempty) <+> pad ' ') <=> pad ' '
 
 scrollTo :: ViewportType -> ScrollRequest -> V.Image -> Viewport -> Viewport
 scrollTo typ req img vp = vp & theStart .~ newStart
