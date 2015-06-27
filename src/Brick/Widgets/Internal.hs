@@ -233,7 +233,6 @@ data BoxRenderer =
     BoxRenderer { contextPrimary :: Lens' Context Int
                 , contextSecondary :: Lens' Context Int
                 , imagePrimary :: V.Image -> Int
-                , imageSecondary :: V.Image -> Int
                 , limitPrimary :: Int -> Widget -> Widget
                 , limitSecondary :: Int -> Widget -> Widget
                 , primarySize :: Widget -> Size
@@ -242,10 +241,10 @@ data BoxRenderer =
                 }
 
 vBoxRenderer :: BoxRenderer
-vBoxRenderer = BoxRenderer availH availW V.imageHeight V.imageWidth vLimit hLimit vSize V.vertCat (Location . (0 ,))
+vBoxRenderer = BoxRenderer availH availW V.imageHeight vLimit hLimit vSize V.vertCat (Location . (0 ,))
 
 hBoxRenderer :: BoxRenderer
-hBoxRenderer = BoxRenderer availW availH V.imageWidth V.imageHeight hLimit vLimit hSize V.horizCat (Location . (, 0))
+hBoxRenderer = BoxRenderer availW availH V.imageWidth hLimit vLimit hSize V.horizCat (Location . (, 0))
 
 renderBox :: BoxRenderer -> [Widget] -> Widget
 renderBox br ws = do
