@@ -9,7 +9,7 @@ module Brick.Widgets.Center
   )
 where
 
-import Control.Lens ((^.), to, (&), (.~))
+import Control.Lens ((^.), to)
 import Graphics.Vty (imageWidth, imageHeight)
 
 import Brick.Widgets.Core
@@ -51,7 +51,7 @@ vCenterWith mChar p =
            render $ hLimit rWidth $
                (vLimit topPaddingAmount $ fill ch) <=>
                (Widget Fixed Fixed $ return result) <=>
-               (vLimit topPaddingAmount $ fill ch)
+               (vLimit bottomPaddingAmount $ fill ch)
 
 center :: Widget -> Widget
 center = centerWith Nothing
