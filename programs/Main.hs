@@ -82,7 +82,7 @@ drawUI st = [withBorderStyle bs a]
                   ))
         a = translateBy (st^.stTrans) $ vCenter $
               (hCenter box)
-              <=> (vLimit 1 $ vPad ' ')
+              <=> " "
               <=> (hCenter (kw "Enter" <+> " adds a list item"))
               <=> (hCenter (kw "+" <+> " changes border styles"))
               <=> (hCenter (kw "Arrow keys" <+> " navigates the list"))
