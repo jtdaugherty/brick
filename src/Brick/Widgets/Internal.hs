@@ -442,7 +442,8 @@ viewport vpname typ p =
 
       -- Then perform a translation of the sub-rendering to fit into the
       -- viewport
-      translated <- render $ translateBy (Location (-1 * vp^.vpLeft, -1 * vp^.vpTop)) $ Widget Fixed Fixed $ return initialResult
+      translated <- render $ translateBy (Location (-1 * vp^.vpLeft, -1 * vp^.vpTop))
+                           $ Widget Fixed Fixed $ return initialResult
 
       -- Return the translated result with the visibility requests
       -- discarded
