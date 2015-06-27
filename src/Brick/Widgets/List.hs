@@ -56,9 +56,10 @@ list name draw es =
     in List es draw selIndex name
 
 renderList :: List e -> Widget
-renderList l = theList
-    where
-        theList = withAttrName listAttr $ viewport (listName l) Vertical $ vBox $ drawListElements l
+renderList l = withAttrName listAttr $
+               viewport (listName l) Vertical $
+               vBox $
+               drawListElements l
 
 drawListElements :: List e -> [Widget]
 drawListElements l = drawnElements
