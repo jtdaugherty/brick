@@ -60,7 +60,9 @@ ui =
     <=> hBorder
     <=> colorDemo
     <=> hBorderWithLabel "horizontal border label"
-    <=> (center "Left of vertical border" <+> vBorder <+> center "Right of vertical border")
+    <=> (center "Left of vertical border"
+         <+> vBorder
+         <+> center "Right of vertical border")
 
 main :: IO ()
 main = simpleMain [] [ui]
