@@ -60,14 +60,14 @@ centerWith :: Maybe Char -> Widget -> Widget
 centerWith c = vCenterWith c . hCenterWith c
 
 centerAbout :: Location -> Widget -> Widget
-centerAbout (Location (offW, offH)) p =
+centerAbout loc p =
     Widget Unlimited Unlimited $ do
       -- Compute translation offset so that loc is in the middle of the
       -- rendering area
       c <- getContext
       let centerW = c^.availW `div` 2
           centerH = c^.availH `div` 2
-          off = Location ( centerW - offW
-                         , centerH - offH
+          off = Location ( centerW - loc^.column
+                         , centerH - loc^.row
                          )
       render $ translateBy off p

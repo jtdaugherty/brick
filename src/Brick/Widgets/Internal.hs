@@ -185,7 +185,7 @@ addVisibilityOffset off r = r & visibilityRequests.each.vrPosition %~ (off <>)
 addCursorOffset :: Location -> Result -> Result
 addCursorOffset off r =
     let onlyVisible = filter isVisible
-        isVisible (CursorLocation (Location (width, height)) _) = width >= 0 && height >= 0
+        isVisible (CursorLocation loc _) = loc^.column >= 0 && loc^.row >= 0
     in r & cursors %~ (\cs -> onlyVisible $ (`clOffset` off) <$> cs)
 
 unrestricted :: Int
@@ -325,12 +325,12 @@ raw :: V.Image -> Widget
 raw img = Widget Fixed Fixed $ return $ def & image .~ img
 
 translateBy :: Location -> Widget -> Widget
-translateBy (Location (tw,th)) p =
+translateBy loc p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
-      return $ addCursorOffset (Location (tw, th)) $
-               addVisibilityOffset (Location (tw, th)) $
-               result & image %~ (V.translate tw th)
+      return $ addCursorOffset loc $
+               addVisibilityOffset loc $
+               result & image %~ (V.translate (loc^.column) (loc^.row))
 
 cropResultToContext :: Result -> RenderM Result
 cropResultToContext result = do
@@ -496,8 +496,8 @@ scrollToView typ rq vp = vp & theStart .~ newStart
             Horizontal -> vpSize._1
             Vertical -> vpSize._2
         reqStart = case typ of
-            Horizontal -> rq^.vrPosition._1
-            Vertical -> rq^.vrPosition._2
+            Horizontal -> rq^.vrPosition.column
+            Vertical -> rq^.vrPosition.row
         reqSize = case typ of
             Horizontal -> rq^.vrSize._1
             Vertical -> rq^.vrSize._2

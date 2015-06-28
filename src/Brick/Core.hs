@@ -2,6 +2,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 module Brick.Core
   ( Location(Location)
+  , TerminalLocation(..)
   , CursorLocation(..)
   , HandleEvent(..)
   , Name(..)
@@ -24,6 +25,14 @@ instance Field1 Location Location Int Int where
 
 instance Field2 Location Location Int Int where
     _2 = loc._2
+
+class TerminalLocation a where
+    column :: Lens' a Int
+    row :: Lens' a Int
+
+instance TerminalLocation Location where
+    column = _1
+    row = _2
 
 newtype Name = Name String
              deriving (Eq, Show, Ord)

@@ -21,6 +21,7 @@ module Brick.Main
 where
 
 import Control.Exception (finally)
+import Control.Lens ((^.))
 import Control.Monad (forever)
 import Control.Monad.Trans.State
 import Control.Concurrent (forkIO, Chan, newChan, readChan, writeChan, killThread)
@@ -44,7 +45,7 @@ import Graphics.Vty
 
 import Brick.Widgets.Core (Widget)
 import Brick.Widgets.Internal (renderFinal, RenderState(..), ScrollRequest(..), Direction(..))
-import Brick.Core (Location(..), CursorLocation(..), Name(..))
+import Brick.Core (row, column, CursorLocation(..), Name(..))
 import Brick.AttrMap
 
 data Next a = Continue a
@@ -138,7 +139,7 @@ renderApp vty app appState rs = do
                                     rs
         picWithCursor = case theCursor of
             Nothing -> pic { picCursor = NoCursor }
-            Just (CursorLocation (Location (w, h)) _) -> pic { picCursor = Cursor w h }
+            Just (CursorLocation loc _) -> pic { picCursor = Cursor (loc^.column) (loc^.row) }
 
     update vty picWithCursor
 
