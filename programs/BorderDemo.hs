@@ -2,6 +2,7 @@
 module Main where
 
 import Control.Applicative ((<$>))
+import Data.Monoid
 import qualified Data.Text as T
 import Graphics.Vty
 
@@ -27,11 +28,10 @@ borderDemos = mkBorderDemo <$> styles
 mkBorderDemo :: (T.Text, BorderStyle) -> Widget
 mkBorderDemo (styleName, sty) =
     withBorderStyle sty $
-    border $
-    hLimit 20 $
+    borderWithLabel "label" $
     vLimit 5 $
-    center $
-    txt styleName
+    vCenter $
+    txt $ "  " <> styleName <> " style  "
 
 borderMappings :: [(AttrName, Attr)]
 borderMappings =
@@ -52,7 +52,7 @@ colorDemo =
     hLimit 20 $
     vLimit 5 $
     center $
-    "body"
+    "colors!"
 
 ui :: Widget
 ui =
