@@ -100,9 +100,13 @@ listRemove pos l | null (l^.listElementsL) = l
                  | otherwise =
     let newSel = case l^.listSelectedL of
           Nothing -> 0
-          Just s  -> if pos < s
-                     then s - 1
-                     else s
+          Just s  -> if pos == 0
+                     then 0
+                     else if pos == s
+                          then pos - 1
+                          else if pos < s
+                               then s - 1
+                               else s
         (front, back) = splitAt pos es
         es' = front ++ tail back
         es = l^.listElementsL
