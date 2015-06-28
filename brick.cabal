@@ -82,6 +82,18 @@ executable brick-hello-world-demo
                        text,
                        lens
 
+executable brick-edit-demo
+  hs-source-dirs:      programs
+  ghc-options:         -threaded -Wall -fno-warn-unused-do-bind
+  default-language:    Haskell2010
+  main-is:             EditDemo.hs
+  build-depends:       base,
+                       brick,
+                       vty >= 5.2.9,
+                       data-default,
+                       text,
+                       lens
+
 executable brick-border-demo
   hs-source-dirs:      programs
   ghc-options:         -threaded -Wall -fno-warn-unused-do-bind
