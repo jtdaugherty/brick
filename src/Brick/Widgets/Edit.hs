@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Brick.Widgets.Edit
-  ( Editor(editStr)
+  ( Editor(editContents)
   , editor
   , renderEditor
   , editAttr
@@ -16,7 +16,7 @@ import Brick.Util (clamp)
 import Brick.AttrMap
 
 data Editor =
-    Editor { editStr :: !String
+    Editor { editContents :: !String
            , editCursorPos :: !Int
            , editDrawContents :: String -> Widget
            , editorName :: Name
@@ -37,7 +37,7 @@ instance HandleEvent Editor where
 
 editSetCursorPos :: Int -> Editor -> Editor
 editSetCursorPos pos e =
-    let newCP = clamp 0 (length $ editStr e) pos
+    let newCP = clamp 0 (length $ editContents e) pos
     in e { editCursorPos = newCP
          }
 
@@ -56,26 +56,26 @@ gotoBOL :: Editor -> Editor
 gotoBOL = editSetCursorPos 0
 
 gotoEOL :: Editor -> Editor
-gotoEOL e = editSetCursorPos (length $ editStr e) e
+gotoEOL e = editSetCursorPos (length $ editContents e) e
 
 deleteChar :: Editor -> Editor
-deleteChar e = e { editStr = s'
+deleteChar e = e { editContents = s'
                  }
     where
         n = editCursorPos e
-        s = editStr e
+        s = editContents e
         s' = take n s <> drop (n+1) s
 
 insertChar :: Char -> Editor -> Editor
 insertChar c theEdit =
-    theEdit { editStr = s
+    theEdit { editContents = s
             , editCursorPos = newCursorPos
             }
     where
         s = take n oldStr ++ [c] ++ drop n oldStr
         n = editCursorPos theEdit
         newCursorPos = n + 1
-        oldStr = editStr theEdit
+        oldStr = editContents theEdit
 
 editor :: Name -> (String -> Widget) -> String -> Editor
 editor name draw s = Editor s (length s) draw name
@@ -92,4 +92,4 @@ renderEditor e =
        showCursor (editorName e) cursorLoc $
        visibleRegion cursorLoc (1, 1) $
        editDrawContents e $
-       editStr e
+       editContents e
