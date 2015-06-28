@@ -30,18 +30,27 @@ drawUI st = [ui]
                 Nothing -> "-"
                 Just i -> str (show (i + 1))
         total = str $ show $ length $ st^.stList.listElementsL
-        ui = center $
-             borderWithLabel label $
-             hLimit 25 $
-             vLimit 15 $
-             renderList (st^.stList)
+        box = borderWithLabel label $
+              hLimit 25 $
+              vLimit 15 $
+              renderList (st^.stList)
+        ui = vCenter $ vBox [ hCenter box
+                            , " "
+                            , hCenter "Press +/- to add/remove list elements."
+                            , hCenter "Press Esc to exit."
+                            ]
 
 appEvent :: Event -> St -> EventM (Next St)
 appEvent e st =
     case e of
-        EvKey KEnter [] ->
+        EvKey (KChar '+') [] ->
             let el = length $ st^.stList.listElementsL
             in continue $ st & stList %~ (listInsert el el)
+
+        EvKey (KChar '-') [] ->
+            case st^.stList.listSelectedL of
+                Nothing -> continue st
+                Just i -> continue $ st & stList %~ (listRemove i)
 
         EvKey KEsc [] -> halt st
 
