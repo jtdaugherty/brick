@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
 module Main where
 
 import Control.Lens
@@ -14,35 +13,27 @@ import Brick.Widgets.Edit
 import Brick.AttrMap
 import Brick.Util
 
-data St =
-    St { _stEditor :: Editor
-       }
-
-makeLenses ''St
-
-drawUI :: St -> [Widget]
-drawUI st = [ui]
+drawUI :: Editor -> [Widget]
+drawUI e = [ui]
     where
-        ui = center $ ("Input: " <+> (hLimit 30 $ renderEditor $ st^.stEditor))
+        ui = center $ ("Input: " <+> (hLimit 30 $ renderEditor e))
 
-appEvent :: Event -> St -> EventM (Next St)
-appEvent e st =
-    case e of
-        EvKey KEsc [] -> halt st
-        EvKey KEnter [] -> halt st
-        ev -> continue $ st & stEditor %~ (handleEvent ev)
+appEvent :: Event -> Editor -> EventM (Next Editor)
+appEvent ev e =
+    case ev of
+        EvKey KEsc [] -> halt e
+        EvKey KEnter [] -> halt e
+        _ -> continue $ handleEvent ev e
 
-initialState :: St
-initialState =
-    St { _stEditor = editor (Name "edit") str ""
-       }
+initialState :: Editor
+initialState = editor (Name "edit") str ""
 
 theMap :: AttrMap
 theMap = attrMap defAttr
     [ (editAttr, white `on` blue)
     ]
 
-theApp :: App St Event
+theApp :: App Editor Event
 theApp =
     App { appDraw = drawUI
         , appChooseCursor = showFirstCursor
@@ -53,5 +44,5 @@ theApp =
 
 main :: IO ()
 main = do
-    st <- defaultMain theApp initialState
-    putStrLn $ "You entered: " <> (st^.stEditor.editContentsL)
+    e <- defaultMain theApp initialState
+    putStrLn $ "You entered: " <> (e^.editContentsL)
