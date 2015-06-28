@@ -96,7 +96,7 @@ appEvent e st =
 
         EvKey KEsc [] -> halt st
 
-        EvKey (KChar 'r') [] -> suspendAndResume $ do
+        EvKey (KChar 'r') [MCtrl] -> suspendAndResume $ do
             putStrLn "Suspended. Press any key..."
             void getChar
             return st
@@ -108,7 +108,7 @@ appEvent e st =
         EvKey KRight [MCtrl] -> continue $ st & stTrans.column %~ (+ 1)
 
         EvKey KEnter [] ->
-            let el = length $ st^.stList.listElements
+            let el = length $ st^.stList.listElementsL
             in continue $ st & stList %~ (listMoveBy 1 . listInsert el el)
 
         ev -> continue $ st & stEditor %~ (handleEvent ev)
@@ -151,4 +151,4 @@ theApp =
 main :: IO ()
 main = do
     st <- defaultMain theApp initialState
-    putStrLn $ "You entered: " <> (st^.stEditor.editContents)
+    putStrLn $ "You entered: " <> (st^.stEditor.editContentsL)

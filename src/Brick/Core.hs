@@ -6,6 +6,7 @@ module Brick.Core
   , CursorLocation(..)
   , HandleEvent(..)
   , Name(..)
+  , suffixLenses
   )
 where
 
@@ -13,6 +14,8 @@ import Control.Lens
 import Data.String
 import Data.Monoid (Monoid(..))
 import Graphics.Vty (Event)
+import qualified Language.Haskell.TH.Syntax as TH
+import qualified Language.Haskell.TH.Lib as TH
 
 data Location = Location { _loc :: (Int, Int)
                          }
@@ -55,3 +58,7 @@ data CursorLocation =
 
 class HandleEvent a where
     handleEvent :: Event -> a -> a
+
+suffixLenses :: TH.Name -> TH.DecsQ
+suffixLenses = makeLensesWith $
+  lensRules & lensField .~ (\_ _ name -> [TopName $ TH.mkName $ TH.nameBase name ++ "L"])

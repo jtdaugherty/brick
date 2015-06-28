@@ -1,10 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 module Brick.Widgets.Edit
-  ( Editor
+  ( Editor(editContents, editCursorPos, editorName, editDrawContents)
   , editor
-  , editContents
-  , editCursorPos
+  , editContentsL
+  , editCursorPosL
+  , editorNameL
   , renderEditor
   , editAttr
   )
@@ -14,19 +15,19 @@ import Control.Lens
 import Data.Monoid ((<>))
 import Graphics.Vty (Event(..), Key(..), Modifier(..))
 
-import Brick.Core (Name, Location(..), HandleEvent(..))
+import Brick.Core (Name, Location(..), HandleEvent(..), suffixLenses)
 import Brick.Widgets.Core
 import Brick.Util (clamp)
 import Brick.AttrMap
 
 data Editor =
-    Editor { _editContents :: !String
-           , _editCursorPos :: !Int
-           , _editDrawContents :: String -> Widget
-           , _editorName :: Name
+    Editor { editContents :: !String
+           , editCursorPos :: !Int
+           , editDrawContents :: String -> Widget
+           , editorName :: Name
            }
 
-makeLenses ''Editor
+suffixLenses ''Editor
 
 instance HandleEvent Editor where
     handleEvent e =
@@ -43,28 +44,28 @@ instance HandleEvent Editor where
 
 editSetCursorPos :: Int -> Editor -> Editor
 editSetCursorPos pos e =
-    let newCP = clamp 0 (length $ e^.editContents) pos
-    in e & editCursorPos .~ newCP
+    let newCP = clamp 0 (length $ e^.editContentsL) pos
+    in e & editCursorPosL .~ newCP
 
 moveLeft :: Editor -> Editor
-moveLeft e = editSetCursorPos (e^.editCursorPos - 1) e
+moveLeft e = editSetCursorPos (e^.editCursorPosL - 1) e
 
 moveRight :: Editor -> Editor
-moveRight e = editSetCursorPos (e^.editCursorPos + 1) e
+moveRight e = editSetCursorPos (e^.editCursorPosL + 1) e
 
 deletePreviousChar :: Editor -> Editor
 deletePreviousChar e
-  | e^.editCursorPos == 0 = e
+  | e^.editCursorPosL == 0 = e
   | otherwise = deleteChar $ moveLeft e
 
 gotoBOL :: Editor -> Editor
 gotoBOL = editSetCursorPos 0
 
 gotoEOL :: Editor -> Editor
-gotoEOL e = editSetCursorPos (length $ e^.editContents) e
+gotoEOL e = editSetCursorPos (length $ e^.editContentsL) e
 
 deleteChar :: Editor -> Editor
-deleteChar e = e & editContents %~ listRemove (e^.editCursorPos)
+deleteChar e = e & editContentsL %~ listRemove (e^.editCursorPosL)
 
 listRemove :: Int -> [a] -> [a]
 listRemove i as
@@ -73,8 +74,8 @@ listRemove i as
 
 insertChar :: Char -> Editor -> Editor
 insertChar c theEdit =
-    theEdit & editContents %~ listInsert c (theEdit^.editCursorPos)
-            & editCursorPos %~ (+ 1)
+    theEdit & editContentsL %~ listInsert c (theEdit^.editCursorPosL)
+            & editCursorPosL %~ (+ 1)
 
 listInsert :: a -> Int -> [a] -> [a]
 listInsert a i as = take i as ++ [a] ++ drop i as
@@ -87,11 +88,11 @@ editAttr = "edit"
 
 renderEditor :: Editor -> Widget
 renderEditor e =
-    let cursorLoc = Location (e^.editCursorPos, 0)
+    let cursorLoc = Location (e^.editCursorPosL, 0)
     in withAttrName editAttr $
        vLimit 1 $
-       viewport (e^.editorName) Horizontal $
-       showCursor (e^.editorName) cursorLoc $
+       viewport (e^.editorNameL) Horizontal $
+       showCursor (e^.editorNameL) cursorLoc $
        visibleRegion cursorLoc (1, 1) $
-       e^.editDrawContents $
-       e^.editContents
+       e^.editDrawContentsL $
+       e^.editContentsL

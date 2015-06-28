@@ -42,7 +42,8 @@ library
                        lens,
                        vector,
                        contravariant,
-                       text
+                       text,
+                       template-haskell
 
 executable brick
   hs-source-dirs:      programs
