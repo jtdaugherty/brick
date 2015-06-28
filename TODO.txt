@@ -4,8 +4,6 @@ Bugs / design issues:
 contain width and height in the context, and behave differently if
 they're Nothing (same for boxes?)
 - Do we need CropLeftBy and CropTopBy if we just Translate negatively?
-- Unify h/vbox implementation as one function configured by lenses and
-functions needed to perform the layout and combine the results
 
 Features:
 - Text manipulation API
