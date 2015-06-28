@@ -59,8 +59,8 @@ ui =
     hBox borderDemos
     <=> hBorder
     <=> colorDemo
-    <=> hBorderWithLabel "horizontal border"
-    <=> (center "Left" <+> vBorder <+> center "Right")
+    <=> hBorderWithLabel "horizontal border label"
+    <=> (center "Left of vertical border" <+> vBorder <+> center "Right of vertical border")
 
 main :: IO ()
 main = simpleMain [] [ui]
