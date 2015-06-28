@@ -54,8 +54,13 @@ colorDemo =
     center $
     "body"
 
-ui :: [Widget]
-ui = [hBox borderDemos <=> colorDemo]
+ui :: Widget
+ui =
+    hBox borderDemos
+    <=> hBorder
+    <=> colorDemo
+    <=> hBorderWithLabel "horizontal border"
+    <=> (center "Left" <+> vBorder <+> center "Right")
 
 main :: IO ()
-main = simpleMain [] ui
+main = simpleMain [] [ui]
