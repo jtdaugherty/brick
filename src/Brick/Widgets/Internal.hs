@@ -37,6 +37,7 @@ module Brick.Widgets.Internal
   , hFill
   , vFill
 
+  , emptyWidget
   , hBox
   , vBox
   , (<=>)
@@ -158,6 +159,9 @@ withBorderStyle bs p = Widget (hSize p) (vSize p) $ withReaderT (& activeBorderS
 
 getActiveBorderStyle :: RenderM BorderStyle
 getActiveBorderStyle = view activeBorderStyle
+
+emptyWidget :: Widget
+emptyWidget = raw V.emptyImage
 
 renderFinal :: AttrMap
             -> [Widget]

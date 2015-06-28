@@ -28,6 +28,7 @@ module Brick.Widgets.Core
   , vFill
   , hBox
   , vBox
+  , emptyWidget
   , hLimit
   , vLimit
   , withDefaultAttr
