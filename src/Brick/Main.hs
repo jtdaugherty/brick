@@ -72,7 +72,9 @@ defaultMain app st = do
 simpleMain :: [(AttrName, Attr)] -> [Widget] -> IO ()
 simpleMain attrs ls =
     let app = App { appDraw = const ls
-                  , appHandleEvent = const (return . Halt)
+                  , appHandleEvent = \e st -> case e of
+                      EvResize _ _ -> continue st
+                      _ -> halt st
                   , appAttrMap = const $ attrMap def attrs
                   , appMakeVtyEvent = id
                   , appChooseCursor = neverShowCursor
