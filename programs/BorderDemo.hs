@@ -20,7 +20,23 @@ styles =
     , ("unicode", unicode)
     , ("unicode bold", unicodeBold)
     , ("unicode rounded", unicodeRounded)
+    , ("custom", custom)
     ]
+
+custom :: BorderStyle
+custom =
+    BorderStyle { bsCornerTL = '/'
+                , bsCornerTR = '\\'
+                , bsCornerBR = '/'
+                , bsCornerBL = '\\'
+                , bsIntersectionFull = '.'
+                , bsIntersectionL = '.'
+                , bsIntersectionR = '.'
+                , bsIntersectionT = '.'
+                , bsIntersectionB = '.'
+                , bsHorizontal = '*'
+                , bsVertical = '!'
+                }
 
 borderDemos :: [Widget]
 borderDemos = mkBorderDemo <$> styles
