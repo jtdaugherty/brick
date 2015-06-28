@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 module Brick.Core
   ( Location(Location)
-  , loc
   , CursorLocation(..)
   , HandleEvent(..)
   , Name(..)
@@ -18,6 +18,12 @@ data Location = Location { _loc :: (Int, Int)
                 deriving Show
 
 makeLenses ''Location
+
+instance Field1 Location Location Int Int where
+    _1 = loc._1
+
+instance Field2 Location Location Int Int where
+    _2 = loc._2
 
 newtype Name = Name String
              deriving (Eq, Show, Ord)

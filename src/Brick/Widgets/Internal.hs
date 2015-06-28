@@ -496,8 +496,8 @@ scrollToView typ rq vp = vp & theStart .~ newStart
             Horizontal -> vpSize._1
             Vertical -> vpSize._2
         reqStart = case typ of
-            Horizontal -> rq^.vrPosition.loc._1
-            Vertical -> rq^.vrPosition.loc._2
+            Horizontal -> rq^.vrPosition._1
+            Vertical -> rq^.vrPosition._2
         reqSize = case typ of
             Horizontal -> rq^.vrSize._1
             Vertical -> rq^.vrSize._2
