@@ -76,7 +76,7 @@ drawUI st = [withBorderStyle bs a]
         (bsName, bs) = styles !! (st^.stBorderStyle)
         box = borderWithLabel (txt bsName) $
                   (hLimit 25 (
-                    (renderEditor drawEditString (st^.stEditor))
+                    (renderEditor $ st^.stEditor)
                     <=> hBorder
                     <=> (vLimit 10 $ renderList (st^.stList))
                   ))
@@ -115,7 +115,7 @@ appEvent e st =
 
 initialState :: St
 initialState =
-    St { _stEditor = editor (Name "edit") ""
+    St { _stEditor = editor (Name "edit") drawEditString ""
        , _stList = list (Name "list") listDrawElem []
        , _stBorderStyle = 0
        , _stTrans = Location (0, 0)

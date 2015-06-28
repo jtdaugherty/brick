@@ -18,6 +18,7 @@ import Brick.AttrMap
 data Editor =
     Editor { editStr :: !String
            , editCursorPos :: !Int
+           , editDrawContents :: String -> Widget
            , editorName :: Name
            }
 
@@ -76,19 +77,19 @@ insertChar c theEdit =
         newCursorPos = n + 1
         oldStr = editStr theEdit
 
-editor :: Name -> String -> Editor
-editor name s = Editor s (length s) name
+editor :: Name -> (String -> Widget) -> String -> Editor
+editor name draw s = Editor s (length s) draw name
 
 editAttr :: AttrName
 editAttr = "edit"
 
-renderEditor :: (String -> Widget) -> Editor -> Widget
-renderEditor renderContents e =
+renderEditor :: Editor -> Widget
+renderEditor e =
     let cursorLoc = Location (editCursorPos e, 0)
     in withAttrName editAttr $
        vLimit 1 $
        viewport (editorName e) Horizontal $
        showCursor (editorName e) cursorLoc $
        visibleRegion cursorLoc (1, 1) $
-       renderContents $
+       editDrawContents e $
        editStr e
