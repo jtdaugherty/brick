@@ -224,10 +224,12 @@ fill :: Char -> Widget
 fill ch = hFill ch <=> vFill ch
 
 vBox :: [Widget] -> Widget
-vBox = renderBox vBoxRenderer
+vBox [] = emptyWidget
+vBox pairs = renderBox vBoxRenderer pairs
 
 hBox :: [Widget] -> Widget
-hBox = renderBox hBoxRenderer
+hBox [] = emptyWidget
+hBox pairs = renderBox hBoxRenderer pairs
 
 data BoxRenderer =
     BoxRenderer { contextPrimary :: Lens' Context Int
