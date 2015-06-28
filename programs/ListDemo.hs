@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
 module Main where
 
 import Control.Lens
@@ -16,45 +15,39 @@ import Brick.Widgets.Center
 import Brick.AttrMap
 import Brick.Util
 
-data St =
-    St { _stList :: List Int
-       }
-
-makeLenses ''St
-
-drawUI :: St -> [Widget]
-drawUI st = [ui]
+drawUI :: List Int -> [Widget]
+drawUI l = [ui]
     where
         label = "Item " <+> cur <+> " of " <+> total
-        cur = case st^.stList.listSelectedL of
+        cur = case l^.listSelectedL of
                 Nothing -> "-"
                 Just i -> str (show (i + 1))
-        total = str $ show $ length $ st^.stList.listElementsL
+        total = str $ show $ length $ l^.listElementsL
         box = borderWithLabel label $
               hLimit 25 $
               vLimit 15 $
-              renderList (st^.stList)
+              renderList l
         ui = vCenter $ vBox [ hCenter box
                             , " "
                             , hCenter "Press +/- to add/remove list elements."
                             , hCenter "Press Esc to exit."
                             ]
 
-appEvent :: Event -> St -> EventM (Next St)
-appEvent e st =
+appEvent :: Event -> List Int -> EventM (Next (List Int))
+appEvent e l =
     case e of
         EvKey (KChar '+') [] ->
-            let el = length $ st^.stList.listElementsL
-            in continue $ st & stList %~ (listInsert el el)
+            let el = length $ l^.listElementsL
+            in continue $ listInsert el el l
 
         EvKey (KChar '-') [] ->
-            case st^.stList.listSelectedL of
-                Nothing -> continue st
-                Just i -> continue $ st & stList %~ (listRemove i)
+            case l^.listSelectedL of
+                Nothing -> continue l
+                Just i -> continue $ listRemove i l
 
-        EvKey KEsc [] -> halt st
+        EvKey KEsc [] -> halt l
 
-        ev -> continue $ st & stList %~ (handleEvent ev)
+        ev -> continue $ handleEvent ev l
 
 listDrawElement :: Bool -> Int -> Widget
 listDrawElement sel i =
@@ -64,10 +57,8 @@ listDrawElement sel i =
     in hCenterWith (Just ' ') $ vBox $ for [1..i+1] $ \j ->
         "Item " <+> (selStr $ show i) <+> " Line " <+> (str $ show j)
 
-initialState :: St
-initialState =
-    St { _stList = list (Name "list") listDrawElement [1, 2, 3]
-       }
+initialState :: List Int
+initialState = list (Name "list") listDrawElement [1, 2, 3]
 
 customAttr :: AttrName
 customAttr = listSelectedAttr <> "custom"
@@ -79,7 +70,7 @@ theMap = attrMap defAttr
     , (customAttr,            fg cyan)
     ]
 
-theApp :: App St Event
+theApp :: App (List Int) Event
 theApp =
     App { appDraw = drawUI
         , appChooseCursor = showFirstCursor
