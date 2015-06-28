@@ -391,13 +391,13 @@ showCursor n cloc p =
 hRelease :: Widget -> Maybe Widget
 hRelease p =
     case hSize p of
-        Fixed -> Just $ Widget Unlimited (vSize p) $ withReaderT (& availW .~ unrestricted) (render p) --- NB
+        Fixed -> Just $ Widget Unlimited (vSize p) $ withReaderT (& availW .~ unrestricted) (render p)
         Unlimited -> Nothing
 
 vRelease :: Widget -> Maybe Widget
 vRelease p =
     case vSize p of
-        Fixed -> Just $ Widget (hSize p) Unlimited $ withReaderT (& availH .~ unrestricted) (render p) --- NB
+        Fixed -> Just $ Widget (hSize p) Unlimited $ withReaderT (& availH .~ unrestricted) (render p)
         Unlimited -> Nothing
 
 viewport :: Name -> ViewportType -> Widget -> Widget
