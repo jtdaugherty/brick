@@ -81,4 +81,4 @@ ui =
          <+> center "Right of vertical border")
 
 main :: IO ()
-main = simpleMain [] [ui]
+main = simpleMain ui

@@ -8,4 +8,4 @@ ui :: Widget
 ui = "Hello, world!"
 
 main :: IO ()
-main = simpleMain [] [ui]
+main = simpleMain ui

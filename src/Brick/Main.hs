@@ -69,13 +69,13 @@ defaultMain app st = do
     chan <- newChan
     customMain (mkVty def) chan app st
 
-simpleMain :: [(AttrName, Attr)] -> [Widget] -> IO ()
-simpleMain attrs ls =
-    let app = App { appDraw = const ls
+simpleMain :: Widget -> IO ()
+simpleMain w =
+    let app = App { appDraw = const [w]
                   , appHandleEvent = \e st -> case e of
                       EvResize _ _ -> continue st
                       _ -> halt st
-                  , appAttrMap = const $ attrMap def attrs
+                  , appAttrMap = const $ attrMap def []
                   , appMakeVtyEvent = id
                   , appChooseCursor = neverShowCursor
                   }
