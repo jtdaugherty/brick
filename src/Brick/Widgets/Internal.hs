@@ -388,13 +388,17 @@ showCursor n cloc p =
       result <- render p
       return $ result & cursors %~ (CursorLocation cloc (Just n):)
 
-hRelease :: Widget -> Widget
+hRelease :: Widget -> Maybe Widget
 hRelease p =
-    Widget Unlimited (vSize p) $ withReaderT (& availW .~ unrestricted) (render p) --- NB
+    case hSize p of
+        Fixed -> Just $ Widget Unlimited (vSize p) $ withReaderT (& availW .~ unrestricted) (render p) --- NB
+        Unlimited -> Nothing
 
-vRelease :: Widget -> Widget
+vRelease :: Widget -> Maybe Widget
 vRelease p =
-    Widget (hSize p) Unlimited $ withReaderT (& availH .~ unrestricted) (render p) --- NB
+    case vSize p of
+        Fixed -> Just $ Widget (hSize p) Unlimited $ withReaderT (& availH .~ unrestricted) (render p) --- NB
+        Unlimited -> Nothing
 
 viewport :: Name -> ViewportType -> Widget -> Widget
 viewport vpname typ p =
@@ -409,12 +413,20 @@ viewport vpname typ p =
       lift $ modify (& viewportMap %~ (M.alter doInsert vpname))
 
       -- Then render the sub-rendering with the rendering layout
-      -- constraint released
-      let release = case typ of
+      -- constraint released (but raise an exception if we are asked to
+      -- render an infinitely-sized widget in the viewport's scrolling
+      -- dimension)
+      let Name vpn = vpname
+          release = case typ of
             Vertical -> vRelease
             Horizontal -> hRelease
+          released = case release p of
+            Just w -> w
+            Nothing -> case typ of
+                Vertical -> error $ "tried to embed an infinite-height widget in vertical viewport " <> (show vpn)
+                Horizontal -> error $ "tried to embed an infinite-width widget in horizontal viewport " <> (show vpn)
 
-      initialResult <- render $ release p
+      initialResult <- render released
 
       -- If the sub-rendering requested visibility, update the scroll
       -- state accordingly
