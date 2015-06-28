@@ -1,7 +1,12 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Brick.Widgets.List
-  ( List(listElements)
+  ( List
+  , listElements
+  , listSelected
+  , listName
+
   , list
   , renderList
   , listMoveBy
@@ -19,6 +24,7 @@ module Brick.Widgets.List
 where
 
 import Control.Applicative ((<$>))
+import Control.Lens ((^.), (&), (.~), makeLenses)
 import Data.Monoid ((<>))
 import Data.Maybe (fromMaybe)
 import Graphics.Vty (Event(..), Key(..))
@@ -30,11 +36,13 @@ import Brick.Util (clamp, for)
 import Brick.AttrMap
 
 data List e =
-    List { listElements :: ![e]
-         , listElementDraw :: Bool -> e -> Widget
-         , listSelected :: !(Maybe Int)
-         , listName :: Name
+    List { _listElements :: ![e]
+         , _listElementDraw :: Bool -> e -> Widget
+         , _listSelected :: !(Maybe Int)
+         , _listName :: Name
          }
+
+makeLenses ''List
 
 instance HandleEvent (List e) where
     handleEvent e theList = f theList
@@ -57,17 +65,17 @@ list name draw es =
 
 renderList :: List e -> Widget
 renderList l = withAttrName listAttr $
-               viewport (listName l) Vertical $
+               viewport (l^.listName) Vertical $
                vBox $
                drawListElements l
 
 drawListElements :: List e -> [Widget]
 drawListElements l = drawnElements
     where
-        es = listElements l
+        es = l^.listElements
         drawnElements = for (zip [0..] es) $ \(i, e) ->
-            let isSelected = Just i == listSelected l
-                elemWidget = listElementDraw l isSelected e
+            let isSelected = Just i == l^.listSelected
+                elemWidget = (l^.listElementDraw) isSelected e
                 makeVisible = if isSelected
                               then (visible . withAttrName listSelectedAttr)
                               else id
@@ -76,51 +84,45 @@ drawListElements l = drawnElements
 listInsert :: Int -> e -> List e -> List e
 listInsert pos e l =
     let safePos = clamp 0 (length es) pos
-        es = listElements l
-        newSel = case listSelected l of
+        es = l^.listElements
+        newSel = case l^.listSelected of
           Nothing -> 0
           Just s -> if safePos < s
                     then s + 1
                     else s
         (front, back) = splitAt safePos es
-    in l { listSelected = Just newSel
-         , listElements = front ++ (e : back)
-         }
+    in l & listSelected .~ Just newSel
+         & listElements .~ (front ++ (e : back))
 
 listRemove :: Int -> List e -> List e
-listRemove pos l | null es = l
-                 | pos /= clamp 0 (length es - 1) pos = l
+listRemove pos l | null (l^.listElements) = l
+                 | pos /= clamp 0 (length (l^.listElements) - 1) pos = l
                  | otherwise =
-    let newSel = case listSelected l of
+    let newSel = case l^.listSelected of
           Nothing -> 0
           Just s  -> if pos < s
                      then s - 1
                      else s
         (front, back) = splitAt pos es
         es' = front ++ tail back
-    in l { listSelected = if null es'
-                          then Nothing
-                          else Just newSel
-         , listElements = es'
-         }
-    where
-        es = listElements l
+        es = l^.listElements
+    in l & listSelected .~ (if null es' then Nothing else Just newSel)
+         & listElements .~ es'
 
 -- Replaces entire list with a new set of elements, but preserves selected index
 -- using a two-way merge algorithm.
 listReplace :: Eq e => [e] -> List e -> List e
-listReplace es' l | es' == es = l
+listReplace es' l | es' == l^.listElements = l
                   | otherwise =
-    let sel = fromMaybe 0 (listSelected l)
-        newSel = case (null es, null es') of
+    let sel = fromMaybe 0 (l^.listSelected)
+        getNewSel es = case (null es, null es') of
           (_, True)      -> Nothing
           (True, False)  -> Just 0
           (False, False) -> Just (maintainSel es es' sel)
-    in l { listSelected = newSel
-         , listElements = es'
-         }
-    where
-        es = listElements l
+        newSel = getNewSel (l^.listElements)
+
+    in l & listSelected .~ newSel
+         & listElements .~ es'
 
 listMoveUp :: List e -> List e
 listMoveUp = listMoveBy (-1)
@@ -130,19 +132,18 @@ listMoveDown = listMoveBy 1
 
 listMoveBy :: Int -> List e -> List e
 listMoveBy amt l =
-    let newSel = clamp 0 (length (listElements l) - 1) <$> (amt +) <$> listSelected l
-    in l { listSelected = newSel }
+    let newSel = clamp 0 (length (l^.listElements) - 1) <$> (amt +) <$> (l^.listSelected)
+    in l & listSelected .~ newSel
 
 listMoveTo :: Int -> List e -> List e
 listMoveTo pos l =
-    let len = length (listElements l)
+    let len = length (l^.listElements)
         newSel = clamp 0 (len - 1) $ if pos < 0 then (len - pos) else pos
-    in l { listSelected = if len > 0
-                          then Just newSel
-                          else Nothing
-         }
+    in l & listSelected .~ if len > 0
+                           then Just newSel
+                           else Nothing
 
 listSelectedElement :: List e -> Maybe (Int, e)
 listSelectedElement l = do
-  sel <- listSelected l
-  return (sel, listElements l !! sel)
+  sel <- l^.listSelected
+  return (sel, (l^.listElements) !! sel)

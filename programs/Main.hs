@@ -107,7 +107,7 @@ appEvent e st =
         EvKey KRight [MCtrl] -> continue $ st & stTrans %~ (\(Location (w, h)) -> Location (w + 1, h))
 
         EvKey KEnter [] ->
-            let el = length $ listElements $ st^.stList
+            let el = length $ st^.stList.listElements
             in continue $ st & stList %~ (listMoveBy 1 . listInsert el el)
 
         ev -> continue $ st & stEditor %~ (handleEvent ev)
