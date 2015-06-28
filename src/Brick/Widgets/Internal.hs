@@ -11,7 +11,6 @@ module Brick.Widgets.Internal
   , ctxAttrs
   , lookupAttrName
   , visibilityRequests
-  , withContext
 
   , RenderState(..)
   , ScrollRequest(..)
@@ -178,9 +177,6 @@ renderFinal aMap layerRenders sz chooseCursor rs = (newRS, pic, theCursor)
 
 addVisibilityOffset :: Location -> Result -> Result
 addVisibilityOffset off r = r & visibilityRequests.each.vrPosition %~ (off <>)
-
-withContext :: (Context -> Context) -> Widget -> Widget
-withContext f w = w { render = withReaderT f (render w) }
 
 addCursorOffset :: Location -> Result -> Result
 addCursorOffset off r =

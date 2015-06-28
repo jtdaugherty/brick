@@ -61,10 +61,11 @@ border_ :: Maybe Widget -> Widget -> Widget
 border_ label wrapped =
     Widget (hSize wrapped) (vSize wrapped) $ do
       bs <- getActiveBorderStyle
+      c <- getContext
 
-      middleResult <- render $ withContext (\c -> c & availW %~ (subtract 2)
-                                                    & availH %~ (subtract 2))
-                                           wrapped
+      middleResult <- render $ hLimit (c^.availW - 2)
+                             $ vLimit (c^.availH - 2)
+                             $ wrapped
 
       let top = (withAttrName tlCornerAttr $ str [bsCornerTL bs])
                 <+> hBorder_ label <+>
@@ -75,9 +76,9 @@ border_ label wrapped =
           middle = vBorder <+> (Widget Fixed Fixed $ return middleResult) <+> vBorder
           total = top <=> middle <=> bottom
 
-      render $ withContext (\c -> c & availW .~ (middleResult^.image.to imageWidth + 2)
-                                    & availH .~ (middleResult^.image.to imageHeight + 2))
-                           total
+      render $ hLimit (middleResult^.image.to imageWidth + 2)
+             $ vLimit (middleResult^.image.to imageHeight + 2)
+             $ total
 
 hBorder :: Widget
 hBorder = hBorder_ Nothing

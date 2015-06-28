@@ -10,7 +10,6 @@ module Brick.Widgets.Core
   , cursors
   , lookupAttrName
   , visibilityRequests
-  , withContext
 
   , Context
   , availW
