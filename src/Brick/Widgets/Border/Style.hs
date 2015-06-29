@@ -10,26 +10,37 @@ where
 
 import Data.Default
 
--- Corners start from top left and go clockwise.  Intersections are:
--- full, left, right, top, bottom.
+-- | A border style for use in any widget that needs to render borders
+-- in a consistent style.
 data BorderStyle =
     BorderStyle { bsCornerTL :: Char
+                -- ^ Top-left corner character
                 , bsCornerTR :: Char
+                -- ^ Top-right corner character
                 , bsCornerBR :: Char
+                -- ^ Bottom-right corner character
                 , bsCornerBL :: Char
+                -- ^ Bottom-left corner character
                 , bsIntersectionFull :: Char
+                -- ^ Full intersection (cross)
                 , bsIntersectionL :: Char
+                -- ^ Left side of a horizontal border intersecting a vertical one
                 , bsIntersectionR :: Char
+                -- ^ Right side of a horizontal border intersecting a vertical one
                 , bsIntersectionT :: Char
+                -- ^ Top of a vertical border intersecting a horizontal one
                 , bsIntersectionB :: Char
+                -- ^ Bottom of a vertical border intersecting a horizontal one
                 , bsHorizontal :: Char
+                -- ^ Horizontal border character
                 , bsVertical :: Char
+                -- ^ Vertical border character
                 }
 
 instance Default BorderStyle where
     def = ascii
 
--- |An ASCII bs which will work in any terminal.
+-- |An ASCII border style which will work in any terminal.
 ascii :: BorderStyle
 ascii =
     BorderStyle { bsCornerTL = '+'
@@ -45,6 +56,7 @@ ascii =
                 , bsVertical = '|'
                 }
 
+-- |A unicode border style with real corner and intersection characters.
 unicode :: BorderStyle
 unicode =
     BorderStyle { bsCornerTL = '┌'
@@ -60,6 +72,7 @@ unicode =
                 , bsVertical = '│'
                 }
 
+-- |A unicode border style in a bold typeface.
 unicodeBold :: BorderStyle
 unicodeBold =
     BorderStyle { bsCornerTL = '┏'
@@ -75,6 +88,7 @@ unicodeBold =
                 , bsVertical = '┃'
                 }
 
+-- |A unicode border style with rounded corners.
 unicodeRounded :: BorderStyle
 unicodeRounded =
     BorderStyle { bsCornerTL = '╭'
