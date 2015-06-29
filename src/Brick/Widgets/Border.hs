@@ -18,7 +18,7 @@ module Brick.Widgets.Border
   )
 where
 
-import Control.Lens ((&), (%~), (^.), (.~), to)
+import Control.Lens ((^.), to)
 import Data.Monoid ((<>))
 import Graphics.Vty (imageHeight, imageWidth)
 
