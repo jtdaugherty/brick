@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Brick.Widgets.Border.Style
   ( BorderStyle(..)
+  , borderStyleFromChar
   , ascii
   , unicode
   , unicodeBold
@@ -39,6 +40,11 @@ data BorderStyle =
 
 instance Default BorderStyle where
     def = ascii
+
+-- | Make a border style using the specified character everywhere.
+borderStyleFromChar :: Char -> BorderStyle
+borderStyleFromChar c =
+    BorderStyle c c c c c c c c c c c
 
 -- |An ASCII border style which will work in any terminal.
 ascii :: BorderStyle

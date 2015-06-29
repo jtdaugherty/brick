@@ -21,6 +21,7 @@ styles =
     , ("unicode bold", unicodeBold)
     , ("unicode rounded", unicodeRounded)
     , ("custom", custom)
+    , ("from 'x'", borderStyleFromChar 'x')
     ]
 
 custom :: BorderStyle
