@@ -5,10 +5,10 @@ import Data.Monoid ((<>))
 import Graphics.Vty
 
 import Brick.Main
-import Brick.Util
-import Brick.Markup
-import Brick.AttrMap
 import Brick.Widgets.Core
+import Brick.Util (on, fg)
+import Brick.Markup (markup, (@?))
+import Brick.AttrMap (attrMap, AttrMap)
 import Data.Text.Markup ((@@))
 
 ui :: Widget
