@@ -2,6 +2,7 @@ module Brick.Markup
   ( Markup
   , markup
   , (@?)
+  , GetAttr(..)
   )
 where
 
