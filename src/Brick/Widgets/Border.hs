@@ -67,12 +67,12 @@ border_ label wrapped =
                              $ vLimit (c^.availH - 2)
                              $ wrapped
 
-      let top = (withAttrName tlCornerAttr $ str [bsCornerTL bs])
+      let top = (withAttr tlCornerAttr $ str [bsCornerTL bs])
                 <+> hBorder_ label <+>
-                (withAttrName trCornerAttr $ str [bsCornerTR bs])
-          bottom = (withAttrName blCornerAttr $ str [bsCornerBL bs])
+                (withAttr trCornerAttr $ str [bsCornerTR bs])
+          bottom = (withAttr blCornerAttr $ str [bsCornerBL bs])
                    <+> hBorder <+>
-                   (withAttrName brCornerAttr $ str [bsCornerBR bs])
+                   (withAttr brCornerAttr $ str [bsCornerBR bs])
           middle = vBorder <+> (Widget Fixed Fixed $ return middleResult) <+> vBorder
           total = top <=> middle <=> bottom
 
@@ -90,12 +90,12 @@ hBorder_ :: Maybe Widget -> Widget
 hBorder_ label =
     Widget Unlimited Fixed $ do
       bs <- getActiveBorderStyle
-      render $ vLimit 1 $ withAttrName hBorderAttr $ hCenterWith (Just $ bsHorizontal bs) msg
+      render $ vLimit 1 $ withAttr hBorderAttr $ hCenterWith (Just $ bsHorizontal bs) msg
       where
-          msg = maybe (txt "") (withAttrName hBorderLabelAttr) label
+          msg = maybe (txt "") (withAttr hBorderLabelAttr) label
 
 vBorder :: Widget
 vBorder =
     Widget Fixed Unlimited $ do
       bs <- getActiveBorderStyle
-      render $ hLimit 1 $ withAttrName vBorderAttr $ fill (bsVertical bs)
+      render $ hLimit 1 $ withAttr vBorderAttr $ fill (bsVertical bs)

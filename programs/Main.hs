@@ -48,7 +48,7 @@ editHighlightedKw2Attr :: AttrName
 editHighlightedKw2Attr = editAttr <> "kw2"
 
 kw :: Widget -> Widget
-kw = withAttrName keywordAttr
+kw = withAttr keywordAttr
 
 highlightWord :: (Eq a) => String -> a -> Markup a -> Markup a
 highlightWord w att mk = assignAttrs 0 chunks mk

@@ -89,7 +89,7 @@ editAttr = "edit"
 renderEditor :: Editor -> Widget
 renderEditor e =
     let cursorLoc = Location (e^.editCursorPosL, 0)
-    in withAttrName editAttr $
+    in withAttr editAttr $
        vLimit 1 $
        viewport (e^.editorNameL) Horizontal $
        showCursor (e^.editorNameL) cursorLoc $

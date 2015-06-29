@@ -33,10 +33,9 @@ module Brick.Widgets.Core
   , hLimit
   , vLimit
   , withDefaultAttr
-  , withDefaultAttrName
-  , withAttrName
-  , withAttrMappings
+  , withAttr
   , forceAttr
+  , updateAttrMap
   , raw
   , withBorderStyle
   , translateBy

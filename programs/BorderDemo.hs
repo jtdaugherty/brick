@@ -64,7 +64,7 @@ borderMappings =
 
 colorDemo :: Widget
 colorDemo =
-    withAttrMappings borderMappings $
+    updateAttrMap (applyAttrMappings borderMappings) $
     borderWithLabel "title" $
     hLimit 20 $
     vLimit 5 $

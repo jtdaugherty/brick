@@ -46,10 +46,9 @@ module Brick.Widgets.Internal
   , hLimit
   , vLimit
   , withDefaultAttr
-  , withDefaultAttrName
-  , withAttrName
-  , withAttrMappings
+  , withAttr
   , forceAttr
+  , updateAttrMap
   , raw
   , translateBy
   , cropLeftBy
@@ -302,31 +301,27 @@ vLimit h p =
     Widget (hSize p) Fixed $ do
       withReaderT (& availH .~ h) $ render $ cropToContext p
 
-withAttrName :: AttrName -> Widget -> Widget
-withAttrName an p =
+withAttr :: AttrName -> Widget -> Widget
+withAttr an p =
     Widget (hSize p) (vSize p) $ do
       withReaderT (& ctxAttrName .~ an) (render p)
 
-withAttrMappings :: [(AttrName, V.Attr)] -> Widget -> Widget
-withAttrMappings ms p =
-    Widget (hSize p) (vSize p) $ do
-      withReaderT (& ctxAttrs %~ applyAttrMappings ms) (render p)
-
-withDefaultAttrName :: AttrName -> Widget -> Widget
-withDefaultAttrName an p =
+withDefaultAttr :: AttrName -> Widget -> Widget
+withDefaultAttr an p =
     Widget (hSize p) (vSize p) $ do
         c <- getContext
         withReaderT (& ctxAttrs %~ (setDefault (attrMapLookup an (c^.ctxAttrs)))) (render p)
 
-withDefaultAttr :: V.Attr -> Widget -> Widget
-withDefaultAttr a p =
+updateAttrMap :: (AttrMap -> AttrMap) -> Widget -> Widget
+updateAttrMap f p =
     Widget (hSize p) (vSize p) $ do
-        withReaderT (& ctxAttrs %~ (setDefault a)) (render p)
+        withReaderT (& ctxAttrs %~ f) (render p)
 
-forceAttr :: V.Attr -> Widget -> Widget
-forceAttr a p =
+forceAttr :: AttrName -> Widget -> Widget
+forceAttr an p =
     Widget (hSize p) (vSize p) $ do
-        withReaderT (& ctxAttrs .~ (forceAttrMap a)) (render p)
+        c <- getContext
+        withReaderT (& ctxAttrs .~ (forceAttrMap (attrMapLookup an (c^.ctxAttrs)))) (render p)
 
 raw :: V.Image -> Widget
 raw img = Widget Fixed Fixed $ return $ def & image .~ img
