@@ -1,4 +1,15 @@
 {-# LANGUAGE OverloadedStrings #-}
+-- | This module provides styles for borders as used in terminal
+-- applications. Your mileage may vary on some of the fancier styles
+-- due to varying support for some border characters in the fonts your
+-- users may be using. Because of this, we provide the 'ascii' style in
+-- addition to the Unicode styles. The 'unicode' style is also a safe
+-- bet.
+--
+-- To use these in your widgets, see
+-- 'Brick.Widgets.Core.withBorderStyle'. By default, widgets rendered
+-- without a specified border style use 'ascii' via the 'Default'
+-- instance provided by 'BorderStyle'.
 module Brick.Widgets.Border.Style
   ( BorderStyle(..)
   , borderStyleFromChar
