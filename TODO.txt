@@ -16,7 +16,6 @@ Features:
 - Port widgets from vty-ui
 
 Performance:
-- Write benchmarks for render on various primitive types
 - Use a zipper for the list widget, use vectors for storage, or
   generalize interface to some traversable so the caller decides what
   structure to use (e.g. tree)
