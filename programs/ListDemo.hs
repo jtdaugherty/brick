@@ -54,11 +54,11 @@ listDrawElement sel i =
     let selStr s = if sel
                    then withAttrName customAttr (str $ "<" <> s <> ">")
                    else str s
-    in hCenterWith (Just ' ') $ vBox $ for [1..i+1] $ \j ->
-        "Item " <+> (selStr $ show i) <+> " Line " <+> (str $ show j)
+    in (hCenterWith (Just ' ') $ vBox $ for [1..i+1] $ \j ->
+        "Item " <+> (selStr $ show i) <+> " Line " <+> (str $ show j)) <=> hBorder
 
 initialState :: List Int
-initialState = list (Name "list") listDrawElement [1, 2, 3]
+initialState = list (Name "list") listDrawElement [0, 1, 2]
 
 customAttr :: AttrName
 customAttr = listSelectedAttr <> "custom"
