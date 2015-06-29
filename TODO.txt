@@ -4,6 +4,7 @@ Bugs / design issues:
 contain width and height in the context, and behave differently if
 they're Nothing (same for boxes?)
 - Do we need CropLeftBy and CropTopBy if we just Translate negatively?
+- Simplify attribute management (too many combinators)
 
 Features:
 - Text manipulation API
@@ -16,5 +17,7 @@ Features:
 
 Performance:
 - Write benchmarks for render on various primitive types
-- Use a zipper for the list widget, use vectors for storage
+- Use a zipper for the list widget, use vectors for storage, or
+  generalize interface to some traversable so the caller decides what
+  structure to use (e.g. tree)
 - Use Vector instead of List where sensible
