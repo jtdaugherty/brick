@@ -206,7 +206,16 @@ str :: String -> Widget
 str s =
     Widget Fixed Fixed $ do
       c <- getContext
-      return $ def & image .~ (V.string (c^.attr) s)
+      let theLines = lines s
+          fixEmpty [] = " "
+          fixEmpty l = l
+      case fixEmpty <$> theLines of
+          -- The empty string case is important since we often need
+          -- empty strings to have non-zero height!  This comes down to Vty's
+          -- behavior of empty strings (they have imageHeight 1)
+          [] -> return $ def & image .~ (V.string (c^.attr) "")
+          [one] -> return $ def & image .~ (V.string (c^.attr) one)
+          multiple -> return $ def & image .~ (V.vertCat $ V.string (c^.attr) <$> multiple)
 
 txt :: T.Text -> Widget
 txt = str . T.unpack
