@@ -58,6 +58,18 @@ executable brick
                        lens,
                        text
 
+executable brick-markup-demo
+  hs-source-dirs:      programs
+  ghc-options:         -threaded -Wall -fno-warn-unused-do-bind
+  default-language:    Haskell2010
+  main-is:             MarkupDemo.hs
+  build-depends:       base,
+                       brick,
+                       vty >= 5.2.9,
+                       data-default,
+                       text,
+                       lens
+
 executable brick-list-demo
   hs-source-dirs:      programs
   ghc-options:         -threaded -Wall -fno-warn-unused-do-bind
