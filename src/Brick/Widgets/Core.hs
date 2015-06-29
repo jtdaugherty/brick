@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 module Brick.Widgets.Core
   ( Widget(..)
   , Size(..)
@@ -47,6 +48,11 @@ module Brick.Widgets.Core
   , viewport
   , visible
   , visibleRegion
+
+#ifdef BENCH
+  , renderFinal
+  , RenderState(..)
+#endif
   )
 where
 
