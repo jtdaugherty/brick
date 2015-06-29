@@ -121,11 +121,11 @@ executable brick-list-demo
                        text,
                        lens
 
-executable brick-event-demo
+executable brick-custom-event-demo
   hs-source-dirs:      programs
   ghc-options:         -threaded -Wall -fno-warn-unused-do-bind
   default-language:    Haskell2010
-  main-is:             EventDemo.hs
+  main-is:             CustomEventDemo.hs
   build-depends:       base,
                        brick,
                        vty >= 5.2.9,
