@@ -46,6 +46,7 @@ module Brick.Widgets.Internal
   , hLimit
   , vLimit
   , withDefaultAttr
+  , withDefaultAttrName
   , withAttrName
   , withAttrMappings
   , forceAttr
@@ -310,6 +311,12 @@ withAttrMappings :: [(AttrName, V.Attr)] -> Widget -> Widget
 withAttrMappings ms p =
     Widget (hSize p) (vSize p) $ do
       withReaderT (& ctxAttrs %~ applyAttrMappings ms) (render p)
+
+withDefaultAttrName :: AttrName -> Widget -> Widget
+withDefaultAttrName an p =
+    Widget (hSize p) (vSize p) $ do
+        c <- getContext
+        withReaderT (& ctxAttrs %~ (setDefault (attrMapLookup an (c^.ctxAttrs)))) (render p)
 
 withDefaultAttr :: V.Attr -> Widget -> Widget
 withDefaultAttr a p =

@@ -64,7 +64,7 @@ list name draw es =
     in List es draw selIndex name
 
 renderList :: List e -> Widget
-renderList l = withAttrName listAttr $
+renderList l = withDefaultAttrName listAttr $
                viewport (l^.listNameL) Vertical $
                vBox $
                drawListElements l
@@ -77,7 +77,7 @@ drawListElements l = drawnElements
             let isSelected = Just i == l^.listSelectedL
                 elemWidget = (l^.listElementDrawL) isSelected e
                 makeVisible = if isSelected
-                              then (visible . withAttrName listSelectedAttr)
+                              then (visible . withDefaultAttrName listSelectedAttr)
                               else id
             in makeVisible elemWidget
 

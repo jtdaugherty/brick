@@ -34,7 +34,6 @@ import Graphics.Vty
   , Picture(..)
   , Cursor(..)
   , Event(..)
-  , Attr
   , update
   , outputIface
   , displayBounds
