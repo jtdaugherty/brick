@@ -24,7 +24,7 @@ ui =
 
 app :: App () Event
 app =
-    App { appDraw = const [padBottom $ padRight ui]
+    App { appDraw = const [ui]
         , appHandleEvent = resizeOrQuit
         , appAttrMap = const def
         , appChooseCursor = neverShowCursor
