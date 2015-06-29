@@ -85,6 +85,18 @@ executable brick-bench
                        containers,
                        vector
 
+executable brick-suspend-resume-demo
+  hs-source-dirs:      programs
+  ghc-options:         -threaded -Wall -fno-warn-unused-do-bind
+  default-language:    Haskell2010
+  main-is:             SuspendAndResumeDemo.hs
+  build-depends:       base,
+                       brick,
+                       vty >= 5.2.9,
+                       data-default,
+                       text,
+                       lens
+
 executable brick-padding-demo
   hs-source-dirs:      programs
   ghc-options:         -threaded -Wall -fno-warn-unused-do-bind
