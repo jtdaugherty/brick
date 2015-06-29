@@ -5,7 +5,6 @@ contain width and height in the context, and behave differently if
 they're Nothing (same for boxes?)
 - Do we need CropLeftBy and CropTopBy if we just Translate negatively?
 - Simplify attribute management (too many combinators)
-- Make all demos use explicit imports
 
 Features:
 - Text manipulation API
