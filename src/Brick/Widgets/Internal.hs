@@ -34,8 +34,11 @@ module Brick.Widgets.Internal
   , txt
   , str
   , fill
-  , hFill
-  , vFill
+
+  , padLeft
+  , padRight
+  , padTop
+  , padBottom
 
   , emptyWidget
   , hBox
@@ -208,20 +211,35 @@ str s =
 txt :: T.Text -> Widget
 txt = str . T.unpack
 
-hFill :: Char -> Widget
-hFill ch =
-    Widget Unlimited Fixed $ do
-      c <- getContext
-      return $ def & image .~ (V.charFill (c^.attr) ch (max 1 (c^.availW)) (min 1 (c^.availH)))
+padLeft :: Widget -> Widget
+padLeft p =
+    Widget Unlimited (vSize p) $ do
+        result <- render p
+        render $ (vLimit (result^.image.to V.imageHeight) $ fill ' ') <+> (Widget Fixed Fixed $ return result)
 
-vFill :: Char -> Widget
-vFill ch =
-    Widget Fixed Unlimited $ do
-      c <- getContext
-      return $ def & image .~ (V.charFill (c^.attr) ch (min 1 (c^.availW)) (max 1 (c^.availH)))
+padRight :: Widget -> Widget
+padRight p =
+    Widget Unlimited (vSize p) $ do
+        result <- render p
+        render $ (Widget Fixed Fixed $ return result) <+> (vLimit (result^.image.to V.imageHeight) $ fill ' ')
+
+padTop :: Widget -> Widget
+padTop p =
+    Widget (hSize p) Unlimited $ do
+        result <- render p
+        render $ (hLimit (result^.image.to V.imageWidth) $ fill ' ') <=> (Widget Fixed Fixed $ return result)
+
+padBottom :: Widget -> Widget
+padBottom p =
+    Widget (hSize p) Unlimited $ do
+        result <- render p
+        render $ (Widget Fixed Fixed $ return result) <=> (hLimit (result^.image.to V.imageWidth) $ fill ' ')
 
 fill :: Char -> Widget
-fill ch = hFill ch <=> vFill ch
+fill ch =
+    Widget Unlimited Unlimited $ do
+      c <- getContext
+      return $ def & image .~ (V.charFill (c^.attr) ch (c^.availW) (c^.availH))
 
 vBox :: [Widget] -> Widget
 vBox [] = emptyWidget
@@ -462,8 +480,14 @@ viewport vpname typ p =
 
       -- Return the translated result with the visibility requests
       -- discarded
-      render $ cropToContext $ ((Widget Fixed Fixed $ return $ translated & visibilityRequests .~ mempty) <+> (hFill ' '))
-                               <=> (vFill ' ')
+      let translatedSize = ( translated^.image.to V.imageWidth
+                           , translated^.image.to V.imageHeight
+                           )
+      case translatedSize of
+          (0, 0) -> render $ fill ' '
+          _ -> render $ cropToContext $ padBottom
+                      $ padRight
+                      $ Widget Fixed Fixed $ return $ translated & visibilityRequests .~ mempty
 
 scrollTo :: ViewportType -> ScrollRequest -> V.Image -> Viewport -> Viewport
 scrollTo typ req img vp = vp & theStart .~ newStart

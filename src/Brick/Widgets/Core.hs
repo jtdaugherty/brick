@@ -25,8 +25,10 @@ module Brick.Widgets.Core
   , txt
   , str
   , fill
-  , hFill
-  , vFill
+  , padLeft
+  , padRight
+  , padTop
+  , padBottom
   , hBox
   , vBox
   , emptyWidget
