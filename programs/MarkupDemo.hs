@@ -26,7 +26,7 @@ theMap = attrMap defAttr
 app :: App () Event
 app =
     App { appDraw = const [ui]
-        , appHandleEvent = const halt
+        , appHandleEvent = resizeOrQuit
         , appAttrMap = const theMap
         , appChooseCursor = neverShowCursor
         , appMakeVtyEvent = id

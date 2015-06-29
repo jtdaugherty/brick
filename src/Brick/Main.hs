@@ -3,6 +3,7 @@ module Brick.Main
   , defaultMain
   , customMain
   , simpleMain
+  , resizeOrQuit
 
   , EventM
   , Next
@@ -71,14 +72,18 @@ defaultMain app st = do
 simpleMain :: Widget -> IO ()
 simpleMain w =
     let app = App { appDraw = const [w]
-                  , appHandleEvent = \e st -> case e of
-                      EvResize _ _ -> continue st
-                      _ -> halt st
-                  , appAttrMap = const $ attrMap def []
+                  , appHandleEvent = resizeOrQuit
+                  , appAttrMap = def
                   , appMakeVtyEvent = id
                   , appChooseCursor = neverShowCursor
                   }
     in defaultMain app ()
+
+resizeOrQuit :: Event -> a -> EventM (Next a)
+resizeOrQuit e a =
+    case e of
+        EvResize _ _ -> continue a
+        _ -> halt a
 
 data InternalNext a = InternalSuspendAndResume RenderState (IO a)
                     | InternalHalt a
