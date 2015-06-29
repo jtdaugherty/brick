@@ -39,12 +39,10 @@ allGroups =
         , mkBench "vBorder"             vBorder
         , mkBench "border"              (border $ str "testing")
         , mkBench "fill"                (fill ' ')
-        , mkBench "hFill"               (hFill ' ')
-        , mkBench "vFill"               (vFill ' ')
         , mkBench "hBoxFixed"           (hBox [str "testing", str "testing"])
         , mkBench "vBoxFixed"           (vBox [str "testing", str "testing"])
-        , mkBench "hBoxUnlimited"       (hBox [hFill ' ', str "testing"])
-        , mkBench "vBoxUnlimited"       (vBox [vFill ' ', str "testing"])
+        , mkBench "hBoxUnlimited"       (hBox [fill ' ', str "testing"])
+        , mkBench "vBoxUnlimited"       (vBox [fill ' ', str "testing"])
         , mkBench "empty"               emptyWidget
         , mkBench "hLimit"              (hLimit 1 $ str "t")
         , mkBench "vLimit"              (vLimit 1 $ str "testing")
