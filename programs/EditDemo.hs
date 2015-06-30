@@ -16,7 +16,7 @@ import Brick.Util
 drawUI :: Editor -> [Widget]
 drawUI e = [ui]
     where
-        ui = center $ ("Input: " <+> (hLimit 30 $ renderEditor e))
+        ui = center $ "Input: " <+> (hLimit 30 $ renderEditor e)
 
 appEvent :: Event -> Editor -> EventM (Next Editor)
 appEvent ev e =
