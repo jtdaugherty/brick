@@ -88,8 +88,8 @@ drawUI st = [withBorderStyle bs a]
               <=> (hCenter (kw "Arrow keys" <+> " navigates the list"))
               <=> (hCenter (kw "Ctrl-Arrow keys" <+> " move the interface"))
 
-appEvent :: Event -> St -> EventM (Next St)
-appEvent e st =
+appEvent :: St -> Event -> EventM (Next St)
+appEvent st e =
     case e of
         EvKey (KChar '+') [] ->
             continue $ st & stBorderStyle %~ ((`mod` (length styles)) . (+ 1))

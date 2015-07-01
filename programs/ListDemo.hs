@@ -33,8 +33,8 @@ drawUI l = [ui]
                             , hCenter "Press Esc to exit."
                             ]
 
-appEvent :: Event -> List Int -> EventM (Next (List Int))
-appEvent e l =
+appEvent :: List Int -> Event -> EventM (Next (List Int))
+appEvent l e =
     case e of
         EvKey (KChar '+') [] ->
             let el = length $ l^.listElementsL

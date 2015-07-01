@@ -29,8 +29,8 @@ drawUI st = [a]
             <=>
             (str $ "Counter value is: " <> (show $ st^.stCounter))
 
-appEvent :: CustomEvent -> St -> EventM (Next St)
-appEvent e st =
+appEvent :: St -> CustomEvent -> EventM (Next St)
+appEvent st e =
     case e of
         VtyEvent (EvKey KEsc []) -> halt st
         VtyEvent ev -> continue $ st & stLastVtyEvent .~ (Just ev)

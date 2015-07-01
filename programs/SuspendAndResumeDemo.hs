@@ -24,8 +24,8 @@ drawUI st = [ui]
                   , "(Press Esc to quit or Space to ask for input)"
                   ]
 
-appEvent :: Event -> St -> EventM (Next St)
-appEvent e st =
+appEvent :: St -> Event -> EventM (Next St)
+appEvent st e =
     case e of
         EvKey KEsc [] -> halt st
         EvKey (KChar ' ') [] -> suspendAndResume $ do

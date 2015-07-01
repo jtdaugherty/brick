@@ -76,7 +76,7 @@ data App s e =
         -- is that many widgets may request a cursor placement but your
         -- application state is what you probably want to use to decide
         -- which one wins.
-        , appHandleEvent :: e -> s -> EventM (Next s)
+        , appHandleEvent :: s -> e -> EventM (Next s)
         -- ^ This function takes an event and your application state
         -- and returns an action to be taken. Possible options are
         -- 'continue', 'suspendAndResume', and 'halt'.
@@ -130,8 +130,8 @@ simpleMain w =
 -- a halt. This is a convenience function useful as an 'appHandleEvent'
 -- value for simple applications using the 'Event' type that do not need
 -- to get more sophisticated user input.
-resizeOrQuit :: Event -> s -> EventM (Next s)
-resizeOrQuit e a =
+resizeOrQuit :: s -> Event -> EventM (Next s)
+resizeOrQuit a e =
     case e of
         EvResize _ _ -> continue a
         _ -> halt a
@@ -193,7 +193,7 @@ runVty :: Vty -> Chan e -> App s e -> s -> RenderState -> IO (Next s, RenderStat
 runVty vty chan app appState rs = do
     firstRS <- renderApp vty app appState rs
     e <- readChan chan
-    (next, scrollReqs) <- runStateT (appHandleEvent app e appState) []
+    (next, scrollReqs) <- runStateT (appHandleEvent app appState e) []
     return (next, firstRS { _scrollRequests = scrollReqs })
 
 withVty :: IO Vty -> (Vty -> IO a) -> IO a

@@ -18,8 +18,8 @@ drawUI e = [ui]
     where
         ui = center $ "Input: " <+> (hLimit 30 $ renderEditor e)
 
-appEvent :: Event -> Editor -> EventM (Next Editor)
-appEvent ev e =
+appEvent :: Editor -> Event -> EventM (Next Editor)
+appEvent e ev =
     case ev of
         EvKey KEsc [] -> halt e
         EvKey KEnter [] -> halt e

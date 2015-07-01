@@ -101,8 +101,8 @@ pieceA, dumpA :: Attr
 pieceA = defAttr `withForeColor` blue `withBackColor` green
 dumpA = defAttr `withStyle` reverseVideo
 
-processEvent :: Event -> World -> EventM (Next World)
-processEvent k world = do
+processEvent :: World -> Event -> EventM (Next World)
+processEvent world k = do
     case k of
         EvKey KEsc [] -> halt world
         EvKey KLeft  [] -> continue $ movePlayer world (-1) 0
