@@ -18,8 +18,6 @@ module Brick.Main
   , scrollToBeginning
   , scrollToEnd
 
-  , supplyVtyEvents
-
   , neverShowCursor
   , showFirstCursor
   )
