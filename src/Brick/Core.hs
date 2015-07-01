@@ -4,6 +4,8 @@ module Brick.Core
   ( Location(Location)
   , TerminalLocation(..)
   , CursorLocation(..)
+  , cursorLocation
+  , cursorLocationName
   , HandleEvent(..)
   , Name(..)
   , suffixLenses
@@ -51,10 +53,12 @@ instance Monoid Location where
     mappend (Location (w1, h1)) (Location (w2, h2)) = Location (w1+w2, h1+h2)
 
 data CursorLocation =
-    CursorLocation { cursorLocation :: !Location
-                   , cursorLocationName :: !(Maybe Name)
+    CursorLocation { _cursorLocation :: !Location
+                   , _cursorLocationName :: !(Maybe Name)
                    }
                    deriving Show
+
+makeLenses ''CursorLocation
 
 class HandleEvent a where
     handleEvent :: Event -> a -> a

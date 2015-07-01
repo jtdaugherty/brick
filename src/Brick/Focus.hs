@@ -8,9 +8,10 @@ module Brick.Focus
   )
 where
 
+import Control.Lens ((^.))
 import Data.Maybe (listToMaybe)
 
-import Brick.Core (Name(..), CursorLocation(..))
+import Brick.Core (Name(..), CursorLocation(..), cursorLocationName)
 
 data FocusRing = FocusRingEmpty
                | FocusRingNonempty ![Name] !Int
@@ -39,5 +40,5 @@ focusRingCursor :: (a -> FocusRing) -> a -> [CursorLocation] -> Maybe CursorLoca
 focusRingCursor getRing st ls =
     listToMaybe $ filter isCurrent ls
     where
-        isCurrent cl = cursorLocationName cl ==
+        isCurrent cl = cl^.cursorLocationName ==
                        (focusGetCurrent $ getRing st)
