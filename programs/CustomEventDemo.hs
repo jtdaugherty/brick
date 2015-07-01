@@ -47,6 +47,7 @@ theApp =
     App { appDraw = drawUI
         , appChooseCursor = showFirstCursor
         , appHandleEvent = appEvent
+        , appStartEvent = return
         , appAttrMap = def
         , appMakeVtyEvent = VtyEvent
         }

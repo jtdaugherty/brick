@@ -143,6 +143,7 @@ theApp :: App St Event
 theApp =
     App { appDraw = drawUI
         , appChooseCursor = showFirstCursor
+        , appStartEvent = return
         , appHandleEvent = appEvent
         , appAttrMap = const theAttrMap
         , appMakeVtyEvent = id

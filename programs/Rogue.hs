@@ -52,6 +52,7 @@ main = do
     let world0 = World (Player (levelStart level0)) level0
         app = App { appDraw = updateDisplay
                   , appHandleEvent = processEvent
+                  , appStartEvent = return
                   , appChooseCursor = neverShowCursor
                   , appMakeVtyEvent = id
                   , appAttrMap = const $ attrMap defAttr []

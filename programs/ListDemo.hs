@@ -75,6 +75,7 @@ theApp =
     App { appDraw = drawUI
         , appChooseCursor = showFirstCursor
         , appHandleEvent = appEvent
+        , appStartEvent = return
         , appAttrMap = const theMap
         , appMakeVtyEvent = id
         }

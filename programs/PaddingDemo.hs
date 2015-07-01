@@ -26,6 +26,7 @@ app :: App () Event
 app =
     App { appDraw = const [ui]
         , appHandleEvent = resizeOrQuit
+        , appStartEvent = return
         , appAttrMap = const def
         , appChooseCursor = neverShowCursor
         , appMakeVtyEvent = id

@@ -26,7 +26,6 @@ import Control.Lens ((^.))
 import Control.Monad (forever)
 import Control.Monad.Trans.State
 import Control.Concurrent (forkIO, Chan, newChan, readChan, writeChan, killThread)
-import Data.Monoid
 import Data.Default
 import Data.Maybe (listToMaybe)
 import qualified Data.Map as M
@@ -56,6 +55,7 @@ data App a e =
     App { appDraw :: a -> [Widget]
         , appChooseCursor :: a -> [CursorLocation] -> Maybe CursorLocation
         , appHandleEvent :: e -> a -> EventM (Next a)
+        , appStartEvent :: a -> EventM a
         , appAttrMap :: a -> AttrMap
         , appMakeVtyEvent :: Event -> e
         }
@@ -73,6 +73,7 @@ simpleMain :: Widget -> IO ()
 simpleMain w =
     let app = App { appDraw = const [w]
                   , appHandleEvent = resizeOrQuit
+                  , appStartEvent = return
                   , appAttrMap = def
                   , appMakeVtyEvent = id
                   , appChooseCursor = neverShowCursor
@@ -106,8 +107,7 @@ runWithNewVty buildVty chan app initialRS initialSt = do
 
 customMain :: IO Vty -> Chan e -> App a e -> a -> IO a
 customMain buildVty chan app initialAppState = do
-    let initialRS = RS M.empty mempty
-        run rs st = do
+    let run rs st = do
             result <- runWithNewVty buildVty chan app rs st
             case result of
                 InternalHalt s -> return s
@@ -115,7 +115,9 @@ customMain buildVty chan app initialAppState = do
                     newAppState <- action
                     run newRS newAppState
 
-    run initialRS initialAppState
+    (st, initialScrollReqs) <- runStateT (appStartEvent app initialAppState) []
+    let initialRS = RS M.empty initialScrollReqs
+    run initialRS st
 
 supplyVtyEvents :: Vty -> (Event -> e) -> Chan e -> IO ()
 supplyVtyEvents vty mkEvent chan =

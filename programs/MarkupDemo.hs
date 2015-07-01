@@ -28,6 +28,7 @@ app =
     App { appDraw = const [ui]
         , appHandleEvent = resizeOrQuit
         , appAttrMap = const theMap
+        , appStartEvent = return
         , appChooseCursor = neverShowCursor
         , appMakeVtyEvent = id
         }

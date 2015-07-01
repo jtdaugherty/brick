@@ -45,6 +45,7 @@ theApp =
     App { appDraw = drawUI
         , appChooseCursor = neverShowCursor
         , appHandleEvent = appEvent
+        , appStartEvent = return
         , appAttrMap = const def
         , appMakeVtyEvent = id
         }
