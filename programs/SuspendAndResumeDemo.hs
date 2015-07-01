@@ -53,6 +53,3 @@ theApp =
 main :: IO ()
 main = do
     void $ defaultMain theApp initialState
-    putStrLn "Enter a line:"
-    s <- getLine
-    print s
