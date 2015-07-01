@@ -188,7 +188,7 @@ addVisibilityOffset off r = r & visibilityRequests.each.vrPosition %~ (off <>)
 addCursorOffset :: Location -> Result -> Result
 addCursorOffset off r =
     let onlyVisible = filter isVisible
-        isVisible (CursorLocation loc _) = loc^.column >= 0 && loc^.row >= 0
+        isVisible loc = loc^.column >= 0 && loc^.row >= 0
     in r & cursors %~ (\cs -> onlyVisible $ (`clOffset` off) <$> cs)
 
 unrestricted :: Int

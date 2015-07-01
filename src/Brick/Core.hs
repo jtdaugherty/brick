@@ -60,6 +60,10 @@ data CursorLocation =
 
 makeLenses ''CursorLocation
 
+instance TerminalLocation CursorLocation where
+    column = cursorLocation._1
+    row = cursorLocation._2
+
 class HandleEvent a where
     handleEvent :: Event -> a -> a
 
