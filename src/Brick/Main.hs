@@ -77,8 +77,9 @@ data App s e =
         -- application state is what you probably want to use to decide
         -- which one wins.
         , appHandleEvent :: s -> e -> EventM (Next s)
-        -- ^ This function takes an event and your application state
-        -- and returns an action to be taken. Possible options are
+        -- ^ This function takes the current application state and an
+        -- event and returns an action to be taken and a corresponding
+        -- transformed application state. Possible options are
         -- 'continue', 'suspendAndResume', and 'halt'.
         , appStartEvent :: s -> EventM s
         -- ^ This function gets called once just prior to the first
@@ -233,10 +234,19 @@ showFirstCursor = const $ listToMaybe
 -- viewports.
 data ViewportScroll =
     ViewportScroll { viewportName :: Name
+                   -- ^ The name of the viewport to be controlled by
+                   -- this scrolling handle.
                    , scrollPage :: Direction -> EventM ()
+                   -- ^ Scroll the viewport by one page in the specified
+                   -- direction.
                    , scrollBy :: Int -> EventM ()
+                   -- ^ Scroll the viewport by the specified number of
+                   -- rows or columns depending on the orientation of
+                   -- the viewport.
                    , scrollToBeginning :: EventM ()
+                   -- ^ Scroll to the beginning of the viewport.
                    , scrollToEnd :: EventM ()
+                   -- ^ Scroll to the end of the viewport.
                    }
 
 -- | Build a viewport scroller for the viewport with the specified name.
