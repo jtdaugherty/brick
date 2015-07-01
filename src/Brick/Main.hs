@@ -12,7 +12,11 @@ module Brick.Main
   , suspendAndResume
 
   , viewportScroll
-  , ViewportScroll(scrollBy, scrollPage, scrollToBeginning, scrollToEnd)
+  , ViewportScroll
+  , scrollBy
+  , scrollPage
+  , scrollToBeginning
+  , scrollToEnd
 
   , supplyVtyEvents
 
