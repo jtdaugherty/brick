@@ -14,6 +14,8 @@ Features:
 - Think of better library name
 - Deal with multi-column characters everywhere
 - Port widgets from vty-ui
+- Overlays relative to a specific widget (e.g. drop-downs) using layers
+but without having to know the position of the controlling widget
 
 Performance:
 - Use a zipper for the list widget, use vectors for storage, or
