@@ -131,10 +131,8 @@ simpleMain w =
 -- value for simple applications using the 'Event' type that do not need
 -- to get more sophisticated user input.
 resizeOrQuit :: s -> Event -> EventM (Next s)
-resizeOrQuit a e =
-    case e of
-        EvResize _ _ -> continue a
-        _ -> halt a
+resizeOrQuit s (EvResize _ _) = continue s
+resizeOrQuit s _ = halt s
 
 data InternalNext a = InternalSuspendAndResume RenderState (IO a)
                     | InternalHalt a
