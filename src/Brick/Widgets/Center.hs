@@ -38,8 +38,7 @@ hCenterWith mChar p =
                off = Location (leftPaddingAmount, 0)
            if leftPaddingAmount == 0 && rightPaddingAmount == 0 then
                return result else
-               return $ addVisibilityOffset off
-                      $ addCursorOffset off
+               return $ addResultOffset off
                       $ result & image .~ paddedImage
 
 vCenter :: Widget -> Widget
@@ -65,8 +64,7 @@ vCenterWith mChar p =
                off = Location (0, topPaddingAmount)
            if topPaddingAmount == 0 && bottomPaddingAmount == 0 then
                return result else
-               return $ addVisibilityOffset off
-                      $ addCursorOffset off
+               return $ addResultOffset off
                       $ result & image .~ paddedImage
 
 center :: Widget -> Widget

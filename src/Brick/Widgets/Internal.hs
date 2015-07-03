@@ -11,8 +11,7 @@ module Brick.Widgets.Internal
   , ctxAttrs
   , lookupAttrName
   , visibilityRequests
-  , addVisibilityOffset
-  , addCursorOffset
+  , addResultOffset
 
   , RenderState(..)
   , ScrollRequest(..)
@@ -184,6 +183,9 @@ renderFinal aMap layerRenders sz chooseCursor rs = (newRS, pic, theCursor)
         layerCursors = (^.cursors) <$> layerResults
         theCursor = chooseCursor $ concat layerCursors
 
+addResultOffset :: Location -> Result -> Result
+addResultOffset off = addCursorOffset off . addVisibilityOffset off
+
 addVisibilityOffset :: Location -> Result -> Result
 addVisibilityOffset off r = r & visibilityRequests.each.vrPosition %~ (off <>)
 
@@ -307,16 +309,14 @@ renderBox br ws = do
           allResults = snd <$> rendered
           allImages = (^.image) <$> allResults
           allPrimaries = imagePrimary br <$> allImages
-          allTranslatedVRs = for (zip [0..] allResults) $ \(i, result) ->
+          allTranslatedResults = for (zip [0..] allResults) $ \(i, result) ->
               let off = locationFromOffset br offPrimary
                   offPrimary = sum $ take i allPrimaries
-              in (addVisibilityOffset off result)^.visibilityRequests
-          allTranslatedCursors = for (zip [0..] allResults) $ \(i, result) ->
-              let off = locationFromOffset br offPrimary
-                  offPrimary = sum $ take i allPrimaries
-              in (addCursorOffset off result)^.cursors
+              in addResultOffset off result
 
-      cropResultToContext $ Result (concatenate br allImages) (concat allTranslatedCursors) (concat allTranslatedVRs)
+      cropResultToContext $ Result (concatenate br allImages)
+                            (concat $ _cursors <$> allTranslatedResults)
+                            (concat $ _visibilityRequests <$> allTranslatedResults)
 
 -- xxx crop cursors and VRs
 hLimit :: Int -> Widget -> Widget
@@ -359,9 +359,8 @@ translateBy :: Location -> Widget -> Widget
 translateBy loc p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
-      return $ addCursorOffset loc $
-               addVisibilityOffset loc $
-               result & image %~ (V.translate (loc^.column) (loc^.row))
+      return $ addResultOffset loc
+             $ result & image %~ (V.translate (loc^.column) (loc^.row))
 
 cropResultToContext :: Result -> RenderM Result
 cropResultToContext result = do
@@ -381,9 +380,8 @@ cropLeftBy cols p =
       result <- render p
       let amt = V.imageWidth (result^.image) - cols
           cropped img = if amt < 0 then V.emptyImage else V.cropLeft amt img
-      return $ addCursorOffset (Location (-1 * cols, 0)) $
-               addVisibilityOffset (Location (-1 * cols, 0)) $
-               result & image %~ cropped
+      return $ addResultOffset (Location (-1 * cols, 0))
+             $ result & image %~ cropped
 
 cropRightBy :: Int -> Widget -> Widget
 cropRightBy cols p =
@@ -400,9 +398,8 @@ cropTopBy rows p =
       result <- render p
       let amt = V.imageHeight (result^.image) - rows
           cropped img = if amt < 0 then V.emptyImage else V.cropTop amt img
-      return $ addCursorOffset (Location (0, -1 * rows)) $
-               addVisibilityOffset (Location (0, -1 * rows)) $
-               result & image %~ cropped
+      return $ addResultOffset (Location (0, -1 * rows))
+             $ result & image %~ cropped
 
 cropBottomBy :: Int -> Widget -> Widget
 cropBottomBy rows p =
