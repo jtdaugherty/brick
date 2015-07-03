@@ -11,6 +11,7 @@ import qualified Data.Text as T
 import Brick.AttrMap
 import Brick.Widgets.Core
 import Brick.Widgets.Border
+import Brick.Widgets.Center
 
 instance NFData Widget where
     rnf w = (hSize w) `seq` (vSize w) `seq` (render w) `seq` ()
@@ -46,6 +47,7 @@ allGroups =
         , mkBench "empty"               emptyWidget
         , mkBench "hLimit"              (hLimit 1 $ str "t")
         , mkBench "vLimit"              (vLimit 1 $ str "testing")
+        , mkBench "hCenter"             (vBox $ take 1000 $ repeat $ hCenter $ str "testing")
 
         -- withDefaultAttr
         -- withDefaultAttrName
