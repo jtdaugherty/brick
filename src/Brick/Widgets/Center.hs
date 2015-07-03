@@ -9,8 +9,8 @@ module Brick.Widgets.Center
   )
 where
 
-import Control.Lens ((^.), to)
-import Graphics.Vty (imageWidth, imageHeight)
+import Control.Lens ((^.), (&), (.~), to)
+import Graphics.Vty (imageWidth, imageHeight, horizCat, charFill, vertCat)
 
 import Brick.Widgets.Core
 import Brick.Core
@@ -29,10 +29,18 @@ hCenterWith mChar p =
                remainder = c^.availW - (leftPaddingAmount * 2)
                leftPaddingAmount = (c^.availW - rWidth) `div` 2
                rightPaddingAmount = leftPaddingAmount + remainder
-           render $ vLimit rHeight $
-               (hLimit leftPaddingAmount $ fill ch) <+>
-               (Widget Fixed Fixed $ return result) <+>
-               (hLimit rightPaddingAmount $ fill ch)
+               leftPadding = charFill (c^.attr) ch leftPaddingAmount rHeight
+               rightPadding = charFill (c^.attr) ch rightPaddingAmount rHeight
+               paddedImage = horizCat [ leftPadding
+                                      , result^.image
+                                      , rightPadding
+                                      ]
+               off = Location (leftPaddingAmount, 0)
+           if leftPaddingAmount == 0 && rightPaddingAmount == 0 then
+               return result else
+               return $ addVisibilityOffset off
+                      $ addCursorOffset off
+                      $ result & image .~ paddedImage
 
 vCenter :: Widget -> Widget
 vCenter = vCenterWith Nothing
@@ -48,10 +56,18 @@ vCenterWith mChar p =
                remainder = c^.availH - (topPaddingAmount * 2)
                topPaddingAmount = (c^.availH - rHeight) `div` 2
                bottomPaddingAmount = topPaddingAmount + remainder
-           render $ hLimit rWidth $
-               (vLimit topPaddingAmount $ fill ch) <=>
-               (Widget Fixed Fixed $ return result) <=>
-               (vLimit bottomPaddingAmount $ fill ch)
+               topPadding = charFill (c^.attr) ch rWidth topPaddingAmount
+               bottomPadding = charFill (c^.attr) ch rWidth bottomPaddingAmount
+               paddedImage = vertCat [ topPadding
+                                     , result^.image
+                                     , bottomPadding
+                                     ]
+               off = Location (0, topPaddingAmount)
+           if topPaddingAmount == 0 && bottomPaddingAmount == 0 then
+               return result else
+               return $ addVisibilityOffset off
+                      $ addCursorOffset off
+                      $ result & image .~ paddedImage
 
 center :: Widget -> Widget
 center = centerWith Nothing
