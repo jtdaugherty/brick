@@ -6,6 +6,7 @@ import Graphics.Vty
 
 import Data.Array
 
+import Control.Lens ((^.))
 import Control.Applicative
 import Control.Monad
 
@@ -129,7 +130,10 @@ updateDisplay world = [ info, playerLayer, geoLayer ]
         (px, py) = playerCoord $ player world
         playerLoc = Location (px, py)
         theLevel = level world
-        playerLayer = center $ raw (char pieceA '@')
+        playerLayer = Widget Fixed Fixed $ do
+            c <- getContext
+            render $ translateBy (Location (c^.availW `div` 2, c^.availH `div` 2)) $
+                     raw $ char pieceA '@'
         geoLayer = centerAbout playerLoc $ raw $ levelGeoImage theLevel
 
 imageForGeo :: LevelPiece -> Image

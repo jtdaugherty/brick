@@ -216,4 +216,5 @@ executable brick-rogue
                        vty >= 5.2.9,
                        data-default,
                        array,
-                       random
+                       random,
+                       lens
