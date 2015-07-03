@@ -495,8 +495,10 @@ viewport vpname typ p =
                            , translated^.image.to V.imageHeight
                            )
       case translatedSize of
-          (0, 0) -> render $ fill ' '
-          _ -> render $ cropToContext $ padBottom
+          (0, 0) -> return $ translated & image .~ (V.charFill (c^.attr) ' ' (c^.availW) (c^.availH))
+                                        & visibilityRequests .~ mempty
+          _ -> render $ cropToContext
+                      $ padBottom
                       $ padRight
                       $ Widget Fixed Fixed $ return $ translated & visibilityRequests .~ mempty
 
