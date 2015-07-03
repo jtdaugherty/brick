@@ -22,7 +22,9 @@ Performance:
   generalize interface to some traversable so the caller decides what
   structure to use (e.g. tree)
 - Use Vector instead of List where sensible
-- Consider viewport alternative combinator that takes a hash of the data
-  to be rendered, caches the hash when it renders, and only re-renders
-  when it gets a new hash (and the hash goes in the viewport state that
-  gets stored in the RenderState)
+
+Open issues:
+- Centering and other operations pad widgets with fills with interacts
+with layering depending on the user's intentions. Sometimes we want
+layers to be opaque and filled, other times we want them to be
+transparent.  How do we deal with this in general?
