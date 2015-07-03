@@ -85,6 +85,18 @@ executable brick-bench
                        containers,
                        vector
 
+executable brick-layer-demo
+  hs-source-dirs:      programs
+  ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
+  default-language:    Haskell2010
+  main-is:             LayerDemo.hs
+  build-depends:       base,
+                       brick,
+                       vty >= 5.2.9,
+                       data-default,
+                       text,
+                       lens
+
 executable brick-suspend-resume-demo
   hs-source-dirs:      programs
   ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
