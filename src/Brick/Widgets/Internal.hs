@@ -219,7 +219,11 @@ str s =
           -- behavior of empty strings (they have imageHeight 1)
           [] -> return $ def & image .~ (V.string (c^.attr) "")
           [one] -> return $ def & image .~ (V.string (c^.attr) one)
-          multiple -> return $ def & image .~ (V.vertCat $ V.string (c^.attr) <$> multiple)
+          multiple ->
+              let maxLength = maximum $ length <$> multiple
+                  lineImgs = lineImg <$> multiple
+                  lineImg lStr = V.string (c^.attr) (lStr ++ replicate (maxLength - length lStr) ' ')
+              in return $ def & image .~ (V.vertCat lineImgs)
 
 txt :: T.Text -> Widget
 txt = str . T.unpack
