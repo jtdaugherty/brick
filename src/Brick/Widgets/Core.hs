@@ -11,6 +11,8 @@ module Brick.Widgets.Core
   , cursors
   , lookupAttrName
   , visibilityRequests
+  , addCursorOffset
+  , addVisibilityOffset
 
   , Context
   , availW

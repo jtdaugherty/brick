@@ -11,6 +11,8 @@ module Brick.Widgets.Internal
   , ctxAttrs
   , lookupAttrName
   , visibilityRequests
+  , addVisibilityOffset
+  , addCursorOffset
 
   , RenderState(..)
   , ScrollRequest(..)
