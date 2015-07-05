@@ -1,26 +1,22 @@
 Bugs / design issues:
-- Fix cursor cropping in render function where missing
-- Deal with hRelease/vRelease differently, e.g. by using Maybe to
-contain width and height in the context, and behave differently if
-they're Nothing (same for boxes?)
-- Do we need CropLeftBy and CropTopBy if we just Translate negatively?
-- Simplify attribute management (too many combinators)
+- Fix cursor and visibility request cropping in primitives where missing
+- Consider adding L suffix to Context lenses to be consistent with other
+lenses
 
 Features:
-- Text manipulation API
-  - monoid instance
-  - RLE attribute assignment with successive transformations?
-  - wrapping
-- Think of better library name
+- Text wrapping
 - Deal with multi-column characters everywhere
 - Port widgets from vty-ui
 - Overlays relative to a specific widget (e.g. drop-downs) using layers
-but without having to know the position of the controlling widget
+but without having to know the position of the controlling widget (e.g.
+add a combinator in one layer to refer to something in another). In
+general, an API for multi-layer rendering might emerge from this.
 
 Performance:
 - Use a zipper for the list widget, use vectors for storage, or
   generalize interface to some traversable so the caller decides what
-  structure to use (e.g. tree)
+  structure to use (e.g. tree, vector). This would also require the
+  generalization of a "selection index"
 - Use Vector instead of List where sensible
 
 Open issues:
