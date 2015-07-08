@@ -16,6 +16,8 @@ a set of declarative combinators and it does the rest. All you have to
 do is provide functions to transform your own application state when
 input (or other kinds of) events arrive.
 
+Under the hood, this library uses [vty](http://hackage.haskell.org/package/vty).
+
 This library deprecates [vty-ui](https://github.com/jtdaugherty/vty-ui).
 Some day this library, too, will have a [70-page
 manual](http://jtdaugherty.github.io/vty-ui/manuals/vty-ui-users-manual-1.9.pdf).
