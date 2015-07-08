@@ -35,3 +35,32 @@ $ cabal sandbox init
 $ cabal install -j
 $ .cabal-sandbox/bin/brick-???-demo
 ```
+
+Status
+------
+
+`brick` is experimental. It does not yet support many of the features
+of, say, `vty-ui`. And there are some places were I have deliberately
+chosen to worry about performance later, for the sake of spending more
+time on the design. For a while my goal with `brick` will be to develop
+a very solid core library with minimal features. It *should* be possible
+to extend this library by making your own packages that depend on
+`brick`. If you do that, you'll also be helping me by testing whether
+the exported interface is usable!
+
+There is a lot that I haven't documented in terms of design and intended
+API usage, but some of that can be gleaned from the demo program source
+and by looking at the implementation of the widgets that are already
+provided.
+
+Contributing
+------------
+
+If you decide to contribute, that's great! Here are some guidelines you
+should consider to make submitting patches easier for all concerned:
+
+ - If you want to take on big things, talk to me first; let's have a
+   design/vision discussion before you start coding.
+ - If you make changes, try to make them consistent with the syntactic
+   conventions I've used in the codebase.
+ - Please provide Haddock documentation for any new functions you add.
