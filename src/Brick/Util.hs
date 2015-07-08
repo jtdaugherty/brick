@@ -1,6 +1,6 @@
+-- | Utility functions.
 module Brick.Util
-  ( for
-  , clamp
+  ( clamp
   , on
   , fg
   , bg

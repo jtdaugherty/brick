@@ -85,7 +85,7 @@ import qualified Graphics.Vty as V
 
 import Brick.Types
 import Brick.Widgets.Border.Style
-import Brick.Util (clOffset, for)
+import Brick.Util (clOffset)
 import Brick.AttrMap
 import Brick.Util (clamp)
 
@@ -313,7 +313,7 @@ renderBox br ws = do
           allResults = snd <$> rendered
           allImages = (^.image) <$> allResults
           allPrimaries = imagePrimary br <$> allImages
-          allTranslatedResults = for (zip [0..] allResults) $ \(i, result) ->
+          allTranslatedResults = (flip map) (zip [0..] allResults) $ \(i, result) ->
               let off = locationFromOffset br offPrimary
                   offPrimary = sum $ take i allPrimaries
               in addResultOffset off result

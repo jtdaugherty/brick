@@ -32,7 +32,7 @@ import Graphics.Vty (Event(..), Key(..))
 import Brick.Types
 import Brick.Merge (maintainSel)
 import Brick.Widgets.Core
-import Brick.Util (clamp, for)
+import Brick.Util (clamp)
 import Brick.AttrMap
 
 data List e =
@@ -73,7 +73,7 @@ drawListElements :: List e -> [Widget]
 drawListElements l = drawnElements
     where
         es = l^.listElementsL
-        drawnElements = for (zip [0..] es) $ \(i, e) ->
+        drawnElements = (flip map) (zip [0..] es) $ \(i, e) ->
             let isSelected = Just i == l^.listSelectedL
                 elemWidget = (l^.listElementDrawL) isSelected e
                 makeVisible = if isSelected

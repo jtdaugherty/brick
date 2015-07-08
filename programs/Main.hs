@@ -125,7 +125,7 @@ initialState =
 listDrawElem :: Bool -> Int -> Widget
 listDrawElem sel i =
     let selStr s = if sel then "<" <> s <> ">" else s
-    in hCenterWith (Just ' ') $ vBox $ for [1..i+1] $ \j ->
+    in hCenterWith (Just ' ') $ vBox $ (flip map) [1..i+1] $ \j ->
         str $ "Item " <> (selStr $ show i) <> " L" <> show j
 
 theAttrMap :: AttrMap
