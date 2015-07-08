@@ -1,14 +1,23 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
+-- | This module provides a scrollable list type and functions for
+-- manipulating and rendering it.
 module Brick.Widgets.List
   ( List(listElements, listSelected, listName, listElementDraw)
+
+  -- * Consructing a list
+  , list
+
+  -- * Rendering a list
+  , renderList
+
+  -- * Lenses
   , listElementsL
   , listSelectedL
   , listNameL
 
-  , list
-  , renderList
+  -- * Manipulating a list
   , listMoveBy
   , listMoveTo
   , listMoveUp
@@ -18,6 +27,7 @@ module Brick.Widgets.List
   , listReplace
   , listSelectedElement
 
+  -- * Attributes
   , listAttr
   , listSelectedAttr
   )
@@ -35,6 +45,8 @@ import Brick.Widgets.Core
 import Brick.Util (clamp)
 import Brick.AttrMap
 
+-- | List state. Lists have an element type 'e' that is the data stored
+-- by the list.
 data List e =
     List { listElements :: ![e]
          , listElementDraw :: Bool -> e -> Widget
@@ -52,17 +64,29 @@ instance HandleEvent (List e) where
                   EvKey KDown [] -> listMoveDown
                   _ -> id
 
+-- | The top-level attribute used for the entire list.
 listAttr :: AttrName
 listAttr = "list"
 
+-- | The attribute used only for the currently-selected list item.
+-- Extends 'listAttr'.
 listSelectedAttr :: AttrName
 listSelectedAttr = listAttr <> "selected"
 
-list :: Name -> (Bool -> e -> Widget) -> [e] -> List e
+-- | Construct a list in terms of an element type 'e'.
+list :: Name
+     -- ^ The list name (must be unique)
+     -> (Bool -> e -> Widget)
+     -- ^ The item rendering function (takes the item and whether it is
+     -- currently selected)
+     -> [e]
+     -- ^ The initial list contents
+     -> List e
 list name draw es =
     let selIndex = if null es then Nothing else Just 0
     in List es draw selIndex name
 
+-- | Turn a list state value into a widget.
 renderList :: List e -> Widget
 renderList l = withDefaultAttr listAttr $
                viewport (l^.listNameL) Vertical $
@@ -81,7 +105,13 @@ drawListElements l = drawnElements
                               else id
             in makeVisible elemWidget
 
-listInsert :: Int -> e -> List e -> List e
+-- | Insert an item into a list at the specified position.
+listInsert :: Int
+           -- ^ The position at which to insert (0 <= i <= size)
+           -> e
+           -- ^ The element to insert
+           -> List e
+           -> List e
 listInsert pos e l =
     let safePos = clamp 0 (length es) pos
         es = l^.listElementsL
@@ -94,7 +124,11 @@ listInsert pos e l =
     in l & listSelectedL .~ Just newSel
          & listElementsL .~ (front ++ (e : back))
 
-listRemove :: Int -> List e -> List e
+-- | Remove an element from a list at the specified position.
+listRemove :: Int
+           -- ^ The position at which to remove an element (0 <= i < size)
+           -> List e
+           -> List e
 listRemove pos l | null (l^.listElementsL) = l
                  | pos /= clamp 0 (length (l^.listElementsL) - 1) pos = l
                  | otherwise =
@@ -113,8 +147,8 @@ listRemove pos l | null (l^.listElementsL) = l
     in l & listSelectedL .~ (if null es' then Nothing else Just newSel)
          & listElementsL .~ es'
 
--- Replaces entire list with a new set of elements, but preserves selected index
--- using a two-way merge algorithm.
+-- | Replace the contents of a list with a new set of elements but
+-- preserve the currently selected index.
 listReplace :: Eq e => [e] -> List e -> List e
 listReplace es' l | es' == l^.listElementsL = l
                   | otherwise =
@@ -128,17 +162,25 @@ listReplace es' l | es' == l^.listElementsL = l
     in l & listSelectedL .~ newSel
          & listElementsL .~ es'
 
+-- | Move the list selected index up by one. (Moves the cursor up,
+-- subtracts one from the index.)
 listMoveUp :: List e -> List e
 listMoveUp = listMoveBy (-1)
 
+-- | Move the list selected index down by one. (Moves the cursor down,
+-- adds one to the index.)
 listMoveDown :: List e -> List e
 listMoveDown = listMoveBy 1
 
+-- | Move the list selected index by the specified amount, subject to
+-- validation.
 listMoveBy :: Int -> List e -> List e
 listMoveBy amt l =
     let newSel = clamp 0 (length (l^.listElementsL) - 1) <$> (amt +) <$> (l^.listSelectedL)
     in l & listSelectedL .~ newSel
 
+-- | Set the selected index for a list to the specified index, subject
+-- to validation.
 listMoveTo :: Int -> List e -> List e
 listMoveTo pos l =
     let len = length (l^.listElementsL)
@@ -147,6 +189,7 @@ listMoveTo pos l =
                             then Just newSel
                             else Nothing
 
+-- | Return a list's selected element, if any.
 listSelectedElement :: List e -> Maybe (Int, e)
 listSelectedElement l = do
   sel <- l^.listSelectedL
