@@ -8,7 +8,6 @@ Features:
 - Port widgets from vty-ui:
   - Progress bar?
   - Dir browser?
-  - Dialog?
   - Checkbox?
   - Button?
 - Overlays relative to a specific widget (e.g. drop-downs) using layers

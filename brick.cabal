@@ -42,6 +42,7 @@ library
     Brick.Widgets.Border.Style
     Brick.Widgets.Center
     Brick.Widgets.Core
+    Brick.Widgets.Dialog
     Brick.Widgets.Edit
     Brick.Widgets.List
     Data.Text.Markup
@@ -99,6 +100,18 @@ executable brick-bench
                        template-haskell,
                        containers,
                        vector
+
+executable brick-dialog-demo
+  hs-source-dirs:      programs
+  ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
+  default-language:    Haskell2010
+  main-is:             DialogDemo.hs
+  build-depends:       base,
+                       brick,
+                       vty >= 5.2.9,
+                       data-default,
+                       text,
+                       lens
 
 executable brick-layer-demo
   hs-source-dirs:      programs
