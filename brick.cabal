@@ -31,7 +31,6 @@ library
     Data.Text.Markup
   other-modules:
     Brick.Widgets.Internal
-    Brick.Merge
 
   build-depends:       base >=4.7 && <4.8,
                        vty >= 5.2.9,
