@@ -16,9 +16,18 @@ a set of declarative combinators and it does the rest. All you have to
 do is provide functions to transform your own application state when
 input (or other kinds of) events arrive.
 
+This library deprecates [vty-ui](https://github.com/jtdaugherty/vty-ui).
+
+Getting Started
+---------------
+
 The best way to get started is to build, run, and read the source for
 the various demonstration programs in the `programs/` directory. This
 will help you get to know the library and what it can do. There is also
 extensive Haddock documentation.
 
-This library deprecates [vty-ui](https://github.com/jtdaugherty/vty-ui).
+```
+$ cabal sandbox init
+$ cabal install -j
+$ .cabal-sandbox/bin/brick-???-demo
+```
