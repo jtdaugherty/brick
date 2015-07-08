@@ -322,13 +322,11 @@ renderBox br ws = do
                             (concat $ _cursors <$> allTranslatedResults)
                             (concat $ _visibilityRequests <$> allTranslatedResults)
 
--- xxx crop cursors and VRs
 hLimit :: Int -> Widget -> Widget
 hLimit w p =
     Widget Fixed (vSize p) $ do
       withReaderT (& availW .~ w) $ render $ cropToContext p
 
--- xxx crop cursors and VRs
 vLimit :: Int -> Widget -> Widget
 vLimit h p =
     Widget (hSize p) Fixed $ do
@@ -390,7 +388,6 @@ cropRightBy cols p =
       result <- render p
       let amt = V.imageWidth (result^.image) - cols
           cropped img = if amt < 0 then V.emptyImage else V.cropRight amt img
-      -- xxx cursors / VRs
       return $ result & image %~ cropped
 
 cropTopBy :: Int -> Widget -> Widget
@@ -408,7 +405,6 @@ cropBottomBy rows p =
       result <- render p
       let amt = V.imageHeight (result^.image) - rows
           cropped img = if amt < 0 then V.emptyImage else V.cropBottom amt img
-      -- xxx crop cursors / VRs
       return $ result & image %~ cropped
 
 showCursor :: Name -> Location -> Widget -> Widget
