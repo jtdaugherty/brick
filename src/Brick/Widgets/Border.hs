@@ -1,12 +1,19 @@
 {-# LANGUAGE OverloadedStrings #-}
+-- | This module provides border widgets: vertical borders, horizontal
+-- borders, and a box border wrapper widget.
 module Brick.Widgets.Border
-  ( border
+  ( -- * Border wrapper
+    border
   , borderWithLabel
 
+  -- * Horizontal border
   , hBorder
   , hBorderWithLabel
+
+  -- * Vertical border
   , vBorder
 
+  -- * Border attribute names
   , borderAttr
   , vBorderAttr
   , hBorderAttr
@@ -27,34 +34,49 @@ import Brick.Widgets.Core
 import Brick.Widgets.Center (hCenterWith)
 import Brick.Widgets.Border.Style (BorderStyle(..))
 
+-- | The top-level border attribute name.
 borderAttr :: AttrName
 borderAttr = "border"
 
+-- | The vertical border attribute name.
 vBorderAttr :: AttrName
 vBorderAttr = borderAttr <> "vertical"
 
+-- | The horizontal border attribute name.
 hBorderAttr :: AttrName
 hBorderAttr = borderAttr <> "horizontal"
 
+-- | The attribute used for horizontal border labels.
 hBorderLabelAttr :: AttrName
 hBorderLabelAttr = hBorderAttr <> "label"
 
+-- | The attribute used for border box top-left corners.
 tlCornerAttr :: AttrName
 tlCornerAttr = borderAttr <> "corner" <> "tl"
 
+-- | The attribute used for border box top-right corners.
 trCornerAttr :: AttrName
 trCornerAttr = borderAttr <> "corner" <> "tr"
 
+-- | The attribute used for border box bottom-left corners.
 blCornerAttr :: AttrName
 blCornerAttr = borderAttr <> "corner" <> "bl"
 
+-- | The attribute used for border box bottom-right corners.
 brCornerAttr :: AttrName
 brCornerAttr = borderAttr <> "corner" <> "br"
 
+-- | Put a border around the specified widget.
 border :: Widget -> Widget
 border = border_ Nothing
 
-borderWithLabel :: Widget -> Widget -> Widget
+-- | Put a border around the specified widget with the specified label
+-- widget placed in the middle of the top horizontal border.
+borderWithLabel :: Widget
+                -- ^ The label widget
+                -> Widget
+                -- ^ The widget to put a border around
+                -> Widget
 borderWithLabel label = border_ (Just label)
 
 border_ :: Maybe Widget -> Widget -> Widget
@@ -80,10 +102,15 @@ border_ label wrapped =
              $ vLimit (middleResult^.image.to imageHeight + 2)
              $ total
 
+-- | A horizontal border.  Fills all horizontal space.
 hBorder :: Widget
 hBorder = hBorder_ Nothing
 
-hBorderWithLabel :: Widget -> Widget
+-- | A horizontal border with a label placed in the center of the
+-- border. Fills all horizontal space.
+hBorderWithLabel :: Widget
+                 -- ^ The label widget
+                 -> Widget
 hBorderWithLabel label = hBorder_ (Just label)
 
 hBorder_ :: Maybe Widget -> Widget
@@ -94,6 +121,7 @@ hBorder_ label =
       where
           msg = maybe (txt "") (withAttr hBorderLabelAttr) label
 
+-- | A vertical border.  Fills all vertical space.
 vBorder :: Widget
 vBorder =
     Widget Fixed Unlimited $ do
