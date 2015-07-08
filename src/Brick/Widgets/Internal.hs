@@ -464,10 +464,7 @@ viewport vpname typ p =
       -- state accordingly
       when (not $ null $ initialResult^.visibilityRequests) $ do
           Just vp <- lift $ gets $ (^.viewportMap.to (M.lookup vpname))
-          -- XXX for now, just permit one request but we could permit
-          -- many by computing the bounding rectangle over the submitted
-          -- requests.
-          let [rq] = initialResult^.visibilityRequests
+          let rq = head $ initialResult^.visibilityRequests
               updatedVp = scrollToView typ rq vp
           lift $ modify (& viewportMap %~ (M.insert vpname updatedVp))
 
@@ -477,8 +474,9 @@ viewport vpname typ p =
       let relevantRequests = snd <$> filter (\(n, _) -> n == vpname) reqs
       when (not $ null relevantRequests) $ do
           Just vp <- lift $ gets $ (^.viewportMap.to (M.lookup vpname))
-          let [rq] = relevantRequests
-              updatedVp = scrollTo typ rq (initialResult^.image) vp
+          let updatedVp = applyRequests relevantRequests vp
+              applyRequests [] v = v
+              applyRequests (rq:rqs) v = scrollTo typ rq (initialResult^.image) $ applyRequests rqs v
           lift $ modify (& viewportMap %~ (M.insert vpname updatedVp))
           return ()
 
