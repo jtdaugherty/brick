@@ -373,9 +373,6 @@ cropResultToContext result = do
 
 cropToContext :: Widget -> Widget
 cropToContext p =
-    -- XXX should this be fixed/fixed? Seems like no, because these are
-    -- about how it fills space given regardless of cropping. This same
-    -- consideration applies to the other crop functions.
     Widget (hSize p) (vSize p) $ (render p >>= cropResultToContext)
 
 cropLeftBy :: Int -> Widget -> Widget
