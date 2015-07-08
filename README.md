@@ -18,8 +18,7 @@ input (or other kinds of) events arrive.
 
 This library deprecates [vty-ui](https://github.com/jtdaugherty/vty-ui).
 Some day this library, too, will have a [70-page
-manual](http://jtdaugherty.github.io/vty-ui/manuals/vty-ui-users-manual-
-1.9.pdf).
+manual](http://jtdaugherty.github.io/vty-ui/manuals/vty-ui-users-manual-1.9.pdf).
 
 Getting Started
 ---------------
