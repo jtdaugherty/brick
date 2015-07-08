@@ -21,18 +21,18 @@ library
   ghc-options:         -Wall -fno-warn-unused-do-bind -O3
   hs-source-dirs:      src
   exposed-modules:
+    Brick.AttrMap
+    Brick.Focus
+    Brick.Main
+    Brick.Markup
+    Brick.Types
+    Brick.Util
     Brick.Widgets.Border
     Brick.Widgets.Border.Style
     Brick.Widgets.Center
     Brick.Widgets.Core
     Brick.Widgets.Edit
     Brick.Widgets.List
-    Brick.AttrMap
-    Brick.Types
-    Brick.Focus
-    Brick.Main
-    Brick.Markup
-    Brick.Util
     Data.Text.Markup
   other-modules:
     Brick.Widgets.Internal
