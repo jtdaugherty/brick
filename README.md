@@ -53,6 +53,10 @@ API usage, but some of that can be gleaned from the demo program source
 and by looking at the implementation of the widgets that are already
 provided.
 
+The development of this library has also revealed some bugs in `vty`,
+and I've tried to report those as I go. If they haven't been resolved,
+you'll see them arise when using `brick`.
+
 Contributing
 ------------
 
@@ -60,7 +64,8 @@ If you decide to contribute, that's great! Here are some guidelines you
 should consider to make submitting patches easier for all concerned:
 
  - If you want to take on big things, talk to me first; let's have a
-   design/vision discussion before you start coding.
+   design/vision discussion before you start coding. Create a GitHub
+   issue and we can use that as the place to hash things out.
  - If you make changes, try to make them consistent with the syntactic
    conventions I've used in the codebase.
  - Please provide Haddock documentation for any new functions you add.
