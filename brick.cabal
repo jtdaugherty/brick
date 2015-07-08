@@ -5,8 +5,14 @@ description:         Brick is a purely-functional terminal UI programming
                      library that lets you write declarative specifications
                      of your terminal user interfaces.  It cleanly separates
                      event handling and application state management from
-                     the business of rendering the interface.  See the
-                     'programs/' directory for a collection of demo programs.
+                     the business of rendering the interface.
+                     .
+                     .
+                     To get started, import Brick.Main and use one
+                     of the starter main alternatives ('simpleMain',
+                     'defaultMain') or create an 'App' value and use
+                     'customMain'. For examples, see the demo programs
+                     in the 'programs' directory.
 license:             BSD3
 license-file:        LICENSE
 author:              Jonathan Daugherty <cygnus@foobox.com>
