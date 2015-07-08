@@ -10,7 +10,6 @@ module Brick.Widgets.Internal
   , attr
   , ctxAttrs
   , lookupAttrName
-  , visibilityRequests
   , addResultOffset
 
   , RenderState(..)
@@ -104,13 +103,25 @@ data Viewport =
        }
        deriving Show
 
+-- | The type of result returned by a widget's rendering function. The
+-- result provides the image, cursor positions, and visibility requests
+-- that resulted from the rendering process.
 data Result =
     Result { _image :: V.Image
+           -- ^ The final rendered image for a widget
            , _cursors :: [CursorLocation]
+           -- ^ The list of reported cursor positions for the
+           -- application to choose from
            , _visibilityRequests :: [VisibilityRequest]
+           -- ^ The list of visibility requests made by widgets rendered
+           -- while rendering this one (used by viewports)
            }
            deriving Show
 
+-- | The rendering context. This tells widgets how to render: how much
+-- space they have in which to render, which attribute they should use
+-- to render, which bordring style should be used, and the attribute map
+-- available for rendering.
 data Context =
     Context { _ctxAttrName :: AttrName
             , _availW :: Int
@@ -119,16 +130,27 @@ data Context =
             , _ctxAttrs :: AttrMap
             }
 
+-- | The type of the rendering monad. This monad is used by the
+-- library's rendering routines to manage rendering state and
+-- communicate rendering parameters to widgets' rendering functions.
 type RenderM a = ReaderT Context (State RenderState) a
 
+-- | Widget growth policies.
 data Size = Fixed
+          -- ^ Fixed widgets take up the same amount of space no matter
+          -- how much they are given.
           | Unlimited
+          -- ^ Unlimited widgets take up the space they are given.
           deriving (Show, Eq, Ord)
 
+-- | The type of widgets.
 data Widget =
     Widget { hSize :: Size
+           -- ^ This widget's horizontal growth policy
            , vSize :: Size
+           -- ^ This widget's vertical growth policy
            , render :: RenderM Result
+           -- ^ This widget's rendering function
            }
 
 data Direction = Up | Down
@@ -155,15 +177,20 @@ instance IsString Widget where
 instance Default Result where
     def = Result V.emptyImage [] []
 
+-- | Get the current rendering context.
 getContext :: RenderM Context
 getContext = ask
 
+-- | When rendering the specified widget, use the specified border style
+-- for any border rendering.
 withBorderStyle :: BorderStyle -> Widget -> Widget
 withBorderStyle bs p = Widget (hSize p) (vSize p) $ withReaderT (& activeBorderStyle .~ bs) (render p)
 
+-- | Get the rendering context's active border style.
 getActiveBorderStyle :: RenderM BorderStyle
 getActiveBorderStyle = view activeBorderStyle
 
+-- | The empty widget.
 emptyWidget :: Widget
 emptyWidget = raw V.emptyImage
 
@@ -183,6 +210,15 @@ renderFinal aMap layerRenders sz chooseCursor rs = (newRS, pic, theCursor)
         layerCursors = (^.cursors) <$> layerResults
         theCursor = chooseCursor $ concat layerCursors
 
+-- | Add an offset to all cursor locations and visbility requests
+-- in the specified rendering result. This function is critical for
+-- maintaining correctness in the rendering results as they are
+-- processed successively by box layouts and other wrapping combinators,
+-- since calls to this function result in converting from widget-local
+-- coordinates to (ultimately) terminal-global ones so they can be used
+-- by other combinators. You should call this any time you render
+-- something and then translate it or otherwise offset it from its
+-- original origin.
 addResultOffset :: Location -> Result -> Result
 addResultOffset off = addCursorOffset off . addVisibilityOffset off
 
@@ -198,14 +234,19 @@ addCursorOffset off r =
 unrestricted :: Int
 unrestricted = 100000
 
+-- | The rendering context's current drawing attribute.
 attr :: (Contravariant f, Functor f) => (V.Attr -> f V.Attr) -> Context -> f Context
 attr = to (\c -> attrMapLookup (c^.ctxAttrName) (c^.ctxAttrs))
 
+-- | Given an attribute name, obtain the attribute for the attribute
+-- name by consulting the context's attribute map.
 lookupAttrName :: AttrName -> RenderM V.Attr
 lookupAttrName n = do
     c <- getContext
     return $ attrMapLookup n (c^.ctxAttrs)
 
+-- | Build a widget from a 'String'. Breaks newlines up and space-pads
+-- short lines out to the length of the longest line.
 str :: String -> Widget
 str s =
     Widget Fixed Fixed $ do
@@ -225,43 +266,60 @@ str s =
                   lineImg lStr = V.string (c^.attr) (lStr ++ replicate (maxLength - length lStr) ' ')
               in return $ def & image .~ (V.vertCat lineImgs)
 
+-- | Build a widget from a 'T.Text' value.  Behaves the same as 'str'.
 txt :: T.Text -> Widget
 txt = str . T.unpack
 
+-- | Pad the specified widget on the left. Grows horizontally but defers
+-- vertical growth to the padded widget.
 padLeft :: Widget -> Widget
 padLeft p =
     Widget Unlimited (vSize p) $ do
         result <- render p
         render $ (vLimit (result^.image.to V.imageHeight) $ fill ' ') <+> (Widget Fixed Fixed $ return result)
 
+-- | Pad the specified widget on the right. Grows horizontally but
+-- defers vertical growth to the padded widget.
 padRight :: Widget -> Widget
 padRight p =
     Widget Unlimited (vSize p) $ do
         result <- render p
         render $ (Widget Fixed Fixed $ return result) <+> (vLimit (result^.image.to V.imageHeight) $ fill ' ')
 
+-- | Pad the specified widget on the top. Grows vertically but defers
+-- horizontal growth to the padded widget.
 padTop :: Widget -> Widget
 padTop p =
     Widget (hSize p) Unlimited $ do
         result <- render p
         render $ (hLimit (result^.image.to V.imageWidth) $ fill ' ') <=> (Widget Fixed Fixed $ return result)
 
+-- | Pad the specified widget on the bottom. Grows vertically but defers
+-- horizontal growth to the padded widget.
 padBottom :: Widget -> Widget
 padBottom p =
     Widget (hSize p) Unlimited $ do
         result <- render p
         render $ (Widget Fixed Fixed $ return result) <=> (hLimit (result^.image.to V.imageWidth) $ fill ' ')
 
+-- | Fill all available space with the specified character. Grows both
+-- horizontally and vertically.
 fill :: Char -> Widget
 fill ch =
     Widget Unlimited Unlimited $ do
       c <- getContext
       return $ def & image .~ (V.charFill (c^.attr) ch (c^.availW) (c^.availH))
 
+-- | Vertical box layout: put the specified widgets one above the other
+-- in the specified order (uppermost first). Defers growth policies to
+-- the growth policies of both widgets.
 vBox :: [Widget] -> Widget
 vBox [] = emptyWidget
 vBox pairs = renderBox vBoxRenderer pairs
 
+-- | Horizontal box layout: put the specified widgets next to each other
+-- in the specified order (leftmost first). Defers growth policies to
+-- the growth policies of both widgets.
 hBox :: [Widget] -> Widget
 hBox [] = emptyWidget
 hBox pairs = renderBox hBoxRenderer pairs
@@ -322,41 +380,61 @@ renderBox br ws = do
                             (concat $ _cursors <$> allTranslatedResults)
                             (concat $ _visibilityRequests <$> allTranslatedResults)
 
+-- | Limit the space available to the specified widget to the specified
+-- number of columns. This is important for constraining the horizontal
+-- growth of otherwise-unlimited widgets.
 hLimit :: Int -> Widget -> Widget
 hLimit w p =
     Widget Fixed (vSize p) $ do
       withReaderT (& availW .~ w) $ render $ cropToContext p
 
+-- | Limit the space available to the specified widget to the specified
+-- number of rows. This is important for constraining the vertical
+-- growth of otherwise-unlimited widgets.
 vLimit :: Int -> Widget -> Widget
 vLimit h p =
     Widget (hSize p) Fixed $ do
       withReaderT (& availH .~ h) $ render $ cropToContext p
 
+-- | When drawing the specified widget, set the current attribute used
+-- for drawing to the one with the specified name. Note that the widget
+-- may use further calls to 'withAttr' to override this; if you really
+-- want to prevent that, use 'withDefaultAttr' or 'forceAttr'.
 withAttr :: AttrName -> Widget -> Widget
 withAttr an p =
     Widget (hSize p) (vSize p) $ do
       withReaderT (& ctxAttrName .~ an) (render p)
 
+-- | Update the attribute map while rendering the specified widget: set
+-- its new default attribute to the one that we get by looking up the
+-- specified attribute name in the map.
 withDefaultAttr :: AttrName -> Widget -> Widget
 withDefaultAttr an p =
     Widget (hSize p) (vSize p) $ do
         c <- getContext
         withReaderT (& ctxAttrs %~ (setDefault (attrMapLookup an (c^.ctxAttrs)))) (render p)
 
+-- | When rendering the specified widget, update the attribute map with
+-- the specified transformation.
 updateAttrMap :: (AttrMap -> AttrMap) -> Widget -> Widget
 updateAttrMap f p =
     Widget (hSize p) (vSize p) $ do
         withReaderT (& ctxAttrs %~ f) (render p)
 
+-- | When rendering the specified widget, force all attribute lookups
+-- in the attribute map to use the value currently assigned to the
+-- specified attribute name.
 forceAttr :: AttrName -> Widget -> Widget
 forceAttr an p =
     Widget (hSize p) (vSize p) $ do
         c <- getContext
         withReaderT (& ctxAttrs .~ (forceAttrMap (attrMapLookup an (c^.ctxAttrs)))) (render p)
 
+-- | Build a widget directly from a raw Vty image.
 raw :: V.Image -> Widget
 raw img = Widget Fixed Fixed $ return $ def & image .~ img
 
+-- | Translate the specified widget by the specified offset amount.
 translateBy :: Location -> Widget -> Widget
 translateBy loc p =
     Widget (hSize p) (vSize p) $ do
@@ -373,6 +451,8 @@ cropToContext :: Widget -> Widget
 cropToContext p =
     Widget (hSize p) (vSize p) $ (render p >>= cropResultToContext)
 
+-- | Crop the specified widget on the left by the specified number of
+-- columns.
 cropLeftBy :: Int -> Widget -> Widget
 cropLeftBy cols p =
     Widget (hSize p) (vSize p) $ do
@@ -382,6 +462,8 @@ cropLeftBy cols p =
       return $ addResultOffset (Location (-1 * cols, 0))
              $ result & image %~ cropped
 
+-- | Crop the specified widget on the right by the specified number of
+-- columns.
 cropRightBy :: Int -> Widget -> Widget
 cropRightBy cols p =
     Widget (hSize p) (vSize p) $ do
@@ -390,6 +472,8 @@ cropRightBy cols p =
           cropped img = if amt < 0 then V.emptyImage else V.cropRight amt img
       return $ result & image %~ cropped
 
+-- | Crop the specified widget on the top by the specified number of
+-- rows.
 cropTopBy :: Int -> Widget -> Widget
 cropTopBy rows p =
     Widget (hSize p) (vSize p) $ do
@@ -399,6 +483,8 @@ cropTopBy rows p =
       return $ addResultOffset (Location (0, -1 * rows))
              $ result & image %~ cropped
 
+-- | Crop the specified widget on the bottom by the specified number of
+-- rows.
 cropBottomBy :: Int -> Widget -> Widget
 cropBottomBy rows p =
     Widget (hSize p) (vSize p) $ do
@@ -407,6 +493,8 @@ cropBottomBy rows p =
           cropped img = if amt < 0 then V.emptyImage else V.cropBottom amt img
       return $ result & image %~ cropped
 
+-- | When rendering the specified widget, also register a cursor
+-- positioning request using the specified name and location.
 showCursor :: Name -> Location -> Widget -> Widget
 showCursor n cloc p =
     Widget (hSize p) (vSize p) $ do
@@ -425,7 +513,28 @@ vRelease p =
         Fixed -> Just $ Widget (hSize p) Unlimited $ withReaderT (& availH .~ unrestricted) (render p)
         Unlimited -> Nothing
 
-viewport :: Name -> ViewportType -> Widget -> Widget
+-- | Render the specified widget in a named viewport with the
+-- specified type. This permits widgets to be scrolled without being
+-- scrolling-aware. To make the most use of viewports, the specified
+-- widget should use the 'visible' combinator to make a "visibility
+-- request". This viewport combinator will then translate the resulting
+-- rendering to make the requested region visible. In addition, the
+-- 'Brick.Main.EventM' monad provides primitives to scroll viewports
+-- created by this function if 'visible' is not what you want.
+--
+-- If a viewport receives more than one visibility request, only the
+-- first is honored. If a viewport receives more than one scrolling
+-- request from 'Brick.Main.EventM', all are honored in the order in
+-- which they are received.
+viewport :: Name
+         -- ^ The name of the viewport (must be unique and stable for
+         -- reliable behavior)
+         -> ViewportType
+         -- ^ The type of viewport (indicates the permitted scrolling
+         -- direction)
+         -> Widget
+         -- ^ The widget to be rendered in the scrollable viewport
+         -> Widget
 viewport vpname typ p =
     Widget Unlimited Unlimited $ do
       -- First, update the viewport size.
@@ -544,6 +653,13 @@ scrollToView typ rq vp = vp & theStart .~ newStart
                         then reqEnd - vp^.theSize
                         else curStart
 
+-- | Request that the specified widget be made visible when it is
+-- rendered inside a viewport. This permits widgets (whose sizes and
+-- positions cannot be known due to being embedded in arbitrary layouts)
+-- make a request for a parent viewport to locate them and scroll enough
+-- to put them in view. This, together with 'viewport' is what makes the
+-- text editor and list widgets possible without making them deal with
+-- the details of scrolling state management.
 visible :: Widget -> Widget
 visible p =
     Widget (hSize p) (vSize p) $ do
@@ -557,6 +673,9 @@ visible p =
                then result & visibilityRequests %~ (VR (Location (0, 0)) imageSize :)
                else result
 
+-- | Similar to 'visible', request that a region (with the specified
+-- 'Location' as its origin and 'V.DisplayRegion' as its size) be made
+-- visible when it is rendered inside a viewport.
 visibleRegion :: Location -> V.DisplayRegion -> Widget -> Widget
 visibleRegion vrloc sz p =
     Widget (hSize p) (vSize p) $ do
@@ -567,8 +686,22 @@ visibleRegion vrloc sz p =
                then result & visibilityRequests %~ (VR vrloc sz :)
                else result
 
-(<+>) :: Widget -> Widget -> Widget
+-- | Horizontal box layout: put the specified widgets next to each other
+-- in the specified order. Defers growth policies to the growth policies
+-- of both widgets.
+(<+>) :: Widget
+      -- ^ Left
+      -> Widget
+      -- ^ Right
+      -> Widget
 (<+>) a b = hBox [a, b]
 
-(<=>) :: Widget -> Widget -> Widget
+-- | Vertical box layout: put the specified widgets one above the other
+-- in the specified order. Defers growth policies to the growth policies
+-- of both widgets.
+(<=>) :: Widget
+      -- ^ Top
+      -> Widget
+      -- ^ Bottom
+      -> Widget
 (<=>) a b = vBox [a, b]
