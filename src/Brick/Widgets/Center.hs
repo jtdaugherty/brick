@@ -1,10 +1,15 @@
+-- | This module provides combinators for centering other widgets.
 module Brick.Widgets.Center
-  ( hCenter
+  ( -- * Centering horizontally
+    hCenter
   , hCenterWith
+  -- * Centering vertically
   , vCenter
   , vCenterWith
+  -- * Centering both horizontally and vertically
   , center
   , centerWith
+  -- * Centering about an arbitrary origin
   , centerAbout
   )
 where
@@ -15,9 +20,14 @@ import Graphics.Vty (imageWidth, imageHeight, horizCat, charFill, vertCat)
 import Brick.Types
 import Brick.Widgets.Core
 
+-- | Center the specified widget horizontally. Consumes all available
+-- horizontal space.
 hCenter :: Widget -> Widget
 hCenter = hCenterWith Nothing
 
+-- | Center the specified widget horizontally. Consumes all available
+-- horizontal space. Uses the specified character to fill in the space
+-- to either side of the centered widget (defaults to space).
 hCenterWith :: Maybe Char -> Widget -> Widget
 hCenterWith mChar p =
     let ch = maybe ' ' id mChar
@@ -41,9 +51,13 @@ hCenterWith mChar p =
                return $ addResultOffset off
                       $ result & image .~ paddedImage
 
+-- | Center a widget vertically.  Consumes all vertical space.
 vCenter :: Widget -> Widget
 vCenter = vCenterWith Nothing
 
+-- | Center a widget vertically. Consumes all vertical space. Uses the
+-- specified character to fill in the space above and below the centered
+-- widget (defaults to space).
 vCenterWith :: Maybe Char -> Widget -> Widget
 vCenterWith mChar p =
     let ch = maybe ' ' id mChar
@@ -67,12 +81,19 @@ vCenterWith mChar p =
                return $ addResultOffset off
                       $ result & image .~ paddedImage
 
+-- | Center a widget both vertically and horizontally. Consumes all
+-- available vertical and horizontal space.
 center :: Widget -> Widget
 center = centerWith Nothing
 
+-- | Center a widget both vertically and horizontally. Consumes all
+-- available vertical and horizontal space. Uses the specified character
+-- to fill in the space around the centered widget (defaults to space).
 centerWith :: Maybe Char -> Widget -> Widget
 centerWith c = vCenterWith c . hCenterWith c
 
+-- | Center the widget horizontally and vertically about the specified
+-- origin.
 centerAbout :: Location -> Widget -> Widget
 centerAbout loc p =
     Widget Unlimited Unlimited $ do
