@@ -1,11 +1,11 @@
 name:                brick
 version:             0.1
 synopsis:            A terminal user interface library
-description:         Brick is a purely-functional terminal UI programming
-                     library that lets you write declarative specifications
-                     of your terminal user interfaces.  It cleanly separates
-                     event handling and application state management from
-                     the business of rendering the interface.
+description:         Brick is a terminal UI programming library that lets you
+                     write declarative specifications of your terminal user
+                     interfaces.  It cleanly separates event handling and
+                     application state management from the business of
+                     rendering the interface.
                      .
                      .
                      To get started, import Brick.Main and use one
