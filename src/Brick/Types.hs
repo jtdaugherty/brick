@@ -80,10 +80,10 @@ class HandleEvent a where
     handleEvent :: Event -> a -> a
 
 -- | A template haskell function to build lenses for a record type. This
--- function differs from the 'Lens.makeLenses' function in that it does
--- not require the record fields to be prefixed with underscores and
--- it adds an "L" suffix to lens names to make it clear that they are
--- lenses.
+-- function differs from the 'Control.Lens.makeLenses' function in that
+-- it does not require the record fields to be prefixed with underscores
+-- and it adds an "L" suffix to lens names to make it clear that they
+-- are lenses.
 suffixLenses :: TH.Name -> TH.DecsQ
 suffixLenses = makeLensesWith $
   lensRules & lensField .~ (\_ _ name -> [TopName $ TH.mkName $ TH.nameBase name ++ "L"])
