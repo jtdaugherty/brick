@@ -20,3 +20,5 @@ The best way to get started is to build, run, and read the source for
 the various demonstration programs in the `programs/` directory. This
 will help you get to know the library and what it can do. There is also
 extensive Haddock documentation.
+
+This library deprecates [vty-ui](https://github.com/jtdaugherty/vty-ui).
