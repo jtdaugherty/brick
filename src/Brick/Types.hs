@@ -76,7 +76,9 @@ instance TerminalLocation CursorLocation where
     column = cursorLocation._1
     row = cursorLocation._2
 
+-- | The class of types that provide some basic event-handling.
 class HandleEvent a where
+    -- | Handle a Vty event
     handleEvent :: Event -> a -> a
 
 -- | A template haskell function to build lenses for a record type. This
