@@ -13,7 +13,7 @@ toolkits which require you to write a long and tedious sequence of
 "create a widget, now bind an event handler", `brick` just requires you
 to describe your interface -- even the bits that are stateful -- using
 a set of declarative combinators and it does the rest. All you have to
-do is provide functions to do transform your own application state when
+do is provide functions to transform your own application state when
 input (or other kinds of) events arrive.
 
 The best way to get started is to build, run, and read the source for
