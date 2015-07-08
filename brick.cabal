@@ -1,7 +1,12 @@
 name:                brick
 version:             0.1
-synopsis:            Testing
-description:         Testing
+synopsis:            A terminal user interface library
+description:         Brick is a purely-functional terminal UI programming
+                     library that lets you write declarative specifications
+                     of your terminal user interfaces.  It cleanly separates
+                     event handling and application state management from
+                     the business of rendering the interface.  See the
+                     'programs/' directory for a collection of demo programs.
 license:             BSD3
 license-file:        LICENSE
 author:              Jonathan Daugherty <cygnus@foobox.com>
