@@ -1,26 +1,35 @@
 Bugs / design issues:
-- Fix cursor and visibility request cropping in primitives where missing
-- Consider adding L suffix to Context lenses to be consistent with other
-lenses
+- Consider adding L suffix to Context and other core lenses to be
+consistent with other lenses
 
 Features:
 - Text wrapping
 - Deal with multi-column characters everywhere
-- Port widgets from vty-ui
+- Port widgets from vty-ui:
+  - Progress bar?
+  - Dir browser?
+  - Dialog?
+  - Checkbox?
+  - Button?
 - Overlays relative to a specific widget (e.g. drop-downs) using layers
 but without having to know the position of the controlling widget (e.g.
 add a combinator in one layer to refer to something in another). In
 general, an API for multi-layer rendering might emerge from this.
-
-Performance:
-- Use a zipper for the list widget, use vectors for storage, or
-  generalize interface to some traversable so the caller decides what
-  structure to use (e.g. tree, vector). This would also require the
-  generalization of a "selection index"
-- Use Vector instead of List where sensible
 
 Open issues:
 - Centering and other operations pad widgets with fills with interacts
 with layering depending on the user's intentions. Sometimes we want
 layers to be opaque and filled, other times we want them to be
 transparent.  How do we deal with this in general?
+
+Documentation:
+- Getting started: simpleMain, defaultMain
+- customMain and the App type
+  - Event handlers
+  - Cursor selection
+  - Suspend & resume, halt, continue
+  - Using your own event type
+- How widgets and rendering work
+- Implementing your own widgets
+  - Rendering sub-widgets
+  - Dealing with the rendering context
