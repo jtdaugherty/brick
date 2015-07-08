@@ -9,7 +9,7 @@ import Graphics.Vty hiding (translate)
 import qualified Data.Text as T
 
 import Brick.Main
-import Brick.Core
+import Brick.Types
 import Brick.Widgets.Core
 import Brick.Widgets.Center
 import Brick.Widgets.Border

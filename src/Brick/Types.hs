@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-module Brick.Core
+module Brick.Types
   ( Location(Location)
   , TerminalLocation(..)
   , CursorLocation(..)

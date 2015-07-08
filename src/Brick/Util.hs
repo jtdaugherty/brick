@@ -12,7 +12,7 @@ import Control.Lens ((&), (%~))
 import Data.Monoid ((<>))
 import Graphics.Vty
 
-import Brick.Core (Location(..), CursorLocation(..), cursorLocation)
+import Brick.Types (Location(..), CursorLocation(..), cursorLocation)
 
 for :: [a] -> (a -> b) -> [b]
 for = flip map

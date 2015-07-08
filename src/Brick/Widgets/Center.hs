@@ -12,8 +12,8 @@ where
 import Control.Lens ((^.), (&), (.~), to)
 import Graphics.Vty (imageWidth, imageHeight, horizCat, charFill, vertCat)
 
+import Brick.Types
 import Brick.Widgets.Core
-import Brick.Core
 
 hCenter :: Widget -> Widget
 hCenter = hCenterWith Nothing

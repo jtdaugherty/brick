@@ -17,7 +17,7 @@ where
 import Control.Lens ((^.))
 import Data.Maybe (listToMaybe)
 
-import Brick.Core (Name(..), CursorLocation(..), cursorLocationName)
+import Brick.Types
 
 -- | A focus ring containing a sequence of widget names to focus and a
 -- currently-focused widget name.

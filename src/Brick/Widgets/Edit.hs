@@ -15,7 +15,7 @@ import Control.Lens
 import Data.Monoid ((<>))
 import Graphics.Vty (Event(..), Key(..), Modifier(..))
 
-import Brick.Core (Name, Location(..), HandleEvent(..), suffixLenses)
+import Brick.Types
 import Brick.Widgets.Core
 import Brick.Util (clamp)
 import Brick.AttrMap

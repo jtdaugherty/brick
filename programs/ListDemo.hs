@@ -7,7 +7,7 @@ import Data.Monoid
 import Graphics.Vty
 
 import Brick.Main
-import Brick.Core
+import Brick.Types
 import Brick.Widgets.Core
 import Brick.Widgets.Border
 import Brick.Widgets.List

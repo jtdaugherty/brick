@@ -29,7 +29,7 @@ import Data.Monoid ((<>))
 import Data.Maybe (fromMaybe)
 import Graphics.Vty (Event(..), Key(..))
 
-import Brick.Core (HandleEvent(..), Name, suffixLenses)
+import Brick.Types
 import Brick.Merge (maintainSel)
 import Brick.Widgets.Core
 import Brick.Util (clamp, for)

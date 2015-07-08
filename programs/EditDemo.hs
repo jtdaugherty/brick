@@ -6,7 +6,7 @@ import Data.Monoid
 import Graphics.Vty hiding (translate)
 
 import Brick.Main
-import Brick.Core
+import Brick.Types
 import Brick.Widgets.Core
 import Brick.Widgets.Center
 import Brick.Widgets.Edit

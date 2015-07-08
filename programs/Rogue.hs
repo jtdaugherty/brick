@@ -13,7 +13,7 @@ import Control.Monad
 import System.Random
 
 import Brick.Main
-import Brick.Core
+import Brick.Types
 import Brick.AttrMap
 import Brick.Widgets.Core
 import Brick.Widgets.Border

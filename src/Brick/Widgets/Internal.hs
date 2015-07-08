@@ -83,7 +83,7 @@ import Control.Lens (Lens')
 import Data.String (IsString(..))
 import qualified Graphics.Vty as V
 
-import Brick.Core
+import Brick.Types
 import Brick.Widgets.Border.Style
 import Brick.Util (clOffset, for)
 import Brick.AttrMap

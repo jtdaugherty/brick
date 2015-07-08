@@ -23,7 +23,7 @@ library
     Brick.Widgets.Edit
     Brick.Widgets.List
     Brick.AttrMap
-    Brick.Core
+    Brick.Types
     Brick.Focus
     Brick.Main
     Brick.Markup

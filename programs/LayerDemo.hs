@@ -7,7 +7,7 @@ import Control.Monad (void)
 import Data.Default
 import Graphics.Vty
 
-import Brick.Core
+import Brick.Types
 import Brick.Main
 import Brick.Widgets.Core
 import Brick.Widgets.Border
