@@ -57,6 +57,21 @@ The development of this library has also revealed some bugs in `vty`,
 and I've tried to report those as I go. If they haven't been resolved,
 you'll see them arise when using `brick`.
 
+Reporting bugs
+--------------
+
+Please file bug reports as GitHub issues.  For best results:
+
+ - Include the versions of relevant software packages: `brick`, `ghc`,
+   and `vty` will be the most important ones. Even better, the output
+   of `cabal freeze` would probably be helpful in making the problem
+   reproducible.
+
+ - Clearly describe the behavior you expected ...
+
+ - ... and include a mininal demonstration program that exhibits the
+   behavior you actually observed.
+
 Contributing
 ------------
 
