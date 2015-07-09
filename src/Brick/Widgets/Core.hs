@@ -14,10 +14,14 @@ module Brick.Widgets.Core
   , fill
 
   -- * Padding
+  , Padding(..)
   , padLeft
   , padRight
   , padTop
   , padBottom
+  , padLeftRight
+  , padTopBottom
+  , padAll
 
   -- * Box layout
   , (<=>)

@@ -35,10 +35,14 @@ module Brick.Widgets.Internal
   , str
   , fill
 
+  , Padding(..)
   , padLeft
   , padRight
   , padTop
   , padBottom
+  , padLeftRight
+  , padTopBottom
+  , padAll
 
   , emptyWidget
   , hBox
@@ -270,37 +274,67 @@ str s =
 txt :: T.Text -> Widget
 txt = str . T.unpack
 
--- | Pad the specified widget on the left. Grows horizontally but defers
--- vertical growth to the padded widget.
-padLeft :: Widget -> Widget
-padLeft p =
-    Widget Unlimited (vSize p) $ do
-        result <- render p
-        render $ (vLimit (result^.image.to V.imageHeight) $ fill ' ') <+> (Widget Fixed Fixed $ return result)
+-- | The type of padding.
+data Padding = Pad Int
+             -- ^ Pad by the specified number of rows or columns.
+             | Max
+             -- ^ Pad up to the number of available rows or columns.
 
--- | Pad the specified widget on the right. Grows horizontally but
--- defers vertical growth to the padded widget.
-padRight :: Widget -> Widget
-padRight p =
-    Widget Unlimited (vSize p) $ do
+-- | Pad the specified widget on the left.
+padLeft :: Padding -> Widget -> Widget
+padLeft padding p =
+    let (f, sz) = case padding of
+          Max -> (id, Unlimited)
+          Pad i -> (hLimit i, Fixed)
+    in Widget sz (vSize p) $ do
         result <- render p
-        render $ (Widget Fixed Fixed $ return result) <+> (vLimit (result^.image.to V.imageHeight) $ fill ' ')
+        render $ (f $ vLimit (result^.image.to V.imageHeight) $ fill ' ') <+>
+                 (Widget Fixed Fixed $ return result)
 
--- | Pad the specified widget on the top. Grows vertically but defers
--- horizontal growth to the padded widget.
-padTop :: Widget -> Widget
-padTop p =
-    Widget (hSize p) Unlimited $ do
+-- | Pad the specified widget on the right.
+padRight :: Padding -> Widget -> Widget
+padRight padding p =
+    let (f, sz) = case padding of
+          Max -> (id, Unlimited)
+          Pad i -> (hLimit i, Fixed)
+    in Widget sz (vSize p) $ do
         result <- render p
-        render $ (hLimit (result^.image.to V.imageWidth) $ fill ' ') <=> (Widget Fixed Fixed $ return result)
+        render $ (Widget Fixed Fixed $ return result) <+>
+                 (f $ vLimit (result^.image.to V.imageHeight) $ fill ' ')
 
--- | Pad the specified widget on the bottom. Grows vertically but defers
--- horizontal growth to the padded widget.
-padBottom :: Widget -> Widget
-padBottom p =
-    Widget (hSize p) Unlimited $ do
+-- | Pad the specified widget on the top.
+padTop :: Padding -> Widget -> Widget
+padTop padding p =
+    let (f, sz) = case padding of
+          Max -> (id, Unlimited)
+          Pad i -> (vLimit i, Fixed)
+    in Widget (hSize p) sz $ do
         result <- render p
-        render $ (Widget Fixed Fixed $ return result) <=> (hLimit (result^.image.to V.imageWidth) $ fill ' ')
+        render $ (f $ hLimit (result^.image.to V.imageWidth) $ fill ' ') <=>
+                 (Widget Fixed Fixed $ return result)
+
+-- | Pad the specified widget on the bottom.
+padBottom :: Padding -> Widget -> Widget
+padBottom padding p =
+    let (f, sz) = case padding of
+          Max -> (id, Unlimited)
+          Pad i -> (vLimit i, Fixed)
+    in Widget (hSize p) sz $ do
+        result <- render p
+        render $ (Widget Fixed Fixed $ return result) <=>
+                 (f $ hLimit (result^.image.to V.imageWidth) $ fill ' ')
+
+-- | Pad a widget on the left and right.
+padLeftRight :: Padding -> Widget -> Widget
+padLeftRight p w = padLeft p $ padRight p w
+
+-- | Pad a widget on the top and bottom.
+padTopBottom :: Padding -> Widget -> Widget
+padTopBottom p w = padTop p $ padBottom p w
+
+-- | Pad a widget on all sides.
+padAll :: Padding -> Widget -> Widget
+padAll p w = padLeftRight p $ padTopBottom p w
 
 -- | Fill all available space with the specified character. Grows both
 -- horizontally and vertically.
@@ -599,8 +633,8 @@ viewport vpname typ p =
           (0, 0) -> return $ translated & image .~ (V.charFill (c^.attr) ' ' (c^.availW) (c^.availH))
                                         & visibilityRequests .~ mempty
           _ -> render $ cropToContext
-                      $ padBottom
-                      $ padRight
+                      $ padBottom Max
+                      $ padRight Max
                       $ Widget Fixed Fixed $ return $ translated & visibilityRequests .~ mempty
 
 scrollTo :: ViewportType -> ScrollRequest -> V.Image -> Viewport -> Viewport

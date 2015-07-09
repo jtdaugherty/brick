@@ -11,15 +11,24 @@ import Brick.Widgets.Center
 
 ui :: Widget
 ui =
-    vBox [ hBox [ padLeft $ vCenter "Left-padded"
+    vBox [ hBox [ padLeft Max $ vCenter "Left-padded"
                 , vBorder
-                , padRight $ vCenter "Right-padded"
+                , padRight Max $ vCenter "Right-padded"
                 ]
          , hBorder
-         , hBox [ padTop $ hCenter "Top-padded"
+         , hBox [ padTop Max $ hCenter "Top-padded"
                 , vBorder
-                , padBottom $ hCenter "Bottom-padded"
+                , padBottom Max $ hCenter "Bottom-padded"
                 ]
+         , hBorder
+         , hBox [ padLeftRight (Pad 2) "Padded by 2 on left/right"
+                , vBorder
+                , vBox [ padTopBottom (Pad 1) "Padded by 1 on top/bottom"
+                       , hBorder
+                       ]
+                ]
+         , hBorder
+         , padAll (Pad 2) "Padded by 2 on all sides"
          ]
 
 app :: App () Event
