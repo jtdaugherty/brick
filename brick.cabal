@@ -49,7 +49,7 @@ library
   other-modules:
     Brick.Widgets.Internal
 
-  build-depends:       base,
+  build-depends:       base <= 5,
                        vty >= 5.2.9,
                        transformers,
                        data-default,
@@ -66,7 +66,7 @@ executable brick
   ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
   default-language:    Haskell2010
   main-is:             Main.hs
-  build-depends:       base,
+  build-depends:       base <= 5,
                        brick,
                        transformers,
                        vty >= 5.2.9,
@@ -88,7 +88,7 @@ executable brick-bench
   default-language:    Haskell2010
   main-is:             Bench.hs
   CPP-Options:         -DBENCH
-  build-depends:       base,
+  build-depends:       base <= 5,
                        transformers,
                        vty >= 5.2.9,
                        data-default,
@@ -106,7 +106,7 @@ executable brick-dialog-demo
   ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
   default-language:    Haskell2010
   main-is:             DialogDemo.hs
-  build-depends:       base,
+  build-depends:       base <= 5,
                        brick,
                        vty >= 5.2.9,
                        data-default,
@@ -118,7 +118,7 @@ executable brick-layer-demo
   ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
   default-language:    Haskell2010
   main-is:             LayerDemo.hs
-  build-depends:       base,
+  build-depends:       base <= 5,
                        brick,
                        vty >= 5.2.9,
                        data-default,
@@ -130,7 +130,7 @@ executable brick-suspend-resume-demo
   ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
   default-language:    Haskell2010
   main-is:             SuspendAndResumeDemo.hs
-  build-depends:       base,
+  build-depends:       base <= 5,
                        brick,
                        vty >= 5.2.9,
                        data-default,
@@ -142,7 +142,7 @@ executable brick-padding-demo
   ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
   default-language:    Haskell2010
   main-is:             PaddingDemo.hs
-  build-depends:       base,
+  build-depends:       base <= 5,
                        brick,
                        vty >= 5.2.9,
                        data-default,
@@ -154,7 +154,7 @@ executable brick-attr-demo
   ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
   default-language:    Haskell2010
   main-is:             AttrDemo.hs
-  build-depends:       base,
+  build-depends:       base <= 5,
                        brick,
                        vty >= 5.2.9,
                        data-default,
@@ -166,7 +166,7 @@ executable brick-markup-demo
   ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
   default-language:    Haskell2010
   main-is:             MarkupDemo.hs
-  build-depends:       base,
+  build-depends:       base <= 5,
                        brick,
                        vty >= 5.2.9,
                        data-default,
@@ -178,7 +178,7 @@ executable brick-list-demo
   ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
   default-language:    Haskell2010
   main-is:             ListDemo.hs
-  build-depends:       base,
+  build-depends:       base <= 5,
                        brick,
                        vty >= 5.2.9,
                        data-default,
@@ -190,7 +190,7 @@ executable brick-custom-event-demo
   ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
   default-language:    Haskell2010
   main-is:             CustomEventDemo.hs
-  build-depends:       base,
+  build-depends:       base <= 5,
                        brick,
                        vty >= 5.2.9,
                        data-default,
@@ -202,7 +202,7 @@ executable brick-hello-world-demo
   ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
   default-language:    Haskell2010
   main-is:             HelloWorldDemo.hs
-  build-depends:       base,
+  build-depends:       base <= 5,
                        brick,
                        vty >= 5.2.9,
                        data-default,
@@ -214,7 +214,7 @@ executable brick-edit-demo
   ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
   default-language:    Haskell2010
   main-is:             EditDemo.hs
-  build-depends:       base,
+  build-depends:       base <= 5,
                        brick,
                        vty >= 5.2.9,
                        data-default,
@@ -226,7 +226,7 @@ executable brick-border-demo
   ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
   default-language:    Haskell2010
   main-is:             BorderDemo.hs
-  build-depends:       base,
+  build-depends:       base <= 5,
                        brick,
                        vty >= 5.2.9,
                        data-default,
@@ -238,7 +238,7 @@ executable brick-rogue
   ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
   default-language:    Haskell2010
   main-is:             Rogue.hs
-  build-depends:       base,
+  build-depends:       base <= 5,
                        brick,
                        transformers,
                        vty >= 5.2.9,
