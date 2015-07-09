@@ -1,6 +1,8 @@
 brick
 -----
 
+[![Build Status](https://travis-ci.org/jtdaugherty/brick.png)](https://travis-ci.org/jtdaugherty/brick)
+
 `brick` is a terminal user interface programming
 library written in Haskell, in the style of
 [gloss](http://hackage.haskell.org/package/gloss). This means you write
