@@ -152,4 +152,4 @@ theApp =
 main :: IO ()
 main = do
     st <- defaultMain theApp initialState
-    putStrLn $ "You entered: " <> (st^.stEditor.editContentsL)
+    putStrLn $ "You entered: " <> (getEditContents $ st^.stEditor)

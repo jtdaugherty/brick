@@ -59,6 +59,7 @@ library
                        vector,
                        contravariant,
                        text,
+                       text-zipper,
                        template-haskell
 
 executable brick

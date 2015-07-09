@@ -1,7 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-import Control.Lens
 import Data.Monoid
 import Graphics.Vty hiding (translate)
 
@@ -46,4 +45,4 @@ theApp =
 main :: IO ()
 main = do
     e <- defaultMain theApp initialState
-    putStrLn $ "You entered: " <> (e^.editContentsL)
+    putStrLn $ "You entered: " <> (getEditContents e)
