@@ -28,6 +28,7 @@ Documentation:
   - Suspend & resume, halt, continue
   - Using your own event type
 - How widgets and rendering work
+  - Space behavior
 - Implementing your own widgets
   - Rendering sub-widgets
   - Dealing with the rendering context
