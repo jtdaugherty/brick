@@ -7,6 +7,7 @@ import Graphics.Vty hiding (translate)
 import Brick.Main
 import Brick.Widgets.Core
 import Brick.Widgets.Dialog
+import Brick.Widgets.Center
 import Brick.AttrMap
 import Brick.Util
 import Brick.Types
@@ -17,7 +18,7 @@ data Choice = Red | Blue | Green
 drawUI :: Dialog Choice -> [Widget]
 drawUI d = [ui]
     where
-        ui = renderDialog d $ str "This is the dialog body."
+        ui = renderDialog d $ hCenter $ padAll (Pad 1) $ str "This is the dialog body."
 
 appEvent :: Dialog Choice -> Event -> EventM (Next (Dialog Choice))
 appEvent d ev =
