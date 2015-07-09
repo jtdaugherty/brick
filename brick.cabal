@@ -49,7 +49,7 @@ library
   other-modules:
     Brick.Widgets.Internal
 
-  build-depends:       base >=4.7 && <4.8,
+  build-depends:       base,
                        vty >= 5.2.9,
                        transformers,
                        data-default,
