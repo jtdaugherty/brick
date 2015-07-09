@@ -41,9 +41,9 @@ import Brick.AttrMap
 
 -- | Dialogs present a window with a title (optional), a body, and
 -- buttons (optional). They provide a 'HandleEvent' instance that knows
--- about 'Tab' and 'Shift'-'Tab' for changing which button is active.
--- Dialog buttons are labeled with strings and map to values of type
--- 'a', which you choose.
+-- about Tab and Shift-Tab for changing which button is active. Dialog
+-- buttons are labeled with strings and map to values of type 'a', which
+-- you choose.
 data Dialog a =
     Dialog { dialogName :: Name
            -- ^ The dialog name
