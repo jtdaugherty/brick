@@ -1,13 +1,28 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
+-- | This module provides a simple dialog widget. You get to pick the
+-- dialog title, if any, as well as its body and buttons.
 module Brick.Widgets.Dialog
   ( Dialog
+  , dialogTitle
+  , dialogName
+  , dialogButtons
+  , dialogSelectedIndex
+  , dialogWidth
+  -- * Construction and rendering
   , dialog
   , renderDialog
+  -- * Getting a dialog's current value
   , dialogSelection
+  -- * Attributes
   , dialogAttr
   , buttonAttr
   , buttonSelectedAttr
+  -- * Lenses
+  , dialogButtonsL
+  , dialogSelectedIndexL
+  , dialogWidthL
+  , dialogTitleL
   )
 where
 
@@ -24,12 +39,22 @@ import Brick.Widgets.Center
 import Brick.Widgets.Border
 import Brick.AttrMap
 
+-- | Dialogs present a window with a title (optional), a body, and
+-- buttons (optional). They provide a 'HandleEvent' instance that knows
+-- about 'Tab' and 'Shift'-'Tab' for changing which button is active.
+-- Dialog buttons are labeled with strings and map to values of type
+-- 'a', which you choose.
 data Dialog a =
     Dialog { dialogName :: Name
+           -- ^ The dialog name
            , dialogTitle :: Maybe String
+           -- ^ The dialog title
            , dialogButtons :: [(String, a)]
+           -- ^ The dialog button labels and values
            , dialogSelectedIndex :: Maybe Int
+           -- ^ The currently selected dialog button index (if any)
            , dialogWidth :: Int
+           -- ^ The maximum width of the dialog
            }
 
 suffixLenses ''Dialog
@@ -37,11 +62,22 @@ suffixLenses ''Dialog
 instance HandleEvent (Dialog a) where
     handleEvent ev d =
         case ev of
-            EvKey (KChar '\t') [] -> nextButton d
-            EvKey KBackTab [] -> prevButton d
+            EvKey (KChar '\t') [] -> nextButtonBy 1 d
+            EvKey KBackTab [] -> nextButtonBy (-1) d
             _ -> d
 
-dialog :: Name -> Maybe String -> Maybe (Int, [(String, a)]) -> Int -> Dialog a
+-- | Create a dialog.
+dialog :: Name
+       -- ^ The dialog name, provided so that you can use this as a
+       -- basis for viewport names in the dialog if desired
+       -> Maybe String
+       -- ^ The dialog title
+       -> Maybe (Int, [(String, a)])
+       -- ^ The currently-selected button index (starting at zero) and
+       -- the button labels and values to use
+       -> Int
+       -- ^ The maximum width of the dialog
+       -> Dialog a
 dialog name title buttonData w =
     let (buttons, idx) = case buttonData of
           Nothing -> ([], Nothing)
@@ -49,15 +85,19 @@ dialog name title buttonData w =
           Just (i, bs) -> (bs, Just $ clamp 0 (length bs - 1) i)
     in Dialog name title buttons idx w
 
+-- | The default attribute of the dialog
 dialogAttr :: AttrName
 dialogAttr = "dialog"
 
+-- | The default attribute for all dialog buttons
 buttonAttr :: AttrName
 buttonAttr = "button"
 
+-- | The attribute for the selected dialog button (extends 'dialogAttr')
 buttonSelectedAttr :: AttrName
 buttonSelectedAttr = buttonAttr <> "selected"
 
+-- | Render a dialog with the specified body widget.
 renderDialog :: Dialog a -> Widget -> Widget
 renderDialog d body =
     let buttonPadding = "  "
@@ -71,28 +111,23 @@ renderDialog d body =
         doBorder = maybe border borderWithLabel (str <$> d^.dialogTitleL)
     in center $
        withDefaultAttr dialogAttr $
-       doBorder $
        hLimit (d^.dialogWidthL) $
+       doBorder $
        vBox [ body
             , hCenter buttons
             ]
 
-nextButton :: Dialog a -> Dialog a
-nextButton d =
-    if null (d^.dialogButtonsL)
-    then d
-    else case d^.dialogSelectedIndexL of
-        Nothing -> d & dialogSelectedIndexL .~ (Just 0)
-        Just i -> d & dialogSelectedIndexL .~ (Just $ (i + 1) `mod` (length (d^.dialogButtonsL)))
+nextButtonBy :: Int -> Dialog a -> Dialog a
+nextButtonBy amt d =
+    let numButtons = length $ d^.dialogButtonsL
+    in if numButtons == 0 then d
+       else case d^.dialogSelectedIndexL of
+           Nothing -> d & dialogSelectedIndexL .~ (Just 0)
+           Just i -> d & dialogSelectedIndexL .~ (Just $ (i + amt) `mod` numButtons)
 
-prevButton :: Dialog a -> Dialog a
-prevButton d =
-    if null (d^.dialogButtonsL)
-    then d
-    else case d^.dialogSelectedIndexL of
-        Nothing -> d & dialogSelectedIndexL .~ (Just 0)
-        Just i -> d & dialogSelectedIndexL .~ (Just $ (i - 1) `mod` (length (d^.dialogButtonsL)))
-
+-- | Obtain the value associated with the dialog's currently-selected
+-- button, if any. This function is probably what you want when someone
+-- presses 'Enter' in a dialog.
 dialogSelection :: Dialog a -> Maybe a
 dialogSelection d =
     case d^.dialogSelectedIndexL of
