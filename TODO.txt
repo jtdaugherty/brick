@@ -23,7 +23,7 @@ transparent.  How do we deal with this in general?
 Documentation:
 - Getting started: simpleMain, defaultMain
 - customMain and the App type
-  - Event handlers
+  - Event handlers and HandleEvent
   - Cursor selection
   - Suspend & resume, halt, continue
   - Using your own event type
