@@ -27,8 +27,6 @@ manual](http://jtdaugherty.github.io/vty-ui/manuals/vty-ui-users-manual-1.9.pdf)
 Getting Started
 ---------------
 
-This package is expected to build on GHC 7.8.3.
-
 The best way to get started is to build, run, and read the source for
 the various demonstration programs in the `programs/` directory. This
 will help you get to know the library and what it can do. There is also
