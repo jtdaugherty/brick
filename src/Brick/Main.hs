@@ -271,7 +271,7 @@ halt = return . Halt
 
 -- | Suspend the event loop, save the terminal state, and run the
 -- specified action. When it returns an application state value, restore
--- the terminal state, and resume the event loop with the returned
--- application state.
+-- the terminal state, redraw the application from the new state, and
+-- resume the event loop.
 suspendAndResume :: IO s -> EventM (Next s)
 suspendAndResume = return . SuspendAndResume
