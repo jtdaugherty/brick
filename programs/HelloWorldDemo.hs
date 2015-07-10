@@ -1,8 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-import Brick.Main
-import Brick.Widgets.Core
+import Brick.Main (simpleMain)
+import Brick.Widgets.Core (Widget)
 
 ui :: Widget
 ui = "Hello, world!"

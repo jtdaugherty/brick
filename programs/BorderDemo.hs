@@ -6,17 +6,9 @@ import Data.Monoid
 import qualified Data.Text as T
 import qualified Graphics.Vty as V
 
-import Brick.Main
-  ( App(..)
-  , simpleMain
-  )
+import qualified Brick.Main as M
 import Brick.Util (fg, bg, on)
-import Brick.AttrMap
-  ( AttrMap
-  , AttrName
-  , attrMap
-  , applyAttrMappings
-  )
+import qualified Brick.AttrMap as A
 import Brick.Widgets.Core
   ( Widget
   , (<=>)
@@ -28,10 +20,7 @@ import Brick.Widgets.Core
   , withBorderStyle
   , txt
   )
-import Brick.Widgets.Center
-  ( vCenter
-  , center
-  )
+import qualified Brick.Widgets.Center as C
 import qualified Brick.Widgets.Border as B
 import qualified Brick.Widgets.Border.Style as BS
 
@@ -68,10 +57,10 @@ mkBorderDemo (styleName, sty) =
     withBorderStyle sty $
     B.borderWithLabel "label" $
     vLimit 5 $
-    vCenter $
+    C.vCenter $
     txt $ "  " <> styleName <> " style  "
 
-borderMappings :: [(AttrName, V.Attr)]
+borderMappings :: [(A.AttrName, V.Attr)]
 borderMappings =
     [ (B.borderAttr,         V.yellow `on` V.black)
     , (B.vBorderAttr,        V.green `on` V.red)
@@ -85,11 +74,11 @@ borderMappings =
 
 colorDemo :: Widget
 colorDemo =
-    updateAttrMap (applyAttrMappings borderMappings) $
+    updateAttrMap (A.applyAttrMappings borderMappings) $
     B.borderWithLabel "title" $
     hLimit 20 $
     vLimit 5 $
-    center $
+    C.center $
     "colors!"
 
 ui :: Widget
@@ -98,9 +87,9 @@ ui =
     <=> B.hBorder
     <=> colorDemo
     <=> B.hBorderWithLabel "horizontal border label"
-    <=> (center "Left of vertical border"
+    <=> (C.center "Left of vertical border"
          <+> B.vBorder
-         <+> center "Right of vertical border")
+         <+> C.center "Right of vertical border")
 
 main :: IO ()
-main = simpleMain ui
+main = M.simpleMain ui
