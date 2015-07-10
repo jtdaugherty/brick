@@ -3,9 +3,17 @@ module Main where
 
 import Data.Monoid
 import Graphics.Vty
+  ( Event, Attr, white, blue, cyan, green, red, yellow
+  , black
+  )
 
 import Brick.Main
 import Brick.Widgets.Core
+  ( Widget
+  , (<=>)
+  , withAttr
+  , vBox
+  )
 import Brick.Util (on, fg)
 import Brick.AttrMap (attrMap, AttrMap)
 
