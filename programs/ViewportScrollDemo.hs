@@ -6,59 +6,68 @@ import Control.Applicative
 import Control.Monad (void)
 import Data.Monoid
 import Data.Default
-import Graphics.Vty
+import qualified Graphics.Vty as V
 
-import Brick.Types
-import Brick.Main
+import qualified Brick.Types as T
+import qualified Brick.Main as M
+import qualified Brick.Widgets.Center as C
+import qualified Brick.Widgets.Border as B
 import Brick.Widgets.Core
-import Brick.Widgets.Center
-import Brick.Widgets.Border
+  ( Widget
+  , ViewportType(Horizontal, Vertical)
+  , hLimit
+  , vLimit
+  , hBox
+  , vBox
+  , viewport
+  , str
+  )
 
-vp1Name :: Name
+vp1Name :: T.Name
 vp1Name = "demo1"
 
-vp2Name :: Name
+vp2Name :: T.Name
 vp2Name = "demo2"
 
 drawUi :: () -> [Widget]
 drawUi = const [ui]
     where
-        ui = center $
+        ui = C.center $
              hLimit 60 $
              vLimit 20 $
-             border $
+             B.border $
              hBox [ viewport vp1Name Vertical $
                     vBox $ "Press up and down arrow keys" :
                            "to scroll this viewport." :
                            (str <$> [ "Line " <> (show i) | i <- [3..50::Int] ])
-                  , vBorder
+                  , B.vBorder
                   , viewport vp2Name Horizontal
                     "Press left and right arrow keys to scroll this viewport."
                   ]
 
-vp1Scroll :: ViewportScroll
-vp1Scroll = viewportScroll vp1Name
+vp1Scroll :: M.ViewportScroll
+vp1Scroll = M.viewportScroll vp1Name
 
-vp2Scroll :: ViewportScroll
-vp2Scroll = viewportScroll vp2Name
+vp2Scroll :: M.ViewportScroll
+vp2Scroll = M.viewportScroll vp2Name
 
-appEvent :: () -> Event -> EventM (Next ())
-appEvent _ (EvKey KDown [])  = scrollBy vp1Scroll 1 >> continue ()
-appEvent _ (EvKey KUp [])    = scrollBy vp1Scroll (-1) >> continue ()
-appEvent _ (EvKey KRight []) = scrollBy vp2Scroll 1 >> continue ()
-appEvent _ (EvKey KLeft [])  = scrollBy vp2Scroll (-1) >> continue ()
-appEvent _ (EvKey KEsc []) = halt ()
-appEvent _ _ = continue ()
+appEvent :: () -> V.Event -> M.EventM (M.Next ())
+appEvent _ (V.EvKey V.KDown [])  = M.scrollBy vp1Scroll 1 >> M.continue ()
+appEvent _ (V.EvKey V.KUp [])    = M.scrollBy vp1Scroll (-1) >> M.continue ()
+appEvent _ (V.EvKey V.KRight []) = M.scrollBy vp2Scroll 1 >> M.continue ()
+appEvent _ (V.EvKey V.KLeft [])  = M.scrollBy vp2Scroll (-1) >> M.continue ()
+appEvent _ (V.EvKey V.KEsc []) = M.halt ()
+appEvent _ _ = M.continue ()
 
-app :: App () Event
+app :: M.App () V.Event
 app =
-    App { appDraw = drawUi
-        , appStartEvent = return
-        , appHandleEvent = appEvent
-        , appAttrMap = const def
-        , appMakeVtyEvent = id
-        , appChooseCursor = neverShowCursor
-        }
+    M.App { M.appDraw = drawUi
+          , M.appStartEvent = return
+          , M.appHandleEvent = appEvent
+          , M.appAttrMap = const def
+          , M.appMakeVtyEvent = id
+          , M.appChooseCursor = M.neverShowCursor
+          }
 
 main :: IO ()
-main = void $ defaultMain app ()
+main = void $ M.defaultMain app ()
