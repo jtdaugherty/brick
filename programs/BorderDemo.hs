@@ -4,68 +4,89 @@ module Main where
 import Control.Applicative ((<$>))
 import Data.Monoid
 import qualified Data.Text as T
-import Graphics.Vty
+import qualified Graphics.Vty as V
 
 import Brick.Main
-import Brick.Util
+  ( App(..)
+  , simpleMain
+  )
+import Brick.Util (fg, bg, on)
 import Brick.AttrMap
+  ( AttrMap
+  , AttrName
+  , attrMap
+  , applyAttrMappings
+  )
 import Brick.Widgets.Core
+  ( Widget
+  , (<=>)
+  , (<+>)
+  , vLimit
+  , hLimit
+  , hBox
+  , updateAttrMap
+  , withBorderStyle
+  , txt
+  )
 import Brick.Widgets.Center
-import Brick.Widgets.Border
-import Brick.Widgets.Border.Style
+  ( vCenter
+  , center
+  )
+import qualified Brick.Widgets.Border as B
+import qualified Brick.Widgets.Border.Style as BS
 
-styles :: [(T.Text, BorderStyle)]
+styles :: [(T.Text, BS.BorderStyle)]
 styles =
-    [ ("ascii", ascii)
-    , ("unicode", unicode)
-    , ("unicode bold", unicodeBold)
-    , ("unicode rounded", unicodeRounded)
+    [ ("ascii", BS.ascii)
+    , ("unicode", BS.unicode)
+    , ("unicode bold", BS.unicodeBold)
+    , ("unicode rounded", BS.unicodeRounded)
     , ("custom", custom)
-    , ("from 'x'", borderStyleFromChar 'x')
+    , ("from 'x'", BS.borderStyleFromChar 'x')
     ]
 
-custom :: BorderStyle
+custom :: BS.BorderStyle
 custom =
-    BorderStyle { bsCornerTL = '/'
-                , bsCornerTR = '\\'
-                , bsCornerBR = '/'
-                , bsCornerBL = '\\'
-                , bsIntersectionFull = '.'
-                , bsIntersectionL = '.'
-                , bsIntersectionR = '.'
-                , bsIntersectionT = '.'
-                , bsIntersectionB = '.'
-                , bsHorizontal = '*'
-                , bsVertical = '!'
-                }
+    BS.BorderStyle { BS.bsCornerTL = '/'
+                   , BS.bsCornerTR = '\\'
+                   , BS.bsCornerBR = '/'
+                   , BS.bsCornerBL = '\\'
+                   , BS.bsIntersectionFull = '.'
+                   , BS.bsIntersectionL = '.'
+                   , BS.bsIntersectionR = '.'
+                   , BS.bsIntersectionT = '.'
+                   , BS.bsIntersectionB = '.'
+                   , BS.bsHorizontal = '*'
+                   , BS.bsVertical = '!'
+                   }
 
 borderDemos :: [Widget]
 borderDemos = mkBorderDemo <$> styles
 
-mkBorderDemo :: (T.Text, BorderStyle) -> Widget
+mkBorderDemo :: (T.Text, BS.BorderStyle) -> Widget
 mkBorderDemo (styleName, sty) =
     withBorderStyle sty $
-    borderWithLabel "label" $
+    B.borderWithLabel "label" $
     vLimit 5 $
     vCenter $
     txt $ "  " <> styleName <> " style  "
 
-borderMappings :: [(AttrName, Attr)]
+borderMappings :: [(AttrName, V.Attr)]
 borderMappings =
-    [ (borderAttr,         yellow `on` black)
-    , (vBorderAttr,        green `on` red)
-    , (hBorderAttr,        white `on` green)
-    , (hBorderLabelAttr,   fg blue)
-    , (tlCornerAttr,       bg red)
-    , (trCornerAttr,       bg blue)
-    , (blCornerAttr,       bg yellow)
-    , (brCornerAttr,       bg green)
+    [ (B.borderAttr,         V.yellow `on` V.black)
+    , (B.vBorderAttr,        V.green `on` V.red)
+    , (B.hBorderAttr,        V.white `on` V.green)
+    , (B.hBorderLabelAttr,   fg V.blue)
+    , (B.tlCornerAttr,       bg V.red)
+    , (B.trCornerAttr,       bg V.blue)
+    , (B.blCornerAttr,       bg V.yellow)
+    , (B.brCornerAttr,       bg V.green)
     ]
 
 colorDemo :: Widget
 colorDemo =
     updateAttrMap (applyAttrMappings borderMappings) $
-    borderWithLabel "title" $
+    B.borderWithLabel "title" $
     hLimit 20 $
     vLimit 5 $
     center $
@@ -74,11 +95,11 @@ colorDemo =
 ui :: Widget
 ui =
     hBox borderDemos
-    <=> hBorder
+    <=> B.hBorder
     <=> colorDemo
-    <=> hBorderWithLabel "horizontal border label"
+    <=> B.hBorderWithLabel "horizontal border label"
     <=> (center "Left of vertical border"
-         <+> vBorder
+         <+> B.vBorder
          <+> center "Right of vertical border")
 
 main :: IO ()
