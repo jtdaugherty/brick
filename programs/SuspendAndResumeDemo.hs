@@ -2,14 +2,22 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Main where
 
-import Control.Lens
+import Control.Lens (makeLenses, (.~), (^.), (&))
 import Control.Monad (void)
 import Data.Monoid
 import Data.Default
-import Graphics.Vty hiding (translate)
+import qualified Graphics.Vty as V
 
 import Brick.Main
+  ( App(..), neverShowCursor, defaultMain
+  , suspendAndResume, halt, continue
+  , EventM, Next
+  )
 import Brick.Widgets.Core
+  ( Widget
+  , vBox
+  , str
+  )
 
 data St =
     St { _stExternalInput :: String
@@ -24,11 +32,11 @@ drawUI st = [ui]
                   , "(Press Esc to quit or Space to ask for input)"
                   ]
 
-appEvent :: St -> Event -> EventM (Next St)
+appEvent :: St -> V.Event -> EventM (Next St)
 appEvent st e =
     case e of
-        EvKey KEsc [] -> halt st
-        EvKey (KChar ' ') [] -> suspendAndResume $ do
+        V.EvKey V.KEsc [] -> halt st
+        V.EvKey (V.KChar ' ') [] -> suspendAndResume $ do
             -- NB: https://github.com/coreyoconnor/vty/issues/77
             putStrLn "Suspended. Please enter something and press enter to resume:"
             s <- getLine
@@ -40,7 +48,7 @@ initialState =
     St { _stExternalInput = ""
        }
 
-theApp :: App St Event
+theApp :: App St V.Event
 theApp =
     App { appDraw = drawUI
         , appChooseCursor = neverShowCursor
