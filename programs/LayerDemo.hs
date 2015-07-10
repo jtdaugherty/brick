@@ -2,19 +2,23 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Main where
 
-import Control.Lens
+import Control.Lens (makeLenses, (^.), (&), (%~))
 import Control.Monad (void)
 import Data.Default
-import Graphics.Vty
+import qualified Graphics.Vty as V
 
-import Brick.Types
-import Brick.Main
+import qualified Brick.Types as T
+import Brick.Types (row, column)
+import qualified Brick.Main as M
+import qualified Brick.Widgets.Border as B
 import Brick.Widgets.Core
-import Brick.Widgets.Border
+  ( Widget
+  , translateBy
+  )
 
 data St =
-    St { _topLayerLocation :: Location
-       , _bottomLayerLocation :: Location
+    St { _topLayerLocation :: T.Location
+       , _bottomLayerLocation :: T.Location
        }
 
 makeLenses ''St
@@ -28,36 +32,36 @@ drawUi st =
 topLayer :: St -> Widget
 topLayer st =
     translateBy (st^.topLayerLocation) $
-    border "Top layer\n(Arrow keys move)"
+    B.border "Top layer\n(Arrow keys move)"
 
 bottomLayer :: St -> Widget
 bottomLayer st =
     translateBy (st^.bottomLayerLocation) $
-    border "Bottom layer\n(Ctrl-arrow keys move)"
+    B.border "Bottom layer\n(Ctrl-arrow keys move)"
 
-appEvent :: St -> Event -> EventM (Next St)
-appEvent st (EvKey KDown [])  = continue $ st & topLayerLocation.row %~ (+ 1)
-appEvent st (EvKey KUp [])    = continue $ st & topLayerLocation.row %~ (subtract 1)
-appEvent st (EvKey KRight []) = continue $ st & topLayerLocation.column %~ (+ 1)
-appEvent st (EvKey KLeft [])  = continue $ st & topLayerLocation.column %~ (subtract 1)
+appEvent :: St -> V.Event -> M.EventM (M.Next St)
+appEvent st (V.EvKey V.KDown [])  = M.continue $ st & topLayerLocation.row %~ (+ 1)
+appEvent st (V.EvKey V.KUp [])    = M.continue $ st & topLayerLocation.row %~ (subtract 1)
+appEvent st (V.EvKey V.KRight []) = M.continue $ st & topLayerLocation.column %~ (+ 1)
+appEvent st (V.EvKey V.KLeft [])  = M.continue $ st & topLayerLocation.column %~ (subtract 1)
 
-appEvent st (EvKey KDown [MCtrl])  = continue $ st & bottomLayerLocation.row %~ (+ 1)
-appEvent st (EvKey KUp [MCtrl])    = continue $ st & bottomLayerLocation.row %~ (subtract 1)
-appEvent st (EvKey KRight [MCtrl]) = continue $ st & bottomLayerLocation.column %~ (+ 1)
-appEvent st (EvKey KLeft [MCtrl])  = continue $ st & bottomLayerLocation.column %~ (subtract 1)
+appEvent st (V.EvKey V.KDown  [V.MCtrl]) = M.continue $ st & bottomLayerLocation.row %~ (+ 1)
+appEvent st (V.EvKey V.KUp    [V.MCtrl]) = M.continue $ st & bottomLayerLocation.row %~ (subtract 1)
+appEvent st (V.EvKey V.KRight [V.MCtrl]) = M.continue $ st & bottomLayerLocation.column %~ (+ 1)
+appEvent st (V.EvKey V.KLeft  [V.MCtrl]) = M.continue $ st & bottomLayerLocation.column %~ (subtract 1)
 
-appEvent st (EvKey KEsc []) = halt st
-appEvent st _ = continue st
+appEvent st (V.EvKey V.KEsc []) = M.halt st
+appEvent st _ = M.continue st
 
-app :: App St Event
+app :: M.App St V.Event
 app =
-    App { appDraw = drawUi
-        , appStartEvent = return
-        , appHandleEvent = appEvent
-        , appAttrMap = const def
-        , appMakeVtyEvent = id
-        , appChooseCursor = neverShowCursor
-        }
+    M.App { M.appDraw = drawUi
+          , M.appStartEvent = return
+          , M.appHandleEvent = appEvent
+          , M.appAttrMap = const def
+          , M.appMakeVtyEvent = id
+          , M.appChooseCursor = M.neverShowCursor
+          }
 
 main :: IO ()
-main = void $ defaultMain app $ St (Location (0, 0)) (Location (0, 0))
+main = void $ M.defaultMain app $ St (T.Location (0, 0)) (T.Location (0, 0))
