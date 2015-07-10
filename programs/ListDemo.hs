@@ -1,83 +1,91 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-import Control.Lens
+import Control.Lens ((^.))
 import Control.Monad (void)
 import Data.Monoid
-import Graphics.Vty
+import qualified Graphics.Vty as V
 
-import Brick.Main
-import Brick.Types
+import qualified Brick.Main as M
+import qualified Brick.Types as T
+import qualified Brick.Widgets.Border as B
+import qualified Brick.Widgets.List as L
+import qualified Brick.Widgets.Center as C
+import qualified Brick.AttrMap as A
 import Brick.Widgets.Core
-import Brick.Widgets.Border
-import Brick.Widgets.List
-import Brick.Widgets.Center
-import Brick.AttrMap
-import Brick.Util
+  ( Widget
+  , (<+>)
+  , str
+  , vLimit
+  , hLimit
+  , vBox
+  , withAttr
+  )
+import Brick.Util (fg, on, bg)
 
-drawUI :: List Int -> [Widget]
+drawUI :: L.List Int -> [Widget]
 drawUI l = [ui]
     where
         label = "Item " <+> cur <+> " of " <+> total
-        cur = case l^.listSelectedL of
+        cur = case l^.(L.listSelectedL) of
                 Nothing -> "-"
                 Just i -> str (show (i + 1))
-        total = str $ show $ length $ l^.listElementsL
-        box = borderWithLabel label $
+        total = str $ show $ length $ l^.(L.listElementsL)
+        box = B.borderWithLabel label $
               hLimit 25 $
               vLimit 15 $
-              renderList l
-        ui = vCenter $ vBox [ hCenter box
-                            , " "
-                            , hCenter "Press +/- to add/remove list elements."
-                            , hCenter "Press Esc to exit."
-                            ]
+              L.renderList l
+        ui = C.vCenter $ vBox [ C.hCenter box
+                              , " "
+                              , C.hCenter "Press +/- to add/remove list elements."
+                              , C.hCenter "Press Esc to exit."
+                              ]
 
-appEvent :: List Int -> Event -> EventM (Next (List Int))
+appEvent :: L.List Int -> V.Event -> M.EventM (M.Next (L.List Int))
 appEvent l e =
     case e of
-        EvKey (KChar '+') [] ->
-            let el = length $ l^.listElementsL
-            in continue $ listInsert el el l
+        V.EvKey (V.KChar '+') [] ->
+            let el = length $ l^.(L.listElementsL)
+            in M.continue $ L.listInsert el el l
 
-        EvKey (KChar '-') [] ->
-            case l^.listSelectedL of
-                Nothing -> continue l
-                Just i -> continue $ listRemove i l
+        V.EvKey (V.KChar '-') [] ->
+            case l^.(L.listSelectedL) of
+                Nothing -> M.continue l
+                Just i -> M.continue $ L.listRemove i l
 
-        EvKey KEsc [] -> halt l
+        V.EvKey V.KEsc [] -> M.halt l
 
-        ev -> continue $ handleEvent ev l
+        ev -> M.continue $ T.handleEvent ev l
 
 listDrawElement :: Bool -> Int -> Widget
 listDrawElement sel i =
     let selStr s = if sel
                    then withAttr customAttr (str $ "<" <> s <> ">")
                    else str s
-    in hCenter $ "Item " <+> (selStr $ show i)
+    in C.hCenter $ "Item " <+> (selStr $ show i)
 
-initialState :: List Int
-initialState = list (Name "list") listDrawElement [0, 1, 2]
+initialState :: L.List Int
+initialState = L.list (T.Name "list") listDrawElement [0, 1, 2]
 
-customAttr :: AttrName
-customAttr = listSelectedAttr <> "custom"
+customAttr :: A.AttrName
+customAttr = L.listSelectedAttr <> "custom"
 
-theMap :: AttrMap
-theMap = attrMap defAttr
-    [ (listAttr,              white `on` blue)
-    , (listSelectedAttr,      blue `on` white)
-    , (customAttr,            fg cyan)
+theMap :: A.AttrMap
+theMap = A.attrMap V.defAttr
+    [ (L.listAttr,            V.white `on` V.blue)
+    , (L.listSelectedAttr,    V.blue `on` V.white)
+    , (customAttr,            fg V.cyan)
     ]
 
-theApp :: App (List Int) Event
+theApp :: M.App (L.List Int) V.Event
 theApp =
-    App { appDraw = drawUI
-        , appChooseCursor = showFirstCursor
-        , appHandleEvent = appEvent
-        , appStartEvent = return
-        , appAttrMap = const theMap
-        , appMakeVtyEvent = id
-        }
+    M.App { M.appDraw = drawUI
+          , M.appChooseCursor = M.showFirstCursor
+          , M.appHandleEvent = appEvent
+          , M.appStartEvent = return
+          , M.appAttrMap = const theMap
+          , M.appMakeVtyEvent = id
+          }
 
 main :: IO ()
-main = void $ defaultMain theApp initialState
+main = void $ M.defaultMain theApp initialState
