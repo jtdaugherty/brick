@@ -2,24 +2,36 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Main where
 
-import Control.Lens
+import Control.Lens (makeLenses, (^.), (&), (.~), (%~))
 import Control.Monad (void, forever)
 import Control.Concurrent (newChan, writeChan, threadDelay, forkIO)
 import Data.Default
 import Data.Monoid
-import Graphics.Vty hiding (translate)
+import qualified Graphics.Vty as V
 
 import Brick.Main
+  ( App(..)
+  , Next
+  , EventM
+  , showFirstCursor
+  , customMain
+  , continue
+  , halt
+  )
 import Brick.Widgets.Core
+  ( Widget
+  , (<=>)
+  , str
+  )
 
 data St =
-    St { _stLastVtyEvent :: Maybe Event
+    St { _stLastVtyEvent :: Maybe V.Event
        , _stCounter :: Int
        }
 
 makeLenses ''St
 
-data CustomEvent = VtyEvent Event
+data CustomEvent = VtyEvent V.Event
                  | Counter
 
 drawUI :: St -> [Widget]
@@ -32,7 +44,7 @@ drawUI st = [a]
 appEvent :: St -> CustomEvent -> EventM (Next St)
 appEvent st e =
     case e of
-        VtyEvent (EvKey KEsc []) -> halt st
+        VtyEvent (V.EvKey V.KEsc []) -> halt st
         VtyEvent ev -> continue $ st & stLastVtyEvent .~ (Just ev)
         Counter -> continue $ st & stCounter %~ (+1)
 
@@ -60,4 +72,4 @@ main = do
         writeChan chan Counter
         threadDelay 1000000
 
-    void $ customMain (mkVty def) chan theApp initialState
+    void $ customMain (V.mkVty def) chan theApp initialState
