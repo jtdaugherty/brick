@@ -2,47 +2,52 @@
 module Main where
 
 import Data.Monoid
-import Graphics.Vty hiding (translate)
+import qualified Graphics.Vty as V
 
-import Brick.Main
-import Brick.Types
+import qualified Brick.Main as M
+import qualified Brick.Types as T
 import Brick.Widgets.Core
-import Brick.Widgets.Center
-import Brick.Widgets.Edit
-import Brick.AttrMap
-import Brick.Util
+  ( Widget
+  , (<+>)
+  , hLimit
+  , str
+  )
+import qualified Brick.Widgets.Center as C
+import qualified Brick.Widgets.Edit as E
+import qualified Brick.AttrMap as A
+import Brick.Util (on)
 
-drawUI :: Editor -> [Widget]
+drawUI :: E.Editor -> [Widget]
 drawUI e = [ui]
     where
-        ui = center $ "Input: " <+> (hLimit 30 $ renderEditor e)
+        ui = C.center $ "Input: " <+> (hLimit 30 $ E.renderEditor e)
 
-appEvent :: Editor -> Event -> EventM (Next Editor)
+appEvent :: E.Editor -> V.Event -> M.EventM (M.Next E.Editor)
 appEvent e ev =
     case ev of
-        EvKey KEsc [] -> halt e
-        EvKey KEnter [] -> halt e
-        _ -> continue $ handleEvent ev e
+        V.EvKey V.KEsc [] -> M.halt e
+        V.EvKey V.KEnter [] -> M.halt e
+        _ -> M.continue $ T.handleEvent ev e
 
-initialState :: Editor
-initialState = editor (Name "edit") str ""
+initialState :: E.Editor
+initialState = E.editor (T.Name "edit") str ""
 
-theMap :: AttrMap
-theMap = attrMap defAttr
-    [ (editAttr, white `on` blue)
+theMap :: A.AttrMap
+theMap = A.attrMap V.defAttr
+    [ (E.editAttr, V.white `on` V.blue)
     ]
 
-theApp :: App Editor Event
+theApp :: M.App E.Editor V.Event
 theApp =
-    App { appDraw = drawUI
-        , appChooseCursor = showFirstCursor
-        , appHandleEvent = appEvent
-        , appStartEvent = return
-        , appAttrMap = const theMap
-        , appMakeVtyEvent = id
-        }
+    M.App { M.appDraw = drawUI
+          , M.appChooseCursor = M.showFirstCursor
+          , M.appHandleEvent = appEvent
+          , M.appStartEvent = return
+          , M.appAttrMap = const theMap
+          , M.appMakeVtyEvent = id
+          }
 
 main :: IO ()
 main = do
-    e <- defaultMain theApp initialState
-    putStrLn $ "You entered: " <> (getEditContents e)
+    e <- M.defaultMain theApp initialState
+    putStrLn $ "You entered: " <> (E.getEditContents e)
