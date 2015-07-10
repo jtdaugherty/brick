@@ -2,36 +2,48 @@
 module Main where
 
 import Data.Default
-import Graphics.Vty
+import qualified Graphics.Vty as V
 
-import Brick.Main
+import Brick.Main (App(..), neverShowCursor, resizeOrQuit, defaultMain)
 import Brick.Widgets.Core
-import Brick.Widgets.Border
-import Brick.Widgets.Center
+  ( Widget
+  , vBox
+  , hBox
+  , Padding(..)
+  , padAll
+  , padLeft
+  , padRight
+  , padTop
+  , padBottom
+  , padTopBottom
+  , padLeftRight
+  )
+import Brick.Widgets.Border as B
+import Brick.Widgets.Center as C
 
 ui :: Widget
 ui =
     vBox [ hBox [ padLeft Max $ vCenter "Left-padded"
-                , vBorder
+                , B.vBorder
                 , padRight Max $ vCenter "Right-padded"
                 ]
-         , hBorder
+         , B.hBorder
          , hBox [ padTop Max $ hCenter "Top-padded"
-                , vBorder
+                , B.vBorder
                 , padBottom Max $ hCenter "Bottom-padded"
                 ]
-         , hBorder
+         , B.hBorder
          , hBox [ padLeftRight (Pad 2) "Padded by 2 on left/right"
-                , vBorder
+                , B.vBorder
                 , vBox [ padTopBottom (Pad 1) "Padded by 1 on top/bottom"
-                       , hBorder
+                       , B.hBorder
                        ]
                 ]
-         , hBorder
+         , B.hBorder
          , padAll (Pad 2) "Padded by 2 on all sides"
          ]
 
-app :: App () Event
+app :: App () V.Event
 app =
     App { appDraw = const [ui]
         , appHandleEvent = resizeOrQuit
