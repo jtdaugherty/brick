@@ -245,17 +245,3 @@ executable brick-border-demo
                        data-default,
                        text,
                        lens
-
-executable brick-rogue
-  hs-source-dirs:      programs
-  ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
-  default-language:    Haskell2010
-  main-is:             Rogue.hs
-  build-depends:       base <= 5,
-                       brick,
-                       transformers,
-                       vty >= 5.2.9,
-                       data-default,
-                       array,
-                       random,
-                       lens
