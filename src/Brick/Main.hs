@@ -87,7 +87,7 @@ data App s e =
         -- initial scrolling requests, for example.
         , appAttrMap :: s -> AttrMap
         -- ^ The attribute map that should be used during rendering.
-        , appMakeVtyEvent :: Event -> e
+        , appLiftVtyEvent :: Event -> e
         -- ^ The event constructor to use to wrap Vty events in your own
         -- event type. For example, if the application's event type is
         -- 'Event', this is just 'id'.
@@ -121,7 +121,7 @@ simpleMain w =
                   , appHandleEvent = resizeOrQuit
                   , appStartEvent = return
                   , appAttrMap = def
-                  , appMakeVtyEvent = id
+                  , appLiftVtyEvent = id
                   , appChooseCursor = neverShowCursor
                   }
     in defaultMain app ()
@@ -141,7 +141,7 @@ data InternalNext a = InternalSuspendAndResume RenderState (IO a)
 runWithNewVty :: IO Vty -> Chan e -> App s e -> RenderState -> s -> IO (InternalNext s)
 runWithNewVty buildVty chan app initialRS initialSt = do
     withVty buildVty $ \vty -> do
-        pid <- forkIO $ supplyVtyEvents vty (appMakeVtyEvent app) chan
+        pid <- forkIO $ supplyVtyEvents vty (appLiftVtyEvent app) chan
         let runInner rs st = do
               (result, newRS) <- runVty vty chan app st rs
               case result of

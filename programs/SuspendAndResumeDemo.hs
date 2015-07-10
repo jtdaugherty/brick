@@ -55,7 +55,7 @@ theApp =
         , appHandleEvent = appEvent
         , appStartEvent = return
         , appAttrMap = const def
-        , appMakeVtyEvent = id
+        , appLiftVtyEvent = id
         }
 
 main :: IO ()

@@ -33,7 +33,7 @@ app =
         , appAttrMap = const theMap
         , appStartEvent = return
         , appChooseCursor = neverShowCursor
-        , appMakeVtyEvent = id
+        , appLiftVtyEvent = id
         }
 
 main :: IO ()

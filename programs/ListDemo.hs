@@ -84,7 +84,7 @@ theApp =
           , M.appHandleEvent = appEvent
           , M.appStartEvent = return
           , M.appAttrMap = const theMap
-          , M.appMakeVtyEvent = id
+          , M.appLiftVtyEvent = id
           }
 
 main :: IO ()

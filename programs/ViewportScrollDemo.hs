@@ -65,7 +65,7 @@ app =
           , M.appStartEvent = return
           , M.appHandleEvent = appEvent
           , M.appAttrMap = const def
-          , M.appMakeVtyEvent = id
+          , M.appLiftVtyEvent = id
           , M.appChooseCursor = M.neverShowCursor
           }
 

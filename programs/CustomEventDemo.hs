@@ -61,7 +61,7 @@ theApp =
         , appHandleEvent = appEvent
         , appStartEvent = return
         , appAttrMap = def
-        , appMakeVtyEvent = VtyEvent
+        , appLiftVtyEvent = VtyEvent
         }
 
 main :: IO ()

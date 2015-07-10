@@ -50,7 +50,7 @@ app =
         , appStartEvent = return
         , appAttrMap = const def
         , appChooseCursor = neverShowCursor
-        , appMakeVtyEvent = id
+        , appLiftVtyEvent = id
         }
 
 main :: IO ()

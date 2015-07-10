@@ -146,7 +146,7 @@ theApp =
         , appStartEvent = return
         , appHandleEvent = appEvent
         , appAttrMap = const theAttrMap
-        , appMakeVtyEvent = id
+        , appLiftVtyEvent = id
         }
 
 main :: IO ()
