@@ -75,33 +75,6 @@ executable brick
                        lens,
                        text
 
-Flag bench
-  Description: whether to build benchmarks
-  Default: False
-
-executable brick-bench
-  hs-source-dirs:      programs,src
-
-  if !flag(bench)
-    buildable:         False
-
-  ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
-  default-language:    Haskell2010
-  main-is:             Bench.hs
-  CPP-Options:         -DBENCH
-  build-depends:       base <= 5,
-                       transformers,
-                       vty >= 5.2.9,
-                       data-default,
-                       lens,
-                       text,
-                       criterion,
-                       deepseq,
-                       contravariant,
-                       template-haskell,
-                       containers,
-                       vector
-
 executable brick-viewport-scroll-demo
   hs-source-dirs:      programs
   ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3

@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 -- | This module provides the core widget combinators and rendering
 -- routines. Everything this library does is in terms of these basic
 -- primitives.
@@ -83,11 +82,6 @@ module Brick.Widgets.Core
 
   -- * Misc
   , Direction(..)
-
-#ifdef BENCH
-  , renderFinal
-  , RenderState(..)
-#endif
   )
 where
 
