@@ -21,7 +21,7 @@ import Brick.Widgets.Core
   , vBox
   , withAttr
   )
-import Brick.Util (fg, on, bg)
+import Brick.Util (fg, on)
 
 drawUI :: L.List Int -> [Widget]
 drawUI l = [ui]
