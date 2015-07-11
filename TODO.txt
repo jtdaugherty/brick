@@ -5,15 +5,7 @@ consistent with other lenses
 Features:
 - Text wrapping (with markup)
 - Deal with multi-column characters everywhere
-- Port widgets from vty-ui:
-  - Progress bar?
-  - Dir browser?
-  - Checkbox?
 - Viewports that support both horizontal and vertical scrolling
-- Overlays relative to a specific widget (e.g. drop-downs) using layers
-but without having to know the position of the controlling widget (e.g.
-add a combinator in one layer to refer to something in another). In
-general, an API for multi-layer rendering might emerge from this.
 
 Open issues:
 - Centering and other operations pad widgets with fills with interacts
@@ -21,7 +13,7 @@ with layering depending on the user's intentions. Sometimes we want
 layers to be opaque and filled, other times we want them to be
 transparent.  How do we deal with this in general?
 
-Documentation:
+Missing non-haddock documentation:
 - Getting started: simpleMain, defaultMain
 - customMain and the App type
   - Event handlers and HandleEvent
