@@ -27,6 +27,10 @@ Source-Repository head
   type:     git
   location: git://github.com/jtdaugherty/brick.git
 
+Flag demos
+    Description:     Build demonstration programs
+    Default:         False
+
 library
   default-language:    Haskell2010
   ghc-options:         -Wall -fno-warn-unused-do-bind -O3
@@ -77,6 +81,8 @@ executable brick
                        text
 
 executable brick-viewport-scroll-demo
+  if !flag(demos)
+    Buildable: False
   hs-source-dirs:      programs
   ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
   default-language:    Haskell2010
@@ -89,6 +95,8 @@ executable brick-viewport-scroll-demo
                        lens
 
 executable brick-dialog-demo
+  if !flag(demos)
+    Buildable: False
   hs-source-dirs:      programs
   ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
   default-language:    Haskell2010
@@ -101,6 +109,8 @@ executable brick-dialog-demo
                        lens
 
 executable brick-layer-demo
+  if !flag(demos)
+    Buildable: False
   hs-source-dirs:      programs
   ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
   default-language:    Haskell2010
@@ -113,6 +123,8 @@ executable brick-layer-demo
                        lens
 
 executable brick-suspend-resume-demo
+  if !flag(demos)
+    Buildable: False
   hs-source-dirs:      programs
   ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
   default-language:    Haskell2010
@@ -125,6 +137,8 @@ executable brick-suspend-resume-demo
                        lens
 
 executable brick-padding-demo
+  if !flag(demos)
+    Buildable: False
   hs-source-dirs:      programs
   ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
   default-language:    Haskell2010
@@ -137,6 +151,8 @@ executable brick-padding-demo
                        lens
 
 executable brick-attr-demo
+  if !flag(demos)
+    Buildable: False
   hs-source-dirs:      programs
   ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
   default-language:    Haskell2010
@@ -149,6 +165,8 @@ executable brick-attr-demo
                        lens
 
 executable brick-markup-demo
+  if !flag(demos)
+    Buildable: False
   hs-source-dirs:      programs
   ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
   default-language:    Haskell2010
@@ -161,6 +179,8 @@ executable brick-markup-demo
                        lens
 
 executable brick-list-demo
+  if !flag(demos)
+    Buildable: False
   hs-source-dirs:      programs
   ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
   default-language:    Haskell2010
@@ -173,6 +193,8 @@ executable brick-list-demo
                        lens
 
 executable brick-custom-event-demo
+  if !flag(demos)
+    Buildable: False
   hs-source-dirs:      programs
   ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
   default-language:    Haskell2010
@@ -185,6 +207,8 @@ executable brick-custom-event-demo
                        lens
 
 executable brick-hello-world-demo
+  if !flag(demos)
+    Buildable: False
   hs-source-dirs:      programs
   ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
   default-language:    Haskell2010
@@ -197,6 +221,8 @@ executable brick-hello-world-demo
                        lens
 
 executable brick-edit-demo
+  if !flag(demos)
+    Buildable: False
   hs-source-dirs:      programs
   ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
   default-language:    Haskell2010
@@ -209,6 +235,8 @@ executable brick-edit-demo
                        lens
 
 executable brick-border-demo
+  if !flag(demos)
+    Buildable: False
   hs-source-dirs:      programs
   ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
   default-language:    Haskell2010

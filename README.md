@@ -34,7 +34,7 @@ extensive Haddock documentation.
 
 ```
 $ cabal sandbox init
-$ cabal install -j
+$ cabal install -j -f demos
 $ .cabal-sandbox/bin/brick-???-demo
 ```
 
