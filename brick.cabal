@@ -45,6 +45,7 @@ library
     Brick.Widgets.Dialog
     Brick.Widgets.Edit
     Brick.Widgets.List
+    Brick.Widgets.ProgressBar
     Data.Text.Markup
   other-modules:
     Brick.Widgets.Internal
