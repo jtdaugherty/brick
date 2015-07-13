@@ -68,6 +68,8 @@ library
                        template-haskell
 
 executable brick
+  if !flag(demos)
+    Buildable: False
   hs-source-dirs:      programs
   ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
   default-language:    Haskell2010
