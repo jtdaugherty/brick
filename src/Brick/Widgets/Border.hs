@@ -13,6 +13,9 @@ module Brick.Widgets.Border
   -- * Vertical border
   , vBorder
 
+  -- * Drawing single border elements
+  , borderElem
+
   -- * Border attribute names
   , borderAttr
   , vBorderAttr
@@ -65,6 +68,14 @@ blCornerAttr = borderAttr <> "corner" <> "bl"
 -- | The attribute used for border box bottom-right corners.
 brCornerAttr :: AttrName
 brCornerAttr = borderAttr <> "corner" <> "br"
+
+-- | Draw the specified border element using the active border style
+-- using 'borderAttr'.
+borderElem :: (BorderStyle -> Char) -> Widget
+borderElem f =
+    Widget Fixed Fixed $ do
+      bs <- getActiveBorderStyle
+      render $ withAttr borderAttr $ str [f bs]
 
 -- | Put a border around the specified widget.
 border :: Widget -> Widget
