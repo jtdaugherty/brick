@@ -33,15 +33,15 @@ data BorderStyle =
                 -- ^ Bottom-right corner character
                 , bsCornerBL :: Char
                 -- ^ Bottom-left corner character
-                , bsIntersectionFull :: Char
+                , bsIntersectFull :: Char
                 -- ^ Full intersection (cross)
-                , bsIntersectionL :: Char
+                , bsIntersectL :: Char
                 -- ^ Left side of a horizontal border intersecting a vertical one
-                , bsIntersectionR :: Char
+                , bsIntersectR :: Char
                 -- ^ Right side of a horizontal border intersecting a vertical one
-                , bsIntersectionT :: Char
+                , bsIntersectT :: Char
                 -- ^ Top of a vertical border intersecting a horizontal one
-                , bsIntersectionB :: Char
+                , bsIntersectB :: Char
                 -- ^ Bottom of a vertical border intersecting a horizontal one
                 , bsHorizontal :: Char
                 -- ^ Horizontal border character
@@ -65,11 +65,11 @@ ascii =
                 , bsCornerTR = '+'
                 , bsCornerBR = '+'
                 , bsCornerBL = '+'
-                , bsIntersectionFull = '+'
-                , bsIntersectionL = '+'
-                , bsIntersectionR = '+'
-                , bsIntersectionT = '+'
-                , bsIntersectionB = '+'
+                , bsIntersectFull = '+'
+                , bsIntersectL = '+'
+                , bsIntersectR = '+'
+                , bsIntersectT = '+'
+                , bsIntersectB = '+'
                 , bsHorizontal = '-'
                 , bsVertical = '|'
                 }
@@ -81,11 +81,11 @@ unicode =
                 , bsCornerTR = '┐'
                 , bsCornerBR = '┘'
                 , bsCornerBL = '└'
-                , bsIntersectionFull = '┼'
-                , bsIntersectionL = '├'
-                , bsIntersectionR = '┤'
-                , bsIntersectionT = '┬'
-                , bsIntersectionB = '┴'
+                , bsIntersectFull = '┼'
+                , bsIntersectL = '├'
+                , bsIntersectR = '┤'
+                , bsIntersectT = '┬'
+                , bsIntersectB = '┴'
                 , bsHorizontal = '─'
                 , bsVertical = '│'
                 }
@@ -97,11 +97,11 @@ unicodeBold =
                 , bsCornerTR = '┓'
                 , bsCornerBR = '┛'
                 , bsCornerBL = '┗'
-                , bsIntersectionFull = '╋'
-                , bsIntersectionL = '┣'
-                , bsIntersectionR = '┫'
-                , bsIntersectionT = '┳'
-                , bsIntersectionB = '┻'
+                , bsIntersectFull = '╋'
+                , bsIntersectL = '┣'
+                , bsIntersectR = '┫'
+                , bsIntersectT = '┳'
+                , bsIntersectB = '┻'
                 , bsHorizontal = '━'
                 , bsVertical = '┃'
                 }
@@ -113,11 +113,11 @@ unicodeRounded =
                 , bsCornerTR = '╮'
                 , bsCornerBR = '╯'
                 , bsCornerBL = '╰'
-                , bsIntersectionFull = '┼'
-                , bsIntersectionL = '├'
-                , bsIntersectionR = '┤'
-                , bsIntersectionT = '┬'
-                , bsIntersectionB = '┴'
+                , bsIntersectFull = '┼'
+                , bsIntersectL = '├'
+                , bsIntersectR = '┤'
+                , bsIntersectT = '┬'
+                , bsIntersectB = '┴'
                 , bsHorizontal = '─'
                 , bsVertical = '│'
                 }
