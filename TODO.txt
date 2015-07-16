@@ -1,6 +1,7 @@
 Bugs / design issues:
 - Consider adding L suffix to Context and other core lenses to be
 consistent with other lenses
+- padAll/padLeftRight/padTopBottom Max do not behave as expected
 
 Features:
 - Text wrapping (with markup)
