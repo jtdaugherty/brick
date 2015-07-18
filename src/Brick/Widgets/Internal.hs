@@ -165,7 +165,11 @@ data Widget =
            -- ^ This widget's rendering function
            }
 
-data Direction = Up | Down
+-- | Scrolling direction.
+data Direction = Up
+               -- ^ Up/left
+               | Down
+               -- ^ Down/right
 
 data ScrollRequest = HScrollBy Int
                    | HScrollPage Direction
