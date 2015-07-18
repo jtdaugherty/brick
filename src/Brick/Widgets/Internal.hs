@@ -180,7 +180,6 @@ data ScrollRequest = HScrollBy Int
                    | VScrollToBeginning
                    | VScrollToEnd
 
-
 data RenderState =
     RS { _viewportMap :: M.Map Name Viewport
        , _scrollRequests :: [(Name, ScrollRequest)]
