@@ -23,7 +23,7 @@ data Choice = Red | Blue | Green
 drawUI :: D.Dialog Choice -> [Widget]
 drawUI d = [ui]
     where
-        ui = D.renderDialog d $ C.hCenter $ padAll (Pad 1) $ str "This is the dialog body."
+        ui = D.renderDialog d $ C.hCenter $ padAll 1 $ str "This is the dialog body."
 
 appEvent :: D.Dialog Choice -> V.Event -> M.EventM (M.Next (D.Dialog Choice))
 appEvent d ev =

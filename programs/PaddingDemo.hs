@@ -33,14 +33,14 @@ ui =
                 , padBottom Max $ hCenter "Bottom-padded"
                 ]
          , B.hBorder
-         , hBox [ padLeftRight (Pad 2) "Padded by 2 on left/right"
+         , hBox [ padLeftRight 2 "Padded by 2 on left/right"
                 , B.vBorder
-                , vBox [ padTopBottom (Pad 1) "Padded by 1 on top/bottom"
+                , vBox [ padTopBottom 1 "Padded by 1 on top/bottom"
                        , B.hBorder
                        ]
                 ]
          , B.hBorder
-         , padAll (Pad 2) "Padded by 2 on all sides"
+         , padAll 2 "Padded by 2 on all sides"
          ]
 
 app :: App () V.Event

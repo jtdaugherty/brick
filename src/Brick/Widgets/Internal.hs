@@ -338,16 +338,16 @@ padBottom padding p =
                  (f $ hLimit (result^.image.to V.imageWidth) $ fill ' ')
 
 -- | Pad a widget on the left and right.
-padLeftRight :: Padding -> Widget -> Widget
-padLeftRight p w = padLeft p $ padRight p w
+padLeftRight :: Int -> Widget -> Widget
+padLeftRight c w = padLeft (Pad c) $ padRight (Pad c) w
 
 -- | Pad a widget on the top and bottom.
-padTopBottom :: Padding -> Widget -> Widget
-padTopBottom p w = padTop p $ padBottom p w
+padTopBottom :: Int -> Widget -> Widget
+padTopBottom r w = padTop (Pad r) $ padBottom (Pad r) w
 
 -- | Pad a widget on all sides.
-padAll :: Padding -> Widget -> Widget
-padAll p w = padLeftRight p $ padTopBottom p w
+padAll :: Int -> Widget -> Widget
+padAll v w = padLeftRight v $ padTopBottom v w
 
 -- | Fill all available space with the specified character. Grows both
 -- horizontally and vertically.
