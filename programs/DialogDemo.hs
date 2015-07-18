@@ -7,7 +7,6 @@ import qualified Graphics.Vty as V
 import qualified Brick.Main as M
 import Brick.Widgets.Core
   ( Widget
-  , Padding(..)
   , padAll
   , str
   )
