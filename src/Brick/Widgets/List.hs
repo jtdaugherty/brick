@@ -195,18 +195,18 @@ listSelectedElement l = do
   sel <- l^.listSelectedL
   return (sel, (l^.listElementsL) !! sel)
 
--- Assuming `xs` is an existing list that we want to update to match the state
--- of `ys`. Given a selected index in `xs`, the goal is to compute the
--- corresponding index in `ys`.
-maintainSel :: Eq e => [e] -> [e] -> Int -> Int
+-- Assuming `xs` is an existing list that we want to update to match the
+-- state of `ys`. Given a selected index in `xs`, the goal is to compute
+-- the corresponding index in `ys`.
+maintainSel :: (Eq e) => [e] -> [e] -> Int -> Int
 maintainSel xs ys sel = let hunks = D.getDiff xs ys
                         in merge 0 sel hunks
 
-merge :: Eq e => Int -> Int -> [D.Diff e] -> Int
+merge :: (Eq e) => Int -> Int -> [D.Diff e] -> Int
 merge _   sel []                 = sel
 merge idx sel (h:hs) | idx > sel = sel
                      | otherwise = case h of
-    D.Both _ _ -> merge sel (idx+1) hs
+    D.Both _ _ -> merge sel (idx + 1) hs
 
     -- element removed in new list
     D.First _  -> let newSel = if idx < sel
@@ -218,4 +218,4 @@ merge idx sel (h:hs) | idx > sel = sel
     D.Second _ -> let newSel = if idx <= sel
                                then sel + 1
                                else sel
-                  in merge newSel (idx+1) hs
+                  in merge newSel (idx + 1) hs
