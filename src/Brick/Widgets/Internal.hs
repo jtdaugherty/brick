@@ -301,7 +301,7 @@ padLeft :: Padding -> Widget -> Widget
 padLeft padding p =
     let (f, sz) = case padding of
           Max -> (id, Unlimited)
-          Pad i -> (hLimit i, Fixed)
+          Pad i -> (hLimit i, hSize p)
     in Widget sz (vSize p) $ do
         result <- render p
         render $ (f $ vLimit (result^.image.to V.imageHeight) $ fill ' ') <+>
@@ -312,7 +312,7 @@ padRight :: Padding -> Widget -> Widget
 padRight padding p =
     let (f, sz) = case padding of
           Max -> (id, Unlimited)
-          Pad i -> (hLimit i, Fixed)
+          Pad i -> (hLimit i, hSize p)
     in Widget sz (vSize p) $ do
         result <- render p
         render $ (Widget Fixed Fixed $ return result) <+>
@@ -323,7 +323,7 @@ padTop :: Padding -> Widget -> Widget
 padTop padding p =
     let (f, sz) = case padding of
           Max -> (id, Unlimited)
-          Pad i -> (vLimit i, Fixed)
+          Pad i -> (vLimit i, vSize p)
     in Widget (hSize p) sz $ do
         result <- render p
         render $ (f $ hLimit (result^.image.to V.imageWidth) $ fill ' ') <=>
@@ -334,7 +334,7 @@ padBottom :: Padding -> Widget -> Widget
 padBottom padding p =
     let (f, sz) = case padding of
           Max -> (id, Unlimited)
-          Pad i -> (vLimit i, Fixed)
+          Pad i -> (vLimit i, vSize p)
     in Widget (hSize p) sz $ do
         result <- render p
         render $ (Widget Fixed Fixed $ return result) <=>
