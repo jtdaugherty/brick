@@ -98,7 +98,15 @@ data VisibilityRequest =
        }
        deriving Show
 
-data ViewportType = Vertical | Horizontal deriving Show
+-- | The type of viewports that indicates the direction(s) in which a
+-- viewport is scrollable.
+data ViewportType = Vertical
+                  -- ^ Viewports of this type are scrollable only vertically.
+                  | Horizontal
+                  -- ^ Viewports of this type are scrollable only horizontally.
+                  | Both
+                  -- ^ Viewports of this type are scrollable vertically and horizontally.
+                  deriving Show
 
 data Viewport =
     VP { _vpLeft :: Int
@@ -159,10 +167,15 @@ data Widget =
 
 data Direction = Up | Down
 
-data ScrollRequest = ScrollBy Int
-                   | ScrollPage Direction
-                   | ScrollToBeginning
-                   | ScrollToEnd
+data ScrollRequest = HScrollBy Int
+                   | HScrollPage Direction
+                   | HScrollToBeginning
+                   | HScrollToEnd
+                   | VScrollBy Int
+                   | VScrollPage Direction
+                   | VScrollToBeginning
+                   | VScrollToEnd
+
 
 data RenderState =
     RS { _viewportMap :: M.Map Name Viewport
@@ -588,11 +601,13 @@ viewport vpname typ p =
           release = case typ of
             Vertical -> vRelease
             Horizontal -> hRelease
+            Both -> \w -> vRelease w >>= hRelease
           released = case release p of
             Just w -> w
             Nothing -> case typ of
                 Vertical -> error $ "tried to embed an infinite-height widget in vertical viewport " <> (show vpn)
                 Horizontal -> error $ "tried to embed an infinite-width widget in horizontal viewport " <> (show vpn)
+                Both -> error $ "tried to embed an infinite-width or infinite-height widget in 'Both' type viewport " <> (show vpn)
 
       initialResult <- render released
 
@@ -601,7 +616,10 @@ viewport vpname typ p =
       when (not $ null $ initialResult^.visibilityRequests) $ do
           Just vp <- lift $ gets $ (^.viewportMap.to (M.lookup vpname))
           let rq = head $ initialResult^.visibilityRequests
-              updatedVp = scrollToView typ rq vp
+              updatedVp = case typ of
+                  Both -> scrollToView Horizontal rq $ scrollToView Vertical rq vp
+                  Horizontal -> scrollToView typ rq vp
+                  Vertical -> scrollToView typ rq vp
           lift $ modify (& viewportMap %~ (M.insert vpname updatedVp))
 
       -- If the rendering state includes any scrolling requests for this
@@ -612,7 +630,13 @@ viewport vpname typ p =
           Just vp <- lift $ gets $ (^.viewportMap.to (M.lookup vpname))
           let updatedVp = applyRequests relevantRequests vp
               applyRequests [] v = v
-              applyRequests (rq:rqs) v = scrollTo typ rq (initialResult^.image) $ applyRequests rqs v
+              applyRequests (rq:rqs) v =
+                  case typ of
+                      Horizontal -> scrollTo typ rq (initialResult^.image) $ applyRequests rqs v
+                      Vertical -> scrollTo typ rq (initialResult^.image) $ applyRequests rqs v
+                      Both -> scrollTo Horizontal rq (initialResult^.image) $
+                              scrollTo Vertical rq (initialResult^.image) $
+                              applyRequests rqs v
           lift $ modify (& viewportMap %~ (M.insert vpname updatedVp))
           return ()
 
@@ -638,53 +662,55 @@ viewport vpname typ p =
                       $ Widget Fixed Fixed $ return $ translated & visibilityRequests .~ mempty
 
 scrollTo :: ViewportType -> ScrollRequest -> V.Image -> Viewport -> Viewport
-scrollTo typ req img vp = vp & theStart .~ newStart
+scrollTo Both _ _ _ = error "BUG: called scrollTo on viewport type 'Both'"
+scrollTo Vertical req img vp = vp & vpTop .~ newVStart
     where
-        theStart :: Lens' Viewport Int
-        theStart = case typ of
-            Horizontal -> vpLeft
-            Vertical -> vpTop
-        theSize = case typ of
-            Horizontal -> vpSize._1
-            Vertical -> vpSize._2
-        imgSize = case typ of
-            Horizontal -> V.imageWidth img
-            Vertical -> V.imageHeight img
-
-        newStart = clamp 0 (imgSize - vp^.theSize) adjustedAmt
+        newVStart = clamp 0 (V.imageHeight img - vp^.vpSize._2) adjustedAmt
         adjustedAmt = case req of
-            ScrollBy amt -> (vp^.theStart) + amt
-            ScrollPage Up -> (vp^.theStart) - (vp^.theSize)
-            ScrollPage Down -> (vp^.theStart) + (vp^.theSize)
-            ScrollToBeginning -> 0
-            ScrollToEnd -> imgSize - (vp^.theSize)
+            VScrollBy amt -> vp^.vpTop + amt
+            VScrollPage Up -> vp^.vpTop - vp^.vpSize._2
+            VScrollPage Down -> vp^.vpTop + vp^.vpSize._2
+            VScrollToBeginning -> 0
+            VScrollToEnd -> V.imageHeight img - vp^.vpSize._2
+            _ -> vp^.vpTop
+scrollTo Horizontal req img vp = vp & vpLeft .~ newHStart
+    where
+        newHStart = clamp 0 (V.imageWidth img - vp^.vpSize._1) adjustedAmt
+        adjustedAmt = case req of
+            HScrollBy amt -> vp^.vpLeft + amt
+            HScrollPage Up -> vp^.vpLeft - vp^.vpSize._1
+            HScrollPage Down -> vp^.vpLeft + vp^.vpSize._1
+            HScrollToBeginning -> 0
+            HScrollToEnd -> V.imageWidth img - vp^.vpSize._1
+            _ -> vp^.vpLeft
 
 scrollToView :: ViewportType -> VisibilityRequest -> Viewport -> Viewport
-scrollToView typ rq vp = vp & theStart .~ newStart
+scrollToView Both _ _ = error "BUG: called scrollToView on 'Both' type viewport"
+scrollToView Vertical rq vp = vp & vpTop .~ newVStart
     where
-        theStart :: Lens' Viewport Int
-        theStart = case typ of
-            Horizontal -> vpLeft
-            Vertical -> vpTop
-        theSize = case typ of
-            Horizontal -> vpSize._1
-            Vertical -> vpSize._2
-        reqStart = case typ of
-            Horizontal -> rq^.vrPosition.column
-            Vertical -> rq^.vrPosition.row
-        reqSize = case typ of
-            Horizontal -> rq^.vrSize._1
-            Vertical -> rq^.vrSize._2
+        curStart = vp^.vpTop
+        curEnd = curStart + vp^.vpSize._2
+        reqStart = rq^.vrPosition.row
 
-        curStart = vp^.theStart
-        curEnd = curStart + vp^.theSize
-
-        reqEnd = reqStart + reqSize
-        newStart :: Int
-        newStart = if reqStart < curStart
+        reqEnd = rq^.vrPosition.row + rq^.vrSize._2
+        newVStart :: Int
+        newVStart = if reqStart < curStart
                    then reqStart
                    else if reqStart > curEnd || reqEnd > curEnd
-                        then reqEnd - vp^.theSize
+                        then reqEnd - vp^.vpSize._2
+                        else curStart
+scrollToView Horizontal rq vp = vp & vpLeft .~ newHStart
+    where
+        curStart = vp^.vpLeft
+        curEnd = curStart + vp^.vpSize._1
+        reqStart = rq^.vrPosition.column
+
+        reqEnd = rq^.vrPosition.column + rq^.vrSize._1
+        newHStart :: Int
+        newHStart = if reqStart < curStart
+                   then reqStart
+                   else if reqStart > curEnd || reqEnd > curEnd
+                        then reqEnd - vp^.vpSize._1
                         else curStart
 
 -- | Request that the specified widget be made visible when it is

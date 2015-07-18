@@ -14,7 +14,7 @@ import qualified Brick.Widgets.Center as C
 import qualified Brick.Widgets.Border as B
 import Brick.Widgets.Core
   ( Widget
-  , ViewportType(Horizontal, Vertical)
+  , ViewportType(Horizontal, Vertical, Both)
   , hLimit
   , vLimit
   , hBox
@@ -29,21 +29,25 @@ vp1Name = "demo1"
 vp2Name :: T.Name
 vp2Name = "demo2"
 
+vp3Name :: T.Name
+vp3Name = "demo3"
+
 drawUi :: () -> [Widget]
 drawUi = const [ui]
     where
-        ui = C.center $
-             hLimit 60 $
-             vLimit 20 $
-             B.border $
-             hBox [ viewport vp1Name Vertical $
-                    vBox $ "Press up and down arrow keys" :
-                           "to scroll this viewport." :
-                           (str <$> [ "Line " <> (show i) | i <- [3..50::Int] ])
-                  , B.vBorder
-                  , viewport vp2Name Horizontal
-                    "Press left and right arrow keys to scroll this viewport."
-                  ]
+        ui = C.center $ B.border $ hLimit 60 $ vLimit 21 $
+             vBox [ pair, B.hBorder, singleton ]
+        singleton = viewport vp3Name Both $
+                    vBox $ "Press ctrl-arrow keys to scroll this viewport horizontally and vertically."
+                         : (str <$> [ "Line " <> show i | i <- [2..25::Int] ])
+        pair = hBox [ viewport vp1Name Vertical $
+                      vBox $ "Press up and down arrow keys" :
+                             "to scroll this viewport." :
+                             (str <$> [ "Line " <> (show i) | i <- [3..50::Int] ])
+                    , B.vBorder
+                    , viewport vp2Name Horizontal
+                      "Press left and right arrow keys to scroll this viewport."
+                    ]
 
 vp1Scroll :: M.ViewportScroll
 vp1Scroll = M.viewportScroll vp1Name
@@ -51,11 +55,18 @@ vp1Scroll = M.viewportScroll vp1Name
 vp2Scroll :: M.ViewportScroll
 vp2Scroll = M.viewportScroll vp2Name
 
+vp3Scroll :: M.ViewportScroll
+vp3Scroll = M.viewportScroll vp3Name
+
 appEvent :: () -> V.Event -> M.EventM (M.Next ())
-appEvent _ (V.EvKey V.KDown [])  = M.scrollBy vp1Scroll 1 >> M.continue ()
-appEvent _ (V.EvKey V.KUp [])    = M.scrollBy vp1Scroll (-1) >> M.continue ()
-appEvent _ (V.EvKey V.KRight []) = M.scrollBy vp2Scroll 1 >> M.continue ()
-appEvent _ (V.EvKey V.KLeft [])  = M.scrollBy vp2Scroll (-1) >> M.continue ()
+appEvent _ (V.EvKey V.KDown  [V.MCtrl]) = M.vScrollBy vp3Scroll 1 >> M.continue ()
+appEvent _ (V.EvKey V.KUp    [V.MCtrl]) = M.vScrollBy vp3Scroll (-1) >> M.continue ()
+appEvent _ (V.EvKey V.KRight [V.MCtrl]) = M.hScrollBy vp3Scroll 1 >> M.continue ()
+appEvent _ (V.EvKey V.KLeft  [V.MCtrl]) = M.hScrollBy vp3Scroll (-1) >> M.continue ()
+appEvent _ (V.EvKey V.KDown [])  = M.vScrollBy vp1Scroll 1 >> M.continue ()
+appEvent _ (V.EvKey V.KUp [])    = M.vScrollBy vp1Scroll (-1) >> M.continue ()
+appEvent _ (V.EvKey V.KRight []) = M.hScrollBy vp2Scroll 1 >> M.continue ()
+appEvent _ (V.EvKey V.KLeft [])  = M.hScrollBy vp2Scroll (-1) >> M.continue ()
 appEvent _ (V.EvKey V.KEsc []) = M.halt ()
 appEvent _ _ = M.continue ()
 

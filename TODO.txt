@@ -6,7 +6,6 @@ consistent with other lenses
 Features:
 - Text wrapping (with markup)
 - Deal with multi-column characters everywhere
-- Viewports that support both horizontal and vertical scrolling
 
 Open issues:
 - Centering and other operations pad widgets with fills with interacts

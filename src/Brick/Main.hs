@@ -15,10 +15,14 @@ module Brick.Main
   -- ** Viewport scrolling
   , viewportScroll
   , ViewportScroll
-  , scrollBy
-  , scrollPage
-  , scrollToBeginning
-  , scrollToEnd
+  , vScrollBy
+  , vScrollPage
+  , vScrollToBeginning
+  , vScrollToEnd
+  , hScrollBy
+  , hScrollPage
+  , hScrollToBeginning
+  , hScrollToEnd
 
   -- * Cursor management functions
   , neverShowCursor
@@ -236,27 +240,43 @@ data ViewportScroll =
     ViewportScroll { viewportName :: Name
                    -- ^ The name of the viewport to be controlled by
                    -- this scrolling handle.
-                   , scrollPage :: Direction -> EventM ()
-                   -- ^ Scroll the viewport by one page in the specified
-                   -- direction.
-                   , scrollBy :: Int -> EventM ()
-                   -- ^ Scroll the viewport by the specified number of
-                   -- rows or columns depending on the orientation of
-                   -- the viewport.
-                   , scrollToBeginning :: EventM ()
-                   -- ^ Scroll to the beginning of the viewport.
-                   , scrollToEnd :: EventM ()
-                   -- ^ Scroll to the end of the viewport.
+                   , hScrollPage :: Direction -> EventM ()
+                   -- ^ Scroll the viewport horizontally by one page in
+                   -- the specified direction.
+                   , hScrollBy :: Int -> EventM ()
+                   -- ^ Scroll the viewport horizontally by the
+                   -- specified number of rows or columns depending on
+                   -- the orientation of the viewport.
+                   , hScrollToBeginning :: EventM ()
+                   -- ^ Scroll horizontally to the beginning of the
+                   -- viewport.
+                   , hScrollToEnd :: EventM ()
+                   -- ^ Scroll horizontally to the end of the viewport.
+                   , vScrollPage :: Direction -> EventM ()
+                   -- ^ Scroll the viewport vertically by one page in
+                   -- the specified direction.
+                   , vScrollBy :: Int -> EventM ()
+                   -- ^ Scroll the viewport vertically by the specified
+                   -- number of rows or columns depending on the
+                   -- orientation of the viewport.
+                   , vScrollToBeginning :: EventM ()
+                   -- ^ Scroll vertically to the beginning of the viewport.
+                   , vScrollToEnd :: EventM ()
+                   -- ^ Scroll vertically to the end of the viewport.
                    }
 
 -- | Build a viewport scroller for the viewport with the specified name.
 viewportScroll :: Name -> ViewportScroll
 viewportScroll n =
     ViewportScroll { viewportName = n
-                   , scrollPage = \dir -> modify ((n, ScrollPage dir) :)
-                   , scrollBy = \i -> modify ((n, ScrollBy i) :)
-                   , scrollToBeginning = modify ((n, ScrollToBeginning) :)
-                   , scrollToEnd = modify ((n, ScrollToEnd) :)
+                   , hScrollPage = \dir -> modify ((n, HScrollPage dir) :)
+                   , hScrollBy = \i -> modify ((n, HScrollBy i) :)
+                   , hScrollToBeginning = modify ((n, HScrollToBeginning) :)
+                   , hScrollToEnd = modify ((n, HScrollToEnd) :)
+                   , vScrollPage = \dir -> modify ((n, HScrollPage dir) :)
+                   , vScrollBy = \i -> modify ((n, VScrollBy i) :)
+                   , vScrollToBeginning = modify ((n, VScrollToBeginning) :)
+                   , vScrollToEnd = modify ((n, VScrollToEnd) :)
                    }
 
 -- | Continue running the event loop with the specified application
