@@ -37,7 +37,7 @@ import Control.Applicative ((<$>))
 import Control.Lens ((^.), (&), (.~))
 import Data.Monoid ((<>))
 import Data.Maybe (fromMaybe)
-import Data.Algorithm.Diff
+import qualified Data.Algorithm.Diff as D
 import Graphics.Vty (Event(..), Key(..))
 
 import Brick.Types
@@ -199,23 +199,23 @@ listSelectedElement l = do
 -- of `ys`. Given a selected index in `xs`, the goal is to compute the
 -- corresponding index in `ys`.
 maintainSel :: Eq e => [e] -> [e] -> Int -> Int
-maintainSel xs ys sel = let hunks = getDiff xs ys
+maintainSel xs ys sel = let hunks = D.getDiff xs ys
                         in merge 0 sel hunks
 
-merge :: Eq e => Int -> Int -> [Diff e] -> Int
+merge :: Eq e => Int -> Int -> [D.Diff e] -> Int
 merge _   sel []                 = sel
 merge idx sel (h:hs) | idx > sel = sel
                      | otherwise = case h of
-    Both _ _ -> merge sel (idx+1) hs
+    D.Both _ _ -> merge sel (idx+1) hs
 
     -- element removed in new list
-    First _  -> let newSel = if idx < sel
-                             then sel - 1
-                             else sel
-                in merge newSel idx hs
+    D.First _  -> let newSel = if idx < sel
+                               then sel - 1
+                               else sel
+                  in merge newSel idx hs
 
     -- element added in new list
-    Second _ -> let newSel = if idx <= sel
-                             then sel + 1
-                             else sel
-                in merge newSel (idx+1) hs
+    D.Second _ -> let newSel = if idx <= sel
+                               then sel + 1
+                               else sel
+                  in merge newSel (idx+1) hs
