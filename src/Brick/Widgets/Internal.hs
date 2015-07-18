@@ -716,10 +716,10 @@ scrollToView Horizontal rq vp = vp & vpLeft .~ newHStart
 -- | Request that the specified widget be made visible when it is
 -- rendered inside a viewport. This permits widgets (whose sizes and
 -- positions cannot be known due to being embedded in arbitrary layouts)
--- make a request for a parent viewport to locate them and scroll enough
--- to put them in view. This, together with 'viewport' is what makes the
--- text editor and list widgets possible without making them deal with
--- the details of scrolling state management.
+-- to make a request for a parent viewport to locate them and scroll
+-- tenough o put them in view. This, together with 'viewport' is what
+-- tmakes the ext editor and list widgets possible without making them
+-- tdeal with he details of scrolling state management.
 visible :: Widget -> Widget
 visible p =
     Widget (hSize p) (vSize p) $ do
