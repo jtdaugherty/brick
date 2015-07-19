@@ -95,14 +95,14 @@ centerWith c = vCenterWith c . hCenterWith c
 -- | Center the widget horizontally and vertically about the specified
 -- origin.
 centerAbout :: Location -> Widget -> Widget
-centerAbout loc p =
+centerAbout l p =
     Widget Unlimited Unlimited $ do
       -- Compute translation offset so that loc is in the middle of the
       -- rendering area
       c <- getContext
       let centerW = c^.availWidthL `div` 2
           centerH = c^.availHeightL `div` 2
-          off = Location ( centerW - loc^.columnL
-                         , centerH - loc^.rowL
+          off = Location ( centerW - l^.columnL
+                         , centerH - l^.rowL
                          )
       render $ translateBy off p

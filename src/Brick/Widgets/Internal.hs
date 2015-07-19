@@ -251,7 +251,7 @@ addVisibilityOffset off r = r & visibilityRequestsL.each.vrPositionL %~ (off <>)
 addCursorOffset :: Location -> Result -> Result
 addCursorOffset off r =
     let onlyVisible = filter isVisible
-        isVisible loc = loc^.columnL >= 0 && loc^.rowL >= 0
+        isVisible l = l^.columnL >= 0 && l^.rowL >= 0
     in r & cursorsL %~ (\cs -> onlyVisible $ (`clOffset` off) <$> cs)
 
 unrestricted :: Int
@@ -489,11 +489,11 @@ raw img = Widget Fixed Fixed $ return $ def & imageL .~ img
 
 -- | Translate the specified widget by the specified offset amount.
 translateBy :: Location -> Widget -> Widget
-translateBy loc p =
+translateBy off p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
-      return $ addResultOffset loc
-             $ result & imageL %~ (V.translate (loc^.columnL) (loc^.rowL))
+      return $ addResultOffset off
+             $ result & imageL %~ (V.translate (off^.columnL) (off^.rowL))
 
 cropResultToContext :: Result -> RenderM Result
 cropResultToContext result = do

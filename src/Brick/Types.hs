@@ -2,7 +2,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 module Brick.Types
-  ( Location(Location)
+  ( Location(..)
+  , locL
   , TerminalLocation(..)
   , CursorLocation(..)
   , cursorLocationL
@@ -21,18 +22,18 @@ import Graphics.Vty (Event)
 import Brick.Types.TH
 
 -- | A terminal screen location.
-data Location = Location { _loc :: (Int, Int)
+data Location = Location { loc :: (Int, Int)
                          -- ^ (Column, Row)
                          }
                 deriving Show
 
-makeLenses ''Location
+suffixLenses ''Location
 
 instance Field1 Location Location Int Int where
-    _1 = loc._1
+    _1 = locL._1
 
 instance Field2 Location Location Int Int where
-    _2 = loc._2
+    _2 = locL._2
 
 -- | The class of types that behave like terminal locations.
 class TerminalLocation a where

@@ -56,4 +56,4 @@ bg = (defAttr `withBackColor`)
 
 -- | Add a 'Location' offset to the specified 'CursorLocation'.
 clOffset :: CursorLocation -> Location -> CursorLocation
-clOffset cl loc = cl & cursorLocationL %~ ( <> loc)
+clOffset cl off = cl & cursorLocationL %~ (<> off)
