@@ -1,11 +1,11 @@
-Bugs / design issues:
-- Consider adding L suffix to Context and other core lenses to be
-consistent with other lenses
-
 Features:
-- Text wrapping (with markup)
-- Deal with multi-column characters everywhere
-- Load & save attribute map to on-disk configuration
+  * High priority:
+    - Text wrapping (with markup)
+    - Load & save attribute map to on-disk configuration
+    - API for obtaining scrolling viewport state in EventM (will
+      staleness be an issue here?)
+  * Low priority:
+    - Deal with multi-column characters everywhere
 
 Open issues:
 - Centering and other operations pad widgets with fills with interacts
@@ -14,14 +14,15 @@ layers to be opaque and filled, other times we want them to be
 transparent.  How do we deal with this in general?
 
 Missing non-haddock documentation:
-- Getting started: simpleMain, defaultMain
-- customMain and the App type
+* Getting started: simpleMain, defaultMain
+* API conventions: lens / non-lens interfaces
+* customMain and the App type
   - Event handlers and HandleEvent
   - Cursor selection
   - Suspend & resume, halt, continue
   - Using your own event type
-- How widgets and rendering work
+* How widgets and rendering work
   - Space behavior
-- Implementing your own widgets
+* Implementing your own widgets
   - Rendering sub-widgets
   - Dealing with the rendering context
