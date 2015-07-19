@@ -3,6 +3,25 @@
 -- This module is designed to be used with the 'OverloadedStrings'
 -- language extension to permit easy construction of 'AttrName' values
 -- and you should also use 'mappend' ('<>') to combine names.
+--
+-- Attribute maps work by mapping hierarchical attribute names to
+-- attributes and inheriting parent names' attributes when child names
+-- specify partial attributes. Hierarchical names are created with 'mappend':
+--
+-- @
+-- let n = attrName "parent" <> attrName "child"
+-- @
+--
+-- Attribute names are mapped to attributes, but some attributes may
+-- be partial (specify only a foreground or background color). When
+-- attribute name lookups occur, the attribute corresponding to a more
+-- specific name ('parent <> child' as above) is sucessively merged with
+-- the parent attribute ('parent' as above) all the way to the "root"
+-- of the attribute map, the map's default attribute. In this way, more
+-- specific attributes inherit what they don't specify from more general
+-- attributes in the same hierarchy. This allows more modularity and
+-- less repetition in specifying how elements of your user interface
+-- take on different attributes.
 module Brick.AttrMap
   ( AttrMap
   , AttrName
