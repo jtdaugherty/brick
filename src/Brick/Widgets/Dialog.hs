@@ -44,6 +44,11 @@ import Brick.AttrMap
 -- about Tab and Shift-Tab for changing which button is active. Dialog
 -- buttons are labeled with strings and map to values of type 'a', which
 -- you choose.
+--
+-- Dialogs handle the following events by default:
+--
+-- * Tab: selecte the next button
+-- * Shift-tab: select the previous button
 data Dialog a =
     Dialog { dialogName :: Name
            -- ^ The dialog name
