@@ -46,7 +46,9 @@ import Brick.Util (clamp)
 import Brick.AttrMap
 
 -- | List state. Lists have an element type 'e' that is the data stored
--- by the list.
+-- by the list.  Lists handle the following events by default:
+--
+-- * Up/down arrow keys: move cursor of selected item
 data List e =
     List { listElements :: ![e]
          , listElementDraw :: Bool -> e -> Widget
