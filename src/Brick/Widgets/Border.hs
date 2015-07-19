@@ -1,6 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 -- | This module provides border widgets: vertical borders, horizontal
--- borders, and a box border wrapper widget.
+-- borders, and a box border wrapper widget. All functions in this
+-- module use the rendering context's active 'BorderStyle'; to change
+-- the 'BorderStyle', use 'withBorderStyle'.
 module Brick.Widgets.Border
   ( -- * Border wrapper
     border
