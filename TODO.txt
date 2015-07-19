@@ -15,7 +15,7 @@ transparent.  How do we deal with this in general?
 
 Missing non-haddock documentation:
 * Getting started: simpleMain, defaultMain
-* API conventions: lens / non-lens interfaces
+* API conventions: lens / non-lens interfaces, attribute name exports
 * customMain and the App type
   - Event handlers and HandleEvent
   - Cursor selection
