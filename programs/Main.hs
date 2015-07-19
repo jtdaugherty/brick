@@ -101,11 +101,11 @@ appEvent st e =
             void getChar
             return st
 
-        EvKey KUp [MCtrl] ->    continue $ st & stTrans.row %~ subtract 1
-        EvKey KDown [MCtrl] ->  continue $ st & stTrans.row %~ (+ 1)
+        EvKey KUp [MCtrl] ->    continue $ st & stTrans.rowL %~ subtract 1
+        EvKey KDown [MCtrl] ->  continue $ st & stTrans.rowL %~ (+ 1)
 
-        EvKey KLeft [MCtrl] ->  continue $ st & stTrans.column %~ (subtract 1)
-        EvKey KRight [MCtrl] -> continue $ st & stTrans.column %~ (+ 1)
+        EvKey KLeft [MCtrl] ->  continue $ st & stTrans.columnL %~ (subtract 1)
+        EvKey KRight [MCtrl] -> continue $ st & stTrans.columnL %~ (+ 1)
 
         EvKey KEnter [] ->
             let el = length $ st^.stList.listElementsL

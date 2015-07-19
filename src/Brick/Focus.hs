@@ -64,5 +64,5 @@ focusRingCursor :: (a -> FocusRing)
 focusRingCursor getRing st ls =
     listToMaybe $ filter isCurrent ls
     where
-        isCurrent cl = cl^.cursorLocationName ==
+        isCurrent cl = cl^.cursorLocationNameL ==
                        (focusGetCurrent $ getRing st)

@@ -34,22 +34,22 @@ hCenterWith mChar p =
     in Widget Unlimited (vSize p) $ do
            result <- render p
            c <- getContext
-           let rWidth = result^.image.to imageWidth
-               rHeight = result^.image.to imageHeight
-               remainder = c^.availW - (leftPaddingAmount * 2)
-               leftPaddingAmount = (c^.availW - rWidth) `div` 2
+           let rWidth = result^.imageL.to imageWidth
+               rHeight = result^.imageL.to imageHeight
+               remainder = c^.availWidthL - (leftPaddingAmount * 2)
+               leftPaddingAmount = (c^.availWidthL - rWidth) `div` 2
                rightPaddingAmount = leftPaddingAmount + remainder
-               leftPadding = charFill (c^.attr) ch leftPaddingAmount rHeight
-               rightPadding = charFill (c^.attr) ch rightPaddingAmount rHeight
+               leftPadding = charFill (c^.attrL) ch leftPaddingAmount rHeight
+               rightPadding = charFill (c^.attrL) ch rightPaddingAmount rHeight
                paddedImage = horizCat [ leftPadding
-                                      , result^.image
+                                      , result^.imageL
                                       , rightPadding
                                       ]
                off = Location (leftPaddingAmount, 0)
            if leftPaddingAmount == 0 && rightPaddingAmount == 0 then
                return result else
                return $ addResultOffset off
-                      $ result & image .~ paddedImage
+                      $ result & imageL .~ paddedImage
 
 -- | Center a widget vertically.  Consumes all vertical space.
 vCenter :: Widget -> Widget
@@ -64,22 +64,22 @@ vCenterWith mChar p =
     in Widget (hSize p) Unlimited $ do
            result <- render p
            c <- getContext
-           let rWidth = result^.image.to imageWidth
-               rHeight = result^.image.to imageHeight
-               remainder = c^.availH - (topPaddingAmount * 2)
-               topPaddingAmount = (c^.availH - rHeight) `div` 2
+           let rWidth = result^.imageL.to imageWidth
+               rHeight = result^.imageL.to imageHeight
+               remainder = c^.availHeightL - (topPaddingAmount * 2)
+               topPaddingAmount = (c^.availHeightL - rHeight) `div` 2
                bottomPaddingAmount = topPaddingAmount + remainder
-               topPadding = charFill (c^.attr) ch rWidth topPaddingAmount
-               bottomPadding = charFill (c^.attr) ch rWidth bottomPaddingAmount
+               topPadding = charFill (c^.attrL) ch rWidth topPaddingAmount
+               bottomPadding = charFill (c^.attrL) ch rWidth bottomPaddingAmount
                paddedImage = vertCat [ topPadding
-                                     , result^.image
+                                     , result^.imageL
                                      , bottomPadding
                                      ]
                off = Location (0, topPaddingAmount)
            if topPaddingAmount == 0 && bottomPaddingAmount == 0 then
                return result else
                return $ addResultOffset off
-                      $ result & image .~ paddedImage
+                      $ result & imageL .~ paddedImage
 
 -- | Center a widget both vertically and horizontally. Consumes all
 -- available vertical and horizontal space.
@@ -100,9 +100,9 @@ centerAbout loc p =
       -- Compute translation offset so that loc is in the middle of the
       -- rendering area
       c <- getContext
-      let centerW = c^.availW `div` 2
-          centerH = c^.availH `div` 2
-          off = Location ( centerW - loc^.column
-                         , centerH - loc^.row
+      let centerW = c^.availWidthL `div` 2
+          centerH = c^.availHeightL `div` 2
+          off = Location ( centerW - loc^.columnL
+                         , centerH - loc^.rowL
                          )
       render $ translateBy off p

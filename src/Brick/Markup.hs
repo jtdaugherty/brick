@@ -31,7 +31,7 @@ class GetAttr a where
 instance GetAttr Attr where
     getAttr a = do
         c <- getContext
-        return $ mergeWithDefault a (c^.ctxAttrs)
+        return $ mergeWithDefault a (c^.ctxAttrMapL)
 
 instance GetAttr AttrName where
     getAttr = lookupAttrName
@@ -51,4 +51,4 @@ markup m =
       imgs <- forM pairs $ \(t, aSrc) -> do
           a <- getAttr aSrc
           return $ string a $ T.unpack t
-      return $ def & image .~ horizCat imgs
+      return $ def & imageL .~ horizCat imgs

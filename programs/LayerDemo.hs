@@ -8,7 +8,7 @@ import Data.Default
 import qualified Graphics.Vty as V
 
 import qualified Brick.Types as T
-import Brick.Types (row, column)
+import Brick.Types (rowL, columnL)
 import qualified Brick.Main as M
 import qualified Brick.Widgets.Border as B
 import Brick.Widgets.Core
@@ -40,15 +40,15 @@ bottomLayer st =
     B.border "Bottom layer\n(Ctrl-arrow keys move)"
 
 appEvent :: St -> V.Event -> M.EventM (M.Next St)
-appEvent st (V.EvKey V.KDown [])  = M.continue $ st & topLayerLocation.row %~ (+ 1)
-appEvent st (V.EvKey V.KUp [])    = M.continue $ st & topLayerLocation.row %~ (subtract 1)
-appEvent st (V.EvKey V.KRight []) = M.continue $ st & topLayerLocation.column %~ (+ 1)
-appEvent st (V.EvKey V.KLeft [])  = M.continue $ st & topLayerLocation.column %~ (subtract 1)
+appEvent st (V.EvKey V.KDown [])  = M.continue $ st & topLayerLocation.rowL %~ (+ 1)
+appEvent st (V.EvKey V.KUp [])    = M.continue $ st & topLayerLocation.rowL %~ (subtract 1)
+appEvent st (V.EvKey V.KRight []) = M.continue $ st & topLayerLocation.columnL %~ (+ 1)
+appEvent st (V.EvKey V.KLeft [])  = M.continue $ st & topLayerLocation.columnL %~ (subtract 1)
 
-appEvent st (V.EvKey V.KDown  [V.MCtrl]) = M.continue $ st & bottomLayerLocation.row %~ (+ 1)
-appEvent st (V.EvKey V.KUp    [V.MCtrl]) = M.continue $ st & bottomLayerLocation.row %~ (subtract 1)
-appEvent st (V.EvKey V.KRight [V.MCtrl]) = M.continue $ st & bottomLayerLocation.column %~ (+ 1)
-appEvent st (V.EvKey V.KLeft  [V.MCtrl]) = M.continue $ st & bottomLayerLocation.column %~ (subtract 1)
+appEvent st (V.EvKey V.KDown  [V.MCtrl]) = M.continue $ st & bottomLayerLocation.rowL %~ (+ 1)
+appEvent st (V.EvKey V.KUp    [V.MCtrl]) = M.continue $ st & bottomLayerLocation.rowL %~ (subtract 1)
+appEvent st (V.EvKey V.KRight [V.MCtrl]) = M.continue $ st & bottomLayerLocation.columnL %~ (+ 1)
+appEvent st (V.EvKey V.KLeft  [V.MCtrl]) = M.continue $ st & bottomLayerLocation.columnL %~ (subtract 1)
 
 appEvent st (V.EvKey V.KEsc []) = M.halt st
 appEvent st _ = M.continue st

@@ -5,12 +5,14 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Brick.Widgets.Internal
   ( Result(..)
-  , image
-  , cursors
-  , attr
-  , ctxAttrs
-  , lookupAttrName
+  , visibilityRequestsL
+  , imageL
+  , cursorsL
   , addResultOffset
+
+  , VisibilityRequest(..)
+  , vrPositionL
+  , vrSizeL
 
   , RenderState(..)
   , ScrollRequest(..)
@@ -21,11 +23,15 @@ module Brick.Widgets.Internal
   , Size(..)
   , RenderM
 
-  , Context
-  , availW
-  , availH
-  , getActiveBorderStyle
+  , Context(ctxAttrName, availWidth, availHeight, ctxBorderStyle, ctxAttrMap)
+  , lookupAttrName
   , getContext
+  , attrL
+  , availWidthL
+  , availHeightL
+  , ctxAttrMapL
+  , ctxAttrNameL
+  , ctxBorderStyleL
 
   , withBorderStyle
 
@@ -70,7 +76,7 @@ module Brick.Widgets.Internal
 where
 
 import Control.Applicative
-import Control.Lens (makeLenses, (^.), (.~), (&), (%~), to, _1, _2, view, each, to, ix)
+import Control.Lens (makeLenses, (^.), (.~), (&), (%~), to, _1, _2, each, to, ix)
 import Control.Monad (when)
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Reader
@@ -93,8 +99,8 @@ import Brick.AttrMap
 import Brick.Util (clamp)
 
 data VisibilityRequest =
-    VR { _vrPosition :: Location
-       , _vrSize :: V.DisplayRegion
+    VR { vrPosition :: Location
+       , vrSize :: V.DisplayRegion
        }
        deriving Show
 
@@ -119,12 +125,12 @@ data Viewport =
 -- result provides the image, cursor positions, and visibility requests
 -- that resulted from the rendering process.
 data Result =
-    Result { _image :: V.Image
+    Result { image :: V.Image
            -- ^ The final rendered image for a widget
-           , _cursors :: [CursorLocation]
+           , cursors :: [CursorLocation]
            -- ^ The list of reported cursor positions for the
            -- application to choose from
-           , _visibilityRequests :: [VisibilityRequest]
+           , visibilityRequests :: [VisibilityRequest]
            -- ^ The list of visibility requests made by widgets rendered
            -- while rendering this one (used by viewports)
            }
@@ -135,11 +141,11 @@ data Result =
 -- to render, which bordring style should be used, and the attribute map
 -- available for rendering.
 data Context =
-    Context { _ctxAttrName :: AttrName
-            , _availW :: Int
-            , _availH :: Int
-            , _activeBorderStyle :: BorderStyle
-            , _ctxAttrs :: AttrMap
+    Context { ctxAttrName :: AttrName
+            , availWidth :: Int
+            , availHeight :: Int
+            , ctxBorderStyle :: BorderStyle
+            , ctxAttrMap :: AttrMap
             }
 
 -- | The type of the rendering monad. This monad is used by the
@@ -181,15 +187,16 @@ data ScrollRequest = HScrollBy Int
                    | VScrollToEnd
 
 data RenderState =
-    RS { _viewportMap :: M.Map Name Viewport
-       , _scrollRequests :: [(Name, ScrollRequest)]
+    RS { viewportMap :: M.Map Name Viewport
+       , scrollRequests :: [(Name, ScrollRequest)]
        }
 
-makeLenses ''Result
-makeLenses ''Context
-makeLenses ''VisibilityRequest
+suffixLenses ''Result
+suffixLenses ''Context
+suffixLenses ''VisibilityRequest
+suffixLenses ''RenderState
+
 makeLenses ''Viewport
-makeLenses ''RenderState
 
 instance IsString Widget where
     fromString = str
@@ -204,11 +211,7 @@ getContext = ask
 -- | When rendering the specified widget, use the specified border style
 -- for any border rendering.
 withBorderStyle :: BorderStyle -> Widget -> Widget
-withBorderStyle bs p = Widget (hSize p) (vSize p) $ withReaderT (& activeBorderStyle .~ bs) (render p)
-
--- | Get the rendering context's active border style.
-getActiveBorderStyle :: RenderM BorderStyle
-getActiveBorderStyle = view activeBorderStyle
+withBorderStyle bs p = Widget (hSize p) (vSize p) $ withReaderT (& ctxBorderStyleL .~ bs) (render p)
 
 -- | The empty widget.
 emptyWidget :: Widget
@@ -226,8 +229,8 @@ renderFinal aMap layerRenders sz chooseCursor rs = (newRS, pic, theCursor)
             (\p -> runReaderT p ctx) <$>
             (render <$> cropToContext <$> layerRenders)
         ctx = Context def (fst sz) (snd sz) def aMap
-        pic = V.picForLayers $ uncurry V.resize sz <$> (^.image) <$> layerResults
-        layerCursors = (^.cursors) <$> layerResults
+        pic = V.picForLayers $ uncurry V.resize sz <$> (^.imageL) <$> layerResults
+        layerCursors = (^.cursorsL) <$> layerResults
         theCursor = chooseCursor $ concat layerCursors
 
 -- | Add an offset to all cursor locations and visbility requests
@@ -243,27 +246,27 @@ addResultOffset :: Location -> Result -> Result
 addResultOffset off = addCursorOffset off . addVisibilityOffset off
 
 addVisibilityOffset :: Location -> Result -> Result
-addVisibilityOffset off r = r & visibilityRequests.each.vrPosition %~ (off <>)
+addVisibilityOffset off r = r & visibilityRequestsL.each.vrPositionL %~ (off <>)
 
 addCursorOffset :: Location -> Result -> Result
 addCursorOffset off r =
     let onlyVisible = filter isVisible
-        isVisible loc = loc^.column >= 0 && loc^.row >= 0
-    in r & cursors %~ (\cs -> onlyVisible $ (`clOffset` off) <$> cs)
+        isVisible loc = loc^.columnL >= 0 && loc^.rowL >= 0
+    in r & cursorsL %~ (\cs -> onlyVisible $ (`clOffset` off) <$> cs)
 
 unrestricted :: Int
 unrestricted = 100000
 
 -- | The rendering context's current drawing attribute.
-attr :: (Contravariant f, Functor f) => (V.Attr -> f V.Attr) -> Context -> f Context
-attr = to (\c -> attrMapLookup (c^.ctxAttrName) (c^.ctxAttrs))
+attrL :: (Contravariant f, Functor f) => (V.Attr -> f V.Attr) -> Context -> f Context
+attrL = to (\c -> attrMapLookup (c^.ctxAttrNameL) (c^.ctxAttrMapL))
 
 -- | Given an attribute name, obtain the attribute for the attribute
 -- name by consulting the context's attribute map.
 lookupAttrName :: AttrName -> RenderM V.Attr
 lookupAttrName n = do
     c <- getContext
-    return $ attrMapLookup n (c^.ctxAttrs)
+    return $ attrMapLookup n (c^.ctxAttrMapL)
 
 -- | Build a widget from a 'String'. Breaks newlines up and space-pads
 -- short lines out to the length of the longest line.
@@ -278,13 +281,13 @@ str s =
           -- The empty string case is important since we often need
           -- empty strings to have non-zero height!  This comes down to Vty's
           -- behavior of empty strings (they have imageHeight 1)
-          [] -> return $ def & image .~ (V.string (c^.attr) "")
-          [one] -> return $ def & image .~ (V.string (c^.attr) one)
+          [] -> return $ def & imageL .~ (V.string (c^.attrL) "")
+          [one] -> return $ def & imageL .~ (V.string (c^.attrL) one)
           multiple ->
               let maxLength = maximum $ length <$> multiple
                   lineImgs = lineImg <$> multiple
-                  lineImg lStr = V.string (c^.attr) (lStr ++ replicate (maxLength - length lStr) ' ')
-              in return $ def & image .~ (V.vertCat lineImgs)
+                  lineImg lStr = V.string (c^.attrL) (lStr ++ replicate (maxLength - length lStr) ' ')
+              in return $ def & imageL .~ (V.vertCat lineImgs)
 
 -- | Build a widget from a 'T.Text' value.  Behaves the same as 'str'.
 txt :: T.Text -> Widget
@@ -304,7 +307,7 @@ padLeft padding p =
           Pad i -> (hLimit i, hSize p)
     in Widget sz (vSize p) $ do
         result <- render p
-        render $ (f $ vLimit (result^.image.to V.imageHeight) $ fill ' ') <+>
+        render $ (f $ vLimit (result^.imageL.to V.imageHeight) $ fill ' ') <+>
                  (Widget Fixed Fixed $ return result)
 
 -- | Pad the specified widget on the right.
@@ -316,7 +319,7 @@ padRight padding p =
     in Widget sz (vSize p) $ do
         result <- render p
         render $ (Widget Fixed Fixed $ return result) <+>
-                 (f $ vLimit (result^.image.to V.imageHeight) $ fill ' ')
+                 (f $ vLimit (result^.imageL.to V.imageHeight) $ fill ' ')
 
 -- | Pad the specified widget on the top.
 padTop :: Padding -> Widget -> Widget
@@ -326,7 +329,7 @@ padTop padding p =
           Pad i -> (vLimit i, vSize p)
     in Widget (hSize p) sz $ do
         result <- render p
-        render $ (f $ hLimit (result^.image.to V.imageWidth) $ fill ' ') <=>
+        render $ (f $ hLimit (result^.imageL.to V.imageWidth) $ fill ' ') <=>
                  (Widget Fixed Fixed $ return result)
 
 -- | Pad the specified widget on the bottom.
@@ -338,7 +341,7 @@ padBottom padding p =
     in Widget (hSize p) sz $ do
         result <- render p
         render $ (Widget Fixed Fixed $ return result) <=>
-                 (f $ hLimit (result^.image.to V.imageWidth) $ fill ' ')
+                 (f $ hLimit (result^.imageL.to V.imageWidth) $ fill ' ')
 
 -- | Pad a widget on the left and right.
 padLeftRight :: Int -> Widget -> Widget
@@ -358,7 +361,7 @@ fill :: Char -> Widget
 fill ch =
     Widget Unlimited Unlimited $ do
       c <- getContext
-      return $ def & image .~ (V.charFill (c^.attr) ch (c^.availW) (c^.availH))
+      return $ def & imageL .~ (V.charFill (c^.attrL) ch (c^.availWidthL) (c^.availHeightL))
 
 -- | Vertical box layout: put the specified widgets one above the other
 -- in the specified order (uppermost first). Defers growth policies to
@@ -386,10 +389,10 @@ data BoxRenderer =
                 }
 
 vBoxRenderer :: BoxRenderer
-vBoxRenderer = BoxRenderer availH availW V.imageHeight vLimit hLimit vSize V.vertCat (Location . (0 ,))
+vBoxRenderer = BoxRenderer availHeightL availWidthL V.imageHeight vLimit hLimit vSize V.vertCat (Location . (0 ,))
 
 hBoxRenderer :: BoxRenderer
-hBoxRenderer = BoxRenderer availW availH V.imageWidth hLimit vLimit hSize V.horizCat (Location . (, 0))
+hBoxRenderer = BoxRenderer availWidthL availHeightL V.imageWidth hLimit vLimit hSize V.horizCat (Location . (, 0))
 
 renderBox :: BoxRenderer -> [Widget] -> Widget
 renderBox br ws = do
@@ -404,7 +407,7 @@ renderBox br ws = do
       renderedLows <- case lows of
           [] -> return []
           ls -> do
-              let remainingPrimary = c^.(contextPrimary br) - (sum $ (^._2.image.(to $ imagePrimary br)) <$> renderedHis)
+              let remainingPrimary = c^.(contextPrimary br) - (sum $ (^._2.imageL.(to $ imagePrimary br)) <$> renderedHis)
                   primaryPerLow = remainingPrimary `div` length ls
                   padFirst = remainingPrimary - (primaryPerLow * length ls)
                   secondaryPerLow = c^.(contextSecondary br)
@@ -419,7 +422,7 @@ renderBox br ws = do
 
       let rendered = sortBy (compare `DF.on` fst) $ renderedHis ++ renderedLows
           allResults = snd <$> rendered
-          allImages = (^.image) <$> allResults
+          allImages = (^.imageL) <$> allResults
           allPrimaries = imagePrimary br <$> allImages
           allTranslatedResults = (flip map) (zip [0..] allResults) $ \(i, result) ->
               let off = locationFromOffset br offPrimary
@@ -427,8 +430,8 @@ renderBox br ws = do
               in addResultOffset off result
 
       cropResultToContext $ Result (concatenate br allImages)
-                            (concat $ _cursors <$> allTranslatedResults)
-                            (concat $ _visibilityRequests <$> allTranslatedResults)
+                            (concat $ cursors <$> allTranslatedResults)
+                            (concat $ visibilityRequests <$> allTranslatedResults)
 
 -- | Limit the space available to the specified widget to the specified
 -- number of columns. This is important for constraining the horizontal
@@ -436,7 +439,7 @@ renderBox br ws = do
 hLimit :: Int -> Widget -> Widget
 hLimit w p =
     Widget Fixed (vSize p) $ do
-      withReaderT (& availW .~ w) $ render $ cropToContext p
+      withReaderT (& availWidthL .~ w) $ render $ cropToContext p
 
 -- | Limit the space available to the specified widget to the specified
 -- number of rows. This is important for constraining the vertical
@@ -444,7 +447,7 @@ hLimit w p =
 vLimit :: Int -> Widget -> Widget
 vLimit h p =
     Widget (hSize p) Fixed $ do
-      withReaderT (& availH .~ h) $ render $ cropToContext p
+      withReaderT (& availHeightL .~ h) $ render $ cropToContext p
 
 -- | When drawing the specified widget, set the current attribute used
 -- for drawing to the one with the specified name. Note that the widget
@@ -453,7 +456,7 @@ vLimit h p =
 withAttr :: AttrName -> Widget -> Widget
 withAttr an p =
     Widget (hSize p) (vSize p) $ do
-      withReaderT (& ctxAttrName .~ an) (render p)
+      withReaderT (& ctxAttrNameL .~ an) (render p)
 
 -- | Update the attribute map while rendering the specified widget: set
 -- its new default attribute to the one that we get by looking up the
@@ -462,14 +465,14 @@ withDefaultAttr :: AttrName -> Widget -> Widget
 withDefaultAttr an p =
     Widget (hSize p) (vSize p) $ do
         c <- getContext
-        withReaderT (& ctxAttrs %~ (setDefault (attrMapLookup an (c^.ctxAttrs)))) (render p)
+        withReaderT (& ctxAttrMapL %~ (setDefault (attrMapLookup an (c^.ctxAttrMapL)))) (render p)
 
 -- | When rendering the specified widget, update the attribute map with
 -- the specified transformation.
 updateAttrMap :: (AttrMap -> AttrMap) -> Widget -> Widget
 updateAttrMap f p =
     Widget (hSize p) (vSize p) $ do
-        withReaderT (& ctxAttrs %~ f) (render p)
+        withReaderT (& ctxAttrMapL %~ f) (render p)
 
 -- | When rendering the specified widget, force all attribute lookups
 -- in the attribute map to use the value currently assigned to the
@@ -478,11 +481,11 @@ forceAttr :: AttrName -> Widget -> Widget
 forceAttr an p =
     Widget (hSize p) (vSize p) $ do
         c <- getContext
-        withReaderT (& ctxAttrs .~ (forceAttrMap (attrMapLookup an (c^.ctxAttrs)))) (render p)
+        withReaderT (& ctxAttrMapL .~ (forceAttrMap (attrMapLookup an (c^.ctxAttrMapL)))) (render p)
 
 -- | Build a widget directly from a raw Vty image.
 raw :: V.Image -> Widget
-raw img = Widget Fixed Fixed $ return $ def & image .~ img
+raw img = Widget Fixed Fixed $ return $ def & imageL .~ img
 
 -- | Translate the specified widget by the specified offset amount.
 translateBy :: Location -> Widget -> Widget
@@ -490,12 +493,12 @@ translateBy loc p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
       return $ addResultOffset loc
-             $ result & image %~ (V.translate (loc^.column) (loc^.row))
+             $ result & imageL %~ (V.translate (loc^.columnL) (loc^.rowL))
 
 cropResultToContext :: Result -> RenderM Result
 cropResultToContext result = do
     c <- getContext
-    return $ result & image %~ (V.crop (c^.availW) (c^.availH))
+    return $ result & imageL %~ (V.crop (c^.availWidthL) (c^.availHeightL))
 
 cropToContext :: Widget -> Widget
 cropToContext p =
@@ -507,10 +510,10 @@ cropLeftBy :: Int -> Widget -> Widget
 cropLeftBy cols p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
-      let amt = V.imageWidth (result^.image) - cols
+      let amt = V.imageWidth (result^.imageL) - cols
           cropped img = if amt < 0 then V.emptyImage else V.cropLeft amt img
       return $ addResultOffset (Location (-1 * cols, 0))
-             $ result & image %~ cropped
+             $ result & imageL %~ cropped
 
 -- | Crop the specified widget on the right by the specified number of
 -- columns.
@@ -518,9 +521,9 @@ cropRightBy :: Int -> Widget -> Widget
 cropRightBy cols p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
-      let amt = V.imageWidth (result^.image) - cols
+      let amt = V.imageWidth (result^.imageL) - cols
           cropped img = if amt < 0 then V.emptyImage else V.cropRight amt img
-      return $ result & image %~ cropped
+      return $ result & imageL %~ cropped
 
 -- | Crop the specified widget on the top by the specified number of
 -- rows.
@@ -528,10 +531,10 @@ cropTopBy :: Int -> Widget -> Widget
 cropTopBy rows p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
-      let amt = V.imageHeight (result^.image) - rows
+      let amt = V.imageHeight (result^.imageL) - rows
           cropped img = if amt < 0 then V.emptyImage else V.cropTop amt img
       return $ addResultOffset (Location (0, -1 * rows))
-             $ result & image %~ cropped
+             $ result & imageL %~ cropped
 
 -- | Crop the specified widget on the bottom by the specified number of
 -- rows.
@@ -539,9 +542,9 @@ cropBottomBy :: Int -> Widget -> Widget
 cropBottomBy rows p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
-      let amt = V.imageHeight (result^.image) - rows
+      let amt = V.imageHeight (result^.imageL) - rows
           cropped img = if amt < 0 then V.emptyImage else V.cropBottom amt img
-      return $ result & image %~ cropped
+      return $ result & imageL %~ cropped
 
 -- | When rendering the specified widget, also register a cursor
 -- positioning request using the specified name and location.
@@ -549,18 +552,18 @@ showCursor :: Name -> Location -> Widget -> Widget
 showCursor n cloc p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
-      return $ result & cursors %~ (CursorLocation cloc (Just n):)
+      return $ result & cursorsL %~ (CursorLocation cloc (Just n):)
 
 hRelease :: Widget -> Maybe Widget
 hRelease p =
     case hSize p of
-        Fixed -> Just $ Widget Unlimited (vSize p) $ withReaderT (& availW .~ unrestricted) (render p)
+        Fixed -> Just $ Widget Unlimited (vSize p) $ withReaderT (& availWidthL .~ unrestricted) (render p)
         Unlimited -> Nothing
 
 vRelease :: Widget -> Maybe Widget
 vRelease p =
     case vSize p of
-        Fixed -> Just $ Widget (hSize p) Unlimited $ withReaderT (& availH .~ unrestricted) (render p)
+        Fixed -> Just $ Widget (hSize p) Unlimited $ withReaderT (& availHeightL .~ unrestricted) (render p)
         Unlimited -> Nothing
 
 -- | Render the specified widget in a named viewport with the
@@ -590,11 +593,11 @@ viewport vpname typ p =
       -- First, update the viewport size.
       c <- getContext
       let newVp = VP 0 0 newSize
-          newSize = (c^.availW, c^.availH)
+          newSize = (c^.availWidthL, c^.availHeightL)
           doInsert (Just vp) = Just $ vp & vpSize .~ newSize
           doInsert Nothing = Just newVp
 
-      lift $ modify (& viewportMap %~ (M.alter doInsert vpname))
+      lift $ modify (& viewportMapL %~ (M.alter doInsert vpname))
 
       -- Then render the sub-rendering with the rendering layout
       -- constraint released (but raise an exception if we are asked to
@@ -616,35 +619,35 @@ viewport vpname typ p =
 
       -- If the sub-rendering requested visibility, update the scroll
       -- state accordingly
-      when (not $ null $ initialResult^.visibilityRequests) $ do
-          Just vp <- lift $ gets $ (^.viewportMap.to (M.lookup vpname))
-          let rq = head $ initialResult^.visibilityRequests
+      when (not $ null $ initialResult^.visibilityRequestsL) $ do
+          Just vp <- lift $ gets $ (^.viewportMapL.to (M.lookup vpname))
+          let rq = head $ initialResult^.visibilityRequestsL
               updatedVp = case typ of
                   Both -> scrollToView Horizontal rq $ scrollToView Vertical rq vp
                   Horizontal -> scrollToView typ rq vp
                   Vertical -> scrollToView typ rq vp
-          lift $ modify (& viewportMap %~ (M.insert vpname updatedVp))
+          lift $ modify (& viewportMapL %~ (M.insert vpname updatedVp))
 
       -- If the rendering state includes any scrolling requests for this
       -- viewport, apply those
-      reqs <- lift $ gets $ (^.scrollRequests)
+      reqs <- lift $ gets $ (^.scrollRequestsL)
       let relevantRequests = snd <$> filter (\(n, _) -> n == vpname) reqs
       when (not $ null relevantRequests) $ do
-          Just vp <- lift $ gets $ (^.viewportMap.to (M.lookup vpname))
+          Just vp <- lift $ gets $ (^.viewportMapL.to (M.lookup vpname))
           let updatedVp = applyRequests relevantRequests vp
               applyRequests [] v = v
               applyRequests (rq:rqs) v =
                   case typ of
-                      Horizontal -> scrollTo typ rq (initialResult^.image) $ applyRequests rqs v
-                      Vertical -> scrollTo typ rq (initialResult^.image) $ applyRequests rqs v
-                      Both -> scrollTo Horizontal rq (initialResult^.image) $
-                              scrollTo Vertical rq (initialResult^.image) $
+                      Horizontal -> scrollTo typ rq (initialResult^.imageL) $ applyRequests rqs v
+                      Vertical -> scrollTo typ rq (initialResult^.imageL) $ applyRequests rqs v
+                      Both -> scrollTo Horizontal rq (initialResult^.imageL) $
+                              scrollTo Vertical rq (initialResult^.imageL) $
                               applyRequests rqs v
-          lift $ modify (& viewportMap %~ (M.insert vpname updatedVp))
+          lift $ modify (& viewportMapL %~ (M.insert vpname updatedVp))
           return ()
 
       -- Get the viewport state now that it has been updated.
-      Just vp <- lift $ gets (M.lookup vpname . (^.viewportMap))
+      Just vp <- lift $ gets (M.lookup vpname . (^.viewportMapL))
 
       -- Then perform a translation of the sub-rendering to fit into the
       -- viewport
@@ -653,16 +656,16 @@ viewport vpname typ p =
 
       -- Return the translated result with the visibility requests
       -- discarded
-      let translatedSize = ( translated^.image.to V.imageWidth
-                           , translated^.image.to V.imageHeight
+      let translatedSize = ( translated^.imageL.to V.imageWidth
+                           , translated^.imageL.to V.imageHeight
                            )
       case translatedSize of
-          (0, 0) -> return $ translated & image .~ (V.charFill (c^.attr) ' ' (c^.availW) (c^.availH))
-                                        & visibilityRequests .~ mempty
+          (0, 0) -> return $ translated & imageL .~ (V.charFill (c^.attrL) ' ' (c^.availWidthL) (c^.availHeightL))
+                                        & visibilityRequestsL .~ mempty
           _ -> render $ cropToContext
                       $ padBottom Max
                       $ padRight Max
-                      $ Widget Fixed Fixed $ return $ translated & visibilityRequests .~ mempty
+                      $ Widget Fixed Fixed $ return $ translated & visibilityRequestsL .~ mempty
 
 scrollTo :: ViewportType -> ScrollRequest -> V.Image -> Viewport -> Viewport
 scrollTo Both _ _ _ = error "BUG: called scrollTo on viewport type 'Both'"
@@ -693,9 +696,9 @@ scrollToView Vertical rq vp = vp & vpTop .~ newVStart
     where
         curStart = vp^.vpTop
         curEnd = curStart + vp^.vpSize._2
-        reqStart = rq^.vrPosition.row
+        reqStart = rq^.vrPositionL.rowL
 
-        reqEnd = rq^.vrPosition.row + rq^.vrSize._2
+        reqEnd = rq^.vrPositionL.rowL + rq^.vrSizeL._2
         newVStart :: Int
         newVStart = if reqStart < curStart
                    then reqStart
@@ -706,9 +709,9 @@ scrollToView Horizontal rq vp = vp & vpLeft .~ newHStart
     where
         curStart = vp^.vpLeft
         curEnd = curStart + vp^.vpSize._1
-        reqStart = rq^.vrPosition.column
+        reqStart = rq^.vrPositionL.columnL
 
-        reqEnd = rq^.vrPosition.column + rq^.vrSize._1
+        reqEnd = rq^.vrPositionL.columnL + rq^.vrSizeL._1
         newHStart :: Int
         newHStart = if reqStart < curStart
                    then reqStart
@@ -727,13 +730,13 @@ visible :: Widget -> Widget
 visible p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
-      let imageSize = ( result^.image.to V.imageWidth
-                      , result^.image.to V.imageHeight
+      let imageSize = ( result^.imageL.to V.imageWidth
+                      , result^.imageL.to V.imageHeight
                       )
       -- The size of the image to be made visible in a viewport must have
       -- non-zero size in both dimensions.
       return $ if imageSize^._1 > 0 && imageSize^._2 > 0
-               then result & visibilityRequests %~ (VR (Location (0, 0)) imageSize :)
+               then result & visibilityRequestsL %~ (VR (Location (0, 0)) imageSize :)
                else result
 
 -- | Similar to 'visible', request that a region (with the specified
@@ -746,7 +749,7 @@ visibleRegion vrloc sz p =
       -- The size of the image to be made visible in a viewport must have
       -- non-zero size in both dimensions.
       return $ if sz^._1 > 0 && sz^._2 > 0
-               then result & visibilityRequests %~ (VR vrloc sz :)
+               then result & visibilityRequestsL %~ (VR vrloc sz :)
                else result
 
 -- | Horizontal box layout: put the specified widgets next to each other

@@ -28,6 +28,7 @@ module Brick.Widgets.Border
   )
 where
 
+import Control.Applicative ((<$>))
 import Control.Lens ((^.), to)
 import Data.Monoid ((<>))
 import Graphics.Vty (imageHeight, imageWidth)
@@ -74,7 +75,7 @@ brCornerAttr = borderAttr <> "corner" <> "br"
 borderElem :: (BorderStyle -> Char) -> Widget
 borderElem f =
     Widget Fixed Fixed $ do
-      bs <- getActiveBorderStyle
+      bs <- ctxBorderStyle <$> getContext
       render $ withAttr borderAttr $ str [f bs]
 
 -- | Put a border around the specified widget.
@@ -93,11 +94,11 @@ borderWithLabel label = border_ (Just label)
 border_ :: Maybe Widget -> Widget -> Widget
 border_ label wrapped =
     Widget (hSize wrapped) (vSize wrapped) $ do
-      bs <- getActiveBorderStyle
+      bs <- ctxBorderStyle <$> getContext
       c <- getContext
 
-      middleResult <- render $ hLimit (c^.availW - 2)
-                             $ vLimit (c^.availH - 2)
+      middleResult <- render $ hLimit (c^.availWidthL - 2)
+                             $ vLimit (c^.availHeightL - 2)
                              $ wrapped
 
       let top = (withAttr tlCornerAttr $ str [bsCornerTL bs])
@@ -109,8 +110,8 @@ border_ label wrapped =
           middle = vBorder <+> (Widget Fixed Fixed $ return middleResult) <+> vBorder
           total = top <=> middle <=> bottom
 
-      render $ hLimit (middleResult^.image.to imageWidth + 2)
-             $ vLimit (middleResult^.image.to imageHeight + 2)
+      render $ hLimit (middleResult^.imageL.to imageWidth + 2)
+             $ vLimit (middleResult^.imageL.to imageHeight + 2)
              $ total
 
 -- | A horizontal border.  Fills all horizontal space.
@@ -127,7 +128,7 @@ hBorderWithLabel label = hBorder_ (Just label)
 hBorder_ :: Maybe Widget -> Widget
 hBorder_ label =
     Widget Unlimited Fixed $ do
-      bs <- getActiveBorderStyle
+      bs <- ctxBorderStyle <$> getContext
       render $ vLimit 1 $ withAttr hBorderAttr $ hCenterWith (Just $ bsHorizontal bs) msg
       where
           msg = maybe (txt "") (withAttr hBorderLabelAttr) label
@@ -136,5 +137,5 @@ hBorder_ label =
 vBorder :: Widget
 vBorder =
     Widget Fixed Unlimited $ do
-      bs <- getActiveBorderStyle
+      bs <- ctxBorderStyle <$> getContext
       render $ hLimit 1 $ withAttr vBorderAttr $ fill (bsVertical bs)

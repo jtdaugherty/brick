@@ -52,6 +52,7 @@ library
     Brick.Widgets.ProgressBar
     Data.Text.Markup
   other-modules:
+    Brick.Types.TH
     Brick.Widgets.Internal
 
   build-depends:       base <= 5,

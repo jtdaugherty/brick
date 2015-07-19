@@ -53,7 +53,7 @@ import Graphics.Vty
 
 import Brick.Widgets.Core (Widget)
 import Brick.Widgets.Internal (renderFinal, RenderState(..), ScrollRequest(..), Direction(..))
-import Brick.Types (row, column, CursorLocation(..), Name(..))
+import Brick.Types (rowL, columnL, CursorLocation(..), Name(..))
 import Brick.AttrMap
 
 -- | The type of actions to take in an event handler.
@@ -197,7 +197,7 @@ runVty vty chan app appState rs = do
     firstRS <- renderApp vty app appState rs
     e <- readChan chan
     (next, scrollReqs) <- runStateT (appHandleEvent app appState e) []
-    return (next, firstRS { _scrollRequests = scrollReqs })
+    return (next, firstRS { scrollRequests = scrollReqs })
 
 withVty :: IO Vty -> (Vty -> IO a) -> IO a
 withVty buildVty useVty = do
@@ -214,7 +214,7 @@ renderApp vty app appState rs = do
                                     rs
         picWithCursor = case theCursor of
             Nothing -> pic { picCursor = NoCursor }
-            Just loc -> pic { picCursor = Cursor (loc^.column) (loc^.row) }
+            Just loc -> pic { picCursor = Cursor (loc^.columnL) (loc^.rowL) }
 
     update vty picWithCursor
 

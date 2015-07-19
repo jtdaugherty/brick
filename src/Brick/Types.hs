@@ -5,8 +5,8 @@ module Brick.Types
   ( Location(Location)
   , TerminalLocation(..)
   , CursorLocation(..)
-  , cursorLocation
-  , cursorLocationName
+  , cursorLocationL
+  , cursorLocationNameL
   , HandleEvent(..)
   , Name(..)
   , suffixLenses
@@ -17,8 +17,8 @@ import Control.Lens
 import Data.String
 import Data.Monoid (Monoid(..))
 import Graphics.Vty (Event)
-import qualified Language.Haskell.TH.Syntax as TH
-import qualified Language.Haskell.TH.Lib as TH
+
+import Brick.Types.TH
 
 -- | A terminal screen location.
 data Location = Location { _loc :: (Int, Int)
@@ -37,13 +37,17 @@ instance Field2 Location Location Int Int where
 -- | The class of types that behave like terminal locations.
 class TerminalLocation a where
     -- | Get the column out of the value
-    column :: Lens' a Int
+    columnL :: Lens' a Int
+    column :: a -> Int
     -- | Get the row out of the value
-    row :: Lens' a Int
+    rowL :: Lens' a Int
+    row :: a -> Int
 
 instance TerminalLocation Location where
-    column = _1
-    row = _2
+    columnL = _1
+    column (Location t) = fst t
+    rowL = _2
+    row (Location t) = snd t
 
 -- | Names of things. Used to name cursor locations, widgets, and
 -- viewports.
@@ -63,29 +67,22 @@ instance Monoid Location where
 
 -- | A cursor location.  These are returned by the rendering process.
 data CursorLocation =
-    CursorLocation { _cursorLocation :: !Location
+    CursorLocation { cursorLocation :: !Location
                    -- ^ The location
-                   , _cursorLocationName :: !(Maybe Name)
+                   , cursorLocationName :: !(Maybe Name)
                    -- ^ The name of the widget associated with the location
                    }
                    deriving Show
 
-makeLenses ''CursorLocation
+suffixLenses ''CursorLocation
 
 instance TerminalLocation CursorLocation where
-    column = cursorLocation._1
-    row = cursorLocation._2
+    columnL = cursorLocationL._1
+    column = column . cursorLocation
+    rowL = cursorLocationL._2
+    row = row . cursorLocation
 
 -- | The class of types that provide some basic event-handling.
 class HandleEvent a where
     -- | Handle a Vty event
     handleEvent :: Event -> a -> a
-
--- | A template haskell function to build lenses for a record type. This
--- function differs from the 'Control.Lens.makeLenses' function in that
--- it does not require the record fields to be prefixed with underscores
--- and it adds an "L" suffix to lens names to make it clear that they
--- are lenses.
-suffixLenses :: TH.Name -> TH.DecsQ
-suffixLenses = makeLensesWith $
-  lensRules & lensField .~ (\_ _ name -> [TopName $ TH.mkName $ TH.nameBase name ++ "L"])

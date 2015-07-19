@@ -34,7 +34,7 @@ progressBar :: Maybe String
 progressBar mLabel progress =
     Widget Unlimited Fixed $ do
         c <- getContext
-        let barWidth = c^.availW
+        let barWidth = c^.availWidthL
             label = maybe "" id mLabel
             labelWidth = length label
             spacesWidth = barWidth - labelWidth

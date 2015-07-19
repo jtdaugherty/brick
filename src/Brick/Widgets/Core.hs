@@ -61,24 +61,30 @@ module Brick.Widgets.Core
 
   -- * Rendering infrastructure
   , RenderM
+  , getContext
+  , lookupAttrName
+
+  -- ** The rendering context
+  , Context(ctxAttrName, availWidth, availHeight, ctxBorderStyle, ctxAttrMap)
+  , attrL
+  , availWidthL
+  , availHeightL
+  , ctxAttrMapL
+  , ctxAttrNameL
+  , ctxBorderStyleL
+
   -- ** Rendering results
   , Result(..)
   -- ** Result lenses
-  , image
-  , cursors
+  , imageL
+  , cursorsL
+  , visibilityRequestsL
+  -- ** Visibility requests
+  , VisibilityRequest(..)
+  , vrPositionL
+  , vrSizeL
   -- ** Adding offsets to cursor positions and visibility requests
   , addResultOffset
-
-  -- ** The rendering context
-  , Context
-  , getContext
-  , lookupAttrName
-  , getActiveBorderStyle
-  -- ** Context lenses
-  , attr
-  , availW
-  , availH
-  , ctxAttrs
 
   -- * Misc
   , Direction(..)
