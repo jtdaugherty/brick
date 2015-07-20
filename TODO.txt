@@ -1,6 +1,7 @@
 Features:
   * High priority:
     - Text wrapping (with markup)
+    - Multi-line text editing
     - Load & save attribute map to on-disk configuration
     - API for obtaining scrolling viewport state in EventM (will
       staleness be an issue here?)
