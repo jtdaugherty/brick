@@ -28,7 +28,6 @@ module Brick.Widgets.Edit
 where
 
 import Control.Lens
-import Data.Maybe (listToMaybe)
 import Graphics.Vty (Event(..), Key(..), Modifier(..))
 
 import qualified Data.Text.Zipper as Z
@@ -45,10 +44,11 @@ import Brick.AttrMap
 -- * Backspace: delete character prior to cursor position
 -- * Ctrl-k: delete all from cursor to end of line
 -- * Left/right arrow keys: move cursor
+-- * Enter: break the current line at the cursor position
 data Editor =
     Editor { editContents :: Z.TextZipper String
            -- ^ The contents of the editor
-           , editDrawContents :: String -> Widget
+           , editDrawContents :: [String] -> Widget
            -- ^ The function the editor uses to draw its contents
            , editorName :: Name
            -- ^ The name of the editor
@@ -63,8 +63,11 @@ instance HandleEvent Editor where
                   EvKey (KChar 'e') [MCtrl] -> Z.gotoEOL
                   EvKey (KChar 'd') [MCtrl] -> Z.deleteChar
                   EvKey (KChar 'k') [MCtrl] -> Z.killToEOL
+                  EvKey KEnter [] -> Z.breakLine
                   EvKey KDel [] -> Z.deleteChar
                   EvKey (KChar c) [] | c /= '\t' -> Z.insertChar c
+                  EvKey KUp [] -> Z.moveUp
+                  EvKey KDown [] -> Z.moveDown
                   EvKey KLeft [] -> Z.moveLeft
                   EvKey KRight [] -> Z.moveRight
                   EvKey KBS [] -> Z.deletePrevChar
@@ -74,12 +77,15 @@ instance HandleEvent Editor where
 -- | Construct an editor.
 editor :: Name
        -- ^ The editor's name (must be unique)
-       -> (String -> Widget)
+       -> ([String] -> Widget)
        -- ^ The content rendering function
+       -> Maybe Int
+       -- ^ The limit on the number of lines in the editor ('Nothing'
+       -- means no limit)
        -> String
        -- ^ The initial content
        -> Editor
-editor name draw s = Editor (Z.stringZipper [s]) draw name
+editor name draw limit s = Editor (Z.stringZipper [s] limit) draw name
 
 -- | Apply an editing operation to the editor's contents. Bear in mind
 -- that you should only apply zipper operations that operate on the
@@ -96,20 +102,20 @@ editAttr :: AttrName
 editAttr = "edit"
 
 -- | Get the contents of the editor.
-getEditContents :: Editor -> String
-getEditContents e = firstLine
-    where
-        allLines = Z.getText $ e^.editContentsL
-        firstLine = maybe "" id $ listToMaybe allLines
+getEditContents :: Editor -> [String]
+getEditContents e = Z.getText $ e^.editContentsL
 
 -- | Turn an editor state value into a widget
 renderEditor :: Editor -> Widget
 renderEditor e =
     let cp = Z.cursorPosition $ e^.editContentsL
-        cursorLoc = Location (cp^._2, 0)
+        cursorLoc = Location (cp^._2, cp^._1)
+        limit = case e^.editContentsL.to Z.getLineLimit of
+            Nothing -> id
+            Just lim -> vLimit lim
     in withAttr editAttr $
-       vLimit 1 $
-       viewport (e^.editorNameL) Horizontal $
+       limit $
+       viewport (e^.editorNameL) Both $
        showCursor (e^.editorNameL) cursorLoc $
        visibleRegion cursorLoc (1, 1) $
        e^.editDrawContentsL $

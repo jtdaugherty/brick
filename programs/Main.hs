@@ -116,7 +116,7 @@ appEvent st e =
 
 initialState :: St
 initialState =
-    St { _stEditor = editor (Name "edit") drawEditString ""
+    St { _stEditor = editor (Name "edit") (drawEditString . head) (Just 1) ""
        , _stList = list (Name "list") listDrawElem []
        , _stBorderStyle = 0
        , _stTrans = Location (0, 0)
@@ -152,4 +152,5 @@ theApp =
 main :: IO ()
 main = do
     st <- defaultMain theApp initialState
-    putStrLn $ "You entered: " <> (getEditContents $ st^.stEditor)
+    putStrLn "You entered:"
+    putStrLn $ unlines $ getEditContents $ st^.stEditor
