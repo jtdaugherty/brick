@@ -233,7 +233,7 @@ neverShowCursor = const $ const Nothing
 -- 'appChooseCursor' value when a simple program has zero or more
 -- widgets that advertise a cursor position.
 showFirstCursor :: s -> [CursorLocation] -> Maybe CursorLocation
-showFirstCursor = const $ listToMaybe
+showFirstCursor = const listToMaybe
 
 -- | Show the cursor with the specified name, if such a cursor location
 -- has been reported.
