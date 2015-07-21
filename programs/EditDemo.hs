@@ -37,9 +37,9 @@ secondEditor = "edit2"
 
 switchEditors :: St -> St
 switchEditors st =
-    if st^.currentEditor == firstEditor
-    then st & currentEditor .~ secondEditor
-    else st & currentEditor .~ firstEditor
+    let next = if st^.currentEditor == firstEditor
+               then secondEditor else firstEditor
+    in st & currentEditor .~ next
 
 currentEditorL :: St -> Lens' St E.Editor
 currentEditorL st =
