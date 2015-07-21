@@ -27,7 +27,7 @@ manual](http://jtdaugherty.github.io/vty-ui/manuals/vty-ui-users-manual-1.9.pdf)
 Feature Overview
 ----------------
 
-`brick` comes with a bunch widget types to get you started:
+`brick` comes with a bunch of widget types to get you started:
 
  * Vertical and horizontal box layout widgets
  * Basic single- and multi-line text editor widgets
