@@ -27,6 +27,7 @@ module Brick.Main
   -- * Cursor management functions
   , neverShowCursor
   , showFirstCursor
+  , showCursorNamed
   )
 where
 
@@ -53,7 +54,7 @@ import Graphics.Vty
 
 import Brick.Widgets.Core (Widget)
 import Brick.Widgets.Internal (renderFinal, RenderState(..), ScrollRequest(..), Direction(..))
-import Brick.Types (rowL, columnL, CursorLocation(..), Name(..))
+import Brick.Types (rowL, columnL, CursorLocation(..), cursorLocationNameL, Name(..))
 import Brick.AttrMap
 
 -- | The type of actions to take in an event handler.
@@ -233,6 +234,13 @@ neverShowCursor = const $ const Nothing
 -- widgets that advertise a cursor position.
 showFirstCursor :: s -> [CursorLocation] -> Maybe CursorLocation
 showFirstCursor = const $ listToMaybe
+
+-- | Show the cursor with the specified name, if such a cursor location
+-- has been reported.
+showCursorNamed :: Name -> [CursorLocation] -> Maybe CursorLocation
+showCursorNamed name locs =
+    let matches loc = loc^.cursorLocationNameL == Just name
+    in listToMaybe $ filter matches locs
 
 -- | A viewport scrolling handle for managing the scroll state of
 -- viewports.

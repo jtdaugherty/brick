@@ -4,7 +4,6 @@
 module Main where
 
 import Control.Lens
-import Data.Maybe (listToMaybe)
 import qualified Graphics.Vty as V
 
 import qualified Brick.Main as M
@@ -76,9 +75,7 @@ theMap = A.attrMap V.defAttr
     ]
 
 appCursor :: St -> [T.CursorLocation] -> Maybe T.CursorLocation
-appCursor st locs =
-    let matchesCurrentEditor loc = loc^.(T.cursorLocationNameL) == Just (st^.currentEditor)
-    in listToMaybe $ filter matchesCurrentEditor locs
+appCursor st = M.showCursorNamed (st^.currentEditor)
 
 theApp :: M.App St V.Event
 theApp =
