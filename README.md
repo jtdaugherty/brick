@@ -24,6 +24,27 @@ This library deprecates [vty-ui](https://github.com/jtdaugherty/vty-ui).
 Some day `brick`, too, will have a [70-page
 manual](http://jtdaugherty.github.io/vty-ui/manuals/vty-ui-users-manual-1.9.pdf).
 
+Feature Overview
+----------------
+
+`brick` comes with a bunch widget types to get you started:
+
+ * Vertical and horizontal box layout widgets
+ * Basic single- and multi-line text editor widgets
+ * List widget
+ * Progress bar widget
+ * Simple dialog box widget
+ * Border-drawing widgets (put borders around or in between things)
+
+In addition, some of `brick`'s more powerful features may not be obvious
+right away:
+
+ * All widgets can be arranged in predictable layouts so you don't have
+   to worry about terminal resizes.
+ * Most widgets can be made scrollable *for free*.
+ * Attribute management is flexible and attribute maps can be stored,
+   loaded from disk, and customized at runtime.
+
 Getting Started
 ---------------
 
