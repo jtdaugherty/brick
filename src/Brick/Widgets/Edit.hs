@@ -43,7 +43,7 @@ import Brick.AttrMap
 -- * Ctrl-d, Del: delete character at cursor position
 -- * Backspace: delete character prior to cursor position
 -- * Ctrl-k: delete all from cursor to end of line
--- * Left/right arrow keys: move cursor
+-- * Arrow keys: move cursor
 -- * Enter: break the current line at the cursor position
 data Editor =
     Editor { editContents :: Z.TextZipper String
