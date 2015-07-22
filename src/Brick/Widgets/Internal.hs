@@ -381,18 +381,26 @@ data BoxRenderer =
     BoxRenderer { contextPrimary :: Lens' Context Int
                 , contextSecondary :: Lens' Context Int
                 , imagePrimary :: V.Image -> Int
+                , imageSecondary :: V.Image -> Int
                 , limitPrimary :: Int -> Widget -> Widget
                 , limitSecondary :: Int -> Widget -> Widget
                 , primarySize :: Widget -> Size
-                , concatenate :: [V.Image] -> V.Image
+                , concatenatePrimary :: [V.Image] -> V.Image
                 , locationFromOffset :: Int -> Location
+                , padImageSecondary :: Int -> V.Image -> V.Attr -> V.Image
                 }
 
 vBoxRenderer :: BoxRenderer
-vBoxRenderer = BoxRenderer availHeightL availWidthL V.imageHeight vLimit hLimit vSize V.vertCat (Location . (0 ,))
+vBoxRenderer =
+    BoxRenderer availHeightL availWidthL V.imageHeight V.imageWidth vLimit hLimit vSize V.vertCat (Location . (0 ,))
+                (\amt img a -> let p = V.charFill a ' ' amt (V.imageHeight img)
+                               in V.horizCat [img, p])
 
 hBoxRenderer :: BoxRenderer
-hBoxRenderer = BoxRenderer availWidthL availHeightL V.imageWidth hLimit vLimit hSize V.horizCat (Location . (, 0))
+hBoxRenderer =
+    BoxRenderer availWidthL availHeightL V.imageWidth V.imageHeight hLimit vLimit hSize V.horizCat (Location . (, 0))
+                (\amt img a -> let p = V.charFill a ' ' (V.imageWidth img) amt
+                               in V.vertCat [img, p])
 
 renderBox :: BoxRenderer -> [Widget] -> Widget
 renderBox br ws = do
@@ -428,8 +436,16 @@ renderBox br ws = do
               let off = locationFromOffset br offPrimary
                   offPrimary = sum $ take i allPrimaries
               in addResultOffset off result
+          -- Determine the secondary dimension value to pad to. In a
+          -- vertical box we want all images to be the same width to
+          -- avoid attribute over-runs or blank spaces with the wrong
+          -- attribute. In a horizontal box we want all images to have
+          -- the same height for the same reason.
+          maxSecondary = maximum $ imageSecondary br <$> allImages
+          padImage img = padImageSecondary br (maxSecondary - imageSecondary br img) img (c^.attrL)
+          paddedImages = padImage <$> allImages
 
-      cropResultToContext $ Result (concatenate br allImages)
+      cropResultToContext $ Result (concatenatePrimary br paddedImages)
                             (concat $ cursors <$> allTranslatedResults)
                             (concat $ visibilityRequests <$> allTranslatedResults)
 
