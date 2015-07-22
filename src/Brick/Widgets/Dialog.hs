@@ -19,6 +19,7 @@ module Brick.Widgets.Dialog
   , buttonAttr
   , buttonSelectedAttr
   -- * Lenses
+  , dialogNameL
   , dialogButtonsL
   , dialogSelectedIndexL
   , dialogWidthL
