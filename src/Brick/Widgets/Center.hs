@@ -31,7 +31,7 @@ hCenter = hCenterWith Nothing
 hCenterWith :: Maybe Char -> Widget -> Widget
 hCenterWith mChar p =
     let ch = maybe ' ' id mChar
-    in Widget Unlimited (vSize p) $ do
+    in Widget Greedy (vSize p) $ do
            result <- render p
            c <- getContext
            let rWidth = result^.imageL.to imageWidth
@@ -61,7 +61,7 @@ vCenter = vCenterWith Nothing
 vCenterWith :: Maybe Char -> Widget -> Widget
 vCenterWith mChar p =
     let ch = maybe ' ' id mChar
-    in Widget (hSize p) Unlimited $ do
+    in Widget (hSize p) Greedy $ do
            result <- render p
            c <- getContext
            let rWidth = result^.imageL.to imageWidth
@@ -96,7 +96,7 @@ centerWith c = vCenterWith c . hCenterWith c
 -- origin.
 centerAbout :: Location -> Widget -> Widget
 centerAbout l p =
-    Widget Unlimited Unlimited $ do
+    Widget Greedy Greedy $ do
       -- Compute translation offset so that loc is in the middle of the
       -- rendering area
       c <- getContext

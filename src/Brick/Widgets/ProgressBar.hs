@@ -32,7 +32,7 @@ progressBar :: Maybe String
             -- ^ The progress value. Should be between 0 and 1 inclusive.
             -> Widget
 progressBar mLabel progress =
-    Widget Unlimited Fixed $ do
+    Widget Greedy Fixed $ do
         c <- getContext
         let barWidth = c^.availWidthL
             label = maybe "" id mLabel

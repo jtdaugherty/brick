@@ -160,9 +160,8 @@ type RenderM a = ReaderT Context (State RenderState) a
 data Size = Fixed
           -- ^ Fixed widgets take up the same amount of space no matter
           -- how much they are given (non-greedy).
-          | Unlimited
-          -- ^ Unlimited widgets take up the space they are given
-          -- (greedy).
+          | Greedy
+          -- ^ Greedy widgets take up all the space they are given.
           deriving (Show, Eq, Ord)
 
 -- | The type of widgets.
@@ -307,7 +306,7 @@ data Padding = Pad Int
 padLeft :: Padding -> Widget -> Widget
 padLeft padding p =
     let (f, sz) = case padding of
-          Max -> (id, Unlimited)
+          Max -> (id, Greedy)
           Pad i -> (hLimit i, hSize p)
     in Widget sz (vSize p) $ do
         result <- render p
@@ -318,7 +317,7 @@ padLeft padding p =
 padRight :: Padding -> Widget -> Widget
 padRight padding p =
     let (f, sz) = case padding of
-          Max -> (id, Unlimited)
+          Max -> (id, Greedy)
           Pad i -> (hLimit i, hSize p)
     in Widget sz (vSize p) $ do
         result <- render p
@@ -329,7 +328,7 @@ padRight padding p =
 padTop :: Padding -> Widget -> Widget
 padTop padding p =
     let (f, sz) = case padding of
-          Max -> (id, Unlimited)
+          Max -> (id, Greedy)
           Pad i -> (vLimit i, vSize p)
     in Widget (hSize p) sz $ do
         result <- render p
@@ -340,7 +339,7 @@ padTop padding p =
 padBottom :: Padding -> Widget -> Widget
 padBottom padding p =
     let (f, sz) = case padding of
-          Max -> (id, Unlimited)
+          Max -> (id, Greedy)
           Pad i -> (vLimit i, vSize p)
     in Widget (hSize p) sz $ do
         result <- render p
@@ -363,7 +362,7 @@ padAll v w = padLeftRight v $ padTopBottom v w
 -- horizontally and vertically.
 fill :: Char -> Widget
 fill ch =
-    Widget Unlimited Unlimited $ do
+    Widget Greedy Greedy $ do
       c <- getContext
       return $ def & imageL .~ (V.charFill (c^.attrL) ch (c^.availWidthL) (c^.availHeightL))
 
@@ -453,8 +452,7 @@ hBoxRenderer =
 -- they are rendered, i.e., the order in which space in the box is
 -- allocated to widgets as the algorithm proceeds. This is because order
 -- matters: if we render greedy widgets first, there will be no space
--- left for non-greedy ones. Greedy widgets have an 'Unlimited' size
--- policy; non-greedy ones have a 'Fixed' size policy.
+-- left for non-greedy ones.
 --
 -- So we render all widgets with size 'Fixed' in the vertical dimension
 -- first. Each is rendered with as much room as the overall box has, but
@@ -533,7 +531,7 @@ renderBox br ws = do
 
 -- | Limit the space available to the specified widget to the specified
 -- number of columns. This is important for constraining the horizontal
--- growth of otherwise-unlimited widgets.
+-- growth of otherwise-greedy widgets.
 hLimit :: Int -> Widget -> Widget
 hLimit w p =
     Widget Fixed (vSize p) $ do
@@ -541,7 +539,7 @@ hLimit w p =
 
 -- | Limit the space available to the specified widget to the specified
 -- number of rows. This is important for constraining the vertical
--- growth of otherwise-unlimited widgets.
+-- growth of otherwise-greedy widgets.
 vLimit :: Int -> Widget -> Widget
 vLimit h p =
     Widget (hSize p) Fixed $ do
@@ -655,14 +653,14 @@ showCursor n cloc p =
 hRelease :: Widget -> Maybe Widget
 hRelease p =
     case hSize p of
-        Fixed -> Just $ Widget Unlimited (vSize p) $ withReaderT (& availWidthL .~ unrestricted) (render p)
-        Unlimited -> Nothing
+        Fixed -> Just $ Widget Greedy (vSize p) $ withReaderT (& availWidthL .~ unrestricted) (render p)
+        Greedy -> Nothing
 
 vRelease :: Widget -> Maybe Widget
 vRelease p =
     case vSize p of
-        Fixed -> Just $ Widget (hSize p) Unlimited $ withReaderT (& availHeightL .~ unrestricted) (render p)
-        Unlimited -> Nothing
+        Fixed -> Just $ Widget (hSize p) Greedy $ withReaderT (& availHeightL .~ unrestricted) (render p)
+        Greedy -> Nothing
 
 -- | Render the specified widget in a named viewport with the
 -- specified type. This permits widgets to be scrolled without being
@@ -687,7 +685,7 @@ viewport :: Name
          -- ^ The widget to be rendered in the scrollable viewport
          -> Widget
 viewport vpname typ p =
-    Widget Unlimited Unlimited $ do
+    Widget Greedy Greedy $ do
       -- First, update the viewport size.
       c <- getContext
       let newVp = VP 0 0 newSize

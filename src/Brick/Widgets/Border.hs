@@ -129,7 +129,7 @@ hBorderWithLabel label = hBorder_ (Just label)
 
 hBorder_ :: Maybe Widget -> Widget
 hBorder_ label =
-    Widget Unlimited Fixed $ do
+    Widget Greedy Fixed $ do
       bs <- ctxBorderStyle <$> getContext
       render $ vLimit 1 $ withAttr hBorderAttr $ hCenterWith (Just $ bsHorizontal bs) msg
       where
@@ -138,6 +138,6 @@ hBorder_ label =
 -- | A vertical border.  Fills all vertical space.
 vBorder :: Widget
 vBorder =
-    Widget Fixed Unlimited $ do
+    Widget Fixed Greedy $ do
       bs <- ctxBorderStyle <$> getContext
       render $ hLimit 1 $ withAttr vBorderAttr $ fill (bsVertical bs)
