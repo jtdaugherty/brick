@@ -153,7 +153,10 @@ data Context =
 -- communicate rendering parameters to widgets' rendering functions.
 type RenderM a = ReaderT Context (State RenderState) a
 
--- | Widget growth policies.
+-- | Widget growth policies. These policies communicate to layout
+-- algorithms how a widget uses space when being rendered. These
+-- policies influence rendering order and space allocation in the box
+-- layout algorithm.
 data Size = Fixed
           -- ^ Fixed widgets take up the same amount of space no matter
           -- how much they are given (non-greedy).
