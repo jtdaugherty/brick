@@ -156,9 +156,10 @@ type RenderM a = ReaderT Context (State RenderState) a
 -- | Widget growth policies.
 data Size = Fixed
           -- ^ Fixed widgets take up the same amount of space no matter
-          -- how much they are given.
+          -- how much they are given (non-greedy).
           | Unlimited
-          -- ^ Unlimited widgets take up the space they are given.
+          -- ^ Unlimited widgets take up the space they are given
+          -- (greedy).
           deriving (Show, Eq, Ord)
 
 -- | The type of widgets.
@@ -449,7 +450,8 @@ hBoxRenderer =
 -- they are rendered, i.e., the order in which space in the box is
 -- allocated to widgets as the algorithm proceeds. This is because order
 -- matters: if we render greedy widgets first, there will be no space
--- left for non-greedy ones.
+-- left for non-greedy ones. Greedy widgets have an 'Unlimited' size
+-- policy; non-greedy ones have a 'Fixed' size policy.
 --
 -- So we render all widgets with size 'Fixed' in the vertical dimension
 -- first. Each is rendered with as much room as the overall box has, but
