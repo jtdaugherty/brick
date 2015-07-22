@@ -821,9 +821,11 @@ scrollToView Horizontal rq vp = vp & vpLeft .~ newHStart
 -- rendered inside a viewport. This permits widgets (whose sizes and
 -- positions cannot be known due to being embedded in arbitrary layouts)
 -- to make a request for a parent viewport to locate them and scroll
--- tenough o put them in view. This, together with 'viewport' is what
--- tmakes the ext editor and list widgets possible without making them
--- tdeal with he details of scrolling state management.
+-- enough to put them in view. This, together with 'viewport', is what
+-- makes the text editor and list widgets possible without making them
+-- deal with the details of scrolling state management.
+--
+-- This does nothing if not rendered in a viewport.
 visible :: Widget -> Widget
 visible p =
     Widget (hSize p) (vSize p) $ do
@@ -839,7 +841,10 @@ visible p =
 
 -- | Similar to 'visible', request that a region (with the specified
 -- 'Location' as its origin and 'V.DisplayRegion' as its size) be made
--- visible when it is rendered inside a viewport.
+-- visible when it is rendered inside a viewport. The 'Location' is
+-- relative to the specified widget's upper-left corner of (0, 0).
+--
+-- This does nothing if not rendered in a viewport.
 visibleRegion :: Location -> V.DisplayRegion -> Widget -> Widget
 visibleRegion vrloc sz p =
     Widget (hSize p) (vSize p) $ do
