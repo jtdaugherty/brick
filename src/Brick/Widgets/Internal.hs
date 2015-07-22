@@ -377,6 +377,16 @@ hBox :: [Widget] -> Widget
 hBox [] = emptyWidget
 hBox pairs = renderBox hBoxRenderer pairs
 
+-- | The process of rendering widgets in a box layout is exactly the
+-- same except for the dimension under consideration (width vs. height),
+-- in which case all of the same operations that consider one dimension
+-- in the layout algorithm need to be switched to consider the other.
+-- Because of this we fill a BoxRenderer with all of the functions
+-- needed to consider the "primary" dimension (e.g. vertical if the
+-- box layout is vertical) as well as the "secondary" dimension (e.g.
+-- horizontal if the box layout is vertical). Doing this permits us to
+-- have one implementation for box layout and parameterizing on the
+-- orientation of all of the operations.
 data BoxRenderer =
     BoxRenderer { contextPrimary :: Lens' Context Int
                 , contextSecondary :: Lens' Context Int
@@ -422,6 +432,53 @@ hBoxRenderer =
                     in V.vertCat [img, p]
                 }
 
+-- | Render a series of widgets in a box layout in the order given.
+--
+-- The growth policy of a box layout is the most unrestricted of the
+-- growth policies of the widgets it contains, so to determine the hSize
+-- and vSize of the box we just take the maximum (using the Ord instance
+-- for Size) of all of the widgets to be rendered in the box.
+--
+-- Then the box layout algorithm proceeds as follows. We'll use
+-- the vertical case to concretely describe the algorithm, but the
+-- horizontal case can be envisioned just by exchanging all
+-- "vertical"/"horizontal" and "rows"/"columns", etc., in the
+-- description.
+--
+-- The growth policies of the child widgets determine the order in which
+-- they are rendered, i.e., the order in which space in the box is
+-- allocated to widgets as the algorithm proceeds. This is because order
+-- matters: if we render greedy widgets first, there will be no space
+-- left for non-greedy ones.
+--
+-- So we render all widgets with size 'Fixed' in the vertical dimension
+-- first. Each is rendered with as much room as the overall box has, but
+-- we assume that they will not be greedy and use it all. If they do,
+-- maybe it's because the terminal is small and there just isn't enough
+-- room to render everything.
+--
+-- Then the remaining height is distributed evenly amongst all remaining
+-- (greedy) widgets and they are rendered in sub-boxes that are as high
+-- as this even slice of rows and as wide as the box is permitted to be.
+-- We only do this step at all if rendering the non-greedy widgets left
+-- us any space, i.e., if there were any rows left.
+--
+-- After rendering the non-greedy and then greedy widgets, their images
+-- are sorted so that they are stored in the order the original widgets
+-- were given. All cursor locations and visibility requests in each
+-- sub-widget are translated according to the position of the sub-widget
+-- in the box.
+--
+-- All images are padded to be as wide as the widest sub-widget to
+-- prevent attribute over-runs. Without this step the attribute used by
+-- a sub-widget may continue on in an undesirable fashion until it hits
+-- something with a different attribute. To prevent this and to behave
+-- in the least surprising way, we pad the image on the right with
+-- whitespace using the context's current attribute.
+--
+-- Finally, the padded images are concatenated together vertically and
+-- returned along with the translated cursor positions and visibility
+-- requests.
 renderBox :: BoxRenderer -> [Widget] -> Widget
 renderBox br ws = do
     Widget (maximum $ hSize <$> ws) (maximum $ vSize <$> ws) $ do
