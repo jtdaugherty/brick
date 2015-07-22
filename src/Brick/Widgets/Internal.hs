@@ -852,7 +852,7 @@ visibleRegion vrloc sz p =
 
 -- | Horizontal box layout: put the specified widgets next to each other
 -- in the specified order. Defers growth policies to the growth policies
--- of both widgets.
+-- of both widgets.  This operator is a binary version of 'hBox'.
 (<+>) :: Widget
       -- ^ Left
       -> Widget
@@ -862,7 +862,7 @@ visibleRegion vrloc sz p =
 
 -- | Vertical box layout: put the specified widgets one above the other
 -- in the specified order. Defers growth policies to the growth policies
--- of both widgets.
+-- of both widgets.  This operator is a binary version of 'vBox'.
 (<=>) :: Widget
       -- ^ Top
       -> Widget
