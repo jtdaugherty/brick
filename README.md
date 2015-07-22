@@ -10,19 +10,17 @@ a function that describes how your user interface should look, but the
 library takes care of a lot of the book-keeping that so commonly goes
 into writing such programs.
 
-The API exposed by `brick` is declarative. Unlike most GUI toolkits
-which require you to write a long and tedious sequence of "create
-a widget, now bind an event handler", `brick` just requires you to
-describe your interface -- even the bits that are stateful -- using a
-set of declarative combinators and it does the rest. All you have to do
-is provide functions to transform your own application state when input
-(or other kinds of) events arrive.
+`brick` exposes a declarative API. Unlike most GUI toolkits which
+require you to write a long and tedious sequence of "create a widget,
+now bind an event handler", `brick` just requires you to describe
+your interface -- even the bits that are stateful -- using a set of
+declarative combinators and it does the rest. All you have to do is
+provide functions to transform your own application state when input (or
+other kinds of) events arrive.
 
 Under the hood, this library uses [vty](http://hackage.haskell.org/package/vty).
 
 This library deprecates [vty-ui](https://github.com/jtdaugherty/vty-ui).
-Some day `brick`, too, will have a [70-page
-manual](http://jtdaugherty.github.io/vty-ui/manuals/vty-ui-users-manual-1.9.pdf).
 
 Feature Overview
 ----------------
@@ -48,6 +46,11 @@ right away:
  * Attribute management is flexible and attribute maps can be stored,
    loaded from disk, and customized at runtime.
 
+`brick` exports [lens](http://github.com/ekmett/lens) and non-`lens`
+interfaces for most things, so you can get the full power of `lens` if
+you want it or use plain Haskell if you don't. If a `brick` library
+function named `thing` has a `lens` version, it is named `thingL`.
+
 Getting Started
 ---------------
 
@@ -69,15 +72,14 @@ Status
 of, say, `vty-ui`. And there are some places were I have deliberately
 chosen to worry about performance later, for the sake of spending more
 time on the design. For a while my goal with `brick` will be to develop
-a very solid core library with minimal features. It *should* be possible
-to extend this library by making your own packages that depend on
-`brick`. If you do that, you'll also be helping me by testing whether
-the exported interface is usable!
+a very solid core library with minimal features. `brick` exports an
+extension API that makes it possible to make your own packages and
+widgets. If you do that, you'll also be helping me by testing whether
+the exported interface is usable and complete!
 
-There is a lot that I haven't documented in terms of design and intended
-API usage, but some of that can be gleaned from the demo program source
-and by looking at the implementation of the widgets that are already
-provided.
+Documentation on the imporant aspects of the design is forthcoming. In
+the mean time, build the demos (with `cabal install -f demos`) and look
+at those and the Haddock documentation to find your way around.
 
 The development of this library has also revealed some bugs in `vty`,
 and I've tried to report those as I go. If they haven't been resolved,
@@ -109,4 +111,4 @@ should consider to make submitting patches easier for all concerned:
    issue and we can use that as the place to hash things out.
  - If you make changes, try to make them consistent with the syntactic
    conventions I've used in the codebase.
- - Please provide Haddock documentation for any new functions you add.
+ - Please provide Haddock documentation for any changes you make.
