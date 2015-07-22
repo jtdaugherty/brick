@@ -384,7 +384,7 @@ data BoxRenderer =
                 , imageSecondary :: V.Image -> Int
                 , limitPrimary :: Int -> Widget -> Widget
                 , limitSecondary :: Int -> Widget -> Widget
-                , primarySize :: Widget -> Size
+                , primaryWidgetSize :: Widget -> Size
                 , concatenatePrimary :: [V.Image] -> V.Image
                 , locationFromOffset :: Int -> Location
                 , padImageSecondary :: Int -> V.Image -> V.Attr -> V.Image
@@ -392,15 +392,35 @@ data BoxRenderer =
 
 vBoxRenderer :: BoxRenderer
 vBoxRenderer =
-    BoxRenderer availHeightL availWidthL V.imageHeight V.imageWidth vLimit hLimit vSize V.vertCat (Location . (0 ,))
-                (\amt img a -> let p = V.charFill a ' ' amt (V.imageHeight img)
-                               in V.horizCat [img, p])
+    BoxRenderer { contextPrimary = availHeightL
+                , contextSecondary = availWidthL
+                , imagePrimary = V.imageHeight
+                , imageSecondary = V.imageWidth
+                , limitPrimary = vLimit
+                , limitSecondary = hLimit
+                , primaryWidgetSize = vSize
+                , concatenatePrimary = V.vertCat
+                , locationFromOffset = Location . (0 ,)
+                , padImageSecondary = \amt img a ->
+                    let p = V.charFill a ' ' amt (V.imageHeight img)
+                    in V.horizCat [img, p]
+                }
 
 hBoxRenderer :: BoxRenderer
 hBoxRenderer =
-    BoxRenderer availWidthL availHeightL V.imageWidth V.imageHeight hLimit vLimit hSize V.horizCat (Location . (, 0))
-                (\amt img a -> let p = V.charFill a ' ' (V.imageWidth img) amt
-                               in V.vertCat [img, p])
+    BoxRenderer { contextPrimary = availWidthL
+                , contextSecondary = availHeightL
+                , imagePrimary = V.imageWidth
+                , imageSecondary = V.imageHeight
+                , limitPrimary = hLimit
+                , limitSecondary = vLimit
+                , primaryWidgetSize = hSize
+                , concatenatePrimary = V.horizCat
+                , locationFromOffset = Location . (, 0)
+                , padImageSecondary = \amt img a ->
+                    let p = V.charFill a ' ' (V.imageWidth img) amt
+                    in V.vertCat [img, p]
+                }
 
 renderBox :: BoxRenderer -> [Widget] -> Widget
 renderBox br ws = do
@@ -408,7 +428,7 @@ renderBox br ws = do
       c <- getContext
 
       let pairsIndexed = zip [(0::Int)..] ws
-          (his, lows) = partition (\p -> (primarySize br $ snd p) == Fixed) pairsIndexed
+          (his, lows) = partition (\p -> (primaryWidgetSize br $ snd p) == Fixed) pairsIndexed
 
       renderedHis <- mapM (\(i, prim) -> (i,) <$> render prim) his
 
