@@ -36,6 +36,7 @@ Feature Overview
  * Simple dialog box widget
  * Border-drawing widgets (put borders around or in between things)
  * Generic scrollable viewports
+ * Extensible widget-building API
 
 In addition, some of `brick`'s more powerful features may not be obvious
 right away:
