@@ -8,6 +8,7 @@ Features:
     - Deal with multi-column characters everywhere
 
 Open issues:
+- Are there better or less error-prone ways of dealing with Names?
 - Centering and other operations pad widgets with fills with interacts
 with layering depending on the user's intentions. Sometimes we want
 layers to be opaque and filled, other times we want them to be
