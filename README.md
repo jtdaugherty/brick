@@ -49,7 +49,8 @@ right away:
 `brick` exports [lens](http://github.com/ekmett/lens) and non-`lens`
 interfaces for most things, so you can get the full power of `lens` if
 you want it or use plain Haskell if you don't. If a `brick` library
-function named `thing` has a `lens` version, it is named `thingL`.
+function named `thing` has a `lens` version, the `lens` version is named
+`thingL`.
 
 Getting Started
 ---------------
