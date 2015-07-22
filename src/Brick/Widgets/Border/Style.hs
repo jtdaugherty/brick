@@ -8,7 +8,7 @@
 --
 -- To use these in your widgets, see
 -- 'Brick.Widgets.Core.withBorderStyle'. By default, widgets rendered
--- without a specified border style use 'ascii' via the 'Default'
+-- without a specified border style use 'unicode' via the 'Default'
 -- instance provided by 'BorderStyle'.
 module Brick.Widgets.Border.Style
   ( BorderStyle(..)
@@ -51,7 +51,7 @@ data BorderStyle =
                 deriving (Show, Read)
 
 instance Default BorderStyle where
-    def = ascii
+    def = unicode
 
 -- | Make a border style using the specified character everywhere.
 borderStyleFromChar :: Char -> BorderStyle
