@@ -90,7 +90,7 @@ list name draw es =
 
 -- | Turn a list state value into a widget.
 renderList :: List e -> Widget
-renderList l = withDefaultAttr listAttr $
+renderList l = withDefAttr listAttr $
                viewport (l^.listNameL) Vertical $
                vBox $
                drawListElements l
@@ -103,7 +103,7 @@ drawListElements l = drawnElements
             let isSelected = Just i == l^.listSelectedL
                 elemWidget = (l^.listElementDrawL) isSelected e
                 makeVisible = if isSelected
-                              then (visible . withDefaultAttr listSelectedAttr)
+                              then (visible . withDefAttr listSelectedAttr)
                               else id
             in makeVisible elemWidget
 

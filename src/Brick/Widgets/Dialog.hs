@@ -115,7 +115,7 @@ renderDialog d body =
 
         doBorder = maybe border borderWithLabel (str <$> d^.dialogTitleL)
     in center $
-       withDefaultAttr dialogAttr $
+       withDefAttr dialogAttr $
        hLimit (d^.dialogWidthL) $
        doBorder $
        vBox [ body

@@ -33,7 +33,7 @@ module Brick.Widgets.Core
   , vLimit
 
   -- * Attribute mangement
-  , withDefaultAttr
+  , withDefAttr
   , withAttr
   , forceAttr
   , updateAttrMap

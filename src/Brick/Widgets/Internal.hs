@@ -58,7 +58,7 @@ module Brick.Widgets.Internal
 
   , hLimit
   , vLimit
-  , withDefaultAttr
+  , withDefAttr
   , withAttr
   , forceAttr
   , updateAttrMap
@@ -548,7 +548,7 @@ vLimit h p =
 -- | When drawing the specified widget, set the current attribute used
 -- for drawing to the one with the specified name. Note that the widget
 -- may use further calls to 'withAttr' to override this; if you really
--- want to prevent that, use 'withDefaultAttr' or 'forceAttr'.
+-- want to prevent that, use 'withDefAttr' or 'forceAttr'.
 withAttr :: AttrName -> Widget -> Widget
 withAttr an p =
     Widget (hSize p) (vSize p) $ do
@@ -557,8 +557,8 @@ withAttr an p =
 -- | Update the attribute map while rendering the specified widget: set
 -- its new default attribute to the one that we get by looking up the
 -- specified attribute name in the map.
-withDefaultAttr :: AttrName -> Widget -> Widget
-withDefaultAttr an p =
+withDefAttr :: AttrName -> Widget -> Widget
+withDefAttr an p =
     Widget (hSize p) (vSize p) $ do
         c <- getContext
         withReaderT (& ctxAttrMapL %~ (setDefault (attrMapLookup an (c^.ctxAttrMapL)))) (render p)
