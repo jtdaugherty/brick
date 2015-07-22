@@ -548,7 +548,10 @@ vLimit h p =
 -- | When drawing the specified widget, set the current attribute used
 -- for drawing to the one with the specified name. Note that the widget
 -- may use further calls to 'withAttr' to override this; if you really
--- want to prevent that, use 'withDefAttr' or 'forceAttr'.
+-- want to prevent that, use 'forceAttr'. Attributes used this way still
+-- get merged hierarchically and still fall back to the attribute map's
+-- default attribute. If you want to change the default attribute, use
+-- 'withDefAttr'.
 withAttr :: AttrName -> Widget -> Widget
 withAttr an p =
     Widget (hSize p) (vSize p) $ do
