@@ -91,7 +91,7 @@ script:
 
  # this builds all libraries and executables
  # (including tests/benchmarks)
- - cabal build
+ - cabal install -f demos
 
  - cabal test
  - cabal check
