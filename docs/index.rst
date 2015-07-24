@@ -272,6 +272,21 @@ to use your own event type.
 Starting up: appStartEvent
 **************************
 
+When an application starts, it may be desirable to perform some of
+the duties typically only possible when an event has arrived, such as
+setting up initial scrolling viewport state. Since such actions can only
+be performed in ``EventM`` and since we do not want to wait until the
+first event arrives to do this work in ``appHandleEvent``, the ``App``
+type provides ``appStartEvent`` function for this purpose:
+
+.. code:: haskell
+
+   appStartEvent :: s -> EventM s
+
+This function takes the initial application state and returns it in
+``EventM``, possibly changing it and possibly making viewport requests.
+For more details, see `Viewports`_.
+
 appChooseCursor: Placing the Cursor
 -----------------------------------
 
