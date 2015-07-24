@@ -1,7 +1,8 @@
 Features:
   * High priority:
     - Text wrapping (with markup)
-    - Load & save attribute map to on-disk configuration
+    - Load & save attribute map to on-disk configuration (vty change
+      pending: Read instance for Attr)
     - API for obtaining scrolling viewport state in EventM (will
       staleness be an issue here?)
   * Low priority:
