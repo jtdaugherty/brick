@@ -405,16 +405,18 @@ context* that contains:
 * The map of attributes to use to look up attribute names
 * The active border style to use when drawing borders
 
-The most important element in the rendering context is the first one:
-the available rendering area. This part of the context tells the widget
-being drawn how many rows and columns are available for it to consume.
-When rendering begins, the widget being rendered (i.e. a layer returned
-by an ``appDraw`` function) gets a rendering context whose rendering
-area is the size of the terminal. This size information is used to let
-widgets take up that space if they so choose. For example, a string
-"Hello, world!" will always take up one row and 13 columns, but the
-string "Hello, world!" *centered* will always take up one row and *all
-available columns*.
+Available Rendering Area
+------------------------
+
+The most important element in the rendering context is the rendering
+area: This part of the context tells the widget being drawn how many
+rows and columns are available for it to consume. When rendering begins,
+the widget being rendered (i.e. a layer returned by an ``appDraw``
+function) gets a rendering context whose rendering area is the size of
+the terminal. This size information is used to let widgets take up that
+space if they so choose. For example, a string "Hello, world!" will
+always take up one row and 13 columns, but the string "Hello, world!"
+*centered* will always take up one row and *all available columns*.
 
 How widgets use space when rendered is described in two pieces of
 information in each ``Widget``: the widget's horizontal and vertical
@@ -473,8 +475,8 @@ When using widgets it is sometimes important to understand their
 horizontal and vertical space behavior by knowing their ``Size`` values,
 and those should be made clear in the Haddock documentation.
 
-Limits
-------
+Limiting Rendering Area
+-----------------------
 
 If you'd like to use a ``Greedy`` widget but want to limit how much
 space it consumes, you can turn it into a ``Fixed`` widget by using
@@ -483,6 +485,14 @@ one of the *limiting combinators*, ``Brick.Widgets.Core.hLimit`` and
 them into widgets with a ``Fixed`` size (in the relevant dimension) and
 run their rendering functions in a modified rendering context with a
 restricted rendering area.
+
+For example, the following will center a string in 30 columns, leaving
+room for something to be placed next to it as the terminal width
+changes:
+
+.. code:: haskell
+
+   let w = hLimit 30 $ hCenter $ str "Hello, world!"
 
 How Attributes Work
 ===================
