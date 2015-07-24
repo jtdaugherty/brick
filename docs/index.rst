@@ -219,9 +219,48 @@ handler is finished. We have three choices:
 Using Your Own Event Type
 *************************
 
-appLiftVtyEvent
+Since we often need to communicate application-specific events
+beyond input events to the event handler, the ``App`` type is
+polymorphic over the event type we want to handle. If we use
+``Brick.Main.defaultMain`` to run our ``App``, we have to use
+``Graphics.Vty.Event`` as our event type. But if our application has
+other event-handling needs, we need to use our own event type.
 
-customMain
+To do this, we first define an event type:
+
+.. code:: haskell
+
+   data CustomEvent =
+       VtyEvent Graphics.Vty.Event
+       | CustomEvent1
+       | CustomEvent2
+
+Our custom event type *must* provide a constructor capable of taking
+a ``Graphics.Vty.Event`` value. This allows the ``brick`` event loop
+to send us ``vty`` events in the midst of our custom ones. To allow
+``brick`` to do this, we provide this constructor as the value of
+``appLiftVtyEvent``. This way, ``brick`` can wrap a ``vty`` event using
+our custom event type and then pass it to our event handler (which takes
+``CustomEvent`` values).
+
+Once we have set ``appLiftVtyEvent`` in this way, we also need to set up
+a mechanism for getting our custom events into the ``brick`` event loop
+from other threads. To do this we use a ``Control.Concurrent.Chan`` and
+call ``Brick.Main.customMain`` instead of ``Brick.Main.defaultMain``:
+
+.. code:: haskell
+
+   main :: IO ()
+   main = do
+       eventChan <- newChan
+       finalState <- customMain (Graphics.Vty.mkVty Data.Default.def) eventChan app initialState
+       -- Use finalState
+
+Beyond just the application and its initial state, the ``customMain``
+function lets us have control over how the ``vty`` library is
+initialized and how ``brick`` gets custom events to give to our event
+handler. ``customMain`` is the entry point into ``brick`` when you need
+to use your own event type.
 
 Starting up: appStartEvent
 **************************
