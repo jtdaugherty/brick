@@ -16,10 +16,10 @@ abstraction and combinators for expressing user interface layouts.
 The process of writing an application using ``brick`` entails writing
 two important functions:
 
- * A *drawing function* that turns your application state into a
-   specification of how your interface should look, and
- * An *event handler* that takes your application state and an input
-   event and decides whether to change the state or quit the program.
+- A *drawing function* that turns your application state into a
+  specification of how your interface should look, and
+- An *event handler* that takes your application state and an input
+  event and decides whether to change the state or quit the program.
 
 We write drawing functions in ``brick`` using an extensive set of
 primitives and combinators to place text on the screen, set its
@@ -64,21 +64,20 @@ API Conventions
 documentation and as you explore the library source and write your own
 programs.
 
- * Use of `lens`_: ``brick`` uses ``lens`` functions internally and also
-   exposes lenses for many types in the library. However, if you
-   prefer not to use the ``lens`` interface in your program, all
-   ``lens`` interfaces have non-`lens` equivalents exported by the
-   same module. In general, the "``L``" suffix on something tells
-   you it is a ``lens``; the name without the "``L``" suffix is the
-   non-`lens` version. You can get by without using ``brick``'s ``lens``
-   interface but your life will probably be much more pleasant once your
-   application state becomes sufficiently complex (see `appHandleEvent:
-   Handling Events`_).
- * Attribute names: some modules export attribute names (see `How
-   Attributes Work`_) associated with user interface elements.
-   These tend to end in an "``Attr``" suffix (e.g. ``borderAttr``).
-   In addition, hierarchical relationships between attributes are
-   documented in Haddock documentation.
+- Use of `lens`_: ``brick`` uses ``lens`` functions internally and also
+  exposes lenses for many types in the library. However, if you prefer
+  not to use the ``lens`` interface in your program, all ``lens``
+  interfaces have non-`lens` equivalents exported by the same module. In
+  general, the "``L``" suffix on something tells you it is a ``lens``;
+  the name without the "``L``" suffix is the non-`lens` version. You can
+  get by without using ``brick``'s ``lens`` interface but your life will
+  probably be much more pleasant once your application state becomes
+  sufficiently complex (see `appHandleEvent: Handling Events`_).
+- Attribute names: some modules export attribute names (see `How
+  Attributes Work`_) associated with user interface elements. These tend
+  to end in an "``Attr``" suffix (e.g. ``borderAttr``). In addition,
+  hierarchical relationships between attributes are documented in
+  Haddock documentation.
 
 The App Type
 ============
