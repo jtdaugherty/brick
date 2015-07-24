@@ -43,8 +43,8 @@ right away:
  * All widgets can be arranged in predictable layouts so you don't have
    to worry about terminal resizes.
  * Most widgets can be made scrollable *for free*.
- * Attribute management is flexible and attribute maps can be stored,
-   loaded from disk, and customized at runtime.
+ * Attribute management is flexible and can be customized at runtime on
+   a per-widget basis.
 
 `brick` exports [lens](http://github.com/ekmett/lens) and non-`lens`
 interfaces for most things, so you can get the full power of `lens` if

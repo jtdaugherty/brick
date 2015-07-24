@@ -352,8 +352,7 @@ maps those attribute names to actual attributes.  This approach lets us:
 * Change the attributes at runtime, letting us or the user change the
   attributes of any element of the application arbitrarily without
   aforcing nyone to build special machinery to make this configurable;
-* Load saved attribute maps from disk, giving us serializable attribute
-  configurations more or less for free;
+* Write routines to load saved attribute maps from disk;
 * Provide modular attribute behavior for third-party components, where
   we would not want to have to recompile third-party code just to change
   attributes, and where we would not want to have to pass in attribute
