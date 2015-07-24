@@ -167,10 +167,9 @@ appHandleEvent: Handling Events
 
 The value of ``appHandleEvent`` is a function that decides how to modify
 the application state as a result of an event. It also decides whether
-to continue program execution.
-
-The function takes the current application state and the event and
-returns the *next application state*:
+to continue program execution. The function takes the current
+application state and the event and returns the *next application
+state*:
 
 .. code:: haskell
 
