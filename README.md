@@ -55,16 +55,24 @@ function named `thing` has a `lens` version, the `lens` version is named
 Getting Started
 ---------------
 
-The best way to get started is to build, run, and read the source for
-the various demonstration programs in the `programs/` directory. This
-will help you get to know the library and what it can do. There is also
-extensive Haddock documentation.
+TLDR:
 
 ```
 $ cabal sandbox init
 $ cabal install -j -f demos
 $ .cabal-sandbox/bin/brick-???-demo
 ```
+
+To get started, see the [first few sections of the brick
+manual](docs/index.rst).
+
+Documentation
+-------------
+
+Your documentation options, in recommended order, are:
+
+* [The brick manual](docs/index.rst)
+* Haddock (all modules)
 
 Status
 ------
