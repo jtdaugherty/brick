@@ -165,8 +165,43 @@ this.
 appHandleEvent: Handling Events
 -------------------------------
 
-Suspend & Resume, Halt, Continue
-********************************
+The value of ``appHandleEvent`` is a function that decides how to modify
+the application state as a result of an event. It also decides whether
+to continue program execution.
+
+The function takes the current application state and the event and
+returns the *next application state*:
+
+.. code::
+   appHandleEvent :: s -> e -> EventM (Next s)
+
+The ``EventM`` monad is the event-handling monad. This monad is a
+transformer around ``IO``, so you are free to do I/O in this monad by
+using ``liftIO``. Keep in mind that time spent blocking in your event
+handler is time during which your UI is unresponsive, so consider this
+when deciding whether to have background threads do work instead of
+inlining the work in the event handler.
+
+The ``Next s`` value describes what should happen after the event
+handler is finished. We have three choices:
+
+* ``Brick.Main.continue s``: continue executing the event loop with the
+  specified application state ``s`` as the next value. Commonly this is
+  where you'd modify the state based on the event and return it.
+* ``Brick.Main.halt s``: halt the event loop and return the final
+  application state value ``s``. This state value is returned to the
+  caller of ``defaultMain`` or ``customMain`` where it can be used prior
+  to finally exiting ``main``.
+* ``Brick.Main.suspendAndResume act``: suspend the ``brick`` event loop
+  and execute the specified ``IO`` action ``act``. The action ``act``
+  must be of type ``IO s``, so when it executes it must return the next
+  application state. When ``suspendAndResume`` is used, the ``brick``
+  event loop is shut down and the terminal state is restored to its
+  state when the ``brick`` event loop began execution. When it finishes
+  executing, the event loop will be resumed using the returned state
+  value. This is useful for situations where your program needs to
+  suspend your interface and execute some other program that needs to
+  gain control of the terminal (such as an external editor).
 
 Using Your Own Event Type
 *************************
