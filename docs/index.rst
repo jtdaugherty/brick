@@ -437,15 +437,6 @@ map combinators:
 * ``Brick.Widgets.Core.forceAttr``
 * ``Brick.Widgets.Core.withDefAttr``
 
-Implementing Your Own Widgets
-=============================
-
-Using the Rendering Context
----------------------------
-
-Rendering Sub-Widgets
----------------------
-
 Viewports
 =========
 
@@ -457,6 +448,15 @@ Scrolling Viewports With Visibility Requests
 
 Scrolling Viewports in Event Handlers
 -------------------------------------
+
+Implementing Your Own Widgets
+=============================
+
+Using the Rendering Context
+---------------------------
+
+Rendering Sub-Widgets
+---------------------
 
 .. _vty: https://github.com/coreyoconnor/vty
 .. _Hackage: http://hackage.haskell.org/
