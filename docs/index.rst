@@ -31,7 +31,8 @@ attributes (e.g. foreground color), and express layout constraints (e.g.
 padding, centering, box layouts, scrolling viewports, etc.).
 
 These functions get packaged into a structure that we hand off to the
-``brick`` library's main event loop.
+``brick`` library's main event loop. We'll cover that in detail in `The
+App Type`_.
 
 Installation
 ------------
