@@ -329,15 +329,14 @@ selection easy in common cases:
 * ``showCursorNamed``: show the cursor with the specified name or
   ``Nothing`` if it is not requested.
 
-Widgets request cursor placement by using the ``showCursor`` combinator.
-For example, this widget places a cursor on the first "``o``" in
-"``foo``" assocated with the cursor name "``myCursor``":
+Widgets request cursor placement by using the
+``Brick.Widgets.Core.showCursor`` combinator. For example, this widget
+places a cursor on the first "``o``" in "``foo``" assocated with the
+cursor name "``myCursor``":
 
 .. code:: haskell
 
-   let w = Brick.Widgets.Core.showCursor
-             (Name "myCursor")
-             (Brick.Types.Location (1, 0))
+   let w = showCursor (Name "myCursor") (Brick.Types.Location (1, 0))
              (Brick.Widgets.Core.str "foobar")
 
 appAttrMap: Providing Attributes
