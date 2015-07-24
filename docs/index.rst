@@ -395,7 +395,8 @@ To draw a widget using an attribute name in the map, use
                                ]
 
 For complete details on how attribute maps and attribute names work, see
-the Haddock documentation for the ``Brick.AttrMap`` module.
+the Haddock documentation for the ``Brick.AttrMap`` module. See also
+`How Attributes Work`_.
 
 How Widgets and Rendering Work
 ==============================
