@@ -291,6 +291,55 @@ For more details, see `Viewports`_. You will probably just want to use
 appChooseCursor: Placing the Cursor
 -----------------------------------
 
+The rendering process for a ``Widget`` may return information about
+where that widget would like to place the cursor. For example, a text
+editor will need to report a cursor position. However, since a
+``Widget`` may be a composite of many such cursor-placing widgets, we
+have to have a way of choosing which of the reported cursor positions,
+if any, is the one we actually want to honor.
+
+To decide which cursor placement to use, or to decide not to show one at
+all, we set the ``App`` type's ``appChooseCursor`` function:
+
+.. code:: haskell
+
+   appChooseCursor :: s -> [CursorLocation] -> Maybe CursorLocation
+
+The event loop renders the interface and collects the
+``Brick.Types.CursorLocation`` values produced by the rendering process
+and passes those, along with the current application state, to this
+function. Using your application state (to track which text input box
+is "focused," say) you can decide which of the locations to return or
+return ``Nothing`` if you do not want to show a cursor.
+
+We decide which location to show by looking at the ``Brick.Types.Name``
+value contained in the ``cursorLocationName`` field. The ``Name``
+value associated with a cursor location will be the ``Name`` of the
+``Widget`` that requested it; this is why constructors for widgets like
+``Brick.Widgets.Edit.editor`` require a ``Name`` parameter. The ``Name``
+lets us distinguish between many cursor-placing widgets of the same
+type.
+
+``Brick.Main`` provides various convenience functions to make cursor
+selection easy in common cases:
+
+* ``neverShowCursor``: never show any cursor.
+* ``showFirstCursor``: always show the first cursor request given; good
+  for applications with only one cursor-placing widget.
+* ``showCursorNamed``: show the cursor with the specified name or
+  ``Nothing`` if it is not requested.
+
+Widgets request cursor placement by using the ``showCursor`` combinator.
+For example, this widget places a cursor on the first "``o``" in
+"``foo``" assocated with the cursor name "``myCursor``":
+
+.. code:: haskell
+
+   let w = Brick.Widgets.Core.showCursor
+             (Name "myCursor")
+             (Brick.Types.Location (1, 0))
+             (Brick.Widgets.Core.str "foobar")
+
 appAttrMap: Providing Attributes
 --------------------------------
 
