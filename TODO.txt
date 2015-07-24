@@ -13,17 +13,3 @@ Open issues:
 with layering depending on the user's intentions. Sometimes we want
 layers to be opaque and filled, other times we want them to be
 transparent.  How do we deal with this in general?
-
-Missing non-haddock documentation:
-* Getting started: simpleMain, defaultMain
-* API conventions: lens / non-lens interfaces, attribute name exports
-* customMain and the App type
-  - Event handlers and HandleEvent
-  - Cursor selection
-  - Suspend & resume, halt, continue
-  - Using your own event type
-* How widgets and rendering work
-  - Space behavior
-* Implementing your own widgets
-  - Rendering sub-widgets
-  - Dealing with the rendering context
