@@ -241,7 +241,8 @@ to send us ``vty`` events in the midst of our custom ones. To allow
 ``brick`` to do this, we provide this constructor as the value of
 ``appLiftVtyEvent``. This way, ``brick`` can wrap a ``vty`` event using
 our custom event type and then pass it to our event handler (which takes
-``CustomEvent`` values).
+``CustomEvent`` values). In this case we'd set ``appLiftVtyEvent =
+VtyEvent``.
 
 Once we have set ``appLiftVtyEvent`` in this way, we also need to set up
 a mechanism for getting our custom events into the ``brick`` event loop
