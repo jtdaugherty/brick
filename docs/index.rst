@@ -395,6 +395,95 @@ the Haddock documentation for the ``Brick.AttrMap`` module. See also
 How Widgets and Rendering Work
 ==============================
 
+When ``brick`` renders a ``Widget``, the widget's rendering routine is
+evaluated to produce a ``vty`` ``Image`` of the widget. The widget's
+rendering routine runs with some information called the *rendering
+context* that contains:
+
+* The size of the area in which to draw things
+* The name of the current attribute to use to draw things
+* The map of attributes to use to look up attribute names
+* The active border style to use when drawing borders
+
+The most important element in the rendering context is the first one:
+the available rendering area. This part of the context tells the widget
+being drawn how many rows and columns are available for it to consume.
+When rendering begins, the widget being rendered (i.e. a layer returned
+by an ``appDraw`` function) gets a rendering context whose rendering
+area is the size of the terminal. This size information is used to let
+widgets take up that space if they so choose. For example, a string
+"Hello, world!" will always take up one row and 13 columns, but the
+string "Hello, world!" *centered* will always take up one row and *all
+available columns*.
+
+How widgets use space when rendered is described in two pieces of
+information in each ``Widget``: the widget's horizontal and vertical
+growth policies. These fields have type ``Brick.Widgets.Core.Size`` and
+can have the values ``Fixed`` and ``Greedy``.
+
+A widget advertising a ``Fixed`` size in a given dimension is a widget
+that will always consume the same number of rows or columns no matter
+how many it is given. Widgets can advertise different growth policies;
+for example, the ``Brick.Widgets.Border.hCenter`` function centers
+a widget and is ``Greedy`` horizontally and defers to the widget it
+centers for vertical growth behavior.
+
+These size policies govern the box layout algorithm that is at
+the heart of every non-trivial drawing specification. When we use
+``Brick.Widgets.Core.vBox`` and ``Brick.Widgets.Core.hBox`` to
+lay things out (or use their binary synonyms ``<=>`` and ``<+>``,
+respectively), the box layout algorithm looks at the growth policies of
+the widgets it receives to determine how to allocate the available space
+to them.
+
+For example, imagine that the terminal window is currently 10 rows high
+and 50 columns wide.  We wish to render the following widget:
+
+.. code:: haskell
+
+   let w = (str "Hello," <=> str "World!")
+
+Rendering this to the terminal will result in "Hello," and "World!"
+underneath it, with 8 rows unoccupied by anything. But if we wished to
+render a vertical border underneath those strings, we would write:
+
+.. code:: haskell
+
+   let w = (str "Hello," <=> str "World!" <=> vBorder)
+
+Rendering this to the terminal will result in "Hello," and "World!"
+underneath it, with 8 rows remaining occupied by vertical border
+characters ("``|``") one column wide. The vertical border widget is
+designed to take up however many rows it was given, but rendering the
+box layout algorithm has to be careful about rendering such ``Greedy``
+widgets because the won't leave room for anything else. Instead, the
+box widget saves the ``Greedy`` widgets for last after rendering
+the ``Fixed`` ones to prevent this from happening. In this way the
+``Greedy`` ones are elastic, taking up the space left after rendering
+the widgets that have a fixed size.
+
+(Note that when we say "before" and "after" here, we don't mean visual
+order; the ``vBorder`` above comes after the strings visually, but the
+widget rendering order depends on size policies even though the final
+widgets get reordered visually to match their original layout. Rendering
+order here refers to the order in which we steadily consume available
+space in the rendering context by rendering sub-widgets.)
+
+When using widgets it is sometimes important to understand their
+horizontal and vertical space behavior by knowing their ``Size`` values,
+and those should be made clear in the Haddock documentation.
+
+Limits
+------
+
+If you'd like to use a ``Greedy`` widget but want to limit how much
+space it consumes, you can turn it into a ``Fixed`` widget by using
+one of the *limiting combinators*, ``Brick.Widgets.Core.hLimit`` and
+``Brick.Widgets.Core.vLimit``. These combinators take widgets and turn
+them into widgets with a ``Fixed`` size (in the relevant dimension) and
+run their rendering functions in a modified rendering context with a
+restricted rendering area.
+
 How Attributes Work
 ===================
 
