@@ -802,6 +802,23 @@ visbility locations as widget layout proceeds. To do so, use the
 of a ``Result`` by a specified amount. The amount depends on the nature
 of the offset introduced by your wrapper widget's logic.
 
+Widgets are not required to respect the rendering context's width and
+height restrictions. Widgets may be embedded in viewports or translated
+so they must render without cropping to work in those scenarios.
+However, widgets rendering other widgets *should* enforce the rendering
+context's constraints to avoid using more space than is available. The
+``Brick.Widgets.Core.cropToContext`` function is provided to make this
+easy:
+
+.. code:: haskell
+
+   let w = cropToContext someWidget
+
+Widgets wrapped with ``cropToContext`` can be safely embedded in other
+widgets. If you don't want to crop in this way, you can use any of
+``vty``'s cropping functions to operate on the ``Result`` image as
+desired.
+
 .. _vty: https://github.com/coreyoconnor/vty
 .. _Hackage: http://hackage.haskell.org/
 .. _lens: http://hackage.haskell.org/package/lens
