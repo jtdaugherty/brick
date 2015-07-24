@@ -76,7 +76,8 @@ programs.
   the name without the "``L``" suffix is the non-`lens` version. You can
   get by without using ``brick``'s ``lens`` interface but your life will
   probably be much more pleasant once your application state becomes
-  sufficiently complex (see `appHandleEvent: Handling Events`_).
+  sufficiently complex if you use lenses to modify it (see
+  `appHandleEvent: Handling Events`_).
 - Attribute names: some modules export attribute names (see `How
   Attributes Work`_) associated with user interface elements. These tend
   to end in an "``Attr``" suffix (e.g. ``borderAttr``). In addition,
