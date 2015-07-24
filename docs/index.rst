@@ -112,14 +112,15 @@ we will handle with ``brick`` applications. However, that is often not
 enough. Imagine an application with multiple threads and network or
 disk I/O. Such an application will need to have its own internal events
 to pass to the event handler as (for example) network data arrives. To
-accomodate this we allow an ``App`` to use an event type of your own
+accommodate this we allow an ``App`` to use an event type of your own
 design, so long as it provides a constructor for ``vty``'s ``Event``
-type (``appLiftVtyEvent``).
+type (``appLiftVtyEvent``). For more details, see `Using Your Own Event
+Type`_.
 
 The various fields of ``App`` will be described in the sections below.
 
 To run an ``App``, we pass it to ``Brick.Main.defaultMain`` or
-``Brick.Main.customMain``.
+``Brick.Main.customMain`` along with an initial application state value.
 
 appDraw: Drawing an Interface
 -----------------------------
@@ -134,6 +135,8 @@ Using Your Own Event Type
 *************************
 
 appLiftVtyEvent
+
+customMain
 
 Starting up: appStartEvent
 **************************
