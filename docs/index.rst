@@ -84,11 +84,11 @@ programs.
   to end in an "``Attr``" suffix (e.g. ``borderAttr``). In addition,
   hierarchical relationships between attributes are documented in
   Haddock documentation.
-- Use of qualified names: in this document I will use fully-qualified
-  names whenever I mention something for the first time or whenever I
-  use something that is not part of ``brick``. Use of names in this way
-  is not intended to produce executable examples, but rather to guide
-  you in writing your ``import`` statements.
+- Use of qualified names: in this document, where sensible, I will use
+  fully-qualified names whenever I mention something for the first time
+  or whenever I use something that is not part of ``brick``. Use of
+  names in this way is not intended to produce executable examples, but
+  rather to guide you in writing your ``import`` statements.
 
 The App Type
 ============
@@ -155,8 +155,9 @@ instructions will then be executed with respect to three things:
   ``Widget`` values behave. For example, fixed-size ``Widget`` values
   such as text strings behave the same under all conditions (and get
   cropped if the terminal is too small) but layout combinators such as
-  ``vBox`` or ``center`` use the size of the terminal to determine how
-  to lay other widgets out. See `How Widgets and Rendering Work`_.
+  ``Brick.Widgets.Core.vBox`` or ``Brick.Widgets.Center.center`` use the
+  size of the terminal to determine how to lay other widgets out. See
+  `How Widgets and Rendering Work`_.
 - The application's attribute map (``appAttrMap``): drawing functions
   requesting the use of attributes cause the attribute map to be
   consulted. See `How Attributes Work`_.
