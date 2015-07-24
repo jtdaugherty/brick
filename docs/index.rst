@@ -710,7 +710,8 @@ Implementing Your Own Widgets
 
 ``brick`` exposes all of the internals you need to implement your own
 widgets. Those internals, together with ``Graphics.Vty``, can be used to
-create widgets from the ground up.  We start by writing a function:
+create widgets from the ground up. We start by writing a constructor
+function:
 
 .. code:: haskell
 
@@ -758,7 +759,12 @@ The job of the rendering function is to return a rendering result which,
 at a minimum, means producing a ``vty`` ``Image``. In addition, if you
 so choose, you can also return one or more cursor positions in the
 ``cursors`` field of the ``Result`` as well as visibility requests (see
-`Viewports`_) in the ``visibilityRequests`` field.
+`Viewports`_) in the ``visibilityRequests`` field. Returned visibility
+requests and cursor positions should be relative to the upper-left
+corner of your widget, ``Location (0, 0)``. When your widget is placed
+in others, such as boxes, the ``Result`` data you returned will be
+offset (as described in `Rendering Sub-Widgets`_) to result in correct
+coordinates once the entire interface has been rendered.
 
 Using the Rendering Context
 ---------------------------
@@ -769,6 +775,20 @@ determine how much space your widget has to render.
 
 To perform an attribute lookup in the attribute map for the context's
 current attribute, use ``Brick.Widgets.Core.attrL``.
+
+For example, to build a widget that always fills the available width and
+height with a fill character using the current attribute, we could
+write:
+
+.. code:: haskell
+
+   myFill :: Char -> Widget
+   myFill ch =
+       Widget Greedy Greedy $ do
+           ctx <- getContext
+           let a = ctx^.attrL
+           return $ Result (Graphics.Vty.charFill ch a (ctx^.availWidth) (ctx^.availHeight))
+                           [] []
 
 Rendering Sub-Widgets
 ---------------------
