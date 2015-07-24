@@ -32,6 +32,7 @@ module Brick.Widgets.Internal
   , ctxAttrMapL
   , ctxAttrNameL
   , ctxBorderStyleL
+  , cropToContext
 
   , withBorderStyle
 
@@ -599,6 +600,8 @@ cropResultToContext result = do
     c <- getContext
     return $ result & imageL %~ (V.crop (c^.availWidthL) (c^.availHeightL))
 
+-- | After rendering the specified widget, crop its result image to the
+-- dimensions in the rendering context.
 cropToContext :: Widget -> Widget
 cropToContext p =
     Widget (hSize p) (vSize p) $ (render p >>= cropResultToContext)
