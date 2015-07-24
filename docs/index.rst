@@ -679,7 +679,10 @@ simply wrap it with ``visible``:
            (visible $ str "Hello," <+> (str " world!")
 
 This example requests that the "``myViewport``" viewport be scrolled so
-that "Hello," is visible.
+that "Hello," is visible. We could extend this example with a value
+in the application state indicating which word in our string should
+be visible and then use that to change which string gets wrapped with
+``visible``; this is the basis of cursor-based scrolling.
 
 Note that a visibility request does not change the state of a viewport if
 the requested widget is already visible! This important detail is what
