@@ -285,7 +285,8 @@ type provides ``appStartEvent`` function for this purpose:
 
 This function takes the initial application state and returns it in
 ``EventM``, possibly changing it and possibly making viewport requests.
-For more details, see `Viewports`_.
+For more details, see `Viewports`_. You will probably just want to use
+``return`` as the implementation of this function for most applications.
 
 appChooseCursor: Placing the Cursor
 -----------------------------------
