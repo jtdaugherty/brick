@@ -130,8 +130,8 @@ appAttrMap: Providing Attributes
 How Widgets and Rendering Work
 ==============================
 
-How Attributs Work
-==================
+How Attributes Work
+===================
 
 Implementing Your Own Widgets
 =============================
