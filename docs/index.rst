@@ -13,6 +13,10 @@ the terminal input and output interface and drawing primitives,
 while ``brick`` builds on those to provide a high-level application
 abstraction and combinators for expressing user interface layouts.
 
+This documentation is intended to provide a high-level overview of
+the library's design along with guidance for using it, but details on
+specific functions can be found in the Haddock documentation.
+
 The process of writing an application using ``brick`` entails writing
 two important functions:
 
@@ -124,6 +128,34 @@ To run an ``App``, we pass it to ``Brick.Main.defaultMain`` or
 
 appDraw: Drawing an Interface
 -----------------------------
+
+The value of ``appDraw`` is a function that turns the current
+application state into a list of *layers*, listed topmost first, that
+will make up the interface. Each ``Widget`` gets turned into a ``vty``
+layer and the resulting layers are drawn to the terminal.
+
+The ``Widget`` type is the type of *drawing instructions*.  The body of
+your drawing function will use one or more drawing functions to build or
+transform ``Widget`` values to describe your interface. These
+instructions will then be executed with respect to two things:
+
+- The size of the terminal: the size of the terminal determines how many
+  ``Widget`` values behave. For example, fixed-size ``Widget`` values
+  such as text strings behave the same under all conditions (and get
+  cropped if the terminal is too small) but layout combinators such as
+  ``vBox`` or ``center`` use the size of the terminal to determine how
+  to lay other widgets out. See `How Widgets and Rendering Work`_.
+- The application's attribute map (``appAttrMap``): drawing functions
+  requesting the use of attributes cause the attribute map to be
+  consulted. See `How Attributes Work`_.
+
+The ``appDraw`` function is called when the event loop begins to draw
+the application as it initially appears. It is also called right after
+an event is processed by ``appHandleEvent``. Even though the function
+returns a specification of how to draw the entire screen, the underlying
+``vty`` library goes to some trouble to efficiently update only the
+parts of the screen that have changed so you don't need to worry about
+this.
 
 appHandleEvent: Handling Events
 -------------------------------
