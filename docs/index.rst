@@ -581,7 +581,8 @@ The ``Brick.Widgets.Core.viewport`` combinator takes another widget and
 embeds it in a named viewport. We name the viewport so that we can
 keep track of its scrolling state in the renderer, and so that you can
 make scrolling requests. The viewport's name is its handle for these
-operations (see `Scrolling Viewports in Event Handlers`_).
+operations (see `Scrolling Viewports in Event Handlers`_). *The viewport
+name must be unique across your interface.*
 
 For example, the following puts a string in a horizontally-scrollable
 viewport:
