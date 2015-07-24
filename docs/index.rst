@@ -163,6 +163,13 @@ returns a specification of how to draw the entire screen, the underlying
 parts of the screen that have changed so you don't need to worry about
 this.
 
+Where do I find drawing functions?
+**********************************
+
+The most important module providing drawing functions is
+``Brick.Widgets.Core``. Beyond that, any module in the ``Brick.Widgets``
+namespace provides specific kinds of functionality.
+
 appHandleEvent: Handling Events
 -------------------------------
 
