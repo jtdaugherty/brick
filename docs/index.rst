@@ -691,11 +691,11 @@ capture various cursor-based scenarios:
 
 * The ``Brick.Widgets.Edit`` widget uses a visibility request to make its
   1x1 cursor position visible, thus making the text editing widget fully
-  scrollable *while being entirely scrolling-unware*.
+  scrollable *while being entirely scrolling-unaware*.
 * The ``Brick.Widgets.List`` widget uses a visibility request to make
-  its selected item visible regardless of its size, which makes the list
-  widget both scrolling-unware and also makes it support variable-height
-  items for free.
+  its selected item visible regardless of its size, which makes
+  the list widget both scrolling-unaware and also makes it support
+  variable-height items for free.
 
 Implementing Your Own Widgets
 =============================
