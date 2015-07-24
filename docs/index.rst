@@ -62,8 +62,8 @@ passing the ``demos`` flag to `cabal install`, e.g.::
 
    $ cabal install brick -f demos
 
-API Conventions
-===============
+Conventions
+===========
 
 ``brick`` has some API conventions worth knowing about as you read this
 documentation and as you explore the library source and write your own
@@ -84,6 +84,11 @@ programs.
   to end in an "``Attr``" suffix (e.g. ``borderAttr``). In addition,
   hierarchical relationships between attributes are documented in
   Haddock documentation.
+- Use of qualified names: in this document I will use fully-qualified
+  names whenever I mention something for the first time or whenever I
+  use something that is not part of ``brick``. Use of names in this way
+  is not intended to produce executable examples, but rather to guide
+  you in writing your ``import`` statements.
 
 The App Type
 ============
@@ -253,7 +258,7 @@ call ``Brick.Main.customMain`` instead of ``Brick.Main.defaultMain``:
 
    main :: IO ()
    main = do
-       eventChan <- newChan
+       eventChan <- Control.Concurrent.newChan
        finalState <- customMain (Graphics.Vty.mkVty Data.Default.def) eventChan app initialState
        -- Use finalState
 
