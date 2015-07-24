@@ -362,12 +362,6 @@ maps those attribute names to actual attributes.  This approach lets us:
 This lets us put the attribute mapping for an entire app, regardless of
 use of third-party widgets, in one place.
 
-In addition, attribute maps provide hierarchical attribute inheritance;
-a more specific attribute derives any properties (e.g. background color)
-that it does not specify from more general attributes in hierarchical
-relationship to it, letting us customize only the parts of attributes
-that we want to change without having to repeat ourselves.
-
 To create a map we use ``Brick.AttrMap.attrMap``, e.g.,
 
 .. code:: haskell
@@ -403,6 +397,45 @@ How Widgets and Rendering Work
 
 How Attributes Work
 ===================
+
+In addition to letting us map names to attributes, attribute maps
+provide hierarchical attribute inheritance: a more specific attribute
+derives any properties (e.g. background color) that it does not specify
+from more general attributes in hierarchical relationship to it, letting
+us customize only the parts of attributes that we want to change without
+having to repeat ourselves.
+
+For example, this draws a string with a foreground color of ``white`` on
+a background color of ``blue``:
+
+.. code:: haskell
+
+   let w = withAttr specificAttr $ str "foobar"
+       generalAttr = attrName "general"
+       specificAttr = attrName "general" <> attrName "specific"
+       myMap = attrMap defAttr [ (generalAttr, bg blue)
+                               , (specificAttr, fg white)
+                               ]
+
+Functions ``Brick.Util.fg`` and ``Brick.Util.bg`` specify
+partial attributes, and map lookups start with the desired name
+(``general/specific`` in this case) and walk up the name hierarchy (to
+``general``), merging partial attribute settings as they go, letting
+already-specified attribute settings take precedence. Finally, any
+attribute settings not specified by map lookups fall back to the map's
+*default attribute*, specified above as ``Graphics.Vty.defAttr``. In
+this way, if you want everything in your application to have a ``blue``
+background color, you only need to specify it *once*: in the attribute
+map's default attribute. Any other attribute names can merely customize
+the foreground color.
+
+In addition to using the attribute map provided by ``appAttrMap``,
+the map can be customized on a per-widget basis by using the attribute
+map combinators:
+
+* ``Brick.Widgets.Core.updateAttrMap``
+* ``Brick.Widgets.Core.forceAttr``
+* ``Brick.Widgets.Core.withDefAttr``
 
 Implementing Your Own Widgets
 =============================
