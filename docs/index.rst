@@ -185,10 +185,11 @@ state*:
 
 The ``EventM`` monad is the event-handling monad. This monad is a
 transformer around ``IO``, so you are free to do I/O in this monad by
-using ``liftIO``. Keep in mind that time spent blocking in your event
-handler is time during which your UI is unresponsive, so consider this
-when deciding whether to have background threads do work instead of
-inlining the work in the event handler.
+using ``liftIO``. Beyond I/O, this monad is just used to make scrolling
+requests to the renderer (see `Viewports`_). Keep in mind that time
+spent blocking in your event handler is time during which your UI is
+unresponsive, so consider this when deciding whether to have background
+threads do work instead of inlining the work in the event handler.
 
 The ``Next s`` value describes what should happen after the event
 handler is finished. We have three choices:
