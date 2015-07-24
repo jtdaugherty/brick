@@ -349,9 +349,9 @@ that is an abstract name for the kind of thing we are drawing, e.g.
 "keyword" or "e-mail address." We then provide an attribute map which
 maps those attribute names to actual attributes.  This approach lets us:
 
-* Change the attributes at runtime, letting us or the user change the
+* Change the attributes at runtime, letting the user change the
   attributes of any element of the application arbitrarily without
-  aforcing nyone to build special machinery to make this configurable;
+  forcing anyone to build special machinery to make this configurable;
 * Write routines to load saved attribute maps from disk;
 * Provide modular attribute behavior for third-party components, where
   we would not want to have to recompile third-party code just to change
