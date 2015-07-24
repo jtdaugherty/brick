@@ -423,11 +423,12 @@ growth policies. These fields have type ``Brick.Widgets.Core.Size`` and
 can have the values ``Fixed`` and ``Greedy``.
 
 A widget advertising a ``Fixed`` size in a given dimension is a widget
-that will always consume the same number of rows or columns no matter
-how many it is given. Widgets can advertise different growth policies;
-for example, the ``Brick.Widgets.Border.hCenter`` function centers
-a widget and is ``Greedy`` horizontally and defers to the widget it
-centers for vertical growth behavior.
+that will always consume the same number of rows or columns no
+matter how many it is given. Widgets can advertise different
+vertical and horizontal growth policies for example, the
+``Brick.Widgets.Border.hCenter`` function centers a widget and is
+``Greedy`` horizontally and defers to the widget it centers for vertical
+growth behavior.
 
 These size policies govern the box layout algorithm that is at
 the heart of every non-trivial drawing specification. When we use
@@ -457,22 +458,14 @@ underneath it, with 8 rows remaining occupied by vertical border
 characters ("``|``") one column wide. The vertical border widget is
 designed to take up however many rows it was given, but rendering the
 box layout algorithm has to be careful about rendering such ``Greedy``
-widgets because the won't leave room for anything else. Instead, the
-box widget saves the ``Greedy`` widgets for last after rendering
-the ``Fixed`` ones to prevent this from happening. In this way the
-``Greedy`` ones are elastic, taking up the space left after rendering
-the widgets that have a fixed size.
+widgets because the won't leave room for anything else. Since the box
+widget cannot know the sizes of its sub-widgets until they are rendered,
+the ``Fixed`` widgets get rendered and their sizes are used to determine
+how much space is left for ``Greedy`` widgets.
 
-(Note that when we say "before" and "after" here, we don't mean visual
-order; the ``vBorder`` above comes after the strings visually, but the
-widget rendering order depends on size policies even though the final
-widgets get reordered visually to match their original layout. Rendering
-order here refers to the order in which we steadily consume available
-space in the rendering context by rendering sub-widgets.)
-
-When using widgets it is sometimes important to understand their
-horizontal and vertical space behavior by knowing their ``Size`` values,
-and those should be made clear in the Haddock documentation.
+When using widgets it is important to understand their horizontal and
+vertical space behavior by knowing their ``Size`` values. Those should
+be made clear in the Haddock documentation.
 
 Limiting Rendering Area
 -----------------------
