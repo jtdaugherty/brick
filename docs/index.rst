@@ -702,11 +702,79 @@ capture various cursor-based scenarios:
 Implementing Your Own Widgets
 =============================
 
+``brick`` exposes all of the internals you need to implement your own
+widgets. Those internals, together with ``Graphics.Vty``, can be used to
+create widgets from the ground up.  We start by writing a function:
+
+.. code:: haskell
+
+   myWidget :: ... -> Widget
+   myWidget ... =
+       Widget Fixed Fixed $ do
+           ...
+
+We specify the horizontal and vertical growth policies of the widget
+as ``Fixed`` in this example, although they should be specified
+appropriately (see `How Widgets and Rendering Work`_). Lastly we specify
+the *rendering function*, a function of type
+
+.. code:: haskell
+
+   render :: RenderM Result
+
+which is a function returning a ``Brick.Widgets.Core.Result``:
+
+.. code:: haskell
+
+    data Result =
+        Result { image :: Graphics.Vty.Image
+               , cursors :: [Brick.Types.CursorLocation]
+               , visibilityRequests :: [Brick.Widgets.Core.VisibilityRequest]
+               }
+
+The ``RenderM`` monad gives us access to the rendering context (see `How
+Widgets and Rendering Work`_) via the ``Brick.Widgets.Core.getContext``
+function. The context type is:
+
+.. code:: haskell
+
+    data Context =
+        Context { ctxAttrName :: AttrName
+                , availWidth :: Int
+                , availHeight :: Int
+                , ctxBorderStyle :: BorderStyle
+                , ctxAttrMap :: AttrMap
+                }
+
+and has `lens` fields exported as described in `Conventions`_.
+
+The job of the rendering function is to return a rendering result which,
+at a minimum, means producing a ``vty`` ``Image``. In addition, if you
+so choose, you can also return one or more cursor positions in the
+``cursors`` field of the ``Result`` as well as visibility requests (see
+`Viewports`_) in the ``visibilityRequests`` field.
+
 Using the Rendering Context
 ---------------------------
 
+The most important fields of the context are the rendering area fields
+``availWidth`` and ``availHeight``. These fields must be used to
+determine how much space your widget has to render.
+
+To perform an attribute lookup in the attribute map for the context's
+current attribute, use ``Brick.Widgets.Core.attrL``.
+
 Rendering Sub-Widgets
 ---------------------
+
+If your custom widget wraps another, then in addition to rendering the
+wrapped widget and augmenting its returned ``Result`` *it must also
+translate the resulting cursor locations and visibility requests*.
+This is vital to maintaining the correctness of cursor locations and
+visbility locations as widget layout proceeds. To do so, use the
+``Brick.Widgets.Core.addResultOffset`` function to offset the elements
+of a ``Result`` by a specified amount. The amount depends on the nature
+of the offset introduced by your wrapper widget's logic.
 
 .. _vty: https://github.com/coreyoconnor/vty
 .. _Hackage: http://hackage.haskell.org/
