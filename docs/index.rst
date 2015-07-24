@@ -698,6 +698,20 @@ capture various cursor-based scenarios:
   the list widget both scrolling-unaware and also makes it support
   variable-height items for free.
 
+Viewport Restrictions
+---------------------
+
+Viewports impose one restriction: a viewport that is scrollable in some
+direction can only embed a widget that has a ``Fixed`` size in that
+direction. This extends to ``Both`` type viewports: they can only embed
+widgets that are ``Fixed`` in both directions. This restriction is
+because when viewports embed a widget, they relax the rendering area
+constraint in the rendering context, but doing so to a large enough
+number for ``Greedy`` widgets would result in a widget that is too big
+and not scrollable in a useful way.
+
+Violating this restriction will result in a runtime exception.
+
 Implementing Your Own Widgets
 =============================
 
