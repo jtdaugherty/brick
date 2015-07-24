@@ -569,14 +569,130 @@ map combinators:
 Viewports
 =========
 
-Drawing Viewports
------------------
+A *viewport* is a scrollable window onto another widget. Viewports have
+a *scrolling direction* which can be one of:
+
+* ``Horizontal``: the viewport can only scroll horizontally.
+* ``Vertical``: the viewport can only scroll vertically.
+* ``Both``: the viewport can scroll both horizontally and vertically.
+
+The ``Brick.Widgets.Core.viewport`` combinator takes another widget and
+embeds it in a named viewport. We name the viewport so that we can
+keep track of its scrolling state in the renderer, and so that you can
+make scrolling requests. The viewport's name is its handle for these
+operations (see `Scrolling Viewports in Event Handlers`_).
+
+For example, the following puts a string in a horizontally-scrollable
+viewport:
+
+.. code:: haskell
+
+   let w = viewport (Name "myViewport") Horizontal $ str "Hello, world!"
+
+The above example is incomplete. A ``viewport`` specification means that
+the widget in the viewport will be placed in a viewport window that is
+``Greedy`` in both directions (see `Available Rendering Area`_). This
+is suitable if we want the viewport size to be the size of the entire
+terminal window, but if we want to embed this scrollable viewport
+somewhere in our interface, we want to control its dimensions. To do so,
+we use the limiting combinators (see `Limiting Rendering Area`_):
+
+.. code:: haskell
+
+   let w = hLimit 5 $
+           vLimit 1 $
+           viewport (Name "myViewport") Horizontal $ str "Hello, world!"
+
+Now the example produces a scrollable window one row high and five
+columns wide initially showing "Hello". The next two sections discuss
+the two ways in which this viewport can be scrolled.
+
+Scrolling Viewports in Event Handlers
+-------------------------------------
+
+The most direct way to scroll a viewport is to make *scrolling requests*
+in the ``EventM`` event-handling monad. Scrolling requests ask the
+render to update the state of a viewport the next time the user
+interface is rendered. Those state updates will be made with respect to
+the *previous* viewport state. This approach is the best approach to use
+to scroll widgets that have no notion of a cursor. For cursor-based
+scrolling, see `Scrolling Viewports With Visibility Requests`_.
+
+To make scrolling requests, we first create a
+``Brick.Main.ViewportScroll`` from a viewport name with
+``Brick.Main.viewportScroll``:
+
+.. code:: haskell
+
+   let vp = viewportScroll (Name "myViewport")
+
+The ``ViewportScroll`` record type contains a number of scrolling
+functions for making scrolling requests:
+
+.. code:: haskell
+
+   hScrollPage :: Direction -> EventM ()
+   hScrollBy :: Int -> EventM ()
+   hScrollToBeginning :: EventM ()
+   hScrollToEnd :: EventM ()
+   vScrollPage :: Direction -> EventM ()
+   vScrollBy :: Int -> EventM ()
+   vScrollToBeginning :: EventM ()
+   vScrollToEnd :: EventM ()
+
+In each case the scrolling function scrolls the viewport by the
+specified amount in the specified direction; functions prefixed with
+``h`` scroll horizontally and functions prefixed with ``v`` scroll
+vertically.
+
+Scrolling operations do nothing when they don't make sense for the
+specified viewport; scrolling a ``Vertical`` viewport horizontally is a
+no-op, for example.
+
+Using ``viewportScroll`` and the ``myViewport`` example given above, we
+can write an event handler that scrolls the "Hello, world!" viewport one
+column to the right:
+
+.. code:: haskell
+
+   myHandler :: s -> e -> EventM (Next s)
+   myHandler s e = do
+       let vp = viewportScroll (Name "myViewport")
+       hScrollBy vp 1
+       continue s
 
 Scrolling Viewports With Visibility Requests
 --------------------------------------------
 
-Scrolling Viewports in Event Handlers
--------------------------------------
+When we need to scroll widgets only when a cursor in the viewport leaves
+the viewport's bounds, we need to use *visibility requests*. A
+visibility request is a hint to the renderer that some element of a
+widget inside a viewport should be made visible, i.e., that the viewport
+should be scrolled to bring the requested element into view.
+
+To use a visibility request to make a widget in a viewport visible, we
+simply wrap it with ``visible``:
+
+.. code:: haskell
+
+   let w = viewport (Name "myViewport") Horizontal $
+           (visible $ str "Hello," <+> (str " world!")
+
+This example requests that the "``myViewport``" viewport be scrolled so
+that "Hello," is visible.
+
+Note that a visibility request does not change the state of a viewport if
+the requested widget is already visible! This important detail is what
+makes visibility requests so powerful, because they can be used to
+capture various cursor-based scenarios:
+
+* The ``Brick.Widgets.Edit`` widget uses a visibility request to make its
+  1x1 cursor position visible, thus making the text editing widget fully
+  scrollable *while being entirely scrolling-unware*.
+* The ``Brick.Widgets.List`` widget uses a visibility request to make
+  its selected item visible regardless of its size, which makes the list
+  widget both scrolling-unware and also makes it support variable-height
+  items for free.
 
 Implementing Your Own Widgets
 =============================
