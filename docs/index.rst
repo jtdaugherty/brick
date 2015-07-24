@@ -570,7 +570,8 @@ Viewports
 =========
 
 A *viewport* is a scrollable window onto another widget. Viewports have
-a *scrolling direction* which can be one of:
+a *scrolling direction* of type ``Brick.Widgets.Core.ViewportType``
+which can be one of:
 
 * ``Horizontal``: the viewport can only scroll horizontally.
 * ``Vertical``: the viewport can only scroll vertically.
