@@ -494,6 +494,36 @@ changes:
 
    let w = hLimit 30 $ hCenter $ str "Hello, world!"
 
+The Attribute Map
+-----------------
+
+The rendering context contains an attribute map (see `How Attributes
+Work`_ and `Attributes`_) which is used to look up attribute names from
+the drawing specification. The map originates from
+``Brick.Main.appAttrMap`` and can be manipulated on a per-widget basis
+using ``Brick.Widgets.Core.updateAttrMap``.
+
+The Active Border Style
+-----------------------
+
+Widgets in the ``Brick.Widgets.Border`` module draw border characters
+(horizontal, vertical, and boxes) between and around other widgets. To
+ensure that widgets across your application share a consistent visual
+style, border widgets consult the rendering context's *active border
+style*, a value of type ``Brick.Widgets.Border.Style``, to get the
+characters used to draw borders.
+
+The default border style is ``Brick.Widgets.Border.Style.unicode``. To
+change border styles, use the ``Brick.Widgets.Core.withBorderStyle``
+combinator to wrap a widget and change the border style it uses when
+rendering. For example, this will use the ``ascii`` border style instead
+of ``unicode``:
+
+.. code:: haskell
+
+   let w = withBorderStyle Brick.Widgets.Border.Style.ascii $
+             Brick.Widgets.Border.border $ str "Hello, world!"
+
 How Attributes Work
 ===================
 
