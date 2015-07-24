@@ -498,8 +498,8 @@ The Attribute Map
 -----------------
 
 The rendering context contains an attribute map (see `How Attributes
-Work`_ and `Attributes`_) which is used to look up attribute names from
-the drawing specification. The map originates from
+Work`_ and `appAttrMap: Managing Attributes`_) which is used to look up
+attribute names from the drawing specification. The map originates from
 ``Brick.Main.appAttrMap`` and can be manipulated on a per-widget basis
 using ``Brick.Widgets.Core.updateAttrMap``.
 
