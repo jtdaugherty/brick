@@ -113,15 +113,18 @@ executes.
 
 The event type is the type of events that your event handler
 (``appHandleEvent``) will handle. The underlying ``vty`` library
-provides ``Graphics.Vty.Event``, and this forms the basis of all events
-we will handle with ``brick`` applications. However, that is often not
-enough. Imagine an application with multiple threads and network or
-disk I/O. Such an application will need to have its own internal events
-to pass to the event handler as (for example) network data arrives. To
-accommodate this we allow an ``App`` to use an event type of your own
-design, so long as it provides a constructor for ``vty``'s ``Event``
-type (``appLiftVtyEvent``). For more details, see `Using Your Own Event
-Type`_.
+provides ``Graphics.Vty.Event`` and this forms the basis of all events
+we will handle with ``brick`` applications. The ``defaultMain`` function
+expects an ``App s Event`` since this is a common case.
+
+However, we often need to extend our notion of events beyond those
+originating from the keyboard. Imagine an application with multiple
+threads and network or disk I/O. Such an application will need to have
+its own internal events to pass to the event handler as (for example)
+network data arrives. To accommodate this we allow an ``App`` to use an
+event type of your own design, so long as it provides a constructor for
+``vty``'s ``Event`` type (``appLiftVtyEvent``). For more details, see
+`Using Your Own Event Type`_.
 
 The various fields of ``App`` will be described in the sections below.
 
