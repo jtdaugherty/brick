@@ -261,7 +261,7 @@ call ``Brick.Main.customMain`` instead of ``Brick.Main.defaultMain``:
    main = do
        eventChan <- Control.Concurrent.newChan
        finalState <- customMain (Graphics.Vty.mkVty Data.Default.def) eventChan app initialState
-       -- Use finalState
+       -- Use finalState and exit
 
 Beyond just the application and its initial state, the ``customMain``
 function lets us have control over how the ``vty`` library is
