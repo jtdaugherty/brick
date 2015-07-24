@@ -684,9 +684,9 @@ in the application state indicating which word in our string should
 be visible and then use that to change which string gets wrapped with
 ``visible``; this is the basis of cursor-based scrolling.
 
-Note that a visibility request does not change the state of a viewport if
-the requested widget is already visible! This important detail is what
-makes visibility requests so powerful, because they can be used to
+Note that a visibility request does not change the state of a viewport
+*if the requested widget is already visible*! This important detail is
+what makes visibility requests so powerful, because they can be used to
 capture various cursor-based scenarios:
 
 * The ``Brick.Widgets.Edit`` widget uses a visibility request to make its
