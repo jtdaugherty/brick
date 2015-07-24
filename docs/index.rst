@@ -130,14 +130,15 @@ appDraw: Drawing an Interface
 -----------------------------
 
 The value of ``appDraw`` is a function that turns the current
-application state into a list of *layers*, listed topmost first, that
-will make up the interface. Each ``Widget`` gets turned into a ``vty``
-layer and the resulting layers are drawn to the terminal.
+application state into a list of *layers* of type ``Widget``, listed
+topmost first, that will make up the interface. Each ``Widget`` gets
+turned into a ``vty`` layer and the resulting layers are drawn to the
+terminal.
 
 The ``Widget`` type is the type of *drawing instructions*.  The body of
 your drawing function will use one or more drawing functions to build or
 transform ``Widget`` values to describe your interface. These
-instructions will then be executed with respect to two things:
+instructions will then be executed with respect to three things:
 
 - The size of the terminal: the size of the terminal determines how many
   ``Widget`` values behave. For example, fixed-size ``Widget`` values
@@ -148,6 +149,9 @@ instructions will then be executed with respect to two things:
 - The application's attribute map (``appAttrMap``): drawing functions
   requesting the use of attributes cause the attribute map to be
   consulted. See `How Attributes Work`_.
+- The state of scrollable viewports: the state of any scrollable
+  viewports on the *previous* drawing will be considered. For more
+  details, see `Viewports`_.
 
 The ``appDraw`` function is called when the event loop begins to draw
 the application as it initially appears. It is also called right after
@@ -193,6 +197,18 @@ Using the Rendering Context
 
 Rendering Sub-Widgets
 ---------------------
+
+Viewports
+=========
+
+Drawing Viewports
+-----------------
+
+Scrolling Viewports With Visibility Requests
+--------------------------------------------
+
+Scrolling Viewports in Event Handlers
+-------------------------------------
 
 .. _vty: https://github.com/coreyoconnor/vty
 .. _Hackage: http://hackage.haskell.org/
