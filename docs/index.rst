@@ -339,8 +339,63 @@ cursor name "``myCursor``":
    let w = showCursor (Name "myCursor") (Brick.Types.Location (1, 0))
              (Brick.Widgets.Core.str "foobar")
 
-appAttrMap: Providing Attributes
---------------------------------
+appAttrMap: Managing Attributes
+-------------------------------
+
+In ``brick`` we use an *attribute map* to assign attibutes to elements
+of the interface. Rather than specifying specific attributes when
+drawing a widget (e.g. red-on-black text) we specify an *attribute name*
+that is an abstract name for the kind of thing we are drawing, e.g.
+"keyword" or "e-mail address." We then provide an attribute map which
+maps those attribute names to actual attributes.  This approach lets us:
+
+* Change the attributes at runtime, letting us or the user change the
+  attributes of any element of the application arbitrarily without
+  aforcing nyone to build special machinery to make this configurable;
+* Load saved attribute maps from disk, giving us serializable attribute
+  configurations more or less for free;
+* Provide modular attribute behavior for third-party components, where
+  we would not want to have to recompile third-party code just to change
+  attributes, and where we would not want to have to pass in attribute
+  arguments to third-party drawing functions.
+
+This lets us put the attribute mapping for an entire app, regardless of
+use of third-party widgets, in one place.
+
+In addition, attribute maps provide hierarchical attribute inheritance;
+a more specific attribute derives any properties (e.g. background color)
+that it does not specify from more general attributes in hierarchical
+relationship to it, letting us customize only the parts of attributes
+that we want to change without having to repeat ourselves.
+
+To create a map we use ``Brick.AttrMap.attrMap``, e.g.,
+
+.. code:: haskell
+
+   App { ...
+       , appAttrMap = const $ attrMap Graphics.Vty.defAttr [(someAttrName, fg blue)]
+       }
+
+To use an attribute map, we specify the ``App`` field ``appAttrMap`` as
+the function to return the current attribute map each time rendering
+occurs. This function takes the current application state, so you may
+choose to store the attribute map in your application state. You may
+also choose not to bother with that and to just set ``appAttrMap = const
+someMap``.
+
+To draw a widget using an attribute name in the map, use
+``Brick.Widgets.Core.withAttr``. For example, this draws a string with a
+``blue`` background:
+
+.. code:: haskell
+
+   let w = withAttr blueBg $ str "foobar"
+       blueBg = attrName "blueBg"
+       myMap = attrMap defAttr [ (blueBg, Brick.Util.bg Graphics.Vty.blue)
+                               ]
+
+For complete details on how attribute maps and attribute names work, see
+the Haddock documentation for the ``Brick.AttrMap`` module.
 
 How Widgets and Rendering Work
 ==============================
