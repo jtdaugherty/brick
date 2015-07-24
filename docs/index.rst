@@ -87,7 +87,6 @@ To use the library we must provide it with a value of type
 various functions:
 
 .. code:: haskell
-   :linenos:
 
    data App s e =
        App { appDraw :: s -> [Widget]
@@ -98,11 +97,29 @@ various functions:
            , appLiftVtyEvent :: Event -> e
            }
 
+The ``App`` type is polymorphic over two types: your application state
+type ``s`` and event type ``e``.
+
+The application state type is the type of data that will evolve over the
+course of the application's execution; we will provide the library with
+its starting value and event handling will transform it as the program
+executes.
+
+The event type is the type of events that your event handler
+(``appHandleEvent``) will handle. The underlying ``vty`` library
+provides ``Graphics.Vty.Event``, and this forms the basis of all events
+we will handle with ``brick`` applications. However, that is often not
+enough. Imagine an application with multiple threads and network or
+disk I/O. Such an application will need to have its own internal events
+to pass to the event handler as (for example) network data arrives. To
+accomodate this we allow an ``App`` to use an event type of your own
+design, so long as it provides a constructor for ``vty``'s ``Event``
+type (``appLiftVtyEvent``).
+
 The various fields of ``App`` will be described in the sections below.
 
-Once we have declared an ``App``, we can pass it to
-``Brick.Main.defaultMain`` or ``Brick.Main.customMain`` to begin running
-the application.
+To run an ``App``, we pass it to ``Brick.Main.defaultMain`` or
+``Brick.Main.customMain``.
 
 appDraw: Drawing an Interface
 -----------------------------
