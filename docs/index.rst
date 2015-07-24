@@ -172,7 +172,8 @@ to continue program execution.
 The function takes the current application state and the event and
 returns the *next application state*:
 
-.. code::
+.. code:: haskell
+
    appHandleEvent :: s -> e -> EventM (Next s)
 
 The ``EventM`` monad is the event-handling monad. This monad is a
