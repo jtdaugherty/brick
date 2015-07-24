@@ -86,12 +86,8 @@ extension API that makes it possible to make your own packages and
 widgets. If you do that, you'll also be helping me by testing whether
 the exported interface is usable and complete!
 
-Documentation on the imporant aspects of the design is forthcoming. In
-the mean time, build the demos (with `cabal install -f demos`) and look
-at those and the Haddock documentation to find your way around.
-
-The development of this library has also revealed some bugs in `vty`,
-and I've tried to report those as I go. If they haven't been resolved,
+The development of this library has revealed some bugs in `vty`, and
+I've tried to report those as I go. If they haven't been resolved,
 you'll see them arise when using `brick`.
 
 Reporting bugs
