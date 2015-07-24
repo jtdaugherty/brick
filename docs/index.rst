@@ -114,8 +114,9 @@ executes.
 The event type is the type of events that your event handler
 (``appHandleEvent``) will handle. The underlying ``vty`` library
 provides ``Graphics.Vty.Event`` and this forms the basis of all events
-we will handle with ``brick`` applications. The ``defaultMain`` function
-expects an ``App s Event`` since this is a common case.
+we will handle with ``brick`` applications. The
+``Brick.Main.defaultMain`` function expects an ``App s Event`` since
+this is a common case.
 
 However, we often need to extend our notion of events beyond those
 originating from the keyboard. Imagine an application with multiple
