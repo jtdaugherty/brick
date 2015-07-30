@@ -85,6 +85,8 @@ module Brick.Widgets.Core
   , vrSizeL
   -- ** Adding offsets to cursor positions and visibility requests
   , addResultOffset
+  -- ** Cropping results
+  , cropToContext
 
   -- * Misc
   , Direction(..)

@@ -423,11 +423,12 @@ growth policies. These fields have type ``Brick.Widgets.Core.Size`` and
 can have the values ``Fixed`` and ``Greedy``.
 
 A widget advertising a ``Fixed`` size in a given dimension is a widget
-that will always consume the same number of rows or columns no matter
-how many it is given. Widgets can advertise different growth policies;
-for example, the ``Brick.Widgets.Border.hCenter`` function centers
-a widget and is ``Greedy`` horizontally and defers to the widget it
-centers for vertical growth behavior.
+that will always consume the same number of rows or columns no
+matter how many it is given. Widgets can advertise different
+vertical and horizontal growth policies for example, the
+``Brick.Widgets.Border.hCenter`` function centers a widget and is
+``Greedy`` horizontally and defers to the widget it centers for vertical
+growth behavior.
 
 These size policies govern the box layout algorithm that is at
 the heart of every non-trivial drawing specification. When we use
@@ -457,22 +458,14 @@ underneath it, with 8 rows remaining occupied by vertical border
 characters ("``|``") one column wide. The vertical border widget is
 designed to take up however many rows it was given, but rendering the
 box layout algorithm has to be careful about rendering such ``Greedy``
-widgets because the won't leave room for anything else. Instead, the
-box widget saves the ``Greedy`` widgets for last after rendering
-the ``Fixed`` ones to prevent this from happening. In this way the
-``Greedy`` ones are elastic, taking up the space left after rendering
-the widgets that have a fixed size.
+widgets because the won't leave room for anything else. Since the box
+widget cannot know the sizes of its sub-widgets until they are rendered,
+the ``Fixed`` widgets get rendered and their sizes are used to determine
+how much space is left for ``Greedy`` widgets.
 
-(Note that when we say "before" and "after" here, we don't mean visual
-order; the ``vBorder`` above comes after the strings visually, but the
-widget rendering order depends on size policies even though the final
-widgets get reordered visually to match their original layout. Rendering
-order here refers to the order in which we steadily consume available
-space in the rendering context by rendering sub-widgets.)
-
-When using widgets it is sometimes important to understand their
-horizontal and vertical space behavior by knowing their ``Size`` values,
-and those should be made clear in the Haddock documentation.
+When using widgets it is important to understand their horizontal and
+vertical space behavior by knowing their ``Size`` values. Those should
+be made clear in the Haddock documentation.
 
 Limiting Rendering Area
 -----------------------
@@ -717,7 +710,8 @@ Implementing Your Own Widgets
 
 ``brick`` exposes all of the internals you need to implement your own
 widgets. Those internals, together with ``Graphics.Vty``, can be used to
-create widgets from the ground up.  We start by writing a function:
+create widgets from the ground up. We start by writing a constructor
+function:
 
 .. code:: haskell
 
@@ -765,7 +759,12 @@ The job of the rendering function is to return a rendering result which,
 at a minimum, means producing a ``vty`` ``Image``. In addition, if you
 so choose, you can also return one or more cursor positions in the
 ``cursors`` field of the ``Result`` as well as visibility requests (see
-`Viewports`_) in the ``visibilityRequests`` field.
+`Viewports`_) in the ``visibilityRequests`` field. Returned visibility
+requests and cursor positions should be relative to the upper-left
+corner of your widget, ``Location (0, 0)``. When your widget is placed
+in others, such as boxes, the ``Result`` data you returned will be
+offset (as described in `Rendering Sub-Widgets`_) to result in correct
+coordinates once the entire interface has been rendered.
 
 Using the Rendering Context
 ---------------------------
@@ -776,6 +775,20 @@ determine how much space your widget has to render.
 
 To perform an attribute lookup in the attribute map for the context's
 current attribute, use ``Brick.Widgets.Core.attrL``.
+
+For example, to build a widget that always fills the available width and
+height with a fill character using the current attribute, we could
+write:
+
+.. code:: haskell
+
+   myFill :: Char -> Widget
+   myFill ch =
+       Widget Greedy Greedy $ do
+           ctx <- getContext
+           let a = ctx^.attrL
+           return $ Result (Graphics.Vty.charFill ch a (ctx^.availWidth) (ctx^.availHeight))
+                           [] []
 
 Rendering Sub-Widgets
 ---------------------
@@ -788,6 +801,23 @@ visbility locations as widget layout proceeds. To do so, use the
 ``Brick.Widgets.Core.addResultOffset`` function to offset the elements
 of a ``Result`` by a specified amount. The amount depends on the nature
 of the offset introduced by your wrapper widget's logic.
+
+Widgets are not required to respect the rendering context's width and
+height restrictions. Widgets may be embedded in viewports or translated
+so they must render without cropping to work in those scenarios.
+However, widgets rendering other widgets *should* enforce the rendering
+context's constraints to avoid using more space than is available. The
+``Brick.Widgets.Core.cropToContext`` function is provided to make this
+easy:
+
+.. code:: haskell
+
+   let w = cropToContext someWidget
+
+Widgets wrapped with ``cropToContext`` can be safely embedded in other
+widgets. If you don't want to crop in this way, you can use any of
+``vty``'s cropping functions to operate on the ``Result`` image as
+desired.
 
 .. _vty: https://github.com/coreyoconnor/vty
 .. _Hackage: http://hackage.haskell.org/
