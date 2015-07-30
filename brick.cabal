@@ -56,7 +56,7 @@ library
     Brick.Widgets.Internal
 
   build-depends:       base <= 5,
-                       vty >= 5.2.9,
+                       vty >= 5.2.10,
                        transformers,
                        data-default,
                        Diff,
@@ -78,7 +78,7 @@ executable brick
   build-depends:       base <= 5,
                        brick,
                        transformers,
-                       vty >= 5.2.9,
+                       vty >= 5.2.10,
                        data-default,
                        lens,
                        text
@@ -92,7 +92,7 @@ executable brick-visibility-demo
   main-is:             VisibilityDemo.hs
   build-depends:       base,
                        brick,
-                       vty >= 5.2.9,
+                       vty >= 5.2.10,
                        data-default,
                        text,
                        lens
@@ -106,7 +106,7 @@ executable brick-viewport-scroll-demo
   main-is:             ViewportScrollDemo.hs
   build-depends:       base,
                        brick,
-                       vty >= 5.2.9,
+                       vty >= 5.2.10,
                        data-default,
                        text,
                        lens
@@ -120,7 +120,7 @@ executable brick-dialog-demo
   main-is:             DialogDemo.hs
   build-depends:       base <= 5,
                        brick,
-                       vty >= 5.2.9,
+                       vty >= 5.2.10,
                        data-default,
                        text,
                        lens
@@ -134,7 +134,7 @@ executable brick-layer-demo
   main-is:             LayerDemo.hs
   build-depends:       base <= 5,
                        brick,
-                       vty >= 5.2.9,
+                       vty >= 5.2.10,
                        data-default,
                        text,
                        lens
@@ -148,7 +148,7 @@ executable brick-suspend-resume-demo
   main-is:             SuspendAndResumeDemo.hs
   build-depends:       base <= 5,
                        brick,
-                       vty >= 5.2.9,
+                       vty >= 5.2.10,
                        data-default,
                        text,
                        lens
@@ -162,7 +162,7 @@ executable brick-padding-demo
   main-is:             PaddingDemo.hs
   build-depends:       base <= 5,
                        brick,
-                       vty >= 5.2.9,
+                       vty >= 5.2.10,
                        data-default,
                        text,
                        lens
@@ -176,7 +176,7 @@ executable brick-attr-demo
   main-is:             AttrDemo.hs
   build-depends:       base <= 5,
                        brick,
-                       vty >= 5.2.9,
+                       vty >= 5.2.10,
                        data-default,
                        text,
                        lens
@@ -190,7 +190,7 @@ executable brick-markup-demo
   main-is:             MarkupDemo.hs
   build-depends:       base <= 5,
                        brick,
-                       vty >= 5.2.9,
+                       vty >= 5.2.10,
                        data-default,
                        text,
                        lens
@@ -204,7 +204,7 @@ executable brick-list-demo
   main-is:             ListDemo.hs
   build-depends:       base <= 5,
                        brick,
-                       vty >= 5.2.9,
+                       vty >= 5.2.10,
                        data-default,
                        text,
                        lens
@@ -218,7 +218,7 @@ executable brick-custom-event-demo
   main-is:             CustomEventDemo.hs
   build-depends:       base <= 5,
                        brick,
-                       vty >= 5.2.9,
+                       vty >= 5.2.10,
                        data-default,
                        text,
                        lens
@@ -232,7 +232,7 @@ executable brick-hello-world-demo
   main-is:             HelloWorldDemo.hs
   build-depends:       base <= 5,
                        brick,
-                       vty >= 5.2.9,
+                       vty >= 5.2.10,
                        data-default,
                        text,
                        lens
@@ -246,7 +246,7 @@ executable brick-edit-demo
   main-is:             EditDemo.hs
   build-depends:       base <= 5,
                        brick,
-                       vty >= 5.2.9,
+                       vty >= 5.2.10,
                        data-default,
                        text,
                        lens
@@ -260,7 +260,7 @@ executable brick-border-demo
   main-is:             BorderDemo.hs
   build-depends:       base <= 5,
                        brick,
-                       vty >= 5.2.9,
+                       vty >= 5.2.10,
                        data-default,
                        text,
                        lens

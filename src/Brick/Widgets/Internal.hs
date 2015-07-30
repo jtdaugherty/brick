@@ -281,10 +281,7 @@ str s =
           fixEmpty [] = " "
           fixEmpty l = l
       case fixEmpty <$> theLines of
-          -- The empty string case is important since we often need
-          -- empty strings to have non-zero height!  This comes down to Vty's
-          -- behavior of empty strings (they have imageHeight 1)
-          [] -> return $ def & imageL .~ (V.string (c^.attrL) "")
+          [] -> return def
           [one] -> return $ def & imageL .~ (V.string (c^.attrL) one)
           multiple ->
               let maxLength = maximum $ length <$> multiple

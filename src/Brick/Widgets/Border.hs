@@ -131,9 +131,8 @@ hBorder_ :: Maybe Widget -> Widget
 hBorder_ label =
     Widget Greedy Fixed $ do
       bs <- ctxBorderStyle <$> getContext
+      let msg = maybe (str [bsHorizontal bs]) (withAttr hBorderLabelAttr) label
       render $ vLimit 1 $ withAttr hBorderAttr $ hCenterWith (Just $ bsHorizontal bs) msg
-      where
-          msg = maybe (txt "") (withAttr hBorderLabelAttr) label
 
 -- | A vertical border.  Fills all vertical space.
 vBorder :: Widget
