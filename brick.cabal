@@ -1,18 +1,28 @@
 name:                brick
 version:             0.1
 synopsis:            A terminal user interface library
-description:         Brick is a terminal UI programming library that lets you
-                     write declarative specifications of your terminal user
-                     interfaces.  It cleanly separates event handling and
-                     application state management from the business of
-                     rendering the interface.
-                     .
-                     .
-                     To get started, import Brick.Main and use one
-                     of the starter main alternatives ('simpleMain',
-                     'defaultMain') or create an 'App' value and use
-                     'customMain'. For examples, see the demo programs
-                     in the 'programs' directory.
+description:
+  Write terminal applications painlessly with 'brick'! You write an
+  event handler and a drawing function and the library does the rest.
+  .
+  .
+  > module Main where
+  >
+  > import Brick.Main (simpleMain)
+  > import Brick.Widgets.Core (Widget, str)
+  >
+  > ui :: Widget
+  > ui = str "Hello, world!"
+  >
+  > main :: IO ()
+  > main = simpleMain ui
+  .
+  .
+  To get started, see:
+  .
+  * The <https://github.com/jtdaugherty/brick/blob/master/docs/guide.rst Brick user guide>
+  .
+  * The demonstration programs in the 'programs' directory
 license:             BSD3
 license-file:        LICENSE
 author:              Jonathan Daugherty <cygnus@foobox.com>
