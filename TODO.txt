@@ -10,7 +10,7 @@ Features:
 
 Open issues:
 - Are there better or less error-prone ways of dealing with Names?
-- Centering and other operations pad widgets with fills with interacts
-with layering depending on the user's intentions. Sometimes we want
-layers to be opaque and filled, other times we want them to be
-transparent.  How do we deal with this in general?
+- Operations that pad widgets with fills interact with layering poorly,
+depending on the user's intentions. Sometimes we want layers to be
+opaque and filled, other times we want them to be transparent. How do we
+deal with this in general?
