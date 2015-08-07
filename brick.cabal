@@ -1,6 +1,6 @@
 name:                brick
 version:             0.1
-synopsis:            A terminal user interface library
+synopsis:            A declarative terminal user interface library
 description:
   Write terminal applications painlessly with 'brick'! You write an
   event handler and a drawing function and the library does the rest.
@@ -20,6 +20,8 @@ description:
   .
   To get started, see:
   .
+  * <https://github.com/jtdaugherty/brick/blob/master/README.md The README>
+  .
   * The <https://github.com/jtdaugherty/brick/blob/master/docs/guide.rst Brick user guide>
   .
   * The demonstration programs in the 'programs' directory
@@ -31,7 +33,8 @@ copyright:           (c) Jonathan Daugherty 2015
 category:            Graphics
 build-type:          Simple
 cabal-version:       >=1.10
-Homepage:            https://.github.com/jtdaugherty/brick/
+Homepage:            https://github.com/jtdaugherty/brick/
+Bug-reports:         https://github.com/jtdaugherty/brick/issues
 extra-source-files:
   CHANGELOG.md
 
