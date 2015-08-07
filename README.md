@@ -73,18 +73,18 @@ Your documentation options, in recommended order, are:
 
 * [The brick user guide](docs/guide.rst)
 * Haddock (all modules)
+* [Demo programs](programs)
 
 Status
 ------
 
-`brick` is experimental. It does not yet support many of the features
-of, say, `vty-ui`. And there are some places were I have deliberately
-chosen to worry about performance later, for the sake of spending more
-time on the design. For a while my goal with `brick` will be to develop
-a very solid core library with minimal features. `brick` exports an
-extension API that makes it possible to make your own packages and
-widgets. If you do that, you'll also be helping me by testing whether
-the exported interface is usable and complete!
+`brick` is young and may be missing some essential features. There are
+some places were I have deliberately chosen to worry about performance
+later for the sake of spending more time on the design (and to wait on
+performance issues to arise first). `brick` exports an extension API
+that makes it possible to make your own packages and widgets. If you
+use that, you'll also be helping to test whether the exported interface
+is usable and complete!
 
 The development of this library has revealed some bugs in `vty`, and
 I've tried to report those as I go. If they haven't been resolved,
