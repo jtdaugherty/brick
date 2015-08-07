@@ -1,5 +1,5 @@
-brick documentation
-~~~~~~~~~~~~~~~~~~~
+Brick User Guide
+~~~~~~~~~~~~~~~~
 
 .. contents:: `Table of Contents`
 

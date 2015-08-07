@@ -64,14 +64,14 @@ $ .cabal-sandbox/bin/brick-???-demo
 ```
 
 To get started, see the [first few sections of the brick
-manual](docs/index.rst).
+user guide](docs/guide.rst).
 
 Documentation
 -------------
 
 Your documentation options, in recommended order, are:
 
-* [The brick manual](docs/index.rst)
+* [The brick user guide](docs/guide.rst)
 * Haddock (all modules)
 
 Status
@@ -116,4 +116,5 @@ should consider to make submitting patches easier for all concerned:
    issue and we can use that as the place to hash things out.
  - If you make changes, try to make them consistent with the syntactic
    conventions I've used in the codebase.
- - Please provide Haddock documentation for any changes you make.
+ - Please provide Haddock and/or user guide documentation for any
+   changes you make.
