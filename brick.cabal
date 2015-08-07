@@ -83,21 +83,6 @@ library
                        text-zipper >= 0.2.1,
                        template-haskell
 
-executable brick
-  if !flag(demos)
-    Buildable: False
-  hs-source-dirs:      programs
-  ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
-  default-language:    Haskell2010
-  main-is:             Main.hs
-  build-depends:       base <= 5,
-                       brick,
-                       transformers,
-                       vty >= 5.2.10,
-                       data-default,
-                       lens,
-                       text
-
 executable brick-visibility-demo
   if !flag(demos)
     Buildable: False
