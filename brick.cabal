@@ -32,6 +32,8 @@ category:            Graphics
 build-type:          Simple
 cabal-version:       >=1.10
 Homepage:            https://.github.com/jtdaugherty/brick/
+extra-source-files:
+  CHANGELOG.md
 
 Source-Repository head
   type:     git
