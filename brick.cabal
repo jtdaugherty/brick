@@ -38,8 +38,10 @@ build-type:          Simple
 cabal-version:       >=1.10
 Homepage:            https://github.com/jtdaugherty/brick/
 Bug-reports:         https://github.com/jtdaugherty/brick/issues
-extra-source-files:
-  CHANGELOG.md
+
+data-files:          README.md,
+                     docs/guide.rst,
+                     CHANGELOG.md
 
 Source-Repository head
   type:     git
