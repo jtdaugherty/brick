@@ -14,11 +14,10 @@ into writing such programs.
 require you to write a long and tedious sequence of "create a widget,
 now bind an event handler", `brick` just requires you to describe
 your interface -- even the bits that are stateful -- using a set of
-declarative combinators and it does the rest. All you have to do is
-provide functions to transform your own application state when input (or
-other kinds of) events arrive.
+declarative combinators. Then you provide a function to transform your
+own application state when input (or other kinds of) events arrive.
 
-Under the hood, this library uses [vty](http://hackage.haskell.org/package/vty).
+Under the hood, this library builds upon [vty](http://hackage.haskell.org/package/vty).
 
 This library deprecates [vty-ui](https://github.com/jtdaugherty/vty-ui).
 
