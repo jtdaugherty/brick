@@ -25,6 +25,9 @@ description:
   * The <https://github.com/jtdaugherty/brick/blob/master/docs/guide.rst Brick user guide>
   .
   * The demonstration programs in the 'programs' directory
+  .
+  .
+  This package deprecates <http://hackage.haskell.org/package/vty-ui vty-ui>.
 license:             BSD3
 license-file:        LICENSE
 author:              Jonathan Daugherty <cygnus@foobox.com>
