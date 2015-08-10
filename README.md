@@ -70,10 +70,10 @@ Documentation
 
 Your documentation options, in recommended order, are:
 
+* [FAQ](FAQ.md)
 * [The brick user guide](docs/guide.rst)
 * Haddock (all modules)
 * [Demo programs](programs)
-* [FAQ](FAQ.md)
 
 Status
 ------
