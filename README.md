@@ -94,10 +94,10 @@ Reporting bugs
 
 Please file bug reports as GitHub issues.  For best results:
 
- - Include the versions of relevant software packages: `brick`, `ghc`,
-   and `vty` will be the most important ones. Even better, the output
-   of `cabal freeze` would probably be helpful in making the problem
-   reproducible.
+ - Include the versions of relevant software packages: your terminal
+   emulator, `brick`, `ghc`, and `vty` will be the most important
+   ones. Even better, the output of `cabal freeze` would probably be
+   helpful in making the problem reproducible.
 
  - Clearly describe the behavior you expected ...
 
