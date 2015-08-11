@@ -37,7 +37,6 @@ appEvent st e =
     case e of
         V.EvKey V.KEsc [] -> halt st
         V.EvKey (V.KChar ' ') [] -> suspendAndResume $ do
-            -- NB: https://github.com/coreyoconnor/vty/issues/77
             putStrLn "Suspended. Please enter something and press enter to resume:"
             s <- getLine
             return $ st & stExternalInput .~ s
