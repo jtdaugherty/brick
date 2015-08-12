@@ -70,10 +70,10 @@ Documentation
 
 Your documentation options, in recommended order, are:
 
-* [FAQ](FAQ.md)
-* [The brick user guide](docs/guide.rst)
+* [FAQ](https://github.com/jtdaugherty/brick/blob/master/FAQ.md)
+* [The brick user guide](https://github.com/jtdaugherty/brick/blob/master/docs/guide.rst)
 * Haddock (all modules)
-* [Demo programs](programs)
+* [Demo programs](https://github.com/jtdaugherty/brick/blob/master/programs)
 
 Status
 ------
