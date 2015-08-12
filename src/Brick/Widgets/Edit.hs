@@ -1,8 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
--- | This module provides a basic single-line text editor widget. You'll
--- need to embed an 'Editor' in your application state and transform it
--- with 'handleEvent' when relevant events arrive. To get the contents
+-- | This module provides a basic text editor widget. You'll need to
+-- embed an 'Editor' in your application state and transform it with
+-- 'handleEvent' when relevant events arrive. To get the contents
 -- of the editor, just use 'getEditContents'. To modify it, use the
 -- 'Z.TextZipper' interface with 'applyEdit'.
 --
