@@ -1,3 +1,9 @@
+Misc:
+  * Add note of caution to viewport documentation about rendering big
+    things, and on using alternative approaches e.g. List
+  * Consider updating editor to use smart translation similiar to list
+    to enable editing of big documents
+
 Features:
   * High priority:
     - Text wrapping (with markup)
