@@ -4,7 +4,7 @@
 -- | This module provides a scrollable list type and functions for
 -- manipulating and rendering it.
 module Brick.Widgets.List
-  ( List(listElements, listSelected, listName, listElementDraw)
+  ( List(listElements, listSelected, listName)
 
   -- * Consructing a list
   , list
@@ -51,7 +51,6 @@ import Brick.AttrMap
 -- * Up/down arrow keys: move cursor of selected item
 data List e =
     List { listElements :: ![e]
-         , listElementDraw :: Bool -> e -> Widget
          , listSelected :: !(Maybe Int)
          , listName :: Name
          }
@@ -78,30 +77,29 @@ listSelectedAttr = listAttr <> "selected"
 -- | Construct a list in terms of an element type 'e'.
 list :: Name
      -- ^ The list name (must be unique)
-     -> (Bool -> e -> Widget)
-     -- ^ The item rendering function (takes the item and whether it is
-     -- currently selected)
      -> [e]
      -- ^ The initial list contents
      -> List e
-list name draw es =
+list name es =
     let selIndex = if null es then Nothing else Just 0
-    in List es draw selIndex name
+    in List es selIndex name
 
--- | Turn a list state value into a widget.
-renderList :: List e -> Widget
-renderList l = withDefAttr listAttr $
-               viewport (l^.listNameL) Vertical $
-               vBox $
-               drawListElements l
+-- | Turn a list state value into a widget given an item drawing
+-- function.
+renderList :: List e -> (Bool -> e -> Widget) -> Widget
+renderList l drawElem =
+    withDefAttr listAttr $
+    viewport (l^.listNameL) Vertical $
+    vBox $
+    drawListElements l drawElem
 
-drawListElements :: List e -> [Widget]
-drawListElements l = drawnElements
+drawListElements :: List e -> (Bool -> e -> Widget) -> [Widget]
+drawListElements l drawElem = drawnElements
     where
         es = l^.listElementsL
         drawnElements = (flip map) (zip [0..] es) $ \(i, e) ->
             let isSelected = Just i == l^.listSelectedL
-                elemWidget = (l^.listElementDrawL) isSelected e
+                elemWidget = drawElem isSelected e
                 makeVisible = if isSelected
                               then (visible . withDefAttr listSelectedAttr)
                               else id
