@@ -86,25 +86,41 @@ list name es =
     in List es selIndex name
 
 -- | Turn a list state value into a widget given an item drawing
--- function.
-renderList :: List e -> (Bool -> e -> Widget) -> Widget
-renderList l drawElem =
+-- function. The integer specifies the height, in rows, of the widgets
+-- returned by the item drawing function. All item widgets must be thism
+-- any rows high.
+renderList :: List e -> (Bool -> e -> Widget) -> Int -> Widget
+renderList l drawElem itemHeight =
     withDefAttr listAttr $
-    viewport (l^.listNameL) Vertical $
-    vBox $
-    drawListElements l drawElem
+    drawListElements l drawElem itemHeight
 
-drawListElements :: List e -> (Bool -> e -> Widget) -> [Widget]
-drawListElements l drawElem = V.toList drawnElements
-    where
-        es = l^.listElementsL
-        drawnElements = (flip V.imap) es $ \i e ->
-            let isSelected = Just i == l^.listSelectedL
-                elemWidget = drawElem isSelected e
-                makeVisible = if isSelected
-                              then (visible . withDefAttr listSelectedAttr)
-                              else id
-            in makeVisible elemWidget
+drawListElements :: List e -> (Bool -> e -> Widget) -> Int -> Widget
+drawListElements l drawElem itemHeight =
+    Widget Fixed Fixed $ do
+        c <- getContext
+
+        let es = V.slice start num (l^.listElementsL)
+            idx = case l^.listSelectedL of
+                Nothing -> 0
+                Just i -> i
+
+            start = max 0 $ idx - numPerHeight + 1
+            num = min (numPerHeight * 2) (V.length (l^.listElementsL) - start)
+            numPerHeight = (c^.availHeightL) `div` itemHeight
+
+            off = start * itemHeight
+
+            drawnElements = (flip V.imap) es $ \i e ->
+                let isSelected = Just (i + start) == l^.listSelectedL
+                    elemWidget = drawElem isSelected e
+                    makeVisible = if isSelected
+                                  then (visible . withDefAttr listSelectedAttr)
+                                  else id
+                in makeVisible elemWidget
+
+        render $ viewport (l^.listNameL) Vertical $
+                 translateBy (Location (0, off)) $
+                 vBox $ V.toList drawnElements
 
 -- | Insert an item into a list at the specified position.
 listInsert :: Int

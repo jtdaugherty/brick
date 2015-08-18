@@ -35,7 +35,7 @@ drawUI l = [ui]
         box = B.borderWithLabel label $
               hLimit 25 $
               vLimit 15 $
-              L.renderList l listDrawElement
+              L.renderList l listDrawElement 1
         ui = C.vCenter $ vBox [ C.hCenter box
                               , " "
                               , C.hCenter "Press +/- to add/remove list elements."
