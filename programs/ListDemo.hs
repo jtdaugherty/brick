@@ -31,7 +31,7 @@ drawUI l = [ui]
         cur = case l^.(L.listSelectedL) of
                 Nothing -> "-"
                 Just i -> str (show (i + 1))
-        total = str $ show $ length $ l^.(L.listElementsL)
+        total = str $ show $ V.length $ l^.(L.listElementsL)
         box = B.borderWithLabel label $
               hLimit 25 $
               vLimit 15 $
@@ -46,7 +46,7 @@ appEvent :: L.List Int -> V.Event -> M.EventM (M.Next (L.List Int))
 appEvent l e =
     case e of
         V.EvKey (V.KChar '+') [] ->
-            let el = length $ l^.(L.listElementsL)
+            let el = V.length $ l^.(L.listElementsL)
             in M.continue $ L.listInsert el el l
 
         V.EvKey (V.KChar '-') [] ->
