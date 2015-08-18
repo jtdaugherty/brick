@@ -82,7 +82,7 @@ list :: Name
      -- ^ The initial list contents
      -> List e
 list name es =
-    let selIndex = if null es then Nothing else Just 0
+    let selIndex = if V.null es then Nothing else Just 0
     in List es selIndex name
 
 -- | Turn a list state value into a widget given an item drawing
@@ -145,7 +145,7 @@ listRemove pos l | V.null (l^.listElementsL) = l
         (front, back) = V.splitAt pos es
         es' = front V.++ V.tail back
         es = l^.listElementsL
-    in l & listSelectedL .~ (if null es' then Nothing else Just newSel)
+    in l & listSelectedL .~ (if V.null es' then Nothing else Just newSel)
          & listElementsL .~ es'
 
 -- | Replace the contents of a list with a new set of elements but
@@ -177,14 +177,14 @@ listMoveDown = listMoveBy 1
 -- validation.
 listMoveBy :: Int -> List e -> List e
 listMoveBy amt l =
-    let newSel = clamp 0 (length (l^.listElementsL) - 1) <$> (amt +) <$> (l^.listSelectedL)
+    let newSel = clamp 0 (V.length (l^.listElementsL) - 1) <$> (amt +) <$> (l^.listSelectedL)
     in l & listSelectedL .~ newSel
 
 -- | Set the selected index for a list to the specified index, subject
 -- to validation.
 listMoveTo :: Int -> List e -> List e
 listMoveTo pos l =
-    let len = length (l^.listElementsL)
+    let len = V.length (l^.listElementsL)
         newSel = clamp 0 (len - 1) $ if pos < 0 then (len - pos) else pos
     in l & listSelectedL .~ if len > 0
                             then Just newSel
