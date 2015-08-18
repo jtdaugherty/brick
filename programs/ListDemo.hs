@@ -12,6 +12,7 @@ import qualified Brick.Widgets.Border as B
 import qualified Brick.Widgets.List as L
 import qualified Brick.Widgets.Center as C
 import qualified Brick.AttrMap as A
+import qualified Data.Vector as V
 import Brick.Widgets.Core
   ( Widget
   , (<+>)
@@ -65,7 +66,7 @@ listDrawElement sel i =
     in C.hCenter $ "Item " <+> (selStr $ show i)
 
 initialState :: L.List Int
-initialState = L.list (T.Name "list") [0, 1, 2]
+initialState = L.list (T.Name "list") (V.fromList [0, 1, 2])
 
 customAttr :: A.AttrName
 customAttr = L.listSelectedAttr <> "custom"

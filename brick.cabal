@@ -212,7 +212,8 @@ executable brick-list-demo
                        vty >= 5.3.1,
                        data-default,
                        text,
-                       lens
+                       lens,
+                       vector
 
 executable brick-custom-event-demo
   if !flag(demos)

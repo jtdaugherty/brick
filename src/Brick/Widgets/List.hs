@@ -39,6 +39,7 @@ import Data.Monoid ((<>))
 import Data.Maybe (fromMaybe)
 import qualified Data.Algorithm.Diff as D
 import Graphics.Vty (Event(..), Key(..))
+import qualified Data.Vector as V
 
 import Brick.Types
 import Brick.Widgets.Core
@@ -50,7 +51,7 @@ import Brick.AttrMap
 --
 -- * Up/down arrow keys: move cursor of selected item
 data List e =
-    List { listElements :: ![e]
+    List { listElements :: !(V.Vector e)
          , listSelected :: !(Maybe Int)
          , listName :: Name
          }
@@ -77,7 +78,7 @@ listSelectedAttr = listAttr <> "selected"
 -- | Construct a list in terms of an element type 'e'.
 list :: Name
      -- ^ The list name (must be unique)
-     -> [e]
+     -> V.Vector e
      -- ^ The initial list contents
      -> List e
 list name es =
@@ -94,10 +95,10 @@ renderList l drawElem =
     drawListElements l drawElem
 
 drawListElements :: List e -> (Bool -> e -> Widget) -> [Widget]
-drawListElements l drawElem = drawnElements
+drawListElements l drawElem = V.toList drawnElements
     where
         es = l^.listElementsL
-        drawnElements = (flip map) (zip [0..] es) $ \(i, e) ->
+        drawnElements = (flip V.imap) es $ \i e ->
             let isSelected = Just i == l^.listSelectedL
                 elemWidget = drawElem isSelected e
                 makeVisible = if isSelected
@@ -113,24 +114,24 @@ listInsert :: Int
            -> List e
            -> List e
 listInsert pos e l =
-    let safePos = clamp 0 (length es) pos
+    let safePos = clamp 0 (V.length es) pos
         es = l^.listElementsL
         newSel = case l^.listSelectedL of
           Nothing -> 0
           Just s -> if safePos < s
                     then s + 1
                     else s
-        (front, back) = splitAt safePos es
+        (front, back) = V.splitAt safePos es
     in l & listSelectedL .~ Just newSel
-         & listElementsL .~ (front ++ (e : back))
+         & listElementsL .~ (front V.++ (e `V.cons` back))
 
 -- | Remove an element from a list at the specified position.
 listRemove :: Int
            -- ^ The position at which to remove an element (0 <= i < size)
            -> List e
            -> List e
-listRemove pos l | null (l^.listElementsL) = l
-                 | pos /= clamp 0 (length (l^.listElementsL) - 1) pos = l
+listRemove pos l | V.null (l^.listElementsL) = l
+                 | pos /= clamp 0 (V.length (l^.listElementsL) - 1) pos = l
                  | otherwise =
     let newSel = case l^.listSelectedL of
           Nothing -> 0
@@ -141,22 +142,22 @@ listRemove pos l | null (l^.listElementsL) = l
                           else if pos < s
                                then s - 1
                                else s
-        (front, back) = splitAt pos es
-        es' = front ++ tail back
+        (front, back) = V.splitAt pos es
+        es' = front V.++ V.tail back
         es = l^.listElementsL
     in l & listSelectedL .~ (if null es' then Nothing else Just newSel)
          & listElementsL .~ es'
 
 -- | Replace the contents of a list with a new set of elements but
 -- preserve the currently selected index.
-listReplace :: Eq e => [e] -> List e -> List e
+listReplace :: Eq e => V.Vector e -> List e -> List e
 listReplace es' l | es' == l^.listElementsL = l
                   | otherwise =
     let sel = fromMaybe 0 (l^.listSelectedL)
-        getNewSel es = case (null es, null es') of
+        getNewSel es = case (V.null es, V.null es') of
           (_, True)      -> Nothing
           (True, False)  -> Just 0
-          (False, False) -> Just (maintainSel es es' sel)
+          (False, False) -> Just (maintainSel (V.toList es) (V.toList es') sel)
         newSel = getNewSel (l^.listElementsL)
 
     in l & listSelectedL .~ newSel
@@ -193,7 +194,7 @@ listMoveTo pos l =
 listSelectedElement :: List e -> Maybe (Int, e)
 listSelectedElement l = do
   sel <- l^.listSelectedL
-  return (sel, (l^.listElementsL) !! sel)
+  return (sel, (l^.listElementsL) V.! sel)
 
 -- Assuming `xs` is an existing list that we want to update to match the
 -- state of `ys`. Given a selected index in `xs`, the goal is to compute
