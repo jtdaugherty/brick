@@ -39,7 +39,9 @@ module Brick.Widgets.Internal
   , ViewportType(..)
 
   , txt
+  , multilineTxt
   , str
+  , multilineStr
   , fill
 
   , Padding(..)
@@ -272,10 +274,19 @@ lookupAttrName n = do
     c <- getContext
     return $ attrMapLookup n (c^.ctxAttrMapL)
 
--- | Build a widget from a 'String'. Breaks newlines up and space-pads
--- short lines out to the length of the longest line.
+-- | Build a widget from a one-line 'String'.
 str :: String -> Widget
 str s =
+    Widget Fixed Fixed $ do
+      c <- getContext
+      return $ def & imageL .~ (V.string (c^.attrL) s)
+
+-- | Build a widget from a multi-line 'String'. Breaks newlines up and
+-- space-pads short lines out to the length of the longest line. If you
+-- know that your string is only one line, use 'str' instead since it is
+-- faster.
+multilineStr :: String -> Widget
+multilineStr s =
     Widget Fixed Fixed $ do
       c <- getContext
       let theLines = lines s
@@ -290,9 +301,15 @@ str s =
                   lineImg lStr = V.string (c^.attrL) (lStr ++ replicate (maxLength - length lStr) ' ')
               in return $ def & imageL .~ (V.vertCat lineImgs)
 
--- | Build a widget from a 'T.Text' value.  Behaves the same as 'str'.
+-- | Build a widget from a one-line 'T.Text' value. Behaves the same as
+-- 'str'.
 txt :: T.Text -> Widget
 txt = str . T.unpack
+
+-- | Build a widget from a multi-line 'T.Text' value. Behaves the same as
+-- 'multilineStr'.
+multilineTxt :: T.Text -> Widget
+multilineTxt = multilineStr . T.unpack
 
 -- | The type of padding.
 data Padding = Pad Int

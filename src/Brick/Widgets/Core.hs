@@ -9,7 +9,9 @@ module Brick.Widgets.Core
   , emptyWidget
   , raw
   , txt
+  , multilineTxt
   , str
+  , multilineStr
   , fill
 
   -- * Padding

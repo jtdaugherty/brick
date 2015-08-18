@@ -14,6 +14,7 @@ import qualified Brick.Widgets.Border as B
 import Brick.Widgets.Core
   ( Widget
   , translateBy
+  , multilineStr
   )
 
 data St =
@@ -32,12 +33,12 @@ drawUi st =
 topLayer :: St -> Widget
 topLayer st =
     translateBy (st^.topLayerLocation) $
-    B.border "Top layer\n(Arrow keys move)"
+    B.border $ multilineStr "Top layer\n(Arrow keys move)"
 
 bottomLayer :: St -> Widget
 bottomLayer st =
     translateBy (st^.bottomLayerLocation) $
-    B.border "Bottom layer\n(Ctrl-arrow keys move)"
+    B.border $ multilineStr "Bottom layer\n(Ctrl-arrow keys move)"
 
 appEvent :: St -> V.Event -> M.EventM (M.Next St)
 appEvent st (V.EvKey V.KDown [])  = M.continue $ st & topLayerLocation.rowL %~ (+ 1)
