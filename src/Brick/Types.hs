@@ -14,6 +14,12 @@ module Brick.Types
   , Widget(..)
   , Size(..)
   , Direction(..)
+
+  , Viewport(..)
+  , vpSize
+  , vpTop
+  , vpLeft
+
   , ViewportType(..)
   , Padding(..)
 
