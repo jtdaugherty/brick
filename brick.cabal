@@ -73,6 +73,7 @@ library
     Data.Text.Markup
   other-modules:
     Brick.Types.TH
+    Brick.Types.Internal
     Brick.Widgets.Internal
 
   build-depends:       base <= 5,

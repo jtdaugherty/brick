@@ -106,7 +106,7 @@ buttonSelectedAttr = buttonAttr <> "selected"
 -- | Render a dialog with the specified body widget.
 renderDialog :: Dialog a -> Widget -> Widget
 renderDialog d body =
-    let buttonPadding = "  "
+    let buttonPadding = str "   "
         mkButton (i, (s, _)) = let att = if Just i == d^.dialogSelectedIndexL
                                          then buttonSelectedAttr
                                          else buttonAttr

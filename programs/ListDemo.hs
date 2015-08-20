@@ -13,9 +13,11 @@ import qualified Brick.Widgets.List as L
 import qualified Brick.Widgets.Center as C
 import qualified Brick.AttrMap as A
 import qualified Data.Vector as V
-import Brick.Widgets.Core
+import Brick.Types
   ( Widget
-  , (<+>)
+  )
+import Brick.Widgets.Core
+  ( (<+>)
   , str
   , vLimit
   , hLimit
@@ -27,9 +29,9 @@ import Brick.Util (fg, on)
 drawUI :: L.List Int -> [Widget]
 drawUI l = [ui]
     where
-        label = "Item " <+> cur <+> " of " <+> total
+        label = str "Item " <+> cur <+> str " of " <+> total
         cur = case l^.(L.listSelectedL) of
-                Nothing -> "-"
+                Nothing -> str "-"
                 Just i -> str (show (i + 1))
         total = str $ show $ V.length $ l^.(L.listElementsL)
         box = B.borderWithLabel label $
@@ -37,9 +39,9 @@ drawUI l = [ui]
               vLimit 15 $
               L.renderList l listDrawElement 1
         ui = C.vCenter $ vBox [ C.hCenter box
-                              , " "
-                              , C.hCenter "Press +/- to add/remove list elements."
-                              , C.hCenter "Press Esc to exit."
+                              , str " "
+                              , C.hCenter $ str "Press +/- to add/remove list elements."
+                              , C.hCenter $ str "Press Esc to exit."
                               ]
 
 appEvent :: L.List Int -> V.Event -> M.EventM (M.Next (L.List Int))
@@ -63,7 +65,7 @@ listDrawElement sel i =
     let selStr s = if sel
                    then withAttr customAttr (str $ "<" <> s <> ">")
                    else str s
-    in C.hCenter $ "Item " <+> (selStr $ show i)
+    in C.hCenter $ str "Item " <+> (selStr $ show i)
 
 initialState :: L.List Int
 initialState = L.list (T.Name "list") (V.fromList [0, 1, 2])

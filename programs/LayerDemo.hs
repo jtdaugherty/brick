@@ -11,9 +11,11 @@ import qualified Brick.Types as T
 import Brick.Types (rowL, columnL)
 import qualified Brick.Main as M
 import qualified Brick.Widgets.Border as B
-import Brick.Widgets.Core
+import Brick.Types
   ( Widget
-  , translateBy
+  )
+import Brick.Widgets.Core
+  ( translateBy
   , multilineStr
   )
 

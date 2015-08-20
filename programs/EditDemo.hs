@@ -9,11 +9,11 @@ import qualified Graphics.Vty as V
 import qualified Brick.Main as M
 import qualified Brick.Types as T
 import Brick.Widgets.Core
-  ( Widget
-  , (<+>)
+  ( (<+>)
   , (<=>)
   , hLimit
   , vLimit
+  , str
   , multilineStr
   )
 import qualified Brick.Widgets.Center as C
@@ -47,14 +47,14 @@ currentEditorL st =
     then edit1
     else edit2
 
-drawUI :: St -> [Widget]
+drawUI :: St -> [T.Widget]
 drawUI st = [ui]
     where
-        ui = C.center $ ("Input 1 (unlimited): " <+> (hLimit 30 $ vLimit 5 $ E.renderEditor $ st^.edit1)) <=>
-                        " " <=>
-                        ("Input 2 (limited to 2 lines): " <+> (hLimit 30 $ E.renderEditor $ st^.edit2)) <=>
-                        " " <=>
-                        "Press Tab to switch between editors, Esc to quit."
+        ui = C.center $ (str "Input 1 (unlimited): " <+> (hLimit 30 $ vLimit 5 $ E.renderEditor $ st^.edit1)) <=>
+                        str " " <=>
+                        (str "Input 2 (limited to 2 lines): " <+> (hLimit 30 $ E.renderEditor $ st^.edit2)) <=>
+                        str " " <=>
+                        str "Press Tab to switch between editors, Esc to quit."
 
 appEvent :: St -> V.Event -> M.EventM (M.Next St)
 appEvent st ev =

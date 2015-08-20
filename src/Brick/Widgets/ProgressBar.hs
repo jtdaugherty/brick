@@ -11,6 +11,7 @@ where
 import Control.Lens ((^.))
 import Data.Monoid
 
+import Brick.Types
 import Brick.AttrMap
 import Brick.Widgets.Core
 

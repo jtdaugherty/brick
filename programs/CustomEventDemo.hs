@@ -18,9 +18,11 @@ import Brick.Main
   , continue
   , halt
   )
-import Brick.Widgets.Core
+import Brick.Types
   ( Widget
-  , (<=>)
+  )
+import Brick.Widgets.Core
+  ( (<=>)
   , str
   )
 

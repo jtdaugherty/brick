@@ -13,9 +13,11 @@ import Brick.Main
   , suspendAndResume, halt, continue
   , EventM, Next
   )
-import Brick.Widgets.Core
+import Brick.Types
   ( Widget
-  , vBox
+  )
+import Brick.Widgets.Core
+  ( vBox
   , str
   )
 
@@ -29,7 +31,7 @@ drawUI :: St -> [Widget]
 drawUI st = [ui]
     where
         ui = vBox [ str $ "External input: \"" <> st^.stExternalInput <> "\""
-                  , "(Press Esc to quit or Space to ask for input)"
+                  , str "(Press Esc to quit or Space to ask for input)"
                   ]
 
 appEvent :: St -> V.Event -> EventM (Next St)

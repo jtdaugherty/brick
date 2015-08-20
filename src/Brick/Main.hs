@@ -52,9 +52,9 @@ import Graphics.Vty
   , mkVty
   )
 
-import Brick.Widgets.Core (Widget)
-import Brick.Widgets.Internal (renderFinal, RenderState(..), ScrollRequest(..), Direction(..))
-import Brick.Types (rowL, columnL, CursorLocation(..), cursorLocationNameL, Name(..))
+import Brick.Types.Internal (ScrollRequest(..), RenderState(..))
+import Brick.Widgets.Internal (renderFinal)
+import Brick.Types (Direction, Widget, rowL, columnL, CursorLocation(..), cursorLocationNameL, Name(..))
 import Brick.AttrMap
 
 -- | The type of actions to take in an event handler.

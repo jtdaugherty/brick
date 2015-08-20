@@ -36,6 +36,7 @@ import Data.Monoid ((<>))
 import Graphics.Vty (imageHeight, imageWidth)
 
 import Brick.AttrMap
+import Brick.Types
 import Brick.Widgets.Core
 import Brick.Widgets.Center (hCenterWith)
 import Brick.Widgets.Border.Style (BorderStyle(..))

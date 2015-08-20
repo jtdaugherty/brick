@@ -1,5 +1,5 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE OverloadedStrings #-}
 module Main where
 
 import Control.Applicative
@@ -12,10 +12,12 @@ import qualified Brick.Types as T
 import qualified Brick.Main as M
 import qualified Brick.Widgets.Center as C
 import qualified Brick.Widgets.Border as B
-import Brick.Widgets.Core
+import Brick.Types
   ( Widget
   , ViewportType(Horizontal, Vertical, Both)
-  , hLimit
+  )
+import Brick.Widgets.Core
+  ( hLimit
   , vLimit
   , hBox
   , vBox
@@ -38,15 +40,15 @@ drawUi = const [ui]
         ui = C.center $ B.border $ hLimit 60 $ vLimit 21 $
              vBox [ pair, B.hBorder, singleton ]
         singleton = viewport vp3Name Both $
-                    vBox $ "Press ctrl-arrow keys to scroll this viewport horizontally and vertically."
+                    vBox $ str "Press ctrl-arrow keys to scroll this viewport horizontally and vertically."
                          : (str <$> [ "Line " <> show i | i <- [2..25::Int] ])
         pair = hBox [ viewport vp1Name Vertical $
-                      vBox $ "Press up and down arrow keys" :
-                             "to scroll this viewport." :
+                      vBox $ str "Press up and down arrow keys" :
+                             str "to scroll this viewport." :
                              (str <$> [ "Line " <> (show i) | i <- [3..50::Int] ])
                     , B.vBorder
-                    , viewport vp2Name Horizontal
-                      "Press left and right arrow keys to scroll this viewport."
+                    , viewport vp2Name Horizontal $
+                      str "Press left and right arrow keys to scroll this viewport."
                     ]
 
 vp1Scroll :: M.ViewportScroll

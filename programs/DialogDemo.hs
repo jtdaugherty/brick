@@ -5,9 +5,11 @@ import Data.Monoid
 import qualified Graphics.Vty as V
 
 import qualified Brick.Main as M
-import Brick.Widgets.Core
+import Brick.Types
   ( Widget
-  , padAll
+  )
+import Brick.Widgets.Core
+  ( padAll
   , str
   )
 import qualified Brick.Widgets.Dialog as D

@@ -21,6 +21,7 @@ import Graphics.Vty (Attr, horizCat, string)
 
 import Brick.Widgets.Core
 import Brick.AttrMap
+import Brick.Types
 
 -- | A type class for types that provide access to an attribute in the
 -- rendering monad.  You probably won't need to instance this.

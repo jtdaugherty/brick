@@ -13,10 +13,12 @@ import qualified Brick.Widgets.Center as C
 import qualified Brick.Widgets.Border as B
 import Brick.AttrMap (AttrMap, AttrName, attrMap)
 import Brick.Util (on)
-import Brick.Widgets.Core
+import Brick.Types
   ( Widget
   , ViewportType(Horizontal, Vertical, Both)
-  , withAttr
+  )
+import Brick.Widgets.Core
+  ( withAttr
   , hLimit
   , vLimit
   , hBox

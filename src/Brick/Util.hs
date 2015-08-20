@@ -12,7 +12,7 @@ import Control.Lens ((&), (%~))
 import Data.Monoid ((<>))
 import Graphics.Vty
 
-import Brick.Types (Location(..), CursorLocation(..), cursorLocationL)
+import Brick.Types.Internal (Location(..), CursorLocation(..), cursorLocationL)
 
 -- | Given a minimum value and a maximum value, clamp a value to that
 -- range (values less than the minimum map to the minimum and values

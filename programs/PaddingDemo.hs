@@ -5,11 +5,14 @@ import Data.Default
 import qualified Graphics.Vty as V
 
 import Brick.Main (App(..), neverShowCursor, resizeOrQuit, defaultMain)
-import Brick.Widgets.Core
+import Brick.Types
   ( Widget
-  , vBox
-  , hBox
   , Padding(..)
+  )
+import Brick.Widgets.Core
+  ( vBox
+  , hBox
+  , str
   , padAll
   , padLeft
   , padRight
@@ -23,24 +26,24 @@ import Brick.Widgets.Center as C
 
 ui :: Widget
 ui =
-    vBox [ hBox [ padLeft Max $ vCenter "Left-padded"
+    vBox [ hBox [ padLeft Max $ vCenter $ str "Left-padded"
                 , B.vBorder
-                , padRight Max $ vCenter "Right-padded"
+                , padRight Max $ vCenter $ str "Right-padded"
                 ]
          , B.hBorder
-         , hBox [ padTop Max $ hCenter "Top-padded"
+         , hBox [ padTop Max $ hCenter $ str "Top-padded"
                 , B.vBorder
-                , padBottom Max $ hCenter "Bottom-padded"
+                , padBottom Max $ hCenter $ str "Bottom-padded"
                 ]
          , B.hBorder
-         , hBox [ padLeftRight 2 "Padded by 2 on left/right"
+         , hBox [ padLeftRight 2 $ str "Padded by 2 on left/right"
                 , B.vBorder
-                , vBox [ padTopBottom 1 "Padded by 1 on top/bottom"
+                , vBox [ padTopBottom 1 $ str "Padded by 1 on top/bottom"
                        , B.hBorder
                        ]
                 ]
          , B.hBorder
-         , padAll 2 "Padded by 2 on all sides"
+         , padAll 2 $ str "Padded by 2 on all sides"
          ]
 
 app :: App () V.Event

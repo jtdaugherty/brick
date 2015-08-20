@@ -5,9 +5,11 @@ import Data.Monoid ((<>))
 import qualified Graphics.Vty as V
 
 import Brick.Main (App(..), defaultMain, resizeOrQuit, neverShowCursor)
-import Brick.Widgets.Core
+import Brick.Types
   ( Widget
-  , (<=>)
+  )
+import Brick.Widgets.Core
+  ( (<=>)
   )
 import Brick.Util (on, fg)
 import Brick.Markup (markup, (@?))
