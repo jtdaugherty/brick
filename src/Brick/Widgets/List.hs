@@ -4,7 +4,7 @@
 -- | This module provides a scrollable list type and functions for
 -- manipulating and rendering it.
 module Brick.Widgets.List
-  ( List(listElements, listSelected, listName)
+  ( List(listElements, listSelected, listName, listItemHeight)
 
   -- * Consructing a list
   , list
@@ -16,6 +16,7 @@ module Brick.Widgets.List
   , listElementsL
   , listSelectedL
   , listNameL
+  , listItemHeightL
 
   -- * Manipulating a list
   , listMoveBy
@@ -80,22 +81,25 @@ list :: Name
      -- ^ The list name (must be unique)
      -> V.Vector e
      -- ^ The initial list contents
+     -> Int
+     -- ^ The list item height in rows (all list item widgets must be
+     -- this high)
      -> List e
-list name es =
+list name es h =
     let selIndex = if V.null es then Nothing else Just 0
-    in List es selIndex name
+    in List es selIndex name h
 
 -- | Turn a list state value into a widget given an item drawing
 -- function. The integer specifies the height, in rows, of the widgets
 -- returned by the item drawing function. All item widgets must be this
 -- many rows high.
-renderList :: List e -> (Bool -> e -> Widget) -> Int -> Widget
-renderList l drawElem itemHeight =
+renderList :: List e -> (Bool -> e -> Widget) -> Widget
+renderList l drawElem =
     withDefAttr listAttr $
-    drawListElements l drawElem itemHeight
+    drawListElements l drawElem
 
-drawListElements :: List e -> (Bool -> e -> Widget) -> Int -> Widget
-drawListElements l drawElem itemHeight =
+drawListElements :: List e -> (Bool -> e -> Widget) -> Widget
+drawListElements l drawElem =
     Widget Fixed Fixed $ do
         c <- getContext
 
@@ -106,9 +110,9 @@ drawListElements l drawElem itemHeight =
 
             start = max 0 $ idx - numPerHeight + 1
             num = min (numPerHeight * 2) (V.length (l^.listElementsL) - start)
-            numPerHeight = (c^.availHeightL) `div` itemHeight
+            numPerHeight = (c^.availHeightL) `div` (l^.listItemHeightL)
 
-            off = start * itemHeight
+            off = start * (l^.listItemHeightL)
 
             drawnElements = (flip V.imap) es $ \i e ->
                 let isSelected = Just (i + start) == l^.listSelectedL

@@ -37,7 +37,7 @@ drawUI l = [ui]
         box = B.borderWithLabel label $
               hLimit 25 $
               vLimit 15 $
-              L.renderList l listDrawElement 1
+              L.renderList l listDrawElement
         ui = C.vCenter $ vBox [ C.hCenter box
                               , str " "
                               , C.hCenter $ str "Press +/- to add/remove list elements."
@@ -68,7 +68,7 @@ listDrawElement sel i =
     in C.hCenter $ str "Item " <+> (selStr $ show i)
 
 initialState :: L.List Int
-initialState = L.list (T.Name "list") (V.fromList [0, 1, 2])
+initialState = L.list (T.Name "list") (V.fromList [0, 1, 2]) 1
 
 customAttr :: A.AttrName
 customAttr = L.listSelectedAttr <> "custom"
