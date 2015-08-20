@@ -42,7 +42,7 @@ bottomLayer st =
     translateBy (st^.bottomLayerLocation) $
     B.border $ multilineStr "Bottom layer\n(Ctrl-arrow keys move)"
 
-appEvent :: St -> V.Event -> M.EventM (M.Next St)
+appEvent :: St -> V.Event -> T.EventM (T.Next St)
 appEvent st (V.EvKey V.KDown [])  = M.continue $ st & topLayerLocation.rowL %~ (+ 1)
 appEvent st (V.EvKey V.KUp [])    = M.continue $ st & topLayerLocation.rowL %~ (subtract 1)
 appEvent st (V.EvKey V.KRight []) = M.continue $ st & topLayerLocation.columnL %~ (+ 1)

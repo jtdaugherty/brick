@@ -18,6 +18,8 @@ module Brick.Types.Internal
   , cursorLocationL
   , cursorLocationNameL
   , Context(..)
+  , EventState
+  , Next(..)
 
   , scrollRequestsL
   , viewportMapL
@@ -80,6 +82,13 @@ data ViewportType = Vertical
                   | Both
                   -- ^ Viewports of this type are scrollable vertically and horizontally.
                   deriving Show
+
+type EventState = [(Name, ScrollRequest)]
+
+-- | The type of actions to take in an event handler.
+data Next a = Continue a
+            | SuspendAndResume (IO a)
+            | Halt a
 
 -- | Scrolling direction.
 data Direction = Up

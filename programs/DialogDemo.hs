@@ -26,7 +26,7 @@ drawUI d = [ui]
     where
         ui = D.renderDialog d $ C.hCenter $ padAll 1 $ str "This is the dialog body."
 
-appEvent :: D.Dialog Choice -> V.Event -> M.EventM (M.Next (D.Dialog Choice))
+appEvent :: D.Dialog Choice -> V.Event -> T.EventM (T.Next (D.Dialog Choice))
 appEvent d ev =
     case ev of
         V.EvKey V.KEsc [] -> M.halt d

@@ -103,7 +103,7 @@ vp2Scroll = M.viewportScroll vp2Name
 vp3Scroll :: M.ViewportScroll
 vp3Scroll = M.viewportScroll vp3Name
 
-appEvent :: St -> V.Event -> M.EventM (M.Next St)
+appEvent :: St -> V.Event -> T.EventM (T.Next St)
 appEvent st (V.EvKey V.KDown  [V.MCtrl]) = M.continue $ st & vp3Index._1 %~ min (vp3Size^._1) . (+ 1)
 appEvent st (V.EvKey V.KUp    [V.MCtrl]) = M.continue $ st & vp3Index._1 %~ max 1 . subtract 1
 appEvent st (V.EvKey V.KRight [V.MCtrl]) = M.continue $ st & vp3Index._2 %~ min (vp3Size^._1) . (+ 1)

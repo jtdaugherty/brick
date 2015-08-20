@@ -11,10 +11,11 @@ import qualified Graphics.Vty as V
 import Brick.Main
   ( App(..), neverShowCursor, defaultMain
   , suspendAndResume, halt, continue
-  , EventM, Next
   )
 import Brick.Types
   ( Widget
+  , EventM
+  , Next
   )
 import Brick.Widgets.Core
   ( vBox

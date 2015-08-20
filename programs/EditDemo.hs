@@ -56,7 +56,7 @@ drawUI st = [ui]
                         str " " <=>
                         str "Press Tab to switch between editors, Esc to quit."
 
-appEvent :: St -> V.Event -> M.EventM (M.Next St)
+appEvent :: St -> V.Event -> T.EventM (T.Next St)
 appEvent st ev =
     case ev of
         V.EvKey V.KEsc [] -> M.halt st

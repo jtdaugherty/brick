@@ -17,6 +17,9 @@ module Brick.Types
   , ViewportType(..)
   , Padding(..)
 
+  , EventM
+  , Next
+
   -- * Rendering infrastructure
   , RenderM
   , getContext
@@ -67,6 +70,9 @@ data Padding = Pad Int
 class HandleEvent a where
     -- | Handle a Vty event
     handleEvent :: Event -> a -> a
+
+-- | The monad in which event handlers run.
+type EventM a = StateT EventState IO a
 
 -- | Widget growth policies. These policies communicate to layout
 -- algorithms how a widget uses space when being rendered. These

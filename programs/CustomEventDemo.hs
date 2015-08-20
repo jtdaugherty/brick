@@ -11,8 +11,6 @@ import qualified Graphics.Vty as V
 
 import Brick.Main
   ( App(..)
-  , Next
-  , EventM
   , showFirstCursor
   , customMain
   , continue
@@ -20,6 +18,8 @@ import Brick.Main
   )
 import Brick.Types
   ( Widget
+  , Next
+  , EventM
   )
 import Brick.Widgets.Core
   ( (<=>)

@@ -44,7 +44,7 @@ drawUI l = [ui]
                               , C.hCenter $ str "Press Esc to exit."
                               ]
 
-appEvent :: L.List Int -> V.Event -> M.EventM (M.Next (L.List Int))
+appEvent :: L.List Int -> V.Event -> T.EventM (T.Next (L.List Int))
 appEvent l e =
     case e of
         V.EvKey (V.KChar '+') [] ->

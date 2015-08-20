@@ -6,8 +6,6 @@ module Brick.Main
   , resizeOrQuit
 
   -- * Event handler functions
-  , EventM
-  , Next
   , continue
   , halt
   , suspendAndResume
@@ -52,15 +50,10 @@ import Graphics.Vty
   , mkVty
   )
 
-import Brick.Types.Internal (ScrollRequest(..), RenderState(..))
+import Brick.Types (Direction, Widget, rowL, columnL, CursorLocation(..), cursorLocationNameL, Name(..), EventM)
+import Brick.Types.Internal (ScrollRequest(..), RenderState(..), Next(..))
 import Brick.Widgets.Internal (renderFinal)
-import Brick.Types (Direction, Widget, rowL, columnL, CursorLocation(..), cursorLocationNameL, Name(..))
 import Brick.AttrMap
-
--- | The type of actions to take in an event handler.
-data Next a = Continue a
-            | SuspendAndResume (IO a)
-            | Halt a
 
 -- | The library application abstraction. Your application's operations
 -- are represented here and passed to one of the various main functions
@@ -97,11 +90,6 @@ data App s e =
         -- event type. For example, if the application's event type is
         -- 'Event', this is just 'id'.
         }
-
--- | The monad in which event handlers run.
-type EventM a = StateT EventState IO a
-
-type EventState = [(Name, ScrollRequest)]
 
 -- | The default main entry point which takes an application and an
 -- initial state and returns the final state returned by a 'halt'

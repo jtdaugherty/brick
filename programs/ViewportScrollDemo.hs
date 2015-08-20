@@ -60,7 +60,7 @@ vp2Scroll = M.viewportScroll vp2Name
 vp3Scroll :: M.ViewportScroll
 vp3Scroll = M.viewportScroll vp3Name
 
-appEvent :: () -> V.Event -> M.EventM (M.Next ())
+appEvent :: () -> V.Event -> T.EventM (T.Next ())
 appEvent _ (V.EvKey V.KDown  [V.MCtrl]) = M.vScrollBy vp3Scroll 1 >> M.continue ()
 appEvent _ (V.EvKey V.KUp    [V.MCtrl]) = M.vScrollBy vp3Scroll (-1) >> M.continue ()
 appEvent _ (V.EvKey V.KRight [V.MCtrl]) = M.hScrollBy vp3Scroll 1 >> M.continue ()
