@@ -54,6 +54,8 @@ import Brick.AttrMap
 -- * Up/down arrow keys: move cursor of selected item
 -- * Page up / page down keys: move cursor of selected item by one page
 --   at a time (based on the number of items shown)
+-- * Home/end keys: move cursor of selected item to beginning or end of
+--   list
 data List e =
     List { listElements :: !(V.Vector e)
          , listSelected :: !(Maybe Int)
@@ -69,6 +71,8 @@ instance HandleEvent (List e) where
             f = case e of
                   EvKey KUp [] -> return $ listMoveUp theList
                   EvKey KDown [] -> return $ listMoveDown theList
+                  EvKey KHome [] -> return $ listMoveTo 0 theList
+                  EvKey KEnd [] -> return $ listMoveTo (length $ listElements theList) theList
                   EvKey KPageDown [] -> do
                       v <- lookupViewport (theList^.listNameL)
                       case v of
