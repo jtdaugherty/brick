@@ -104,9 +104,7 @@ list name es h =
     in List es selIndex name h
 
 -- | Turn a list state value into a widget given an item drawing
--- function. The integer specifies the height, in rows, of the widgets
--- returned by the item drawing function. All item widgets must be this
--- many rows high.
+-- function.
 renderList :: List e -> (Bool -> e -> Widget) -> Widget
 renderList l drawElem =
     withDefAttr listAttr $
