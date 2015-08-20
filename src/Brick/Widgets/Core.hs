@@ -158,7 +158,9 @@ txt = str . T.unpack
 multilineTxt :: T.Text -> Widget
 multilineTxt = multilineStr . T.unpack
 
--- | Pad the specified widget on the left.
+-- | Pad the specified widget on the left. If max padding is used, this
+-- grows greedily horizontally; otherwise it defers to the padded
+-- widget.
 padLeft :: Padding -> Widget -> Widget
 padLeft padding p =
     let (f, sz) = case padding of
@@ -169,7 +171,9 @@ padLeft padding p =
         render $ (f $ vLimit (result^.imageL.to V.imageHeight) $ fill ' ') <+>
                  (Widget Fixed Fixed $ return result)
 
--- | Pad the specified widget on the right.
+-- | Pad the specified widget on the right. If max padding is used,
+-- this grows greedily horizontally; otherwise it defers to the padded
+-- widget.
 padRight :: Padding -> Widget -> Widget
 padRight padding p =
     let (f, sz) = case padding of
@@ -180,7 +184,8 @@ padRight padding p =
         render $ (Widget Fixed Fixed $ return result) <+>
                  (f $ vLimit (result^.imageL.to V.imageHeight) $ fill ' ')
 
--- | Pad the specified widget on the top.
+-- | Pad the specified widget on the top. If max padding is used, this
+-- grows greedily vertically; otherwise it defers to the padded widget.
 padTop :: Padding -> Widget -> Widget
 padTop padding p =
     let (f, sz) = case padding of
@@ -191,7 +196,9 @@ padTop padding p =
         render $ (f $ hLimit (result^.imageL.to V.imageWidth) $ fill ' ') <=>
                  (Widget Fixed Fixed $ return result)
 
--- | Pad the specified widget on the bottom.
+-- | Pad the specified widget on the bottom. If max padding is used,
+-- this grows greedily vertically; otherwise it defers to the padded
+-- widget.
 padBottom :: Padding -> Widget -> Widget
 padBottom padding p =
     let (f, sz) = case padding of
@@ -202,15 +209,18 @@ padBottom padding p =
         render $ (Widget Fixed Fixed $ return result) <=>
                  (f $ hLimit (result^.imageL.to V.imageWidth) $ fill ' ')
 
--- | Pad a widget on the left and right.
+-- | Pad a widget on the left and right. Defers to the padded widget for
+-- growth policy.
 padLeftRight :: Int -> Widget -> Widget
 padLeftRight c w = padLeft (Pad c) $ padRight (Pad c) w
 
--- | Pad a widget on the top and bottom.
+-- | Pad a widget on the top and bottom. Defers to the padded widget for
+-- growth policy.
 padTopBottom :: Int -> Widget -> Widget
 padTopBottom r w = padTop (Pad r) $ padBottom (Pad r) w
 
--- | Pad a widget on all sides.
+-- | Pad a widget on all sides. Defers to the padded widget for growth
+-- policy.
 padAll :: Int -> Widget -> Widget
 padAll v w = padLeftRight v $ padTopBottom v w
 
