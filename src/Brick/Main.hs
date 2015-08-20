@@ -9,6 +9,7 @@ module Brick.Main
   , continue
   , halt
   , suspendAndResume
+  , lookupViewport
 
   -- ** Viewport scrolling
   , viewportScroll
@@ -21,9 +22,6 @@ module Brick.Main
   , hScrollPage
   , hScrollToBeginning
   , hScrollToEnd
-
-  -- * Viewport data retrieval
-  , lookupViewport
 
   -- * Cursor management functions
   , neverShowCursor
