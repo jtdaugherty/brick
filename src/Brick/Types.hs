@@ -78,7 +78,9 @@ class HandleEvent a where
     -- | Handle a Vty event
     handleEvent :: Event -> a -> EventM a
 
--- | The monad in which event handlers run.
+-- | The monad in which event handlers run. Although it may be tempting
+-- to dig into the reader value yourself, just use
+-- 'Brick.Main.lookupViewport'.
 type EventM a = ReaderT (M.Map Name Viewport) (StateT EventState IO) a
 
 -- | Widget growth policies. These policies communicate to layout
