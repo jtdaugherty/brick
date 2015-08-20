@@ -29,6 +29,7 @@ where
 
 import Control.Lens (Field1, Field2, _1, _2, Lens', makeLenses)
 import Data.String
+import Data.Monoid
 import qualified Data.Map as M
 import Graphics.Vty (DisplayRegion)
 

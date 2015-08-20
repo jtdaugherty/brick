@@ -10,7 +10,6 @@ import Control.Lens ((^.), (&), (%~))
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Reader
 import Data.Default
-import Data.Monoid ((<>), mempty)
 import qualified Graphics.Vty as V
 
 import Brick.Types
