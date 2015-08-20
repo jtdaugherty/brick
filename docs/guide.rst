@@ -222,6 +222,59 @@ handler is finished. We have three choices:
   suspend your interface and execute some other program that needs to
   gain control of the terminal (such as an external editor).
 
+The HandleEvent Type Class
+**************************
+
+Event handlers are responsible for transforming the application state.
+While you can use ordinary methods to do this such as pattern matching
+and pure function calls, some widget state types such as the ones
+provided by the ``Brick.Widgets.List`` and ``Brick.Widgets.Edit``
+modules support another interface: the ``Brick.Types.HandleEvent`` type
+class.
+
+The ``HandleEvent`` type class has only one method:
+
+.. code:: haskell
+
+   handleEvent :: Event -> a -> EventM a
+
+Instances of ``HandleEvent`` provide reasonable default behavior for
+handling input events; for example, arrow keys change the ``List``
+selection and input keys modify the text in ``Editor`` states.
+
+Since ``handleEvent`` runs in ``EventM``, event handlers
+written this way have access to rendering viewport states via
+``Brick.Main.lookupViewport`` and the ``IO`` monad via ``liftIO``.
+
+To use ``handleEvent`` in your program, invoke it on the relevant piece
+of state in our event handler, e.g.,
+
+.. code:: haskell
+
+   myEvent :: s -> e -> EventM (Next s)
+   myEvent s e = continue =<< handleEvent e s
+
+This pattern works fine when your application state instances
+``HandleEvent``, but it can become unpleasant if the value on which
+you want to invoke ``handleEvent`` is embedded deeply within your
+application state. If you have chosen to generate lenses for your
+application state fields, you can use the convenience function
+``handleEventLensed`` by specifying your state, a lens, and the event:
+
+.. code:: haskell
+
+   myEvent :: s -> e -> EventM (Next s)
+   myEvent s e = continue =<< handleEventLensed s someLens e
+
+Compare that with the more verbose explicit version:
+
+.. code:: haskell
+
+   myEvent :: s -> e -> EventM (Next s)
+   myEvent s e = do
+     newVal <- handleEvent e (s^.someLens)
+     continue $ s & someLens .~ newVal
+
 Using Your Own Event Type
 *************************
 
@@ -419,8 +472,8 @@ always take up one row and 13 columns, but the string "Hello, world!"
 
 How widgets use space when rendered is described in two pieces of
 information in each ``Widget``: the widget's horizontal and vertical
-growth policies. These fields have type ``Brick.Widgets.Core.Size`` and
-can have the values ``Fixed`` and ``Greedy``.
+growth policies. These fields have type ``Brick.Types.Size`` and can
+have the values ``Fixed`` and ``Greedy``.
 
 A widget advertising a ``Fixed`` size in a given dimension is a widget
 that will always consume the same number of rows or columns no
@@ -562,8 +615,8 @@ Viewports
 =========
 
 A *viewport* is a scrollable window onto another widget. Viewports have
-a *scrolling direction* of type ``Brick.Widgets.Core.ViewportType``
-which can be one of:
+a *scrolling direction* of type ``Brick.Types.ViewportType`` which can
+be one of:
 
 * ``Horizontal``: the viewport can only scroll horizontally.
 * ``Vertical``: the viewport can only scroll vertically.
@@ -729,18 +782,18 @@ the *rendering function*, a function of type
 
    render :: RenderM Result
 
-which is a function returning a ``Brick.Widgets.Core.Result``:
+which is a function returning a ``Brick.Types.Result``:
 
 .. code:: haskell
 
     data Result =
         Result { image :: Graphics.Vty.Image
                , cursors :: [Brick.Types.CursorLocation]
-               , visibilityRequests :: [Brick.Widgets.Core.VisibilityRequest]
+               , visibilityRequests :: [Brick.Types.VisibilityRequest]
                }
 
 The ``RenderM`` monad gives us access to the rendering context (see `How
-Widgets and Rendering Work`_) via the ``Brick.Widgets.Core.getContext``
+Widgets and Rendering Work`_) via the ``Brick.Types.getContext``
 function. The context type is:
 
 .. code:: haskell
@@ -774,7 +827,7 @@ The most important fields of the context are the rendering area fields
 determine how much space your widget has to render.
 
 To perform an attribute lookup in the attribute map for the context's
-current attribute, use ``Brick.Widgets.Core.attrL``.
+current attribute, use ``Brick.Types.attrL``.
 
 For example, to build a widget that always fills the available width and
 height with a fill character using the current attribute, we could
