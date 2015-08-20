@@ -52,6 +52,8 @@ import Brick.AttrMap
 -- by the list.  Lists handle the following events by default:
 --
 -- * Up/down arrow keys: move cursor of selected item
+-- * Page up / page down keys: move cursor of selected item by one page
+--   at a time (based on the number of items shown)
 data List e =
     List { listElements :: !(V.Vector e)
          , listSelected :: !(Maybe Int)
