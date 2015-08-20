@@ -193,6 +193,11 @@ runVty vty chan app appState rs = do
     (next, scrollReqs) <- runStateT (runReaderT (appHandleEvent app appState e) (viewportMap rs)) []
     return (next, firstRS { scrollRequests = scrollReqs })
 
+-- | Given a viewport name, get the viewport's size and offset
+-- information from the most recent rendering. Returns 'Nothing' if
+-- no such state could be found, either because the name was invalid
+-- or because no rendering has occurred (e.g. in an 'appStartEvent'
+-- handler).
 lookupViewport :: Name -> EventM (Maybe Viewport)
 lookupViewport = asks . M.lookup
 
