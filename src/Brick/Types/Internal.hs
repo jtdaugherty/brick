@@ -91,7 +91,7 @@ data ViewportType = Vertical
 
 type EventState = [(Name, ScrollRequest)]
 
--- | The type of actions to take in an event handler.
+-- | The type of actions to take upon completion of an event handler.
 data Next a = Continue a
             | SuspendAndResume (IO a)
             | Halt a
