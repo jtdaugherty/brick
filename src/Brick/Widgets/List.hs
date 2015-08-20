@@ -72,7 +72,7 @@ instance HandleEvent (List e) where
                   EvKey KUp [] -> return $ listMoveUp theList
                   EvKey KDown [] -> return $ listMoveDown theList
                   EvKey KHome [] -> return $ listMoveTo 0 theList
-                  EvKey KEnd [] -> return $ listMoveTo (length $ listElements theList) theList
+                  EvKey KEnd [] -> return $ listMoveTo (V.length $ listElements theList) theList
                   EvKey KPageDown [] -> do
                       v <- lookupViewport (theList^.listNameL)
                       case v of
