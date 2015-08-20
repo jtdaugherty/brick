@@ -1,8 +1,6 @@
 module Main where
 
-import Brick.Main (simpleMain)
-import Brick.Types (Widget)
-import Brick.Widgets.Core (str)
+import Brick
 
 ui :: Widget
 ui = str "Hello, world!"
