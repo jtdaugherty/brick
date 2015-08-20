@@ -22,6 +22,9 @@ module Brick.Main
   , hScrollToBeginning
   , hScrollToEnd
 
+  -- * Viewport data retrieval
+  , lookupViewport
+
   -- * Cursor management functions
   , neverShowCursor
   , showFirstCursor
@@ -32,7 +35,9 @@ where
 import Control.Exception (finally)
 import Control.Lens ((^.))
 import Control.Monad (forever)
+import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.State
+import Control.Monad.Trans.Reader
 import Control.Concurrent (forkIO, Chan, newChan, readChan, writeChan, killThread)
 import Data.Default
 import Data.Maybe (listToMaybe)
@@ -50,7 +55,7 @@ import Graphics.Vty
   , mkVty
   )
 
-import Brick.Types (Direction, Widget, rowL, columnL, CursorLocation(..), cursorLocationNameL, Name(..), EventM)
+import Brick.Types (Viewport, Direction, Widget, rowL, columnL, CursorLocation(..), cursorLocationNameL, Name(..), EventM)
 import Brick.Types.Internal (ScrollRequest(..), RenderState(..), Next(..))
 import Brick.Widgets.Internal (renderFinal)
 import Brick.AttrMap
@@ -171,7 +176,7 @@ customMain buildVty chan app initialAppState = do
                     newAppState <- action
                     run newRS newAppState
 
-    (st, initialScrollReqs) <- runStateT (appStartEvent app initialAppState) []
+    (st, initialScrollReqs) <- runStateT (runReaderT (appStartEvent app initialAppState) M.empty) []
     let initialRS = RS M.empty initialScrollReqs
     run initialRS st
 
@@ -185,8 +190,11 @@ runVty :: Vty -> Chan e -> App s e -> s -> RenderState -> IO (Next s, RenderStat
 runVty vty chan app appState rs = do
     firstRS <- renderApp vty app appState rs
     e <- readChan chan
-    (next, scrollReqs) <- runStateT (appHandleEvent app appState e) []
+    (next, scrollReqs) <- runStateT (runReaderT (appHandleEvent app appState e) (viewportMap rs)) []
     return (next, firstRS { scrollRequests = scrollReqs })
+
+lookupViewport :: Name -> EventM (Maybe Viewport)
+lookupViewport = asks . M.lookup
 
 withVty :: IO Vty -> (Vty -> IO a) -> IO a
 withVty buildVty useVty = do
@@ -265,14 +273,14 @@ data ViewportScroll =
 viewportScroll :: Name -> ViewportScroll
 viewportScroll n =
     ViewportScroll { viewportName = n
-                   , hScrollPage = \dir -> modify ((n, HScrollPage dir) :)
-                   , hScrollBy = \i -> modify ((n, HScrollBy i) :)
-                   , hScrollToBeginning = modify ((n, HScrollToBeginning) :)
-                   , hScrollToEnd = modify ((n, HScrollToEnd) :)
-                   , vScrollPage = \dir -> modify ((n, HScrollPage dir) :)
-                   , vScrollBy = \i -> modify ((n, VScrollBy i) :)
-                   , vScrollToBeginning = modify ((n, VScrollToBeginning) :)
-                   , vScrollToEnd = modify ((n, VScrollToEnd) :)
+                   , hScrollPage = \dir -> lift $ modify ((n, HScrollPage dir) :)
+                   , hScrollBy = \i -> lift $ modify ((n, HScrollBy i) :)
+                   , hScrollToBeginning = lift $ modify ((n, HScrollToBeginning) :)
+                   , hScrollToEnd = lift $ modify ((n, HScrollToEnd) :)
+                   , vScrollPage = \dir -> lift $ modify ((n, HScrollPage dir) :)
+                   , vScrollBy = \i -> lift $ modify ((n, VScrollBy i) :)
+                   , vScrollToBeginning = lift $ modify ((n, VScrollToBeginning) :)
+                   , vScrollToEnd = lift $ modify ((n, VScrollToEnd) :)
                    }
 
 -- | Continue running the event loop with the specified application

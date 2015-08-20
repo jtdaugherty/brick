@@ -55,6 +55,7 @@ import Control.Monad.Trans.Reader
 import Graphics.Vty (Event, Image, emptyImage, Attr)
 import Data.Default (Default(..))
 import Data.Functor.Contravariant
+import qualified Data.Map as M
 
 import Brick.Types.TH
 import Brick.Types.Internal
@@ -72,7 +73,7 @@ class HandleEvent a where
     handleEvent :: Event -> a -> EventM a
 
 -- | The monad in which event handlers run.
-type EventM a = StateT EventState IO a
+type EventM a = ReaderT (M.Map Name Viewport) (StateT EventState IO) a
 
 -- | Widget growth policies. These policies communicate to layout
 -- algorithms how a widget uses space when being rendered. These
