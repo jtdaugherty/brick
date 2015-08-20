@@ -19,7 +19,6 @@ import Data.Default (def)
 
 import Graphics.Vty (Attr, horizCat, string)
 
-import Brick.Widgets.Core
 import Brick.AttrMap
 import Brick.Types
 
