@@ -35,7 +35,7 @@ module Brick.Widgets.List
 where
 
 import Control.Applicative ((<$>))
-import Control.Lens ((^.), (&), (.~))
+import Control.Lens ((^.), (&), (.~), _2)
 import Data.Monoid ((<>))
 import Data.Maybe (fromMaybe)
 import qualified Data.Algorithm.Diff as D
@@ -43,6 +43,7 @@ import Graphics.Vty (Event(..), Key(..))
 import qualified Data.Vector as V
 
 import Brick.Types
+import Brick.Main (lookupViewport)
 import Brick.Widgets.Core
 import Brick.Util (clamp)
 import Brick.AttrMap
@@ -55,17 +56,28 @@ data List e =
     List { listElements :: !(V.Vector e)
          , listSelected :: !(Maybe Int)
          , listName :: Name
+         , listItemHeight :: Int
          }
 
 suffixLenses ''List
 
 instance HandleEvent (List e) where
-    handleEvent e theList = return $ f theList
+    handleEvent e theList = f
         where
             f = case e of
-                  EvKey KUp [] -> listMoveUp
-                  EvKey KDown [] -> listMoveDown
-                  _ -> id
+                  EvKey KUp [] -> return $ listMoveUp theList
+                  EvKey KDown [] -> return $ listMoveDown theList
+                  EvKey KPageDown [] -> do
+                      v <- lookupViewport (theList^.listNameL)
+                      case v of
+                          Nothing -> return theList
+                          Just vp -> return $ listMoveBy (vp^.vpSize._2 `div` theList^.listItemHeightL) theList
+                  EvKey KPageUp [] -> do
+                      v <- lookupViewport (theList^.listNameL)
+                      case v of
+                          Nothing -> return theList
+                          Just vp -> return $ listMoveBy (negate $ vp^.vpSize._2 `div` theList^.listItemHeightL) theList
+                  _ -> return theList
 
 -- | The top-level attribute used for the entire list.
 listAttr :: AttrName
