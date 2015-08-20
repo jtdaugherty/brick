@@ -61,9 +61,7 @@ appEvent st ev =
     case ev of
         V.EvKey V.KEsc [] -> M.halt st
         V.EvKey (V.KChar '\t') [] -> M.continue $ switchEditors st
-        _ -> do
-            e <- T.handleEvent ev (st ^. currentEditorL st)
-            M.continue $ st & currentEditorL st .~ e
+        _ -> M.continue =<< T.handleEventLensed st (currentEditorL st) ev
 
 initialState :: St
 initialState =

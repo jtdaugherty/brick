@@ -1,5 +1,6 @@
 -- | Basic types used by this library.
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE RankNTypes #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Brick.Types
   ( Location(..)
@@ -9,6 +10,7 @@ module Brick.Types
   , cursorLocationL
   , cursorLocationNameL
   , HandleEvent(..)
+  , handleEventLensed
   , Name(..)
   , suffixLenses
   , Widget(..)
@@ -54,7 +56,7 @@ module Brick.Types
   )
 where
 
-import Control.Lens (_1, _2, to, (^.))
+import Control.Lens (_1, _2, to, (^.), (&), (.~), Lens')
 import Data.Monoid (Monoid(..))
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Reader
@@ -77,6 +79,24 @@ data Padding = Pad Int
 class HandleEvent a where
     -- | Handle a Vty event
     handleEvent :: Event -> a -> EventM a
+
+-- | A convenience function for handling events intended for values
+-- that are targets of lenses in your application state. This function
+-- obtains the target value of the specified lens, invokes 'handleEvent'
+-- on it, and stores the resulting transformed value back in the state
+-- using the lens.
+handleEventLensed :: (HandleEvent b)
+                  => a
+                  -- ^ The state value.
+                  -> Lens' a b
+                  -- ^ The lens to use to extract and store the target
+                  -- of the event.
+                  -> Event
+                  -- ^ The event to handle.
+                  -> EventM a
+handleEventLensed v target ev = do
+    newB <- handleEvent ev (v^.target)
+    return $ v & target .~ newB
 
 -- | The monad in which event handlers run. Although it may be tempting
 -- to dig into the reader value yourself, just use
