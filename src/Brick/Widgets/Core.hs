@@ -8,9 +8,7 @@ module Brick.Widgets.Core
     emptyWidget
   , raw
   , txt
-  , multilineTxt
   , str
-  , multilineStr
   , fill
 
   -- * Padding
@@ -121,19 +119,10 @@ addCursorOffset off r =
 unrestricted :: Int
 unrestricted = 100000
 
--- | Build a widget from a one-line 'String'.
+-- | Build a widget from a 'String'. Breaks newlines up and space-pads
+-- short lines out to the length of the longest line.
 str :: String -> Widget
 str s =
-    Widget Fixed Fixed $ do
-      c <- getContext
-      return $ def & imageL .~ (V.string (c^.attrL) s)
-
--- | Build a widget from a multi-line 'String'. Breaks newlines up and
--- space-pads short lines out to the length of the longest line. If you
--- know that your string is only one line, use 'str' instead since it is
--- faster.
-multilineStr :: String -> Widget
-multilineStr s =
     Widget Fixed Fixed $ do
       c <- getContext
       let theLines = lines s
@@ -152,11 +141,6 @@ multilineStr s =
 -- 'str'.
 txt :: T.Text -> Widget
 txt = str . T.unpack
-
--- | Build a widget from a multi-line 'T.Text' value. Behaves the same as
--- 'multilineStr'.
-multilineTxt :: T.Text -> Widget
-multilineTxt = multilineStr . T.unpack
 
 -- | Pad the specified widget on the left. If max padding is used, this
 -- grows greedily horizontally; otherwise it defers to the padded

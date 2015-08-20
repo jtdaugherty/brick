@@ -14,7 +14,6 @@ import Brick.Widgets.Core
   , hLimit
   , vLimit
   , str
-  , multilineStr
   )
 import qualified Brick.Widgets.Center as C
 import qualified Brick.Widgets.Edit as E
@@ -66,8 +65,8 @@ appEvent st ev =
 initialState :: St
 initialState =
     St firstEditor
-       (E.editor firstEditor (multilineStr . unlines) Nothing "")
-       (E.editor secondEditor (multilineStr . unlines) (Just 2) "")
+       (E.editor firstEditor (str . unlines) Nothing "")
+       (E.editor secondEditor (str . unlines) (Just 2) "")
 
 theMap :: A.AttrMap
 theMap = A.attrMap V.defAttr

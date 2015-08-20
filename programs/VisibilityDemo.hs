@@ -24,7 +24,6 @@ import Brick.Widgets.Core
   , hBox
   , vBox
   , viewport
-  , multilineStr
   , str
   , visible
   )
@@ -63,7 +62,7 @@ drawUi st = [ui]
     where
         ui = C.center $ hLimit 60 $ vLimit 30 $
              vBox [ B.border $ vBox [ pair, B.hBorder, singleton ]
-                  , multilineStr $ "- Up/down arrow keys scroll the top-left viewport\n" <>
+                  , str $ "- Up/down arrow keys scroll the top-left viewport\n" <>
                           "- Left/right arrow keys scroll the top-right viewport\n" <>
                           "- Ctrl-arrow keys move the bottom viewport"
                   ]
