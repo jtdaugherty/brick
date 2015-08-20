@@ -68,9 +68,9 @@ suffixLenses ''Dialog
 instance HandleEvent (Dialog a) where
     handleEvent ev d =
         case ev of
-            EvKey (KChar '\t') [] -> nextButtonBy 1 d
-            EvKey KBackTab [] -> nextButtonBy (-1) d
-            _ -> d
+            EvKey (KChar '\t') [] -> return $ nextButtonBy 1 d
+            EvKey KBackTab [] -> return $ nextButtonBy (-1) d
+            _ -> return d
 
 -- | Create a dialog.
 dialog :: Name

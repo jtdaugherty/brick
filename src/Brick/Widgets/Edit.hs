@@ -72,7 +72,7 @@ instance HandleEvent Editor where
                   EvKey KRight [] -> Z.moveRight
                   EvKey KBS [] -> Z.deletePrevChar
                   _ -> id
-        in applyEdit f ed
+        in return $ applyEdit f ed
 
 -- | Construct an editor.
 editor :: Name

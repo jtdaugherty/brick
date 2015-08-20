@@ -59,7 +59,7 @@ data List e =
 suffixLenses ''List
 
 instance HandleEvent (List e) where
-    handleEvent e theList = f theList
+    handleEvent e theList = return $ f theList
         where
             f = case e of
                   EvKey KUp [] -> listMoveUp

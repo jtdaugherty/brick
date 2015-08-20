@@ -31,7 +31,7 @@ appEvent d ev =
     case ev of
         V.EvKey V.KEsc [] -> M.halt d
         V.EvKey V.KEnter [] -> M.halt d
-        _ -> M.continue $ T.handleEvent ev d
+        _ -> M.continue =<< T.handleEvent ev d
 
 initialState :: D.Dialog Choice
 initialState = D.dialog "dialog" (Just "Title") (Just (0, choices)) 50

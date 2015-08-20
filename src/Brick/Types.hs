@@ -69,7 +69,7 @@ data Padding = Pad Int
 -- | The class of types that provide some basic event-handling.
 class HandleEvent a where
     -- | Handle a Vty event
-    handleEvent :: Event -> a -> a
+    handleEvent :: Event -> a -> EventM a
 
 -- | The monad in which event handlers run.
 type EventM a = StateT EventState IO a

@@ -58,7 +58,7 @@ appEvent l e =
 
         V.EvKey V.KEsc [] -> M.halt l
 
-        ev -> M.continue $ T.handleEvent ev l
+        ev -> M.continue =<< T.handleEvent ev l
 
 listDrawElement :: Bool -> Int -> Widget
 listDrawElement sel i =
