@@ -67,10 +67,15 @@ data VisibilityRequest =
        }
        deriving Show
 
+-- | Describes the state of a viewport as it appears as its most recent
+-- rendering.
 data Viewport =
     VP { _vpLeft :: Int
+       -- ^ The column offset of left side of the viewport.
        , _vpTop :: Int
+       -- ^ The row offset of the top of the viewport.
        , _vpSize :: DisplayRegion
+       -- ^ The size of the viewport.
        }
        deriving Show
 
