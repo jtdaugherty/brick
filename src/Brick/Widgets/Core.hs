@@ -234,14 +234,16 @@ fill ch =
 
 -- | Vertical box layout: put the specified widgets one above the other
 -- in the specified order (uppermost first). Defers growth policies to
--- the growth policies of both widgets.
+-- the growth policies of the contained widgets (if any are greedy, so
+-- is the box).
 vBox :: [Widget] -> Widget
 vBox [] = emptyWidget
 vBox pairs = renderBox vBoxRenderer pairs
 
 -- | Horizontal box layout: put the specified widgets next to each other
 -- in the specified order (leftmost first). Defers growth policies to
--- the growth policies of both widgets.
+-- the growth policies of the contained widgets (if any are greedy, so
+-- is the box).
 hBox :: [Widget] -> Widget
 hBox [] = emptyWidget
 hBox pairs = renderBox hBoxRenderer pairs
@@ -397,7 +399,8 @@ renderBox br ws = do
 
 -- | Limit the space available to the specified widget to the specified
 -- number of columns. This is important for constraining the horizontal
--- growth of otherwise-greedy widgets.
+-- growth of otherwise-greedy widgets. This is non-greedy horizontally
+-- and defers to the limited widget vertically.
 hLimit :: Int -> Widget -> Widget
 hLimit w p =
     Widget Fixed (vSize p) $ do
@@ -405,7 +408,8 @@ hLimit w p =
 
 -- | Limit the space available to the specified widget to the specified
 -- number of rows. This is important for constraining the vertical
--- growth of otherwise-greedy widgets.
+-- growth of otherwise-greedy widgets. This is non-greedy vertically and
+-- defers to the limited widget horizontally.
 vLimit :: Int -> Widget -> Widget
 vLimit h p =
     Widget (hSize p) Fixed $ do
@@ -453,6 +457,7 @@ raw :: V.Image -> Widget
 raw img = Widget Fixed Fixed $ return $ def & imageL .~ img
 
 -- | Translate the specified widget by the specified offset amount.
+-- Defers to the translated width for growth policy.
 translateBy :: Location -> Widget -> Widget
 translateBy off p =
     Widget (hSize p) (vSize p) $ do
@@ -461,7 +466,7 @@ translateBy off p =
              $ result & imageL %~ (V.translate (off^.columnL) (off^.rowL))
 
 -- | Crop the specified widget on the left by the specified number of
--- columns.
+-- columns. Defers to the translated width for growth policy.
 cropLeftBy :: Int -> Widget -> Widget
 cropLeftBy cols p =
     Widget (hSize p) (vSize p) $ do
@@ -472,7 +477,7 @@ cropLeftBy cols p =
              $ result & imageL %~ cropped
 
 -- | Crop the specified widget on the right by the specified number of
--- columns.
+-- columns. Defers to the translated width for growth policy.
 cropRightBy :: Int -> Widget -> Widget
 cropRightBy cols p =
     Widget (hSize p) (vSize p) $ do
@@ -482,7 +487,7 @@ cropRightBy cols p =
       return $ result & imageL %~ cropped
 
 -- | Crop the specified widget on the top by the specified number of
--- rows.
+-- rows. Defers to the translated width for growth policy.
 cropTopBy :: Int -> Widget -> Widget
 cropTopBy rows p =
     Widget (hSize p) (vSize p) $ do
@@ -493,7 +498,7 @@ cropTopBy rows p =
              $ result & imageL %~ cropped
 
 -- | Crop the specified widget on the bottom by the specified number of
--- rows.
+-- rows. Defers to the translated width for growth policy.
 cropBottomBy :: Int -> Widget -> Widget
 cropBottomBy rows p =
     Widget (hSize p) (vSize p) $ do
