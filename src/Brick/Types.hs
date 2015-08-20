@@ -3,30 +3,29 @@
 {-# LANGUAGE RankNTypes #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Brick.Types
-  ( Location(..)
+  ( -- * The Widget type
+    Widget(..)
+
+    -- * Location types and lenses
+  , Location(..)
   , locL
   , TerminalLocation(..)
   , CursorLocation(..)
   , cursorLocationL
   , cursorLocationNameL
-  , HandleEvent(..)
-  , handleEventLensed
-  , Name(..)
-  , suffixLenses
-  , Widget(..)
-  , Size(..)
-  , Direction(..)
 
+  -- * Viewports
   , Viewport(..)
+  , ViewportType(..)
   , vpSize
   , vpTop
   , vpLeft
 
-  , ViewportType(..)
-  , Padding(..)
-
+  -- * Event-handling types
   , EventM
   , Next
+  , HandleEvent(..)
+  , handleEventLensed
 
   -- * Rendering infrastructure
   , RenderM
@@ -44,7 +43,8 @@ module Brick.Types
   -- ** Rendering results
   , Result(..)
   , lookupAttrName
-  -- ** Result lenses
+
+  -- ** Rendering result lenses
   , imageL
   , cursorsL
   , visibilityRequestsL
@@ -53,6 +53,16 @@ module Brick.Types
   , VisibilityRequest(..)
   , vrPositionL
   , vrSizeL
+
+  -- * Making lenses
+  , suffixLenses
+
+  -- * Miscellaneous
+  , Size(..)
+  , Padding(..)
+  , Direction(..)
+  , Name(..)
+
   )
 where
 
