@@ -247,7 +247,7 @@ written this way have access to rendering viewport states via
 ``Brick.Main.lookupViewport`` and the ``IO`` monad via ``liftIO``.
 
 To use ``handleEvent`` in your program, invoke it on the relevant piece
-of state in our event handler, e.g.,
+of state in your event handler, e.g.,
 
 .. code:: haskell
 
