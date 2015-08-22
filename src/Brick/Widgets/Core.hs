@@ -562,17 +562,6 @@ viewport vpname typ p =
 
       initialResult <- render released
 
-      -- If the sub-rendering requested visibility, update the scroll
-      -- state accordingly
-      when (not $ null $ initialResult^.visibilityRequestsL) $ do
-          Just vp <- lift $ gets $ (^.viewportMapL.to (M.lookup vpname))
-          let rq = head $ initialResult^.visibilityRequestsL
-              updatedVp = case typ of
-                  Both -> scrollToView Horizontal rq $ scrollToView Vertical rq vp
-                  Horizontal -> scrollToView typ rq vp
-                  Vertical -> scrollToView typ rq vp
-          lift $ modify (& viewportMapL %~ (M.insert vpname updatedVp))
-
       -- If the rendering state includes any scrolling requests for this
       -- viewport, apply those
       reqs <- lift $ gets $ (^.scrollRequestsL)
@@ -590,6 +579,17 @@ viewport vpname typ p =
                               applyRequests rqs v
           lift $ modify (& viewportMapL %~ (M.insert vpname updatedVp))
           return ()
+
+      -- If the sub-rendering requested visibility, update the scroll
+      -- state accordingly
+      when (not $ null $ initialResult^.visibilityRequestsL) $ do
+          Just vp <- lift $ gets $ (^.viewportMapL.to (M.lookup vpname))
+          let rq = head $ initialResult^.visibilityRequestsL
+              updatedVp = case typ of
+                  Both -> scrollToView Horizontal rq $ scrollToView Vertical rq vp
+                  Horizontal -> scrollToView typ rq vp
+                  Vertical -> scrollToView typ rq vp
+          lift $ modify (& viewportMapL %~ (M.insert vpname updatedVp))
 
       -- Get the viewport state now that it has been updated.
       Just vp <- lift $ gets (M.lookup vpname . (^.viewportMapL))
