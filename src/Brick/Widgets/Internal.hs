@@ -1,3 +1,5 @@
+{-# LANGUAGE BangPatterns #-}
+
 module Brick.Widgets.Internal
   ( renderFinal
   , cropToContext
@@ -24,7 +26,7 @@ renderFinal :: AttrMap
             -> (RenderState, V.Picture, Maybe CursorLocation)
 renderFinal aMap layerRenders sz chooseCursor rs = (newRS, pic, theCursor)
     where
-        (layerResults, newRS) = flip runState rs $ sequence $
+        (layerResults, !newRS) = flip runState rs $ sequence $
             (\p -> runReaderT p ctx) <$>
             (render <$> cropToContext <$> layerRenders)
         ctx = Context def (fst sz) (snd sz) def aMap
