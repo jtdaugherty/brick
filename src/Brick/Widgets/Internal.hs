@@ -1,5 +1,4 @@
 {-# LANGUAGE BangPatterns #-}
-
 module Brick.Widgets.Internal
   ( renderFinal
   , cropToContext
