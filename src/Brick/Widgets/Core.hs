@@ -78,6 +78,7 @@ import qualified Data.Function as DF
 import Data.List (sortBy, partition)
 import Control.Lens (Lens')
 import qualified Graphics.Vty as V
+import Control.DeepSeq
 
 import Brick.Types
 import Brick.Types.Internal
@@ -125,10 +126,11 @@ str :: String -> Widget
 str s =
     Widget Fixed Fixed $ do
       c <- getContext
-      let theLines = lines s
+      let theLines = fixEmpty <$> (dropUnused . lines) s
           fixEmpty [] = " "
           fixEmpty l = l
-      case fixEmpty <$> theLines of
+          dropUnused l = take (availWidth c) <$> take (availHeight c) l
+      case force theLines of
           [] -> return def
           [one] -> return $ def & imageL .~ (V.string (c^.attrL) one)
           multiple ->
