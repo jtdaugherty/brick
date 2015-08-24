@@ -87,7 +87,8 @@ library
                        contravariant,
                        text,
                        text-zipper >= 0.2.1,
-                       template-haskell
+                       template-haskell,
+                       deepseq >= 1.4 && < 1.5
 
 executable brick-visibility-demo
   if !flag(demos)
