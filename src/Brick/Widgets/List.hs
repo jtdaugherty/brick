@@ -116,7 +116,7 @@ renderList l drawElem =
 
 drawListElements :: List e -> (Bool -> e -> Widget) -> Widget
 drawListElements l drawElem =
-    Widget Fixed Fixed $ do
+    Widget Greedy Greedy $ do
         c <- getContext
 
         let es = V.slice start num (l^.listElementsL)
