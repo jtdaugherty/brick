@@ -2,6 +2,19 @@
 Brick changelog
 ---------------
 
+0.2.1
+-----
+
+Bug fixes:
+* List:
+  * Fixed size policy of lists so that rather than being Fixed/Fixed,
+    they are Greedy/Greedy. This resolves issues that arise when the box
+    layout widget renders a list widget alongside a Fixed/Fixed one.
+    (Closes issue #17, thanks Karl Voelker)
+* Scrolling:
+  * vScrollPage actually scrolls vertically now rather than horizontally
+    (Thanks Hans-Peter Deifel <hpd@hpdeifel.de>)
+
 0.2
 ---
 
