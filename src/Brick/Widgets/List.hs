@@ -243,16 +243,13 @@ merge :: (Eq e) => Int -> Int -> [D.Diff e] -> Int
 merge _   sel []                 = sel
 merge idx sel (h:hs) | idx > sel = sel
                      | otherwise = case h of
-    D.Both _ _ -> merge sel (idx + 1) hs
+    D.Both _ _ -> merge (idx + 1) sel hs
 
     -- element removed in new list
-    D.First _  -> let newSel = if idx < sel
-                               then sel - 1
-                               else sel
-                  in merge newSel idx hs
+    D.First _  -> merge idx (sel - 1) hs
 
     -- element added in new list
     D.Second _ -> let newSel = if idx <= sel
                                then sel + 1
                                else sel
-                  in merge newSel (idx + 1) hs
+                  in merge (idx + 1) newSel hs
