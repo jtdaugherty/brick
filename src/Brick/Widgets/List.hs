@@ -237,8 +237,11 @@ listSelectedElement l = do
 -- the corresponding index in `ys`.
 maintainSel :: (Eq e) => [e] -> [e] -> Int -> Int
 maintainSel xs ys sel = let hunks = D.getDiff xs ys
-                        in merge 0 sel hunks
+                        in clamp 0 (length ys - 1) $ merge 0 sel hunks
 
+-- Given (0, sel, diff), computes the value 'sel' would have after 'diff'
+-- was applied. Retuns -1 if the selected item doesn't appear anywhere in
+-- the replacement list.
 merge :: (Eq e) => Int -> Int -> [D.Diff e] -> Int
 merge _   sel []                 = sel
 merge idx sel (h:hs) | idx > sel = sel
