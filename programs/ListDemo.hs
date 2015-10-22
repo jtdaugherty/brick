@@ -4,6 +4,7 @@ module Main where
 import Control.Lens ((^.))
 import Control.Monad (void)
 import Data.Monoid
+import Data.Maybe (fromMaybe)
 import qualified Graphics.Vty as V
 
 import qualified Brick.Main as M
@@ -26,7 +27,7 @@ import Brick.Widgets.Core
   )
 import Brick.Util (fg, on)
 
-drawUI :: L.List Int -> [Widget]
+drawUI :: (Show a) => L.List a -> [Widget]
 drawUI l = [ui]
     where
         label = str "Item " <+> cur <+> str " of " <+> total
@@ -44,12 +45,13 @@ drawUI l = [ui]
                               , C.hCenter $ str "Press Esc to exit."
                               ]
 
-appEvent :: L.List Int -> V.Event -> T.EventM (T.Next (L.List Int))
+appEvent :: L.List Char -> V.Event -> T.EventM (T.Next (L.List Char))
 appEvent l e =
     case e of
         V.EvKey (V.KChar '+') [] ->
-            let el = V.length $ l^.(L.listElementsL)
-            in M.continue $ L.listInsert el el l
+            let el = nextElement (L.listElements l)
+                pos = V.length $ l^.(L.listElementsL)
+            in M.continue $ L.listInsert pos el l
 
         V.EvKey (V.KChar '-') [] ->
             case l^.(L.listSelectedL) of
@@ -59,16 +61,19 @@ appEvent l e =
         V.EvKey V.KEsc [] -> M.halt l
 
         ev -> M.continue =<< T.handleEvent ev l
+    where
+      nextElement :: V.Vector Char -> Char
+      nextElement v = fromMaybe '?' $ V.find (flip V.notElem v) (V.fromList ['a' .. 'z'])
 
-listDrawElement :: Bool -> Int -> Widget
-listDrawElement sel i =
+listDrawElement :: (Show a) => Bool -> a -> Widget
+listDrawElement sel a =
     let selStr s = if sel
                    then withAttr customAttr (str $ "<" <> s <> ">")
                    else str s
-    in C.hCenter $ str "Item " <+> (selStr $ show i)
+    in C.hCenter $ str "Item " <+> (selStr $ show a)
 
-initialState :: L.List Int
-initialState = L.list (T.Name "list") (V.fromList [0, 1, 2]) 1
+initialState :: L.List Char
+initialState = L.list (T.Name "list") (V.fromList ['a','b','c']) 1
 
 customAttr :: A.AttrName
 customAttr = L.listSelectedAttr <> "custom"
@@ -80,7 +85,7 @@ theMap = A.attrMap V.defAttr
     , (customAttr,            fg V.cyan)
     ]
 
-theApp :: M.App (L.List Int) V.Event
+theApp :: M.App (L.List Char) V.Event
 theApp =
     M.App { M.appDraw = drawUI
           , M.appChooseCursor = M.showFirstCursor
