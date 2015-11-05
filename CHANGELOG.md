@@ -2,6 +2,14 @@
 Brick changelog
 ---------------
 
+0.2.2
+-----
+
+Demo changes:
+* Improved the list demo by using characters instead of integers in the
+  demo list and cleaned up item-adding code (thanks Jøhannes Lippmann
+  <code@schauderbasis.de>)
+
 0.2.1
 -----
 
