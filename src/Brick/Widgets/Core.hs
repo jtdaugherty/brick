@@ -593,12 +593,28 @@ viewport vpname typ p =
                   Vertical -> scrollToView typ rq vp
           lift $ modify (& viewportMapL %~ (M.insert vpname updatedVp))
 
+      -- If the size of the rendering changes enough to make the
+      -- viewport offsets invalid, reset them
+      Just vp <- lift $ gets $ (^.viewportMapL.to (M.lookup vpname))
+      let img = initialResult^.imageL
+          fixTop v = if V.imageHeight img < v^.vpSize._2
+                   then v & vpTop .~ 0
+                   else v
+          fixLeft v = if V.imageWidth img < v^.vpSize._1
+                   then v & vpLeft .~ 0
+                   else v
+          updateVp = case typ of
+              Both -> fixLeft . fixTop
+              Horizontal -> fixLeft
+              Vertical -> fixTop
+      lift $ modify (& viewportMapL %~ (M.insert vpname (updateVp vp)))
+
       -- Get the viewport state now that it has been updated.
-      Just vp <- lift $ gets (M.lookup vpname . (^.viewportMapL))
+      Just vpFinal <- lift $ gets (M.lookup vpname . (^.viewportMapL))
 
       -- Then perform a translation of the sub-rendering to fit into the
       -- viewport
-      translated <- render $ translateBy (Location (-1 * vp^.vpLeft, -1 * vp^.vpTop))
+      translated <- render $ translateBy (Location (-1 * vpFinal^.vpLeft, -1 * vpFinal^.vpTop))
                            $ Widget Fixed Fixed $ return initialResult
 
       -- Return the translated result with the visibility requests
