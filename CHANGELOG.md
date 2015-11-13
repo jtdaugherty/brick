@@ -2,6 +2,15 @@
 Brick changelog
 ---------------
 
+0.2.3
+-----
+
+Bug fixes:
+* Fixed viewport behavior when the image in a viewport reduces its size
+  enough to render the viewport offsets invalid. Before, this behavior
+  caused a crash during image croppin in vty; now the behavior is
+  handled sanely (fixes #22; reported by Hans-Peter Deifel)
+
 0.2.2
 -----
 
