@@ -187,9 +187,7 @@ listRemove pos l | V.null (l^.listElementsL) = l
 -- 'Just') is not in the list bounds, zero is used instead.
 listReplace :: Eq e => V.Vector e -> Maybe Int -> List e -> List e
 listReplace es idx l =
-    let newSel = checkIdx <$> idx
-        checkIdx i = if i >= 0 && i < V.length es
-                     then i else 0
+    let newSel = clamp 0 (V.length es - 1) <$> idx
     in l & listSelectedL .~ newSel
          & listElementsL .~ es
 
