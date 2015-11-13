@@ -37,8 +37,6 @@ where
 import Control.Applicative ((<$>))
 import Control.Lens ((^.), (&), (.~), _2)
 import Data.Monoid ((<>))
-import Data.Maybe (fromMaybe)
-import qualified Data.Algorithm.Diff as D
 import Graphics.Vty (Event(..), Key(..))
 import qualified Data.Vector as V
 
@@ -184,20 +182,16 @@ listRemove pos l | V.null (l^.listElementsL) = l
     in l & listSelectedL .~ (if V.null es' then Nothing else Just newSel)
          & listElementsL .~ es'
 
--- | Replace the contents of a list with a new set of elements but
--- preserve the currently selected index.
-listReplace :: Eq e => V.Vector e -> List e -> List e
-listReplace es' l | es' == l^.listElementsL = l
-                  | otherwise =
-    let sel = fromMaybe 0 (l^.listSelectedL)
-        getNewSel es = case (V.null es, V.null es') of
-          (_, True)      -> Nothing
-          (True, False)  -> Just 0
-          (False, False) -> Just (maintainSel (V.toList es) (V.toList es') sel)
-        newSel = getNewSel (l^.listElementsL)
-
+-- | Replace the contents of a list with a new set of elements and
+-- update the new selected index. If the specified selected index (via
+-- 'Just') is not in the list bounds, zero is used instead.
+listReplace :: Eq e => V.Vector e -> Maybe Int -> List e -> List e
+listReplace es idx l =
+    let newSel = checkIdx <$> idx
+        checkIdx i = if i >= 0 && i < V.length es
+                     then i else 0
     in l & listSelectedL .~ newSel
-         & listElementsL .~ es'
+         & listElementsL .~ es
 
 -- | Move the list selected index up by one. (Moves the cursor up,
 -- subtracts one from the index.)
@@ -231,28 +225,3 @@ listSelectedElement :: List e -> Maybe (Int, e)
 listSelectedElement l = do
   sel <- l^.listSelectedL
   return (sel, (l^.listElementsL) V.! sel)
-
--- Assuming `xs` is an existing list that we want to update to match the
--- state of `ys`. Given a selected index in `xs`, the goal is to compute
--- the corresponding index in `ys`.
-maintainSel :: (Eq e) => [e] -> [e] -> Int -> Int
-maintainSel xs ys sel = let hunks = D.getDiff xs ys
-                        in merge 0 sel hunks
-
-merge :: (Eq e) => Int -> Int -> [D.Diff e] -> Int
-merge _   sel []                 = sel
-merge idx sel (h:hs) | idx > sel = sel
-                     | otherwise = case h of
-    D.Both _ _ -> merge sel (idx + 1) hs
-
-    -- element removed in new list
-    D.First _  -> let newSel = if idx < sel
-                               then sel - 1
-                               else sel
-                  in merge newSel idx hs
-
-    -- element added in new list
-    D.Second _ -> let newSel = if idx <= sel
-                               then sel + 1
-                               else sel
-                  in merge newSel (idx + 1) hs

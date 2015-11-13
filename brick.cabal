@@ -80,7 +80,6 @@ library
                        vty >= 5.3.1,
                        transformers,
                        data-default,
-                       Diff,
                        containers,
                        lens,
                        vector,
