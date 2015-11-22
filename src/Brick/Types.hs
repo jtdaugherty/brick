@@ -67,6 +67,7 @@ module Brick.Types
   )
 where
 
+import Control.Applicative
 import Control.Lens (_1, _2, to, (^.), (&), (.~), Lens')
 import Data.Monoid (Monoid(..))
 import Control.Monad.Trans.State.Lazy
