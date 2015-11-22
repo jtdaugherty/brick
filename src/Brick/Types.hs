@@ -1,6 +1,7 @@
 -- | Basic types used by this library.
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Brick.Types
   ( -- * The Widget type
@@ -22,7 +23,7 @@ module Brick.Types
   , vpLeft
 
   -- * Event-handling types
-  , EventM
+  , EventM(..)
   , Next
   , HandleEvent(..)
   , handleEventLensed
@@ -111,7 +112,10 @@ handleEventLensed v target ev = do
 -- | The monad in which event handlers run. Although it may be tempting
 -- to dig into the reader value yourself, just use
 -- 'Brick.Main.lookupViewport'.
-type EventM a = ReaderT (M.Map Name Viewport) (StateT EventState IO) a
+newtype EventM a =
+    EventM { runEventM :: ReaderT (M.Map Name Viewport) (StateT EventState IO) a
+           }
+           deriving (Functor, Applicative, Monad)
 
 -- | Widget growth policies. These policies communicate to layout
 -- algorithms how a widget uses space when being rendered. These
