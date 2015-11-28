@@ -107,7 +107,12 @@ list name es h =
 
 -- | Turn a list state value into a widget given an item drawing
 -- function.
-renderList :: List e -> (Bool -> e -> Widget) -> Widget
+renderList :: List e
+           -- ^ The List to be rendered
+           -> (Bool -> e -> Widget)
+           -- ^ Rendering function, True for the selected element
+           -> Widget
+           -- ^ rendered widget
 renderList l drawElem =
     withDefAttr listAttr $
     drawListElements l drawElem
