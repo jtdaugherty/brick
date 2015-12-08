@@ -102,7 +102,7 @@ Please file bug reports as GitHub issues.  For best results:
 
  - Clearly describe the behavior you expected ...
 
- - ... and include a mininal demonstration program that exhibits the
+ - ... and include a minimal demonstration program that exhibits the
    behavior you actually observed.
 
 Contributing
