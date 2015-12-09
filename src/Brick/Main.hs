@@ -135,7 +135,7 @@ data InternalNext a = InternalSuspendAndResume RenderState (IO a)
                     | InternalHalt a
 
 runWithNewVty :: IO Vty -> Chan e -> App s e -> RenderState -> s -> IO (InternalNext s)
-runWithNewVty buildVty chan app initialRS initialSt = do
+runWithNewVty buildVty chan app initialRS initialSt =
     withVty buildVty $ \vty -> do
         pid <- forkIO $ supplyVtyEvents vty (appLiftVtyEvent app) chan
         let runInner rs st = do

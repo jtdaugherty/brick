@@ -61,5 +61,5 @@ theApp =
         }
 
 main :: IO ()
-main = do
+main =
     void $ defaultMain theApp initialState

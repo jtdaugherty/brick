@@ -15,6 +15,7 @@ module Brick.Widgets.Center
 where
 
 import Control.Lens ((^.), (&), (.~), to)
+import Data.Maybe (fromMaybe)
 import Graphics.Vty (imageWidth, imageHeight, horizCat, charFill, vertCat)
 
 import Brick.Types
@@ -30,7 +31,7 @@ hCenter = hCenterWith Nothing
 -- to either side of the centered widget (defaults to space).
 hCenterWith :: Maybe Char -> Widget -> Widget
 hCenterWith mChar p =
-    let ch = maybe ' ' id mChar
+    let ch = fromMaybe ' ' mChar
     in Widget Greedy (vSize p) $ do
            result <- render p
            c <- getContext
@@ -60,7 +61,7 @@ vCenter = vCenterWith Nothing
 -- widget (defaults to space).
 vCenterWith :: Maybe Char -> Widget -> Widget
 vCenterWith mChar p =
-    let ch = maybe ' ' id mChar
+    let ch = fromMaybe ' ' mChar
     in Widget (hSize p) Greedy $ do
            result <- render p
            c <- getContext

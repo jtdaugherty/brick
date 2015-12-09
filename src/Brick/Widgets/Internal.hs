@@ -37,7 +37,7 @@ renderFinal aMap layerRenders sz chooseCursor rs = (newRS, pic, theCursor)
 -- dimensions in the rendering context.
 cropToContext :: Widget -> Widget
 cropToContext p =
-    Widget (hSize p) (vSize p) $ (render p >>= cropResultToContext)
+    Widget (hSize p) (vSize p) (render p >>= cropResultToContext)
 
 cropResultToContext :: Result -> RenderM Result
 cropResultToContext result = do

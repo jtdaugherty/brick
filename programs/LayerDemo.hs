@@ -8,12 +8,9 @@ import Data.Default
 import qualified Graphics.Vty as V
 
 import qualified Brick.Types as T
-import Brick.Types (rowL, columnL)
+import Brick.Types (rowL, columnL, Widget)
 import qualified Brick.Main as M
 import qualified Brick.Widgets.Border as B
-import Brick.Types
-  ( Widget
-  )
 import Brick.Widgets.Core
   ( translateBy
   , str
