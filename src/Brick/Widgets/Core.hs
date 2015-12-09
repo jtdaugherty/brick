@@ -65,8 +65,8 @@ module Brick.Widgets.Core
 where
 
 import Control.Applicative
-import Control.Lens ((^.), (.~), (&), (%~), to, _1, _2, each, to, ix)
-import Control.Monad (when)
+import Control.Lens ((^.), (.~), (&), (%~), to, _1, _2, each, to, ix, Lens')
+import Control.Monad ((>=>),when)
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Reader
 import Control.Monad.Trans.Class (lift)
@@ -76,7 +76,6 @@ import Data.Monoid ((<>), mempty)
 import qualified Data.Map as M
 import qualified Data.Function as DF
 import Data.List (sortBy, partition)
-import Control.Lens (Lens')
 import qualified Graphics.Vty as V
 import Control.DeepSeq
 
@@ -337,7 +336,7 @@ hBoxRenderer =
 -- returned along with the translated cursor positions and visibility
 -- requests.
 renderBox :: BoxRenderer -> [Widget] -> Widget
-renderBox br ws = do
+renderBox br ws =
     Widget (maximum $ hSize <$> ws) (maximum $ vSize <$> ws) $ do
       c <- getContext
 
@@ -389,7 +388,7 @@ renderBox br ws = do
 -- and defers to the limited widget vertically.
 hLimit :: Int -> Widget -> Widget
 hLimit w p =
-    Widget Fixed (vSize p) $ do
+    Widget Fixed (vSize p) $
       withReaderT (& availWidthL .~ w) $ render $ cropToContext p
 
 -- | Limit the space available to the specified widget to the specified
@@ -398,7 +397,7 @@ hLimit w p =
 -- defers to the limited widget horizontally.
 vLimit :: Int -> Widget -> Widget
 vLimit h p =
-    Widget (hSize p) Fixed $ do
+    Widget (hSize p) Fixed $
       withReaderT (& availHeightL .~ h) $ render $ cropToContext p
 
 -- | When drawing the specified widget, set the current attribute used
@@ -410,7 +409,7 @@ vLimit h p =
 -- 'withDefAttr'.
 withAttr :: AttrName -> Widget -> Widget
 withAttr an p =
-    Widget (hSize p) (vSize p) $ do
+    Widget (hSize p) (vSize p) $
       withReaderT (& ctxAttrNameL .~ an) (render p)
 
 -- | Update the attribute map while rendering the specified widget: set
@@ -426,7 +425,7 @@ withDefAttr an p =
 -- the specified transformation.
 updateAttrMap :: (AttrMap -> AttrMap) -> Widget -> Widget
 updateAttrMap f p =
-    Widget (hSize p) (vSize p) $ do
+    Widget (hSize p) (vSize p) $
         withReaderT (& ctxAttrMapL %~ f) (render p)
 
 -- | When rendering the specified widget, force all attribute lookups
@@ -554,7 +553,7 @@ viewport vpname typ p =
           release = case typ of
             Vertical -> vRelease
             Horizontal -> hRelease
-            Both -> \w -> vRelease w >>= hRelease
+            Both ->vRelease >=> hRelease
           released = case release p of
             Just w -> w
             Nothing -> case typ of

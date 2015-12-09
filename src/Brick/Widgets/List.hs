@@ -36,6 +36,7 @@ where
 
 import Control.Applicative ((<$>))
 import Control.Lens ((^.), (&), (.~), _2)
+import Data.Maybe (fromMaybe)
 import Data.Monoid ((<>))
 import Graphics.Vty (Event(..), Key(..))
 import qualified Data.Vector as V
@@ -123,9 +124,7 @@ drawListElements l drawElem =
         c <- getContext
 
         let es = V.slice start num (l^.listElementsL)
-            idx = case l^.listSelectedL of
-                Nothing -> 0
-                Just i -> i
+            idx = fromMaybe 0 (l^.listSelectedL)
 
             start = max 0 $ idx - numPerHeight + 1
             num = min (numPerHeight * 2) (V.length (l^.listElementsL) - start)

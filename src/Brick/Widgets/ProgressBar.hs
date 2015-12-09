@@ -9,6 +9,7 @@ module Brick.Widgets.ProgressBar
 where
 
 import Control.Lens ((^.))
+import Data.Maybe (fromMaybe)
 import Data.Monoid
 
 import Brick.Types
@@ -36,7 +37,7 @@ progressBar mLabel progress =
     Widget Greedy Fixed $ do
         c <- getContext
         let barWidth = c^.availWidthL
-            label = maybe "" id mLabel
+            label = fromMaybe "" mLabel
             labelWidth = length label
             spacesWidth = barWidth - labelWidth
             leftPart = replicate (spacesWidth `div` 2) ' '
