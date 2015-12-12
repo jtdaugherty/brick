@@ -2,6 +2,23 @@
 Brick changelog
 ---------------
 
+0.3
+---
+
+API changes:
+* Made EventM a newtype instead of a type alias
+* List: listReplace now takes the new selected index and no longer does
+element diffing
+
+Package changes:
+* Removed the dependency on the Diff package
+
+Misc:
+* Applied some hlint hints (thanks Markus Hauck <markus1189@gmail.com>)
+* Fixed a typo in the README (thanks Markus Hauck <markus1189@gmail.com>)
+* Improved the renderList documentation (thanks Profpatsch <mail@profpatsch.de>)
+* Types: added an explicit import of Applicative for older GHCs
+
 0.2.3
 -----
 
