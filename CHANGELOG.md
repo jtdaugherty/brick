@@ -2,6 +2,12 @@
 Brick changelog
 ---------------
 
+0.3.1
+-----
+
+Bug fixes:
+* EventM newtype again instances MonadIO (thanks Andrew Rademacher)
+
 0.3
 ---
 
