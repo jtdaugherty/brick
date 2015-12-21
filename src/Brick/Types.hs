@@ -76,6 +76,7 @@ import Graphics.Vty (Event, Image, emptyImage, Attr)
 import Data.Default (Default(..))
 import Data.Functor.Contravariant
 import qualified Data.Map as M
+import Control.Monad.IO.Class
 
 import Brick.Types.TH
 import Brick.Types.Internal
@@ -116,7 +117,7 @@ handleEventLensed v target ev = do
 newtype EventM a =
     EventM { runEventM :: ReaderT (M.Map Name Viewport) (StateT EventState IO) a
            }
-           deriving (Functor, Applicative, Monad)
+           deriving (Functor, Applicative, Monad, MonadIO)
 
 -- | Widget growth policies. These policies communicate to layout
 -- algorithms how a widget uses space when being rendered. These
