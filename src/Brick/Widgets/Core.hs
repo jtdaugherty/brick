@@ -30,7 +30,7 @@ module Brick.Widgets.Core
   , hLimit
   , vLimit
 
-  -- * Attribute mangement
+  -- * Attribute management
   , withDefAttr
   , withAttr
   , forceAttr
