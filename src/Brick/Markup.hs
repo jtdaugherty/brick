@@ -1,5 +1,5 @@
 -- | This module provides an API for turning "markup" values into
--- widgets. This module uses the Data.Text.Markup interface in this
+-- widgets. This module uses the "Data.Text.Markup" interface in this
 -- package to assign attributes to substrings in a text string; to
 -- manipulate markup using (for example) syntax highlighters, see that
 -- module.
