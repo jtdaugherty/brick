@@ -1,6 +1,9 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE DeriveFoldable#-}
+{-# LANGUAGE DeriveTraversable #-}
 -- | This module provides a scrollable list type and functions for
 -- manipulating and rendering it.
 module Brick.Widgets.List
@@ -36,6 +39,8 @@ where
 
 import Control.Applicative ((<$>))
 import Control.Lens ((^.), (&), (.~), _2)
+import Data.Foldable (Foldable)
+import Data.Traversable (Traversable)
 import Data.Maybe (fromMaybe)
 import Data.Monoid ((<>))
 import Graphics.Vty (Event(..), Key(..))
@@ -60,7 +65,7 @@ data List e =
          , listSelected :: !(Maybe Int)
          , listName :: Name
          , listItemHeight :: Int
-         }
+         } deriving (Functor, Foldable, Traversable)
 
 suffixLenses ''List
 
