@@ -30,6 +30,8 @@ module Brick.Widgets.List
   , listRemove
   , listReplace
   , listSelectedElement
+  , listClear
+  , listReverse
 
   -- * Attributes
   , listAttr
@@ -37,8 +39,8 @@ module Brick.Widgets.List
   )
 where
 
-import Control.Applicative ((<$>))
-import Control.Lens ((^.), (&), (.~), _2)
+import Control.Applicative ((<$>),(<*>),pure)
+import Control.Lens ((^.), (&), (.~), (%~), _2)
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 import Data.Maybe (fromMaybe)
@@ -232,3 +234,14 @@ listSelectedElement :: List e -> Maybe (Int, e)
 listSelectedElement l = do
   sel <- l^.listSelectedL
   return (sel, (l^.listElementsL) V.! sel)
+
+-- | Remove all elements from the list and clear the selection.
+listClear :: List e -> List e
+listClear l = l & listElementsL .~ V.empty & listSelectedL .~ Nothing
+
+-- | Reverse the list.  The element selected before the reversal will
+-- again be the selected one.
+listReverse :: List e -> List e
+listReverse theList = theList & listElementsL %~ V.reverse & listSelectedL .~ newSel
+  where n = V.length (listElements theList)
+        newSel = (-) <$> pure (n-1) <*> listSelected theList
