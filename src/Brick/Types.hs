@@ -44,7 +44,6 @@ module Brick.Types
   -- ** Rendering results
   , Result(..)
   , lookupAttrName
-  , lookupViewportR
 
   -- ** Rendering result lenses
   , imageL
@@ -188,8 +187,3 @@ lookupAttrName :: AttrName -> RenderM Attr
 lookupAttrName n = do
     c <- getContext
     return $ attrMapLookup n (c^.ctxAttrMapL)
-
--- | Given a name, obtain the viewport for that name by consulting
--- the viewport map in the rendering monad.
-lookupViewportR :: Name -> RenderM (Maybe Viewport)
-lookupViewportR name = lift $ gets (M.lookup name . (^.viewportMapL))

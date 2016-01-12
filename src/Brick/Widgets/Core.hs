@@ -55,6 +55,7 @@ module Brick.Widgets.Core
   , viewport
   , visible
   , visibleRegion
+  , unsafeLookupViewport
 
   -- ** Adding offsets to cursor positions and visibility requests
   , addResultOffset
@@ -628,6 +629,18 @@ viewport vpname typ p =
                       $ padBottom Max
                       $ padRight Max
                       $ Widget Fixed Fixed $ return $ translated & visibilityRequestsL .~ mempty
+
+-- | Given a name, obtain the viewport for that name by consulting the
+-- viewport map in the rendering monad. NOTE! Some care must be taken
+-- when calling this function, since it only returns useful values
+-- after the viewport in question has been rendered. If you call this
+-- function during rendering before a viewport has been rendered, you
+-- may get nothing or you may get a stale version of the viewport. This
+-- is because viewports are updated during rendering and the one you are
+-- interested in may not have been rendered yet. So if you want to use
+-- this, be sure you know what you are doing.
+unsafeLookupViewport :: Name -> RenderM (Maybe Viewport)
+unsafeLookupViewport name = lift $ gets (M.lookup name . (^.viewportMapL))
 
 scrollTo :: ViewportType -> ScrollRequest -> V.Image -> Viewport -> Viewport
 scrollTo Both _ _ _ = error "BUG: called scrollTo on viewport type 'Both'"
