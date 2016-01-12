@@ -31,7 +31,7 @@ license:             BSD3
 license-file:        LICENSE
 author:              Jonathan Daugherty <cygnus@foobox.com>
 maintainer:          Jonathan Daugherty <cygnus@foobox.com>
-copyright:           (c) Jonathan Daugherty 2015
+copyright:           (c) Jonathan Daugherty 2015-2016
 category:            Graphics
 build-type:          Simple
 cabal-version:       >=1.10
