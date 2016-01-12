@@ -2,6 +2,23 @@
 Brick changelog
 ---------------
 
+0.4
+---
+
+API changes:
+* Added Brick.Widgets.Core.unsafeLookupViewport to make certain kinds
+  of custom widget implementations easier when viewport states are needed
+  (thanks Markus Hauck <markus1189@gmail.com>)
+* List: added listClear and listReverse functions (thanks Markus Hauck)
+* List: Derive instances for Functor, Foldable, Traversable (thanks
+  Markus Hauck)
+
+Documentation changes:
+* Hyperlink "Data.Text.Markup" inside Brick.Markup haddock (thanks
+  Markus Hauck)
+* Fix typo in 'Attribute Management' section of user guide (thanks
+  Markus Hauck)
+
 0.3.1
 -----
 
