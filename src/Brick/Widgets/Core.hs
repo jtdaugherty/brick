@@ -675,11 +675,12 @@ scrollToView Vertical rq vp = vp & vpTop .~ newVStart
 
         reqEnd = rq^.vrPositionL.rowL + rq^.vrSizeL._2
         newVStart :: Int
-        newVStart = if reqStart < curStart
+        newVStart = if reqStart < vStartEndVisible
                    then reqStart
-                   else if reqStart > curEnd || reqEnd > curEnd
-                        then reqEnd - vp^.vpSize._2
-                        else curStart
+                   else vStartEndVisible
+        vStartEndVisible = if reqEnd < curEnd
+                           then curStart
+                           else curStart + (reqEnd - curEnd)
 scrollToView Horizontal rq vp = vp & vpLeft .~ newHStart
     where
         curStart = vp^.vpLeft
@@ -688,11 +689,12 @@ scrollToView Horizontal rq vp = vp & vpLeft .~ newHStart
 
         reqEnd = rq^.vrPositionL.columnL + rq^.vrSizeL._1
         newHStart :: Int
-        newHStart = if reqStart < curStart
+        newHStart = if reqStart < hStartEndVisible
                    then reqStart
-                   else if reqStart > curEnd || reqEnd > curEnd
-                        then reqEnd - vp^.vpSize._1
-                        else curStart
+                   else hStartEndVisible
+        hStartEndVisible = if reqEnd < curEnd
+                           then curStart
+                           else curStart + (reqEnd - curEnd)
 
 -- | Request that the specified widget be made visible when it is
 -- rendered inside a viewport. This permits widgets (whose sizes and
