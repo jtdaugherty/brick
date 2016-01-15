@@ -522,8 +522,9 @@ vRelease p =
 -- 'Brick.Main.EventM' monad provides primitives to scroll viewports
 -- created by this function if 'visible' is not what you want.
 --
--- If a viewport receives more than one visibility request, only the
--- first is honored. If a viewport receives more than one scrolling
+-- If a viewport receives more than one visibility request, then the
+-- visibility requests are merged with the inner visibility request
+-- taking preference. If a viewport receives more than one scrolling
 -- request from 'Brick.Main.EventM', all are honored in the order in
 -- which they are received.
 viewport :: Name
@@ -586,12 +587,12 @@ viewport vpname typ p =
       -- state accordingly
       when (not $ null $ initialResult^.visibilityRequestsL) $ do
           Just vp <- lift $ gets $ (^.viewportMapL.to (M.lookup vpname))
-          let rq = head $ initialResult^.visibilityRequestsL
-              updatedVp = case typ of
-                  Both -> scrollToView Horizontal rq $ scrollToView Vertical rq vp
-                  Horizontal -> scrollToView typ rq vp
-                  Vertical -> scrollToView typ rq vp
-          lift $ modify (& viewportMapL %~ (M.insert vpname updatedVp))
+          let rqs = initialResult^.visibilityRequestsL
+              updateVp vp' rq = case typ of
+                  Both -> scrollToView Horizontal rq $ scrollToView Vertical rq vp'
+                  Horizontal -> scrollToView typ rq vp'
+                  Vertical -> scrollToView typ rq vp'
+          lift $ modify (& viewportMapL %~ (M.insert vpname $ foldl updateVp vp rqs))
 
       -- If the size of the rendering changes enough to make the
       -- viewport offsets invalid, reset them
@@ -675,11 +676,12 @@ scrollToView Vertical rq vp = vp & vpTop .~ newVStart
 
         reqEnd = rq^.vrPositionL.rowL + rq^.vrSizeL._2
         newVStart :: Int
-        newVStart = if reqStart < curStart
+        newVStart = if reqStart < vStartEndVisible
                    then reqStart
-                   else if reqStart > curEnd || reqEnd > curEnd
-                        then reqEnd - vp^.vpSize._2
-                        else curStart
+                   else vStartEndVisible
+        vStartEndVisible = if reqEnd < curEnd
+                           then curStart
+                           else curStart + (reqEnd - curEnd)
 scrollToView Horizontal rq vp = vp & vpLeft .~ newHStart
     where
         curStart = vp^.vpLeft
@@ -688,11 +690,12 @@ scrollToView Horizontal rq vp = vp & vpLeft .~ newHStart
 
         reqEnd = rq^.vrPositionL.columnL + rq^.vrSizeL._1
         newHStart :: Int
-        newHStart = if reqStart < curStart
+        newHStart = if reqStart < hStartEndVisible
                    then reqStart
-                   else if reqStart > curEnd || reqEnd > curEnd
-                        then reqEnd - vp^.vpSize._1
-                        else curStart
+                   else hStartEndVisible
+        hStartEndVisible = if reqEnd < curEnd
+                           then curStart
+                           else curStart + (reqEnd - curEnd)
 
 -- | Request that the specified widget be made visible when it is
 -- rendered inside a viewport. This permits widgets (whose sizes and
