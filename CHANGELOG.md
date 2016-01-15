@@ -2,6 +2,22 @@
 Brick changelog
 ---------------
 
+0.4.1
+-----
+
+Bug fixes:
+* Fixed a bug in the 'visible' combinator: If the size of the visibility
+  request was larger than the available space, then the rendering of a
+  viewport was toggling between two states, one with aligning on the
+  end of the visibility request, and another one aligning on the start.
+  This commit fixes it so that a visibility request is always aligned
+  on the start if not enough space is available. (thanks Thomas Strobel
+  <ts468@cam.ac.uk>)
+
+Behavior changes:
+* Honor multiple 'visible' markers in a single viewport with preference
+  on the innermost request (thanks Thomas Strobel <ts468@cam.ac.uk>)
+
 0.4
 ---
 
