@@ -39,7 +39,10 @@ module Brick.Widgets.List
   )
 where
 
+import Control.Applicative ((<$>),(<*>),pure)
 import Control.Lens ((^.), (&), (.~), (%~), _2)
+import Data.Foldable (Foldable)
+import Data.Traversable (Traversable)
 import Data.Maybe (fromMaybe)
 import Data.Monoid ((<>))
 import Graphics.Vty (Event(..), Key(..))
