@@ -45,7 +45,7 @@ fromText = (@@ def)
 
 -- | Extract the text from markup, discarding the markup metadata.
 toText :: (Eq a) => Markup a -> T.Text
-toText = T.concat . (fst <$>) . markupToList
+toText = T.concat . (fst <$>) . concat . markupToList
 
 -- | Set the metadata for a range of character positions in a piece of
 -- markup. This is useful for, e.g., syntax highlighting.
@@ -59,11 +59,17 @@ markupSet (start, len) val m@(Markup l) = if start < 0 || start + len > length l
         (theOldEntries, theTail) = splitAt len theLongTail
         theNewEntries = zip (fst <$> theOldEntries) (repeat val)
 
--- | Convert markup to a list of pairs in which each pair contains the
--- longest subsequence of characters having the same metadata.
-markupToList :: (Eq a) => Markup a -> [(T.Text, a)]
-markupToList (Markup thePairs) = toList thePairs
+-- | Convert markup to a list of lines. Each line is represented by a
+-- list of pairs in which each pair contains the longest subsequence of
+-- characters having the same metadata.
+markupToList :: (Eq a) => Markup a -> [[(T.Text, a)]]
+markupToList (Markup thePairs) = toList <$> toLines [] [] thePairs
     where
+        toLines ls cur [] = ls ++ [cur]
+        toLines ls cur ((ch, val):rest)
+            | ch == '\n' = toLines (ls ++ [cur]) [] rest
+            | otherwise = toLines ls (cur ++ [(ch, val)]) rest
+
         toList [] = []
         toList ((ch, val):rest) = (T.pack $ ch : (fst <$> matching), val) : toList remaining
             where

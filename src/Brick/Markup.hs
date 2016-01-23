@@ -17,7 +17,7 @@ import qualified Data.Text as T
 import Data.Text.Markup
 import Data.Default (def)
 
-import Graphics.Vty (Attr, horizCat, string)
+import Graphics.Vty (Attr, vertCat, horizCat, string)
 
 import Brick.AttrMap
 import Brick.Types
@@ -47,8 +47,11 @@ instance GetAttr AttrName where
 markup :: (Eq a, GetAttr a) => Markup a -> Widget
 markup m =
     Widget Fixed Fixed $ do
-      let pairs = markupToList m
-      imgs <- forM pairs $ \(t, aSrc) -> do
-          a <- getAttr aSrc
-          return $ string a $ T.unpack t
-      return $ def & imageL .~ horizCat imgs
+      let markupLines = markupToList m
+          mkLine pairs = do
+              is <- forM pairs $ \(t, aSrc) -> do
+                  a <- getAttr aSrc
+                  return $ string a $ T.unpack t
+              return $ horizCat is
+      lineImgs <- mapM mkLine markupLines
+      return $ def & imageL .~ vertCat lineImgs
