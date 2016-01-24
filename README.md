@@ -86,10 +86,6 @@ that makes it possible to make your own packages and widgets. If you
 use that, you'll also be helping to test whether the exported interface
 is usable and complete!
 
-The development of this library has revealed some bugs in `vty`, and
-I've tried to report those as I go. If they haven't been resolved,
-you'll see them arise when using `brick`.
-
 Reporting bugs
 --------------
 
