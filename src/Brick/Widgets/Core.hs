@@ -153,7 +153,11 @@ padLeft padding p =
           Max -> (id, Greedy)
           Pad i -> (hLimit i, hSize p)
     in Widget sz (vSize p) $ do
-        result <- render p
+        c <- getContext
+        let lim = case padding of
+              Max -> c^.availWidthL
+              Pad i -> c^.availWidthL - i
+        result <- render $ hLimit lim p
         render $ (f $ vLimit (result^.imageL.to V.imageHeight) $ fill ' ') <+>
                  (Widget Fixed Fixed $ return result)
 
@@ -166,7 +170,11 @@ padRight padding p =
           Max -> (id, Greedy)
           Pad i -> (hLimit i, hSize p)
     in Widget sz (vSize p) $ do
-        result <- render p
+        c <- getContext
+        let lim = case padding of
+              Max -> c^.availWidthL
+              Pad i -> c^.availWidthL - i
+        result <- render $ hLimit lim p
         render $ (Widget Fixed Fixed $ return result) <+>
                  (f $ vLimit (result^.imageL.to V.imageHeight) $ fill ' ')
 
@@ -178,7 +186,11 @@ padTop padding p =
           Max -> (id, Greedy)
           Pad i -> (vLimit i, vSize p)
     in Widget (hSize p) sz $ do
-        result <- render p
+        c <- getContext
+        let lim = case padding of
+              Max -> c^.availHeightL
+              Pad i -> c^.availHeightL - i
+        result <- render $ vLimit lim p
         render $ (f $ hLimit (result^.imageL.to V.imageWidth) $ fill ' ') <=>
                  (Widget Fixed Fixed $ return result)
 
@@ -191,7 +203,11 @@ padBottom padding p =
           Max -> (id, Greedy)
           Pad i -> (vLimit i, vSize p)
     in Widget (hSize p) sz $ do
-        result <- render p
+        c <- getContext
+        let lim = case padding of
+              Max -> c^.availHeightL
+              Pad i -> c^.availHeightL - i
+        result <- render $ vLimit lim p
         render $ (Widget Fixed Fixed $ return result) <=>
                  (f $ hLimit (result^.imageL.to V.imageWidth) $ fill ' ')
 
