@@ -360,7 +360,17 @@ renderBox br ws =
       let pairsIndexed = zip [(0::Int)..] ws
           (his, lows) = partition (\p -> (primaryWidgetSize br $ snd p) == Fixed) pairsIndexed
 
-      renderedHis <- mapM (\(i, prim) -> (i,) <$> render prim) his
+      let availPrimary = c^.(contextPrimary br)
+          availSecondary = c^.(contextSecondary br)
+
+          renderHis _ prev [] = return prev
+          renderHis remainingPrimary prev ((i, prim):rest) = do
+              result <- render $ limitPrimary br remainingPrimary
+                               $ limitSecondary br availSecondary
+                               $ cropToContext prim
+              renderHis (remainingPrimary - (result^.imageL.(to $ imagePrimary br))) (prev ++ [(i, result)]) rest
+
+      renderedHis <- renderHis availPrimary [] his
 
       renderedLows <- case lows of
           [] -> return []
