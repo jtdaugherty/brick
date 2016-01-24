@@ -139,11 +139,11 @@ drawListElements l drawElem =
 
             off = start * (l^.listItemHeightL)
 
-            drawnElements = (flip V.imap) es $ \i e ->
+            drawnElements = flip V.imap es $ \i e ->
                 let isSelected = Just (i + start) == l^.listSelectedL
                     elemWidget = drawElem isSelected e
                     makeVisible = if isSelected
-                                  then (visible . withDefAttr listSelectedAttr)
+                                  then visible . withDefAttr listSelectedAttr
                                   else id
                 in makeVisible elemWidget
 
@@ -180,13 +180,10 @@ listRemove pos l | V.null (l^.listElementsL) = l
                  | otherwise =
     let newSel = case l^.listSelectedL of
           Nothing -> 0
-          Just s  -> if pos == 0
-                     then 0
-                     else if pos == s
-                          then pos - 1
-                          else if pos < s
-                               then s - 1
-                               else s
+          Just s | pos == 0 -> 0
+                 | pos == s -> pos - 1
+                 | pos  < s -> s - 1
+                 | otherwise -> s
         (front, back) = V.splitAt pos es
         es' = front V.++ V.tail back
         es = l^.listElementsL
@@ -224,7 +221,7 @@ listMoveBy amt l =
 listMoveTo :: Int -> List e -> List e
 listMoveTo pos l =
     let len = V.length (l^.listElementsL)
-        newSel = clamp 0 (len - 1) $ if pos < 0 then (len - pos) else pos
+        newSel = clamp 0 (len - 1) $ if pos < 0 then len - pos else pos
     in l & listSelectedL .~ if len > 0
                             then Just newSel
                             else Nothing
