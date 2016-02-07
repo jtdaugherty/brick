@@ -9,7 +9,7 @@
 module Brick.Widgets.List
   ( List(listElements, listSelected, listName, listItemHeight)
 
-  -- * Consructing a list
+  -- * Constructing a list
   , list
 
   -- * Rendering a list
