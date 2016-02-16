@@ -60,6 +60,7 @@ appEvent st ev =
     case ev of
         V.EvKey V.KEsc [] -> M.halt st
         V.EvKey (V.KChar '\t') [] -> M.continue $ switchEditors st
+        V.EvKey V.KBackTab [] -> M.continue $ switchEditors st
         _ -> M.continue =<< T.handleEventLensed st (currentEditorL st) ev
 
 initialState :: St
