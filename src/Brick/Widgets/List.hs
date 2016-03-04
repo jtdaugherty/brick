@@ -4,6 +4,8 @@
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DeriveFoldable#-}
 {-# LANGUAGE DeriveTraversable #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances #-}
 -- | This module provides a scrollable list type and functions for
 -- manipulating and rendering it.
 module Brick.Widgets.List
@@ -39,6 +41,7 @@ module Brick.Widgets.List
   -- * Attributes
   , listAttr
   , listSelectedAttr
+  , listSelectedFocusedAttr
   )
 where
 
@@ -74,6 +77,9 @@ data List n e =
 
 suffixLenses ''List
 
+instance Named (List n e) n where
+    getName = listName
+
 handleListEvent :: (Show n, Ord n) => Event -> List n e -> EventM n (List n e)
 handleListEvent e theList =
     case e of
@@ -97,10 +103,15 @@ handleListEvent e theList =
 listAttr :: AttrName
 listAttr = "list"
 
--- | The attribute used only for the currently-selected list item.
--- Extends 'listAttr'.
+-- | The attribute used only for the currently-selected list item when
+-- the list does not have focus. Extends 'listAttr'.
 listSelectedAttr :: AttrName
 listSelectedAttr = listAttr <> "selected"
+
+-- | The attribute used only for the currently-selected list item when
+-- the list has focus. Extends 'listSelectedAttr'.
+listSelectedFocusedAttr :: AttrName
+listSelectedFocusedAttr = listSelectedAttr <> "focused"
 
 -- | Construct a list in terms of an element type 'e'.
 list :: n
@@ -118,18 +129,20 @@ list name es h =
 -- | Turn a list state value into a widget given an item drawing
 -- function.
 renderList :: (Ord n, Show n)
-           => List n e
-           -- ^ The List to be rendered
-           -> (Bool -> e -> Widget n)
+           => (Bool -> e -> Widget n)
            -- ^ Rendering function, True for the selected element
+           -> Bool
+           -- ^ Whether the list has focus
+           -> List n e
+           -- ^ The List to be rendered
            -> Widget n
            -- ^ rendered widget
-renderList l drawElem =
+renderList drawElem foc l =
     withDefAttr listAttr $
-    drawListElements l drawElem
+    drawListElements foc l drawElem
 
-drawListElements :: (Ord n, Show n) => List n e -> (Bool -> e -> Widget n) -> Widget n
-drawListElements l drawElem =
+drawListElements :: (Ord n, Show n) => Bool -> List n e -> (Bool -> e -> Widget n) -> Widget n
+drawListElements foc l drawElem =
     Widget Greedy Greedy $ do
         c <- getContext
 
@@ -145,8 +158,11 @@ drawListElements l drawElem =
             drawnElements = flip V.imap es $ \i e ->
                 let isSelected = Just (i + start) == l^.listSelectedL
                     elemWidget = drawElem isSelected e
+                    selItemAttr = if foc
+                                  then withDefAttr listSelectedFocusedAttr
+                                  else withDefAttr listSelectedAttr
                     makeVisible = if isSelected
-                                  then visible . withDefAttr listSelectedAttr
+                                  then visible . selItemAttr
                                   else id
                 in makeVisible elemWidget
 

@@ -1,5 +1,7 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FunctionalDependencies #-}
 -- | This module provides the core widget combinators and rendering
 -- routines. Everything this library does is in terms of these basic
 -- primitives.
@@ -41,6 +43,9 @@ module Brick.Widgets.Core
 
   -- * Cursor placement
   , showCursor
+
+  -- * Naming
+  , Named(..)
 
   -- * Translation
   , translateBy
@@ -86,6 +91,11 @@ import Brick.Widgets.Border.Style
 import Brick.Util (clOffset, clamp)
 import Brick.AttrMap
 import Brick.Widgets.Internal
+
+-- | The class of types that store interface element names.
+class Named a n | a -> n where
+    -- | Get the name of the specified value.
+    getName :: a -> n
 
 -- | When rendering the specified widget, use the specified border style
 -- for any border rendering.

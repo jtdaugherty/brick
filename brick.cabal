@@ -256,6 +256,7 @@ executable brick-edit-demo
                        vty >= 5.3.1,
                        data-default,
                        text,
+                       vector,
                        lens
 
 executable brick-border-demo

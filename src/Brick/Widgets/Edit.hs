@@ -58,6 +58,9 @@ data Editor n =
 
 suffixLenses ''Editor
 
+instance Named (Editor n) n where
+    getName = editorName
+
 handleEditorEvent :: Event -> Editor n -> EventM n (Editor n)
 handleEditorEvent e ed =
         let f = case e of

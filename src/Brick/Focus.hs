@@ -11,6 +11,7 @@ module Brick.Focus
   , focusPrev
   , focusGetCurrent
   , focusRingCursor
+  , withFocusRing
   )
 where
 
@@ -18,6 +19,7 @@ import Control.Lens ((^.))
 import Data.Maybe (listToMaybe)
 
 import Brick.Types
+import Brick.Widgets.Core (Named(..))
 
 -- | A focus ring containing a sequence of widget names to focus and a
 -- currently-focused widget name.
@@ -42,6 +44,9 @@ focusPrev FocusRingEmpty = FocusRingEmpty
 focusPrev (FocusRingNonempty ns i) = FocusRingNonempty ns i'
     where
         i' = (i + (length ns) - 1) `mod` (length ns)
+
+withFocusRing :: (Eq n, Named a n) => FocusRing n -> (Bool -> a -> b) -> a -> b
+withFocusRing ring f a = f (focusGetCurrent ring == Just (getName a)) a
 
 -- | Get the currently-focused widget name from the ring. If the ring is
 -- emtpy, return 'Nothing'.

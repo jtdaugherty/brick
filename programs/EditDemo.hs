@@ -4,6 +4,7 @@
 module Main where
 
 import Control.Lens
+import qualified Data.Vector as DV
 import qualified Graphics.Vty as V
 
 import qualified Brick.Main as M
@@ -13,9 +14,11 @@ import Brick.Widgets.Core
   , (<=>)
   , hLimit
   , vLimit
+  , fill
   , str
   )
 import qualified Brick.Widgets.Center as C
+import qualified Brick.Widgets.List as L
 import qualified Brick.Widgets.Edit as E
 import qualified Brick.AttrMap as A
 import qualified Brick.Focus as F
@@ -23,31 +26,31 @@ import Brick.Util (on)
 
 data Name = Edit1
           | Edit2
+          | List1
           deriving (Ord, Show, Eq)
 
 data St =
     St { _focusRing :: F.FocusRing Name
        , _edit1 :: E.Editor Name
        , _edit2 :: E.Editor Name
+       , _list1 :: L.List Name Int
        }
 
 makeLenses ''St
 
-currentEditorL :: St -> Lens' St (E.Editor Name)
-currentEditorL st =
-    case F.focusGetCurrent (st^.focusRing) of
-        Just Edit1 -> edit1
-        Just Edit2 -> edit2
-        Nothing -> error "BUG: focus ring had nothing selected!"
-
 drawUI :: St -> [T.Widget Name]
 drawUI st = [ui]
     where
-        ui = C.center $ (str "Input 1 (unlimited): " <+> (hLimit 30 $ vLimit 5 $ E.renderEditor $ st^.edit1)) <=>
-                        str " " <=>
-                        (str "Input 2 (limited to 2 lines): " <+> (hLimit 30 $ E.renderEditor $ st^.edit2)) <=>
-                        str " " <=>
-                        str "Press Tab to switch between editors, Esc to quit."
+        theList = F.withFocusRing (st^.focusRing) (L.renderList drawElem) (st^.list1)
+        drawElem _ i = (str $ show i) <+> (vLimit 1 $ fill ' ')
+        ui = C.center $
+            (str "Input 1 (unlimited): " <+> (hLimit 30 $ vLimit 5 $ E.renderEditor $ st^.edit1)) <=>
+            str " " <=>
+            (str "Input 2 (limited to 2 lines): " <+> (hLimit 30 $ E.renderEditor $ st^.edit2)) <=>
+            str " " <=>
+            (str "Input 3: " <+> (hLimit 30 $ vLimit 3 theList)) <=>
+            str " " <=>
+            str "Press Tab to switch between editors, Esc to quit."
 
 appEvent :: St -> V.Event -> T.EventM Name (T.Next St)
 appEvent st ev =
@@ -55,18 +58,25 @@ appEvent st ev =
         V.EvKey V.KEsc [] -> M.halt st
         V.EvKey (V.KChar '\t') [] -> M.continue $ st & focusRing %~ F.focusNext
         V.EvKey V.KBackTab [] -> M.continue $ st & focusRing %~ F.focusPrev
-        _ -> M.continue =<<
-          T.handleEventLensed st (currentEditorL st) E.handleEditorEvent ev
+
+        _ -> M.continue =<< case F.focusGetCurrent (st^.focusRing) of
+               Just Edit1 -> T.handleEventLensed st edit1 E.handleEditorEvent ev
+               Just Edit2 -> T.handleEventLensed st edit2 E.handleEditorEvent ev
+               Just List1 -> T.handleEventLensed st list1 L.handleListEvent ev
+               Nothing -> return st
 
 initialState :: St
 initialState =
-    St (F.focusRing [Edit1, Edit2])
+    St (F.focusRing [Edit1, Edit2, List1])
        (E.editor Edit1 (str . unlines) Nothing "")
        (E.editor Edit2 (str . unlines) (Just 2) "")
+       (L.list List1 (DV.fromList [1, 2, 3, 4, 5]) 1)
 
 theMap :: A.AttrMap
 theMap = A.attrMap V.defAttr
     [ (E.editAttr, V.white `on` V.blue)
+    , (L.listSelectedFocusedAttr, V.black `on` V.white)
+    , (L.listSelectedAttr, V.white `on` V.blue)
     ]
 
 appCursor :: St -> [T.CursorLocation Name] -> Maybe (T.CursorLocation Name)
