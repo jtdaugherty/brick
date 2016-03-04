@@ -23,23 +23,23 @@ data St =
 
 makeLenses ''St
 
-drawUi :: St -> [Widget]
+drawUi :: St -> [Widget ()]
 drawUi st =
     [ topLayer st
     , bottomLayer st
     ]
 
-topLayer :: St -> Widget
+topLayer :: St -> Widget ()
 topLayer st =
     translateBy (st^.topLayerLocation) $
     B.border $ str "Top layer\n(Arrow keys move)"
 
-bottomLayer :: St -> Widget
+bottomLayer :: St -> Widget ()
 bottomLayer st =
     translateBy (st^.bottomLayerLocation) $
     B.border $ str "Bottom layer\n(Ctrl-arrow keys move)"
 
-appEvent :: St -> V.Event -> T.EventM (T.Next St)
+appEvent :: St -> V.Event -> T.EventM () (T.Next St)
 appEvent st (V.EvKey V.KDown [])  = M.continue $ st & topLayerLocation.rowL %~ (+ 1)
 appEvent st (V.EvKey V.KUp [])    = M.continue $ st & topLayerLocation.rowL %~ (subtract 1)
 appEvent st (V.EvKey V.KRight []) = M.continue $ st & topLayerLocation.columnL %~ (+ 1)
@@ -53,7 +53,7 @@ appEvent st (V.EvKey V.KLeft  [V.MCtrl]) = M.continue $ st & bottomLayerLocation
 appEvent st (V.EvKey V.KEsc []) = M.halt st
 appEvent st _ = M.continue st
 
-app :: M.App St V.Event
+app :: M.App St V.Event ()
 app =
     M.App { M.appDraw = drawUi
           , M.appStartEvent = return

@@ -26,7 +26,7 @@ import Brick.Types
 -- rendering monad.  You probably won't need to instance this.
 class GetAttr a where
     -- | Where to get the attribute for this attribute metadata.
-    getAttr :: a -> RenderM Attr
+    getAttr :: a -> RenderM n Attr
 
 instance GetAttr Attr where
     getAttr a = do
@@ -44,7 +44,7 @@ instance GetAttr AttrName where
 (@?) = (@@)
 
 -- | Build a widget from markup.
-markup :: (Eq a, GetAttr a) => Markup a -> Widget
+markup :: (Eq a, GetAttr a) => Markup a -> Widget n
 markup m =
     Widget Fixed Fixed $ do
       let markupLines = markupToList m

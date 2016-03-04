@@ -12,6 +12,8 @@ module Brick.Widgets.Dialog
   -- * Construction and rendering
   , dialog
   , renderDialog
+  -- * Handling events
+  , handleDialogEvent
   -- * Getting a dialog's current value
   , dialogSelection
   -- * Attributes
@@ -50,8 +52,8 @@ import Brick.AttrMap
 --
 -- * Tab: selecte the next button
 -- * Shift-tab: select the previous button
-data Dialog a =
-    Dialog { dialogName :: Name
+data Dialog n a =
+    Dialog { dialogName :: n
            -- ^ The dialog name
            , dialogTitle :: Maybe String
            -- ^ The dialog title
@@ -65,15 +67,15 @@ data Dialog a =
 
 suffixLenses ''Dialog
 
-instance HandleEvent (Dialog a) where
-    handleEvent ev d =
-        case ev of
-            EvKey (KChar '\t') [] -> return $ nextButtonBy 1 d
-            EvKey KBackTab [] -> return $ nextButtonBy (-1) d
-            _ -> return d
+handleDialogEvent :: Event -> Dialog n a -> EventM n (Dialog n a)
+handleDialogEvent ev d =
+    return $ case ev of
+        EvKey (KChar '\t') [] -> nextButtonBy 1 d
+        EvKey KBackTab [] -> nextButtonBy (-1) d
+        _ -> d
 
 -- | Create a dialog.
-dialog :: Name
+dialog :: n
        -- ^ The dialog name, provided so that you can use this as a
        -- basis for viewport names in the dialog if desired
        -> Maybe String
@@ -83,7 +85,7 @@ dialog :: Name
        -- the button labels and values to use
        -> Int
        -- ^ The maximum width of the dialog
-       -> Dialog a
+       -> Dialog n a
 dialog name title buttonData w =
     let (buttons, idx) = case buttonData of
           Nothing -> ([], Nothing)
@@ -104,7 +106,7 @@ buttonSelectedAttr :: AttrName
 buttonSelectedAttr = buttonAttr <> "selected"
 
 -- | Render a dialog with the specified body widget.
-renderDialog :: Dialog a -> Widget -> Widget
+renderDialog :: Dialog n a -> Widget n -> Widget n
 renderDialog d body =
     let buttonPadding = str "   "
         mkButton (i, (s, _)) = let att = if Just i == d^.dialogSelectedIndexL
@@ -123,7 +125,7 @@ renderDialog d body =
             , hCenter buttons
             ]
 
-nextButtonBy :: Int -> Dialog a -> Dialog a
+nextButtonBy :: Int -> Dialog n a -> Dialog n a
 nextButtonBy amt d =
     let numButtons = length $ d^.dialogButtonsL
     in if numButtons == 0 then d
@@ -134,7 +136,7 @@ nextButtonBy amt d =
 -- | Obtain the value associated with the dialog's currently-selected
 -- button, if any. This function is probably what you want when someone
 -- presses 'Enter' in a dialog.
-dialogSelection :: Dialog a -> Maybe a
+dialogSelection :: Dialog n a -> Maybe a
 dialogSelection d =
     case d^.dialogSelectedIndexL of
         Nothing -> Nothing

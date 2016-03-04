@@ -18,11 +18,11 @@ import Brick.Types.Internal
 import Brick.AttrMap
 
 renderFinal :: AttrMap
-            -> [Widget]
+            -> [Widget n]
             -> V.DisplayRegion
-            -> ([CursorLocation] -> Maybe CursorLocation)
-            -> RenderState
-            -> (RenderState, V.Picture, Maybe CursorLocation)
+            -> ([CursorLocation n] -> Maybe (CursorLocation n))
+            -> RenderState n
+            -> (RenderState n, V.Picture, Maybe (CursorLocation n))
 renderFinal aMap layerRenders sz chooseCursor rs = (newRS, pic, theCursor)
     where
         (layerResults, !newRS) = flip runState rs $ sequence $
@@ -35,11 +35,11 @@ renderFinal aMap layerRenders sz chooseCursor rs = (newRS, pic, theCursor)
 
 -- | After rendering the specified widget, crop its result image to the
 -- dimensions in the rendering context.
-cropToContext :: Widget -> Widget
+cropToContext :: Widget n -> Widget n
 cropToContext p =
     Widget (hSize p) (vSize p) (render p >>= cropResultToContext)
 
-cropResultToContext :: Result -> RenderM Result
+cropResultToContext :: Result n -> RenderM n (Result n)
 cropResultToContext result = do
     c <- getContext
     return $ result & imageL %~ (V.crop (c^.availWidthL) (c^.availHeightL))

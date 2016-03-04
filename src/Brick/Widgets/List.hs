@@ -15,6 +15,9 @@ module Brick.Widgets.List
   -- * Rendering a list
   , renderList
 
+  -- * Handling events
+  , handleListEvent
+
   -- * Lenses
   , listElementsL
   , listSelectedL
@@ -62,34 +65,33 @@ import Brick.AttrMap
 --   at a time (based on the number of items shown)
 -- * Home/end keys: move cursor of selected item to beginning or end of
 --   list
-data List e =
+data List n e =
     List { listElements :: !(V.Vector e)
          , listSelected :: !(Maybe Int)
-         , listName :: Name
+         , listName :: n
          , listItemHeight :: Int
          } deriving (Functor, Foldable, Traversable)
 
 suffixLenses ''List
 
-instance HandleEvent (List e) where
-    handleEvent e theList = f
-        where
-            f = case e of
-                  EvKey KUp [] -> return $ listMoveUp theList
-                  EvKey KDown [] -> return $ listMoveDown theList
-                  EvKey KHome [] -> return $ listMoveTo 0 theList
-                  EvKey KEnd [] -> return $ listMoveTo (V.length $ listElements theList) theList
-                  EvKey KPageDown [] -> do
-                      v <- lookupViewport (theList^.listNameL)
-                      case v of
-                          Nothing -> return theList
-                          Just vp -> return $ listMoveBy (vp^.vpSize._2 `div` theList^.listItemHeightL) theList
-                  EvKey KPageUp [] -> do
-                      v <- lookupViewport (theList^.listNameL)
-                      case v of
-                          Nothing -> return theList
-                          Just vp -> return $ listMoveBy (negate $ vp^.vpSize._2 `div` theList^.listItemHeightL) theList
-                  _ -> return theList
+handleListEvent :: (Show n, Ord n) => Event -> List n e -> EventM n (List n e)
+handleListEvent e theList =
+    case e of
+        EvKey KUp [] -> return $ listMoveUp theList
+        EvKey KDown [] -> return $ listMoveDown theList
+        EvKey KHome [] -> return $ listMoveTo 0 theList
+        EvKey KEnd [] -> return $ listMoveTo (V.length $ listElements theList) theList
+        EvKey KPageDown [] -> do
+            v <- lookupViewport (theList^.listNameL)
+            case v of
+                Nothing -> return theList
+                Just vp -> return $ listMoveBy (vp^.vpSize._2 `div` theList^.listItemHeightL) theList
+        EvKey KPageUp [] -> do
+            v <- lookupViewport (theList^.listNameL)
+            case v of
+                Nothing -> return theList
+                Just vp -> return $ listMoveBy (negate $ vp^.vpSize._2 `div` theList^.listItemHeightL) theList
+        _ -> return theList
 
 -- | The top-level attribute used for the entire list.
 listAttr :: AttrName
@@ -101,31 +103,32 @@ listSelectedAttr :: AttrName
 listSelectedAttr = listAttr <> "selected"
 
 -- | Construct a list in terms of an element type 'e'.
-list :: Name
+list :: n
      -- ^ The list name (must be unique)
      -> V.Vector e
      -- ^ The initial list contents
      -> Int
      -- ^ The list item height in rows (all list item widgets must be
      -- this high)
-     -> List e
+     -> List n e
 list name es h =
     let selIndex = if V.null es then Nothing else Just 0
     in List es selIndex name h
 
 -- | Turn a list state value into a widget given an item drawing
 -- function.
-renderList :: List e
+renderList :: (Ord n, Show n)
+           => List n e
            -- ^ The List to be rendered
-           -> (Bool -> e -> Widget)
+           -> (Bool -> e -> Widget n)
            -- ^ Rendering function, True for the selected element
-           -> Widget
+           -> Widget n
            -- ^ rendered widget
 renderList l drawElem =
     withDefAttr listAttr $
     drawListElements l drawElem
 
-drawListElements :: List e -> (Bool -> e -> Widget) -> Widget
+drawListElements :: (Ord n, Show n) => List n e -> (Bool -> e -> Widget n) -> Widget n
 drawListElements l drawElem =
     Widget Greedy Greedy $ do
         c <- getContext
@@ -156,8 +159,8 @@ listInsert :: Int
            -- ^ The position at which to insert (0 <= i <= size)
            -> e
            -- ^ The element to insert
-           -> List e
-           -> List e
+           -> List n e
+           -> List n e
 listInsert pos e l =
     let safePos = clamp 0 (V.length es) pos
         es = l^.listElementsL
@@ -173,8 +176,8 @@ listInsert pos e l =
 -- | Remove an element from a list at the specified position.
 listRemove :: Int
            -- ^ The position at which to remove an element (0 <= i < size)
-           -> List e
-           -> List e
+           -> List n e
+           -> List n e
 listRemove pos l | V.null (l^.listElementsL) = l
                  | pos /= clamp 0 (V.length (l^.listElementsL) - 1) pos = l
                  | otherwise =
@@ -193,7 +196,7 @@ listRemove pos l | V.null (l^.listElementsL) = l
 -- | Replace the contents of a list with a new set of elements and
 -- update the new selected index. If the specified selected index (via
 -- 'Just') is not in the list bounds, zero is used instead.
-listReplace :: Eq e => V.Vector e -> Maybe Int -> List e -> List e
+listReplace :: Eq e => V.Vector e -> Maybe Int -> List n e -> List n e
 listReplace es idx l =
     let newSel = clamp 0 (V.length es - 1) <$> idx
     in l & listSelectedL .~ newSel
@@ -201,24 +204,24 @@ listReplace es idx l =
 
 -- | Move the list selected index up by one. (Moves the cursor up,
 -- subtracts one from the index.)
-listMoveUp :: List e -> List e
+listMoveUp :: List n e -> List n e
 listMoveUp = listMoveBy (-1)
 
 -- | Move the list selected index down by one. (Moves the cursor down,
 -- adds one to the index.)
-listMoveDown :: List e -> List e
+listMoveDown :: List n e -> List n e
 listMoveDown = listMoveBy 1
 
 -- | Move the list selected index by the specified amount, subject to
 -- validation.
-listMoveBy :: Int -> List e -> List e
+listMoveBy :: Int -> List n e -> List n e
 listMoveBy amt l =
     let newSel = clamp 0 (V.length (l^.listElementsL) - 1) <$> (amt +) <$> (l^.listSelectedL)
     in l & listSelectedL .~ newSel
 
 -- | Set the selected index for a list to the specified index, subject
 -- to validation.
-listMoveTo :: Int -> List e -> List e
+listMoveTo :: Int -> List n e -> List n e
 listMoveTo pos l =
     let len = V.length (l^.listElementsL)
         newSel = clamp 0 (len - 1) $ if pos < 0 then len - pos else pos
@@ -227,18 +230,18 @@ listMoveTo pos l =
                             else Nothing
 
 -- | Return a list's selected element, if any.
-listSelectedElement :: List e -> Maybe (Int, e)
+listSelectedElement :: List n e -> Maybe (Int, e)
 listSelectedElement l = do
   sel <- l^.listSelectedL
   return (sel, (l^.listElementsL) V.! sel)
 
 -- | Remove all elements from the list and clear the selection.
-listClear :: List e -> List e
+listClear :: List n e -> List n e
 listClear l = l & listElementsL .~ V.empty & listSelectedL .~ Nothing
 
 -- | Reverse the list.  The element selected before the reversal will
 -- again be the selected one.
-listReverse :: List e -> List e
+listReverse :: List n e -> List n e
 listReverse theList = theList & listElementsL %~ V.reverse & listSelectedL .~ newSel
   where n = V.length (listElements theList)
         newSel = (-) <$> pure (n-1) <*> listSelected theList

@@ -25,7 +25,6 @@ module Brick.Types
   -- * Event-handling types
   , EventM(..)
   , Next
-  , HandleEvent(..)
   , handleEventLensed
 
   -- * Rendering infrastructure
@@ -62,7 +61,6 @@ module Brick.Types
   , Size(..)
   , Padding(..)
   , Direction(..)
-  , Name(..)
 
   )
 where
@@ -89,34 +87,30 @@ data Padding = Pad Int
              | Max
              -- ^ Pad up to the number of available rows or columns.
 
--- | The class of types that provide some basic event-handling.
-class HandleEvent a where
-    -- | Handle a Vty event
-    handleEvent :: Event -> a -> EventM a
-
 -- | A convenience function for handling events intended for values
 -- that are targets of lenses in your application state. This function
 -- obtains the target value of the specified lens, invokes 'handleEvent'
 -- on it, and stores the resulting transformed value back in the state
 -- using the lens.
-handleEventLensed :: (HandleEvent b)
-                  => a
+handleEventLensed :: a
                   -- ^ The state value.
                   -> Lens' a b
                   -- ^ The lens to use to extract and store the target
                   -- of the event.
+                  -> (Event -> b -> EventM n b)
+                  -- ^ The event handler.
                   -> Event
                   -- ^ The event to handle.
-                  -> EventM a
-handleEventLensed v target ev = do
+                  -> EventM n a
+handleEventLensed v target handleEvent ev = do
     newB <- handleEvent ev (v^.target)
     return $ v & target .~ newB
 
 -- | The monad in which event handlers run. Although it may be tempting
 -- to dig into the reader value yourself, just use
 -- 'Brick.Main.lookupViewport'.
-newtype EventM a =
-    EventM { runEventM :: ReaderT (M.Map Name Viewport) (StateT EventState IO) a
+newtype EventM n a =
+    EventM { runEventM :: ReaderT (M.Map n Viewport) (StateT (EventState n) IO) a
            }
            deriving (Functor, Applicative, Monad, MonadIO)
 
@@ -132,27 +126,27 @@ data Size = Fixed
           deriving (Show, Eq, Ord)
 
 -- | The type of widgets.
-data Widget =
+data Widget n =
     Widget { hSize :: Size
            -- ^ This widget's horizontal growth policy
            , vSize :: Size
            -- ^ This widget's vertical growth policy
-           , render :: RenderM Result
+           , render :: RenderM n (Result n)
            -- ^ This widget's rendering function
            }
 
 -- | The type of the rendering monad. This monad is used by the
 -- library's rendering routines to manage rendering state and
 -- communicate rendering parameters to widgets' rendering functions.
-type RenderM a = ReaderT Context (State RenderState) a
+type RenderM n a = ReaderT Context (State (RenderState n)) a
 
 -- | The type of result returned by a widget's rendering function. The
 -- result provides the image, cursor positions, and visibility requests
 -- that resulted from the rendering process.
-data Result =
+data Result n =
     Result { image :: Image
            -- ^ The final rendered image for a widget
-           , cursors :: [CursorLocation]
+           , cursors :: [CursorLocation n]
            -- ^ The list of reported cursor positions for the
            -- application to choose from
            , visibilityRequests :: [VisibilityRequest]
@@ -161,11 +155,11 @@ data Result =
            }
            deriving Show
 
-instance Default Result where
+instance Default (Result n) where
     def = Result emptyImage [] []
 
 -- | Get the current rendering context.
-getContext :: RenderM Context
+getContext :: RenderM n Context
 getContext = ask
 
 suffixLenses ''Context
@@ -175,7 +169,7 @@ suffixLenses ''Result
 attrL :: (Contravariant f, Functor f) => (Attr -> f Attr) -> Context -> f Context
 attrL = to (\c -> attrMapLookup (c^.ctxAttrNameL) (c^.ctxAttrMapL))
 
-instance TerminalLocation CursorLocation where
+instance TerminalLocation (CursorLocation n) where
     columnL = cursorLocationL._1
     column = column . cursorLocation
     rowL = cursorLocationL._2
@@ -183,7 +177,7 @@ instance TerminalLocation CursorLocation where
 
 -- | Given an attribute name, obtain the attribute for the attribute
 -- name by consulting the context's attribute map.
-lookupAttrName :: AttrName -> RenderM Attr
+lookupAttrName :: AttrName -> RenderM n Attr
 lookupAttrName n = do
     c <- getContext
     return $ attrMapLookup n (c^.ctxAttrMapL)

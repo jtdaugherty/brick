@@ -89,11 +89,11 @@ import Brick.Widgets.Internal
 
 -- | When rendering the specified widget, use the specified border style
 -- for any border rendering.
-withBorderStyle :: BorderStyle -> Widget -> Widget
+withBorderStyle :: BorderStyle -> Widget n -> Widget n
 withBorderStyle bs p = Widget (hSize p) (vSize p) $ withReaderT (& ctxBorderStyleL .~ bs) (render p)
 
 -- | The empty widget.
-emptyWidget :: Widget
+emptyWidget :: Widget n
 emptyWidget = raw V.emptyImage
 
 -- | Add an offset to all cursor locations and visbility requests
@@ -105,13 +105,13 @@ emptyWidget = raw V.emptyImage
 -- by other combinators. You should call this any time you render
 -- something and then translate it or otherwise offset it from its
 -- original origin.
-addResultOffset :: Location -> Result -> Result
+addResultOffset :: Location -> Result n -> Result n
 addResultOffset off = addCursorOffset off . addVisibilityOffset off
 
-addVisibilityOffset :: Location -> Result -> Result
+addVisibilityOffset :: Location -> Result n -> Result n
 addVisibilityOffset off r = r & visibilityRequestsL.each.vrPositionL %~ (off <>)
 
-addCursorOffset :: Location -> Result -> Result
+addCursorOffset :: Location -> Result n -> Result n
 addCursorOffset off r =
     let onlyVisible = filter isVisible
         isVisible l = l^.columnL >= 0 && l^.rowL >= 0
@@ -122,7 +122,7 @@ unrestricted = 100000
 
 -- | Build a widget from a 'String'. Breaks newlines up and space-pads
 -- short lines out to the length of the longest line.
-str :: String -> Widget
+str :: String -> Widget n
 str s =
     Widget Fixed Fixed $ do
       c <- getContext
@@ -141,13 +141,13 @@ str s =
 
 -- | Build a widget from a one-line 'T.Text' value. Behaves the same as
 -- 'str'.
-txt :: T.Text -> Widget
+txt :: T.Text -> Widget n
 txt = str . T.unpack
 
 -- | Pad the specified widget on the left. If max padding is used, this
 -- grows greedily horizontally; otherwise it defers to the padded
 -- widget.
-padLeft :: Padding -> Widget -> Widget
+padLeft :: Padding -> Widget n -> Widget n
 padLeft padding p =
     let (f, sz) = case padding of
           Max -> (id, Greedy)
@@ -164,7 +164,7 @@ padLeft padding p =
 -- | Pad the specified widget on the right. If max padding is used,
 -- this grows greedily horizontally; otherwise it defers to the padded
 -- widget.
-padRight :: Padding -> Widget -> Widget
+padRight :: Padding -> Widget n -> Widget n
 padRight padding p =
     let (f, sz) = case padding of
           Max -> (id, Greedy)
@@ -180,7 +180,7 @@ padRight padding p =
 
 -- | Pad the specified widget on the top. If max padding is used, this
 -- grows greedily vertically; otherwise it defers to the padded widget.
-padTop :: Padding -> Widget -> Widget
+padTop :: Padding -> Widget n -> Widget n
 padTop padding p =
     let (f, sz) = case padding of
           Max -> (id, Greedy)
@@ -197,7 +197,7 @@ padTop padding p =
 -- | Pad the specified widget on the bottom. If max padding is used,
 -- this grows greedily vertically; otherwise it defers to the padded
 -- widget.
-padBottom :: Padding -> Widget -> Widget
+padBottom :: Padding -> Widget n -> Widget n
 padBottom padding p =
     let (f, sz) = case padding of
           Max -> (id, Greedy)
@@ -213,22 +213,22 @@ padBottom padding p =
 
 -- | Pad a widget on the left and right. Defers to the padded widget for
 -- growth policy.
-padLeftRight :: Int -> Widget -> Widget
+padLeftRight :: Int -> Widget n -> Widget n
 padLeftRight c w = padLeft (Pad c) $ padRight (Pad c) w
 
 -- | Pad a widget on the top and bottom. Defers to the padded widget for
 -- growth policy.
-padTopBottom :: Int -> Widget -> Widget
+padTopBottom :: Int -> Widget n -> Widget n
 padTopBottom r w = padTop (Pad r) $ padBottom (Pad r) w
 
 -- | Pad a widget on all sides. Defers to the padded widget for growth
 -- policy.
-padAll :: Int -> Widget -> Widget
+padAll :: Int -> Widget n -> Widget n
 padAll v w = padLeftRight v $ padTopBottom v w
 
 -- | Fill all available space with the specified character. Grows both
 -- horizontally and vertically.
-fill :: Char -> Widget
+fill :: Char -> Widget n
 fill ch =
     Widget Greedy Greedy $ do
       c <- getContext
@@ -238,7 +238,7 @@ fill ch =
 -- in the specified order (uppermost first). Defers growth policies to
 -- the growth policies of the contained widgets (if any are greedy, so
 -- is the box).
-vBox :: [Widget] -> Widget
+vBox :: [Widget n] -> Widget n
 vBox [] = emptyWidget
 vBox pairs = renderBox vBoxRenderer pairs
 
@@ -246,7 +246,7 @@ vBox pairs = renderBox vBoxRenderer pairs
 -- in the specified order (leftmost first). Defers growth policies to
 -- the growth policies of the contained widgets (if any are greedy, so
 -- is the box).
-hBox :: [Widget] -> Widget
+hBox :: [Widget n] -> Widget n
 hBox [] = emptyWidget
 hBox pairs = renderBox hBoxRenderer pairs
 
@@ -260,20 +260,20 @@ hBox pairs = renderBox hBoxRenderer pairs
 -- horizontal if the box layout is vertical). Doing this permits us to
 -- have one implementation for box layout and parameterizing on the
 -- orientation of all of the operations.
-data BoxRenderer =
+data BoxRenderer n =
     BoxRenderer { contextPrimary :: Lens' Context Int
                 , contextSecondary :: Lens' Context Int
                 , imagePrimary :: V.Image -> Int
                 , imageSecondary :: V.Image -> Int
-                , limitPrimary :: Int -> Widget -> Widget
-                , limitSecondary :: Int -> Widget -> Widget
-                , primaryWidgetSize :: Widget -> Size
+                , limitPrimary :: Int -> Widget n -> Widget n
+                , limitSecondary :: Int -> Widget n -> Widget n
+                , primaryWidgetSize :: Widget n -> Size
                 , concatenatePrimary :: [V.Image] -> V.Image
                 , locationFromOffset :: Int -> Location
                 , padImageSecondary :: Int -> V.Image -> V.Attr -> V.Image
                 }
 
-vBoxRenderer :: BoxRenderer
+vBoxRenderer :: BoxRenderer n
 vBoxRenderer =
     BoxRenderer { contextPrimary = availHeightL
                 , contextSecondary = availWidthL
@@ -289,7 +289,7 @@ vBoxRenderer =
                     in V.horizCat [img, p]
                 }
 
-hBoxRenderer :: BoxRenderer
+hBoxRenderer :: BoxRenderer n
 hBoxRenderer =
     BoxRenderer { contextPrimary = availWidthL
                 , contextSecondary = availHeightL
@@ -352,7 +352,7 @@ hBoxRenderer =
 -- Finally, the padded images are concatenated together vertically and
 -- returned along with the translated cursor positions and visibility
 -- requests.
-renderBox :: BoxRenderer -> [Widget] -> Widget
+renderBox :: BoxRenderer n -> [Widget n] -> Widget n
 renderBox br ws =
     Widget (maximum $ hSize <$> ws) (maximum $ vSize <$> ws) $ do
       c <- getContext
@@ -413,7 +413,7 @@ renderBox br ws =
 -- number of columns. This is important for constraining the horizontal
 -- growth of otherwise-greedy widgets. This is non-greedy horizontally
 -- and defers to the limited widget vertically.
-hLimit :: Int -> Widget -> Widget
+hLimit :: Int -> Widget n -> Widget n
 hLimit w p =
     Widget Fixed (vSize p) $
       withReaderT (& availWidthL .~ w) $ render $ cropToContext p
@@ -422,7 +422,7 @@ hLimit w p =
 -- number of rows. This is important for constraining the vertical
 -- growth of otherwise-greedy widgets. This is non-greedy vertically and
 -- defers to the limited widget horizontally.
-vLimit :: Int -> Widget -> Widget
+vLimit :: Int -> Widget n -> Widget n
 vLimit h p =
     Widget (hSize p) Fixed $
       withReaderT (& availHeightL .~ h) $ render $ cropToContext p
@@ -434,7 +434,7 @@ vLimit h p =
 -- get merged hierarchically and still fall back to the attribute map's
 -- default attribute. If you want to change the default attribute, use
 -- 'withDefAttr'.
-withAttr :: AttrName -> Widget -> Widget
+withAttr :: AttrName -> Widget n -> Widget n
 withAttr an p =
     Widget (hSize p) (vSize p) $
       withReaderT (& ctxAttrNameL .~ an) (render p)
@@ -442,7 +442,7 @@ withAttr an p =
 -- | Update the attribute map while rendering the specified widget: set
 -- its new default attribute to the one that we get by looking up the
 -- specified attribute name in the map.
-withDefAttr :: AttrName -> Widget -> Widget
+withDefAttr :: AttrName -> Widget n -> Widget n
 withDefAttr an p =
     Widget (hSize p) (vSize p) $ do
         c <- getContext
@@ -450,7 +450,7 @@ withDefAttr an p =
 
 -- | When rendering the specified widget, update the attribute map with
 -- the specified transformation.
-updateAttrMap :: (AttrMap -> AttrMap) -> Widget -> Widget
+updateAttrMap :: (AttrMap -> AttrMap) -> Widget n -> Widget n
 updateAttrMap f p =
     Widget (hSize p) (vSize p) $
         withReaderT (& ctxAttrMapL %~ f) (render p)
@@ -458,19 +458,19 @@ updateAttrMap f p =
 -- | When rendering the specified widget, force all attribute lookups
 -- in the attribute map to use the value currently assigned to the
 -- specified attribute name.
-forceAttr :: AttrName -> Widget -> Widget
+forceAttr :: AttrName -> Widget n -> Widget n
 forceAttr an p =
     Widget (hSize p) (vSize p) $ do
         c <- getContext
         withReaderT (& ctxAttrMapL .~ (forceAttrMap (attrMapLookup an (c^.ctxAttrMapL)))) (render p)
 
 -- | Build a widget directly from a raw Vty image.
-raw :: V.Image -> Widget
+raw :: V.Image -> Widget n
 raw img = Widget Fixed Fixed $ return $ def & imageL .~ img
 
 -- | Translate the specified widget by the specified offset amount.
 -- Defers to the translated width for growth policy.
-translateBy :: Location -> Widget -> Widget
+translateBy :: Location -> Widget n -> Widget n
 translateBy off p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
@@ -479,7 +479,7 @@ translateBy off p =
 
 -- | Crop the specified widget on the left by the specified number of
 -- columns. Defers to the translated width for growth policy.
-cropLeftBy :: Int -> Widget -> Widget
+cropLeftBy :: Int -> Widget n -> Widget n
 cropLeftBy cols p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
@@ -490,7 +490,7 @@ cropLeftBy cols p =
 
 -- | Crop the specified widget on the right by the specified number of
 -- columns. Defers to the translated width for growth policy.
-cropRightBy :: Int -> Widget -> Widget
+cropRightBy :: Int -> Widget n -> Widget n
 cropRightBy cols p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
@@ -500,7 +500,7 @@ cropRightBy cols p =
 
 -- | Crop the specified widget on the top by the specified number of
 -- rows. Defers to the translated width for growth policy.
-cropTopBy :: Int -> Widget -> Widget
+cropTopBy :: Int -> Widget n -> Widget n
 cropTopBy rows p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
@@ -511,7 +511,7 @@ cropTopBy rows p =
 
 -- | Crop the specified widget on the bottom by the specified number of
 -- rows. Defers to the translated width for growth policy.
-cropBottomBy :: Int -> Widget -> Widget
+cropBottomBy :: Int -> Widget n -> Widget n
 cropBottomBy rows p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
@@ -521,19 +521,19 @@ cropBottomBy rows p =
 
 -- | When rendering the specified widget, also register a cursor
 -- positioning request using the specified name and location.
-showCursor :: Name -> Location -> Widget -> Widget
+showCursor :: n -> Location -> Widget n -> Widget n
 showCursor n cloc p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
       return $ result & cursorsL %~ (CursorLocation cloc (Just n):)
 
-hRelease :: Widget -> Maybe Widget
+hRelease :: Widget n -> Maybe (Widget n)
 hRelease p =
     case hSize p of
         Fixed -> Just $ Widget Greedy (vSize p) $ withReaderT (& availWidthL .~ unrestricted) (render p)
         Greedy -> Nothing
 
-vRelease :: Widget -> Maybe Widget
+vRelease :: Widget n -> Maybe (Widget n)
 vRelease p =
     case vSize p of
         Fixed -> Just $ Widget (hSize p) Greedy $ withReaderT (& availHeightL .~ unrestricted) (render p)
@@ -553,15 +553,16 @@ vRelease p =
 -- taking preference. If a viewport receives more than one scrolling
 -- request from 'Brick.Main.EventM', all are honored in the order in
 -- which they are received.
-viewport :: Name
+viewport :: (Ord n, Show n)
+         => n
          -- ^ The name of the viewport (must be unique and stable for
          -- reliable behavior)
          -> ViewportType
          -- ^ The type of viewport (indicates the permitted scrolling
          -- direction)
-         -> Widget
+         -> Widget n
          -- ^ The widget to be rendered in the scrollable viewport
-         -> Widget
+         -> Widget n
 viewport vpname typ p =
     Widget Greedy Greedy $ do
       -- First, update the viewport size.
@@ -577,17 +578,16 @@ viewport vpname typ p =
       -- constraint released (but raise an exception if we are asked to
       -- render an infinitely-sized widget in the viewport's scrolling
       -- dimension)
-      let Name vpn = vpname
-          release = case typ of
+      let release = case typ of
             Vertical -> vRelease
             Horizontal -> hRelease
             Both ->vRelease >=> hRelease
           released = case release p of
             Just w -> w
             Nothing -> case typ of
-                Vertical -> error $ "tried to embed an infinite-height widget in vertical viewport " <> (show vpn)
-                Horizontal -> error $ "tried to embed an infinite-width widget in horizontal viewport " <> (show vpn)
-                Both -> error $ "tried to embed an infinite-width or infinite-height widget in 'Both' type viewport " <> (show vpn)
+                Vertical -> error $ "tried to embed an infinite-height widget in vertical viewport " <> (show vpname)
+                Horizontal -> error $ "tried to embed an infinite-width widget in horizontal viewport " <> (show vpname)
+                Both -> error $ "tried to embed an infinite-width or infinite-height widget in 'Both' type viewport " <> (show vpname)
 
       initialResult <- render released
 
@@ -666,7 +666,7 @@ viewport vpname typ p =
 -- is because viewports are updated during rendering and the one you are
 -- interested in may not have been rendered yet. So if you want to use
 -- this, be sure you know what you are doing.
-unsafeLookupViewport :: Name -> RenderM (Maybe Viewport)
+unsafeLookupViewport :: (Ord n) => n -> RenderM n (Maybe Viewport)
 unsafeLookupViewport name = lift $ gets (M.lookup name . (^.viewportMapL))
 
 scrollTo :: ViewportType -> ScrollRequest -> V.Image -> Viewport -> Viewport
@@ -732,7 +732,7 @@ scrollToView Horizontal rq vp = vp & vpLeft .~ newHStart
 -- deal with the details of scrolling state management.
 --
 -- This does nothing if not rendered in a viewport.
-visible :: Widget -> Widget
+visible :: Widget n -> Widget n
 visible p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
@@ -751,7 +751,7 @@ visible p =
 -- relative to the specified widget's upper-left corner of (0, 0).
 --
 -- This does nothing if not rendered in a viewport.
-visibleRegion :: Location -> V.DisplayRegion -> Widget -> Widget
+visibleRegion :: Location -> V.DisplayRegion -> Widget n -> Widget n
 visibleRegion vrloc sz p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
@@ -764,19 +764,19 @@ visibleRegion vrloc sz p =
 -- | Horizontal box layout: put the specified widgets next to each other
 -- in the specified order. Defers growth policies to the growth policies
 -- of both widgets.  This operator is a binary version of 'hBox'.
-(<+>) :: Widget
+(<+>) :: Widget n
       -- ^ Left
-      -> Widget
+      -> Widget n
       -- ^ Right
-      -> Widget
+      -> Widget n
 (<+>) a b = hBox [a, b]
 
 -- | Vertical box layout: put the specified widgets one above the other
 -- in the specified order. Defers growth policies to the growth policies
 -- of both widgets.  This operator is a binary version of 'vBox'.
-(<=>) :: Widget
+(<=>) :: Widget n
       -- ^ Top
-      -> Widget
+      -> Widget n
       -- ^ Bottom
-      -> Widget
+      -> Widget n
 (<=>) a b = vBox [a, b]

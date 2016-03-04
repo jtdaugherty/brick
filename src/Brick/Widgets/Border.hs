@@ -75,26 +75,26 @@ brCornerAttr = borderAttr <> "corner" <> "br"
 
 -- | Draw the specified border element using the active border style
 -- using 'borderAttr'.
-borderElem :: (BorderStyle -> Char) -> Widget
+borderElem :: (BorderStyle -> Char) -> Widget n
 borderElem f =
     Widget Fixed Fixed $ do
       bs <- ctxBorderStyle <$> getContext
       render $ withAttr borderAttr $ str [f bs]
 
 -- | Put a border around the specified widget.
-border :: Widget -> Widget
+border :: Widget n -> Widget n
 border = border_ Nothing
 
 -- | Put a border around the specified widget with the specified label
 -- widget placed in the middle of the top horizontal border.
-borderWithLabel :: Widget
+borderWithLabel :: Widget n
                 -- ^ The label widget
-                -> Widget
+                -> Widget n
                 -- ^ The widget to put a border around
-                -> Widget
+                -> Widget n
 borderWithLabel label = border_ (Just label)
 
-border_ :: Maybe Widget -> Widget -> Widget
+border_ :: Maybe (Widget n) -> Widget n -> Widget n
 border_ label wrapped =
     Widget (hSize wrapped) (vSize wrapped) $ do
       bs <- ctxBorderStyle <$> getContext
@@ -118,17 +118,17 @@ border_ label wrapped =
              $ total
 
 -- | A horizontal border.  Fills all horizontal space.
-hBorder :: Widget
+hBorder :: Widget n
 hBorder = hBorder_ Nothing
 
 -- | A horizontal border with a label placed in the center of the
 -- border. Fills all horizontal space.
-hBorderWithLabel :: Widget
+hBorderWithLabel :: Widget n
                  -- ^ The label widget
-                 -> Widget
+                 -> Widget n
 hBorderWithLabel label = hBorder_ (Just label)
 
-hBorder_ :: Maybe Widget -> Widget
+hBorder_ :: Maybe (Widget n) -> Widget n
 hBorder_ label =
     Widget Greedy Fixed $ do
       bs <- ctxBorderStyle <$> getContext
@@ -136,7 +136,7 @@ hBorder_ label =
       render $ vLimit 1 $ withAttr hBorderAttr $ hCenterWith (Just $ bsHorizontal bs) msg
 
 -- | A vertical border.  Fills all vertical space.
-vBorder :: Widget
+vBorder :: Widget n
 vBorder =
     Widget Fixed Greedy $ do
       bs <- ctxBorderStyle <$> getContext

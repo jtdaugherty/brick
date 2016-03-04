@@ -52,10 +52,10 @@ custom =
                    , BS.bsVertical = '!'
                    }
 
-borderDemos :: [Widget]
+borderDemos :: [Widget ()]
 borderDemos = mkBorderDemo <$> styles
 
-mkBorderDemo :: (T.Text, BS.BorderStyle) -> Widget
+mkBorderDemo :: (T.Text, BS.BorderStyle) -> Widget ()
 mkBorderDemo (styleName, sty) =
     withBorderStyle sty $
     B.borderWithLabel (str "label") $
@@ -75,7 +75,7 @@ borderMappings =
     , (B.brCornerAttr,       bg V.green)
     ]
 
-colorDemo :: Widget
+colorDemo :: Widget ()
 colorDemo =
     updateAttrMap (A.applyAttrMappings borderMappings) $
     B.borderWithLabel (str "title") $
@@ -84,7 +84,7 @@ colorDemo =
     C.center $
     str "colors!"
 
-ui :: Widget
+ui :: Widget ()
 ui =
     hBox borderDemos
     <=> B.hBorder

@@ -36,20 +36,16 @@ data St =
 
 makeLenses ''St
 
-vp1Name :: T.Name
-vp1Name = "demo1"
+data Name = VP1
+          | VP2
+          | VP3
+          deriving (Show, Ord, Eq)
 
 vp1Size :: Int
 vp1Size = 15
 
-vp2Name :: T.Name
-vp2Name = "demo2"
-
 vp2Size :: Int
 vp2Size = 15
-
-vp3Name :: T.Name
-vp3Name = "demo3"
 
 vp3Size :: (Int, Int)
 vp3Size = (25, 25)
@@ -57,7 +53,7 @@ vp3Size = (25, 25)
 selectedAttr :: AttrName
 selectedAttr = "selected"
 
-drawUi :: St -> [Widget]
+drawUi :: St -> [Widget Name]
 drawUi st = [ui]
     where
         ui = C.center $ hLimit 60 $ vLimit 30 $
@@ -66,7 +62,7 @@ drawUi st = [ui]
                           "- Left/right arrow keys scroll the top-right viewport\n" <>
                           "- Ctrl-arrow keys move the bottom viewport"
                   ]
-        singleton = viewport vp3Name Both $
+        singleton = viewport VP3 Both $
                     vBox $ do
                          i <- [1..vp3Size^._1]
                          let row = do
@@ -78,14 +74,14 @@ drawUi st = [ui]
                          return $ hBox row
 
         pair = hBox [ vp1, B.vBorder, vp2 ]
-        vp1 = viewport vp1Name Vertical $
+        vp1 = viewport VP1 Vertical $
                   vBox $ do
                       i <- [1..vp1Size]
                       let mkItem = if i == st^.vp1Index
                                    then withAttr selectedAttr . visible
                                    else id
                       return $ mkItem $ str $ "Item " <> show i
-        vp2 = viewport vp2Name Horizontal $
+        vp2 = viewport VP2 Horizontal $
                   hBox $ do
                       i <- [1..vp2Size]
                       let mkItem = if i == st^.vp2Index
@@ -93,16 +89,16 @@ drawUi st = [ui]
                                    else id
                       return $ mkItem $ str $ "Item " <> show i <> " "
 
-vp1Scroll :: M.ViewportScroll
-vp1Scroll = M.viewportScroll vp1Name
+vp1Scroll :: M.ViewportScroll Name
+vp1Scroll = M.viewportScroll VP1
 
-vp2Scroll :: M.ViewportScroll
-vp2Scroll = M.viewportScroll vp2Name
+vp2Scroll :: M.ViewportScroll Name
+vp2Scroll = M.viewportScroll VP2
 
-vp3Scroll :: M.ViewportScroll
-vp3Scroll = M.viewportScroll vp3Name
+vp3Scroll :: M.ViewportScroll Name
+vp3Scroll = M.viewportScroll VP3
 
-appEvent :: St -> V.Event -> T.EventM (T.Next St)
+appEvent :: St -> V.Event -> T.EventM Name (T.Next St)
 appEvent st (V.EvKey V.KDown  [V.MCtrl]) = M.continue $ st & vp3Index._1 %~ min (vp3Size^._1) . (+ 1)
 appEvent st (V.EvKey V.KUp    [V.MCtrl]) = M.continue $ st & vp3Index._1 %~ max 1 . subtract 1
 appEvent st (V.EvKey V.KRight [V.MCtrl]) = M.continue $ st & vp3Index._2 %~ min (vp3Size^._1) . (+ 1)
@@ -119,7 +115,7 @@ theMap = attrMap V.defAttr
     [ (selectedAttr, V.black `on` V.yellow)
     ]
 
-app :: M.App St V.Event
+app :: M.App St V.Event Name
 app =
     M.App { M.appDraw = drawUi
           , M.appStartEvent = return

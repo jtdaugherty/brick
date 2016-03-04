@@ -36,14 +36,14 @@ makeLenses ''St
 data CustomEvent = VtyEvent V.Event
                  | Counter
 
-drawUI :: St -> [Widget]
+drawUI :: St -> [Widget ()]
 drawUI st = [a]
     where
         a = (str $ "Last Vty event: " <> (show $ st^.stLastVtyEvent))
             <=>
             (str $ "Counter value is: " <> (show $ st^.stCounter))
 
-appEvent :: St -> CustomEvent -> EventM (Next St)
+appEvent :: St -> CustomEvent -> EventM () (Next St)
 appEvent st e =
     case e of
         VtyEvent (V.EvKey V.KEsc []) -> halt st
@@ -56,7 +56,7 @@ initialState =
        , _stCounter = 0
        }
 
-theApp :: App St CustomEvent
+theApp :: App St CustomEvent ()
 theApp =
     App { appDraw = drawUI
         , appChooseCursor = showFirstCursor

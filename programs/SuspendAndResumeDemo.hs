@@ -28,14 +28,14 @@ data St =
 
 makeLenses ''St
 
-drawUI :: St -> [Widget]
+drawUI :: St -> [Widget ()]
 drawUI st = [ui]
     where
         ui = vBox [ str $ "External input: \"" <> st^.stExternalInput <> "\""
                   , str "(Press Esc to quit or Space to ask for input)"
                   ]
 
-appEvent :: St -> V.Event -> EventM (Next St)
+appEvent :: St -> V.Event -> EventM () (Next St)
 appEvent st e =
     case e of
         V.EvKey V.KEsc [] -> halt st
@@ -50,7 +50,7 @@ initialState =
     St { _stExternalInput = ""
        }
 
-theApp :: App St V.Event
+theApp :: App St V.Event ()
 theApp =
     App { appDraw = drawUI
         , appChooseCursor = neverShowCursor

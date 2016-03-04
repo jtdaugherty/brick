@@ -27,7 +27,7 @@ import Brick.Widgets.Core
   )
 import Brick.Util (fg, on)
 
-drawUI :: (Show a) => L.List a -> [Widget]
+drawUI :: (Show a) => L.List () a -> [Widget ()]
 drawUI l = [ui]
     where
         label = str "Item " <+> cur <+> str " of " <+> total
@@ -45,7 +45,7 @@ drawUI l = [ui]
                               , C.hCenter $ str "Press Esc to exit."
                               ]
 
-appEvent :: L.List Char -> V.Event -> T.EventM (T.Next (L.List Char))
+appEvent :: L.List () Char -> V.Event -> T.EventM () (T.Next (L.List () Char))
 appEvent l e =
     case e of
         V.EvKey (V.KChar '+') [] ->
@@ -60,20 +60,20 @@ appEvent l e =
 
         V.EvKey V.KEsc [] -> M.halt l
 
-        ev -> M.continue =<< T.handleEvent ev l
+        ev -> M.continue =<< L.handleListEvent ev l
     where
       nextElement :: V.Vector Char -> Char
       nextElement v = fromMaybe '?' $ V.find (flip V.notElem v) (V.fromList ['a' .. 'z'])
 
-listDrawElement :: (Show a) => Bool -> a -> Widget
+listDrawElement :: (Show a) => Bool -> a -> Widget ()
 listDrawElement sel a =
     let selStr s = if sel
                    then withAttr customAttr (str $ "<" <> s <> ">")
                    else str s
     in C.hCenter $ str "Item " <+> (selStr $ show a)
 
-initialState :: L.List Char
-initialState = L.list (T.Name "list") (V.fromList ['a','b','c']) 1
+initialState :: L.List () Char
+initialState = L.list () (V.fromList ['a','b','c']) 1
 
 customAttr :: A.AttrName
 customAttr = L.listSelectedAttr <> "custom"
@@ -85,7 +85,7 @@ theMap = A.attrMap V.defAttr
     , (customAttr,            fg V.cyan)
     ]
 
-theApp :: M.App (L.List Char) V.Event
+theApp :: M.App (L.List () Char) V.Event ()
 theApp =
     M.App { M.appDraw = drawUI
           , M.appChooseCursor = M.showFirstCursor

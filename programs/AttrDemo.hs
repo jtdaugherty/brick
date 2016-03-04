@@ -20,7 +20,7 @@ import Brick.Widgets.Core
 import Brick.Util (on, fg)
 import Brick.AttrMap (attrMap, AttrMap)
 
-ui :: Widget
+ui :: Widget ()
 ui =
     vBox [ str "This text uses the global default attribute."
          , withAttr "foundFull" $
@@ -51,7 +51,7 @@ theMap = attrMap globalDefault
     , ("general" <> "specific",   fg cyan)
     ]
 
-app :: App () Event
+app :: App () Event ()
 app =
     App { appDraw = const [ui]
         , appHandleEvent = resizeOrQuit

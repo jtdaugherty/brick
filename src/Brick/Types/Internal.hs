@@ -5,7 +5,6 @@ module Brick.Types.Internal
   , VisibilityRequest(..)
   , vrPositionL
   , vrSizeL
-  , Name(..)
   , Location(..)
   , locL
   , origin
@@ -39,17 +38,9 @@ import Brick.Types.TH
 import Brick.AttrMap (AttrName, AttrMap)
 import Brick.Widgets.Border.Style (BorderStyle)
 
--- | Names of things. Used to name cursor locations, widgets, and
--- viewports.
-newtype Name = Name String
-             deriving (Eq, Show, Ord)
-
-instance IsString Name where
-    fromString = Name
-
-data RenderState =
-    RS { viewportMap :: M.Map Name Viewport
-       , scrollRequests :: [(Name, ScrollRequest)]
+data RenderState n =
+    RS { viewportMap :: M.Map n Viewport
+       , scrollRequests :: [(n, ScrollRequest)]
        }
 
 data ScrollRequest = HScrollBy Int
@@ -89,7 +80,7 @@ data ViewportType = Vertical
                   -- ^ Viewports of this type are scrollable vertically and horizontally.
                   deriving Show
 
-type EventState = [(Name, ScrollRequest)]
+type EventState n = [(n, ScrollRequest)]
 
 -- | The type of actions to take upon completion of an event handler.
 data Next a = Continue a
@@ -140,10 +131,10 @@ instance Monoid Location where
     mappend (Location (w1, h1)) (Location (w2, h2)) = Location (w1+w2, h1+h2)
 
 -- | A cursor location.  These are returned by the rendering process.
-data CursorLocation =
+data CursorLocation n =
     CursorLocation { cursorLocation :: !Location
                    -- ^ The location
-                   , cursorLocationName :: !(Maybe Name)
+                   , cursorLocationName :: !(Maybe n)
                    -- ^ The name of the widget associated with the location
                    }
                    deriving Show

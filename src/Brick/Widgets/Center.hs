@@ -23,13 +23,13 @@ import Brick.Widgets.Core
 
 -- | Center the specified widget horizontally. Consumes all available
 -- horizontal space.
-hCenter :: Widget -> Widget
+hCenter :: Widget n -> Widget n
 hCenter = hCenterWith Nothing
 
 -- | Center the specified widget horizontally. Consumes all available
 -- horizontal space. Uses the specified character to fill in the space
 -- to either side of the centered widget (defaults to space).
-hCenterWith :: Maybe Char -> Widget -> Widget
+hCenterWith :: Maybe Char -> Widget n -> Widget n
 hCenterWith mChar p =
     let ch = fromMaybe ' ' mChar
     in Widget Greedy (vSize p) $ do
@@ -53,13 +53,13 @@ hCenterWith mChar p =
                       $ result & imageL .~ paddedImage
 
 -- | Center a widget vertically.  Consumes all vertical space.
-vCenter :: Widget -> Widget
+vCenter :: Widget n -> Widget n
 vCenter = vCenterWith Nothing
 
 -- | Center a widget vertically. Consumes all vertical space. Uses the
 -- specified character to fill in the space above and below the centered
 -- widget (defaults to space).
-vCenterWith :: Maybe Char -> Widget -> Widget
+vCenterWith :: Maybe Char -> Widget n -> Widget n
 vCenterWith mChar p =
     let ch = fromMaybe ' ' mChar
     in Widget (hSize p) Greedy $ do
@@ -84,18 +84,18 @@ vCenterWith mChar p =
 
 -- | Center a widget both vertically and horizontally. Consumes all
 -- available vertical and horizontal space.
-center :: Widget -> Widget
+center :: Widget n -> Widget n
 center = centerWith Nothing
 
 -- | Center a widget both vertically and horizontally. Consumes all
 -- available vertical and horizontal space. Uses the specified character
 -- to fill in the space around the centered widget (defaults to space).
-centerWith :: Maybe Char -> Widget -> Widget
+centerWith :: Maybe Char -> Widget n -> Widget n
 centerWith c = vCenterWith c . hCenterWith c
 
 -- | Center the widget horizontally and vertically about the specified
 -- origin.
-centerAbout :: Location -> Widget -> Widget
+centerAbout :: Location -> Widget n -> Widget n
 centerAbout l p =
     Widget Greedy Greedy $ do
       -- Compute translation offset so that loc is in the middle of the

@@ -24,7 +24,7 @@ import Brick.Widgets.Core
 import Brick.Widgets.Border as B
 import Brick.Widgets.Center as C
 
-ui :: Widget
+ui :: Widget ()
 ui =
     vBox [ hBox [ padLeft Max $ vCenter $ str "Left-padded"
                 , B.vBorder
@@ -46,7 +46,7 @@ ui =
          , padAll 2 $ str "Padded by 2 on all sides"
          ]
 
-app :: App () V.Event
+app :: App () V.Event ()
 app =
     App { appDraw = const [ui]
         , appHandleEvent = resizeOrQuit

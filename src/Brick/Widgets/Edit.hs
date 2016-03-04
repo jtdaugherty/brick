@@ -15,6 +15,8 @@ module Brick.Widgets.Edit
   , editor
   -- * Reading editor contents
   , getEditContents
+  -- * Handling events
+  , handleEditorEvent
   -- * Editing text
   , applyEdit
   -- * Lenses for working with editors
@@ -45,19 +47,19 @@ import Brick.AttrMap
 -- * Ctrl-k: delete all from cursor to end of line
 -- * Arrow keys: move cursor
 -- * Enter: break the current line at the cursor position
-data Editor =
+data Editor n =
     Editor { editContents :: Z.TextZipper String
            -- ^ The contents of the editor
-           , editDrawContents :: [String] -> Widget
+           , editDrawContents :: [String] -> Widget n
            -- ^ The function the editor uses to draw its contents
-           , editorName :: Name
+           , editorName :: n
            -- ^ The name of the editor
            }
 
 suffixLenses ''Editor
 
-instance HandleEvent Editor where
-    handleEvent e ed =
+handleEditorEvent :: Event -> Editor n -> EventM n (Editor n)
+handleEditorEvent e ed =
         let f = case e of
                   EvKey (KChar 'a') [MCtrl] -> Z.gotoBOL
                   EvKey (KChar 'e') [MCtrl] -> Z.gotoEOL
@@ -75,16 +77,16 @@ instance HandleEvent Editor where
         in return $ applyEdit f ed
 
 -- | Construct an editor.
-editor :: Name
+editor :: n
        -- ^ The editor's name (must be unique)
-       -> ([String] -> Widget)
+       -> ([String] -> Widget n)
        -- ^ The content rendering function
        -> Maybe Int
        -- ^ The limit on the number of lines in the editor ('Nothing'
        -- means no limit)
        -> String
        -- ^ The initial content
-       -> Editor
+       -> Editor n
 editor name draw limit s = Editor (Z.stringZipper [s] limit) draw name
 
 -- | Apply an editing operation to the editor's contents. Bear in mind
@@ -93,8 +95,8 @@ editor name draw limit s = Editor (Z.stringZipper [s] limit) draw name
 -- text.
 applyEdit :: (Z.TextZipper String -> Z.TextZipper String)
           -- ^ The 'Data.Text.Zipper' editing transformation to apply
-          -> Editor
-          -> Editor
+          -> Editor n
+          -> Editor n
 applyEdit f e = e & editContentsL %~ f
 
 -- | The attribute assigned to the editor
@@ -102,11 +104,11 @@ editAttr :: AttrName
 editAttr = "edit"
 
 -- | Get the contents of the editor.
-getEditContents :: Editor -> [String]
+getEditContents :: Editor n -> [String]
 getEditContents e = Z.getText $ e^.editContentsL
 
 -- | Turn an editor state value into a widget
-renderEditor :: Editor -> Widget
+renderEditor :: (Ord n, Show n) => Editor n -> Widget n
 renderEditor e =
     let cp = Z.cursorPosition $ e^.editContentsL
         cursorLoc = Location (cp^._2, cp^._1)

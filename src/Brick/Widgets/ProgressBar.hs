@@ -32,7 +32,7 @@ progressBar :: Maybe String
             -- the progress bar.
             -> Float
             -- ^ The progress value. Should be between 0 and 1 inclusive.
-            -> Widget
+            -> Widget n
 progressBar mLabel progress =
     Widget Greedy Fixed $ do
         c <- getContext

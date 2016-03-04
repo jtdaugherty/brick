@@ -19,7 +19,7 @@ import Brick.Markup (markup, (@?))
 import Brick.AttrMap (attrMap, AttrMap)
 import Data.Text.Markup ((@@))
 
-ui :: Widget
+ui :: Widget ()
 ui = (m1 <=> m2) <+> (padLeft (Pad 1) m3)
     where
         m1 = markup $ ("Hello" @@ fg V.blue) <> ", " <> ("world!" @@ fg V.red)
@@ -32,7 +32,7 @@ theMap = attrMap V.defAttr
     , ("keyword2",      V.white `on` V.blue)
     ]
 
-app :: App () V.Event
+app :: App () V.Event ()
 app =
     App { appDraw = const [ui]
         , appHandleEvent = resizeOrQuit
