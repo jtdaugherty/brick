@@ -2,6 +2,31 @@
 Brick changelog
 ---------------
 
+0.5
+---
+
+Functionality changes:
+ * Markup: make markup support multi-line strings (fixes #41)
+ * brick-edit-demo: support shift-tab to switch editors
+ * Core: improve box layout algorithm (when rendering boxes, track
+   remaining space while rendering high-priority children to use
+   successively more constrained primary dimensions)
+ * Core: make fixed padding take precedence over padded widgets (fixes #42)
+   Prior to this commit, padding a widget meant that if there was room
+   after rendering the widget, the specified amount of padding would be
+   added. This meant that under tight layout constraints padding would
+   disappear before a padded widget would. This is often a desirable
+   outcome but it also led to unexpected behavior when adding padding
+   to a widget that grows greedily: fixed padding would never show up
+   because it was placed in a box adjacent to the widget in question,
+   and boxes always render greedy children before fixed ones. As a
+   result fixed padding would disappear under these conditions. Instead,
+   in the case of fixed padding, since we often intend to *guarantee*
+   that padding is present, all of the padding combinators have been
+   modified so that when the padded widget is rendered with fixed
+   padding in the amount V, the widget is given V fewer rows/columns
+   when it is rendered so that the padding always has room.
+
 0.4.1
 -----
 
