@@ -18,6 +18,7 @@ import Brick.Widgets.Core
 import qualified Brick.Widgets.Center as C
 import qualified Brick.Widgets.Edit as E
 import qualified Brick.AttrMap as A
+import qualified Brick.Focus as F
 import Brick.Util (on)
 
 data Name = Edit1
@@ -25,24 +26,19 @@ data Name = Edit1
           deriving (Ord, Show, Eq)
 
 data St =
-    St { _currentEditor :: Name
+    St { _focusRing :: F.FocusRing Name
        , _edit1 :: E.Editor Name
        , _edit2 :: E.Editor Name
        }
 
 makeLenses ''St
 
-switchEditors :: St -> St
-switchEditors st =
-    let next = if st^.currentEditor == Edit1
-               then Edit2 else Edit1
-    in st & currentEditor .~ next
-
 currentEditorL :: St -> Lens' St (E.Editor Name)
 currentEditorL st =
-    if st^.currentEditor == Edit1
-    then edit1
-    else edit2
+    case F.focusGetCurrent (st^.focusRing) of
+        Just Edit1 -> edit1
+        Just Edit2 -> edit2
+        Nothing -> error "BUG: focus ring had nothing selected!"
 
 drawUI :: St -> [T.Widget Name]
 drawUI st = [ui]
@@ -57,14 +53,14 @@ appEvent :: St -> V.Event -> T.EventM Name (T.Next St)
 appEvent st ev =
     case ev of
         V.EvKey V.KEsc [] -> M.halt st
-        V.EvKey (V.KChar '\t') [] -> M.continue $ switchEditors st
-        V.EvKey V.KBackTab [] -> M.continue $ switchEditors st
+        V.EvKey (V.KChar '\t') [] -> M.continue $ st & focusRing %~ F.focusNext
+        V.EvKey V.KBackTab [] -> M.continue $ st & focusRing %~ F.focusPrev
         _ -> M.continue =<<
           T.handleEventLensed st (currentEditorL st) E.handleEditorEvent ev
 
 initialState :: St
 initialState =
-    St Edit1
+    St (F.focusRing [Edit1, Edit2])
        (E.editor Edit1 (str . unlines) Nothing "")
        (E.editor Edit2 (str . unlines) (Just 2) "")
 
@@ -74,7 +70,7 @@ theMap = A.attrMap V.defAttr
     ]
 
 appCursor :: St -> [T.CursorLocation Name] -> Maybe (T.CursorLocation Name)
-appCursor st = M.showCursorNamed (st^.currentEditor)
+appCursor = F.focusRingCursor (^.focusRing)
 
 theApp :: M.App St V.Event Name
 theApp =
