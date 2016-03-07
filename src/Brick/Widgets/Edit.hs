@@ -1,5 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 -- | This module provides a basic text editor widget. You'll need to
 -- embed an 'Editor' in your application state and transform it with
 -- 'handleEvent' when relevant events arrive. To get the contents
@@ -26,10 +28,12 @@ module Brick.Widgets.Edit
   , renderEditor
   -- * Attributes
   , editAttr
+  , editFocusedAttr
   )
 where
 
 import Control.Lens
+import Data.Monoid
 import Graphics.Vty (Event(..), Key(..), Modifier(..))
 
 import qualified Data.Text.Zipper as Z
@@ -102,26 +106,36 @@ applyEdit :: (Z.TextZipper String -> Z.TextZipper String)
           -> Editor n
 applyEdit f e = e & editContentsL %~ f
 
--- | The attribute assigned to the editor
+-- | The attribute assigned to the editor when it does not have focus.
 editAttr :: AttrName
 editAttr = "edit"
+
+-- | The attribute assigned to the editor when it has focus.
+editFocusedAttr :: AttrName
+editFocusedAttr = editAttr <> "focused"
 
 -- | Get the contents of the editor.
 getEditContents :: Editor n -> [String]
 getEditContents e = Z.getText $ e^.editContentsL
 
 -- | Turn an editor state value into a widget
-renderEditor :: (Ord n, Show n) => Editor n -> Widget n
-renderEditor e =
+renderEditor :: (Ord n, Show n)
+             => Bool
+             -- ^ Whether the editor has focus. It will report a cursor
+             -- position if and only if it has focus.
+             -> Editor n
+             -- ^ The editor.
+             -> Widget n
+renderEditor foc e =
     let cp = Z.cursorPosition $ e^.editContentsL
         cursorLoc = Location (cp^._2, cp^._1)
         limit = case e^.editContentsL.to Z.getLineLimit of
             Nothing -> id
             Just lim -> vLimit lim
-    in withAttr editAttr $
+    in withAttr (if foc then editFocusedAttr else editAttr) $
        limit $
        viewport (e^.editorNameL) Both $
-       showCursor (e^.editorNameL) cursorLoc $
+       (if foc then showCursor (e^.editorNameL) cursorLoc else id) $
        visibleRegion cursorLoc (1, 1) $
        e^.editDrawContentsL $
        getEditContents e

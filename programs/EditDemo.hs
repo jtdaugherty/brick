@@ -42,11 +42,14 @@ drawUI :: St -> [T.Widget Name]
 drawUI st = [ui]
     where
         theList = F.withFocusRing (st^.focusRing) (L.renderList drawElem) (st^.list1)
+        e1 = F.withFocusRing (st^.focusRing) E.renderEditor (st^.edit1)
+        e2 = F.withFocusRing (st^.focusRing) E.renderEditor (st^.edit2)
+
         drawElem _ i = (str $ show i) <+> (vLimit 1 $ fill ' ')
         ui = C.center $
-            (str "Input 1 (unlimited): " <+> (hLimit 30 $ vLimit 5 $ E.renderEditor $ st^.edit1)) <=>
+            (str "Input 1 (unlimited): " <+> (hLimit 30 $ vLimit 5 e1)) <=>
             str " " <=>
-            (str "Input 2 (limited to 2 lines): " <+> (hLimit 30 $ E.renderEditor $ st^.edit2)) <=>
+            (str "Input 2 (limited to 2 lines): " <+> (hLimit 30 e2)) <=>
             str " " <=>
             (str "Input 3: " <+> (hLimit 30 $ vLimit 3 theList)) <=>
             str " " <=>
@@ -74,9 +77,11 @@ initialState =
 
 theMap :: A.AttrMap
 theMap = A.attrMap V.defAttr
-    [ (E.editAttr, V.white `on` V.blue)
-    , (L.listSelectedFocusedAttr, V.black `on` V.white)
-    , (L.listSelectedAttr, V.white `on` V.blue)
+    [ (E.editAttr,                   V.white `on` V.blue)
+    , (L.listSelectedAttr,           V.white `on` V.blue)
+
+    , (E.editFocusedAttr,            V.black `on` V.yellow)
+    , (L.listSelectedFocusedAttr,    V.black `on` V.yellow)
     ]
 
 appCursor :: St -> [T.CursorLocation Name] -> Maybe (T.CursorLocation Name)
