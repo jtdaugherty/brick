@@ -110,7 +110,8 @@ applyEdit f e = e & editContentsL %~ f
 editAttr :: AttrName
 editAttr = "edit"
 
--- | The attribute assigned to the editor when it has focus.
+-- | The attribute assigned to the editor when it has focus. Extends
+-- 'editAttr'.
 editFocusedAttr :: AttrName
 editFocusedAttr = editAttr <> "focused"
 
