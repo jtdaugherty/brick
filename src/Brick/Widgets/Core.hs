@@ -1,7 +1,6 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
 -- | This module provides the core widget combinators and rendering
 -- routines. Everything this library does is in terms of these basic
 -- primitives.
@@ -93,7 +92,7 @@ import Brick.AttrMap
 import Brick.Widgets.Internal
 
 -- | The class of types that store interface element names.
-class Named a n | a -> n where
+class Named a n where
     -- | Get the name of the specified value.
     getName :: a -> n
 
