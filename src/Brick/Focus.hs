@@ -45,7 +45,25 @@ focusPrev (FocusRingNonempty ns i) = FocusRingNonempty ns i'
     where
         i' = (i + (length ns) - 1) `mod` (length ns)
 
-withFocusRing :: (Eq n, Named a n) => FocusRing n -> (Bool -> a -> b) -> a -> b
+-- | This function is a convenience function to look up a widget state
+-- value's name in a focus ring and set its focus setting according to
+-- the focus ring's state. This function determines whether a given
+-- widget state value is the focus of the ring and passes the resulting
+-- boolean to a rendering function, along with the state value (a), to
+-- produce whatever comes next (b).
+--
+-- Focus-aware widgets have rendering functions that should be
+-- usable with this combinator; see 'Brick.Widgets.List.List' and
+-- 'Brick.Widgets.Edit.Edit'.
+withFocusRing :: (Eq n, Named a n)
+              => FocusRing n
+              -- ^ The focus ring to use as the source of focus state.
+              -> (Bool -> a -> b)
+              -- ^ A function that takes a value and its focus state.
+              -> a
+              -- ^ The wiget state value that we need to check for focus.
+              -> b
+              -- ^ The rest of the computation.
 withFocusRing ring f a = f (focusGetCurrent ring == Just (getName a)) a
 
 -- | Get the currently-focused widget name from the ring. If the ring is
