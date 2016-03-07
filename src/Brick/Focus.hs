@@ -34,6 +34,7 @@ focusRing names = FocusRingNonempty names 0
 -- | Advance focus to the next widget in the ring.
 focusNext :: FocusRing n -> FocusRing n
 focusNext FocusRingEmpty = FocusRingEmpty
+focusNext fr@(FocusRingNonempty [_] _) = fr
 focusNext (FocusRingNonempty ns i) = FocusRingNonempty ns i'
     where
         i' = (i + 1) `mod` (length ns)
@@ -41,6 +42,7 @@ focusNext (FocusRingNonempty ns i) = FocusRingNonempty ns i'
 -- | Advance focus to the previous widget in the ring.
 focusPrev :: FocusRing n -> FocusRing n
 focusPrev FocusRingEmpty = FocusRingEmpty
+focusPrev fr@(FocusRingNonempty [_] _) = fr
 focusPrev (FocusRingNonempty ns i) = FocusRingNonempty ns i'
     where
         i' = (i + (length ns) - 1) `mod` (length ns)
