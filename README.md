@@ -65,6 +65,14 @@ $ .cabal-sandbox/bin/brick-???-demo
 To get started, see the [first few sections of the brick
 user guide](docs/guide.rst).
 
+Brick-Users Discussion
+----------------------
+
+The `brick-users` Google Group / e-mail list is a place to discuss
+library changes, give feedback, and ask questions. You can subscribe at:
+
+[https://groups.google.com/group/brick-users](https://groups.google.com/group/brick-users)
+
 Documentation
 -------------
 
