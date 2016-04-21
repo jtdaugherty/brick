@@ -70,6 +70,7 @@ library
     Brick.Widgets.Edit
     Brick.Widgets.List
     Brick.Widgets.ProgressBar
+    Brick.Widgets.Radio
     Data.Text.Markup
   other-modules:
     Brick.Types.TH
