@@ -212,7 +212,7 @@ listRemove pos l | V.null (l^.listElementsL) = l
 -- | Replace the contents of a list with a new set of elements and
 -- update the new selected index. If the specified selected index (via
 -- 'Just') is not in the list bounds, zero is used instead.
-listReplace :: Eq e => V.Vector e -> Maybe Int -> List n e -> List n e
+listReplace :: V.Vector e -> Maybe Int -> List n e -> List n e
 listReplace es idx l =
     let newSel = clamp 0 (V.length es - 1) <$> idx
     in l & listSelectedL .~ newSel

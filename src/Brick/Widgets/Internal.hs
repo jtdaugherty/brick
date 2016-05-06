@@ -42,4 +42,4 @@ cropToContext p =
 cropResultToContext :: Result n -> RenderM n (Result n)
 cropResultToContext result = do
     c <- getContext
-    return $ result & imageL %~ (V.crop (c^.availWidthL) (c^.availHeightL))
+    return $ result & imageL %~ (V.crop (max 0 $ c^.availWidthL) (max 0 $ c^.availHeightL))
