@@ -37,9 +37,9 @@ hCenterWith mChar p =
            c <- getContext
            let rWidth = result^.imageL.to imageWidth
                rHeight = result^.imageL.to imageHeight
-               remainder = c^.availWidthL - (leftPaddingAmount * 2)
-               leftPaddingAmount = (c^.availWidthL - rWidth) `div` 2
-               rightPaddingAmount = leftPaddingAmount + remainder
+               remainder = max 0 $ c^.availWidthL - (leftPaddingAmount * 2)
+               leftPaddingAmount = max 0 $ (c^.availWidthL - rWidth) `div` 2
+               rightPaddingAmount = max 0 $ leftPaddingAmount + remainder
                leftPadding = charFill (c^.attrL) ch leftPaddingAmount rHeight
                rightPadding = charFill (c^.attrL) ch rightPaddingAmount rHeight
                paddedImage = horizCat [ leftPadding
@@ -67,9 +67,9 @@ vCenterWith mChar p =
            c <- getContext
            let rWidth = result^.imageL.to imageWidth
                rHeight = result^.imageL.to imageHeight
-               remainder = c^.availHeightL - (topPaddingAmount * 2)
-               topPaddingAmount = (c^.availHeightL - rHeight) `div` 2
-               bottomPaddingAmount = topPaddingAmount + remainder
+               remainder = max 0 $ c^.availHeightL - (topPaddingAmount * 2)
+               topPaddingAmount = max 0 $ (c^.availHeightL - rHeight) `div` 2
+               bottomPaddingAmount = max 0 $ topPaddingAmount + remainder
                topPadding = charFill (c^.attrL) ch rWidth topPaddingAmount
                bottomPadding = charFill (c^.attrL) ch rWidth bottomPaddingAmount
                paddedImage = vertCat [ topPadding
