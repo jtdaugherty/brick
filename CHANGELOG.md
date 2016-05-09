@@ -2,6 +2,16 @@
 Brick changelog
 ---------------
 
+0.5.1
+-----
+
+Bug fixes:
+ * Fix negative cropping in hCenter, vCenter, and cropResultToContext
+   (fixes #52)
+ * Remove unnecessary Eq constraint from listReplace (fixes #48; thanks
+   sifmelcara)
+ * Mention Google Group in README
+
 0.5
 ---
 
