@@ -27,7 +27,7 @@ module Brick.Widgets.Edit
   )
 where
 
-import Control.Lens
+import Lens.Micro
 import Graphics.Vty (Event(..), Key(..), Modifier(..))
 
 import qualified Data.Text.Zipper as Z

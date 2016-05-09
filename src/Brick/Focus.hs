@@ -14,7 +14,7 @@ module Brick.Focus
   )
 where
 
-import Control.Lens ((^.))
+import Lens.Micro ((^.))
 import Data.Maybe (listToMaybe)
 
 import Brick.Types

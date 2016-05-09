@@ -40,7 +40,7 @@ module Brick.Widgets.List
 where
 
 import Control.Applicative ((<$>),(<*>),pure)
-import Control.Lens ((^.), (&), (.~), (%~), _2)
+import Lens.Micro ((^.), (&), (.~), (%~), _2)
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 import Data.Maybe (fromMaybe)

@@ -31,7 +31,7 @@ module Brick.Main
 where
 
 import Control.Exception (finally)
-import Control.Lens ((^.))
+import Lens.Micro ((^.))
 import Control.Monad (forever)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.State

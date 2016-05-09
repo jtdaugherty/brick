@@ -81,7 +81,8 @@ library
                        transformers,
                        data-default,
                        containers,
-                       lens,
+                       microlens,
+                       microlens-th,
                        vector,
                        contravariant,
                        text,
@@ -101,7 +102,8 @@ executable brick-visibility-demo
                        vty >= 5.3.1,
                        data-default,
                        text,
-                       lens
+                       microlens,
+                       microlens-th
 
 executable brick-viewport-scroll-demo
   if !flag(demos)
@@ -115,7 +117,7 @@ executable brick-viewport-scroll-demo
                        vty >= 5.3.1,
                        data-default,
                        text,
-                       lens
+                       microlens
 
 executable brick-dialog-demo
   if !flag(demos)
@@ -129,7 +131,7 @@ executable brick-dialog-demo
                        vty >= 5.3.1,
                        data-default,
                        text,
-                       lens
+                       microlens
 
 executable brick-layer-demo
   if !flag(demos)
@@ -143,7 +145,8 @@ executable brick-layer-demo
                        vty >= 5.3.1,
                        data-default,
                        text,
-                       lens
+                       microlens,
+                       microlens-th
 
 executable brick-suspend-resume-demo
   if !flag(demos)
@@ -157,7 +160,8 @@ executable brick-suspend-resume-demo
                        vty >= 5.3.1,
                        data-default,
                        text,
-                       lens
+                       microlens,
+                       microlens-th
 
 executable brick-padding-demo
   if !flag(demos)
@@ -171,7 +175,7 @@ executable brick-padding-demo
                        vty >= 5.3.1,
                        data-default,
                        text,
-                       lens
+                       microlens
 
 executable brick-attr-demo
   if !flag(demos)
@@ -185,7 +189,7 @@ executable brick-attr-demo
                        vty >= 5.3.1,
                        data-default,
                        text,
-                       lens
+                       microlens
 
 executable brick-markup-demo
   if !flag(demos)
@@ -199,7 +203,7 @@ executable brick-markup-demo
                        vty >= 5.3.1,
                        data-default,
                        text,
-                       lens
+                       microlens
 
 executable brick-list-demo
   if !flag(demos)
@@ -213,7 +217,7 @@ executable brick-list-demo
                        vty >= 5.3.1,
                        data-default,
                        text,
-                       lens,
+                       microlens,
                        vector
 
 executable brick-custom-event-demo
@@ -228,7 +232,8 @@ executable brick-custom-event-demo
                        vty >= 5.3.1,
                        data-default,
                        text,
-                       lens
+                       microlens,
+                       microlens-th
 
 executable brick-hello-world-demo
   if !flag(demos)
@@ -242,7 +247,7 @@ executable brick-hello-world-demo
                        vty >= 5.3.1,
                        data-default,
                        text,
-                       lens
+                       microlens
 
 executable brick-edit-demo
   if !flag(demos)
@@ -256,7 +261,8 @@ executable brick-edit-demo
                        vty >= 5.3.1,
                        data-default,
                        text,
-                       lens
+                       microlens,
+                       microlens-th
 
 executable brick-border-demo
   if !flag(demos)
@@ -270,4 +276,4 @@ executable brick-border-demo
                        vty >= 5.3.1,
                        data-default,
                        text,
-                       lens
+                       microlens

@@ -27,7 +27,7 @@ module Brick.Widgets.Dialog
   )
 where
 
-import Control.Lens
+import Lens.Micro
 import Control.Applicative
 import Data.Monoid
 import Data.List (intersperse)

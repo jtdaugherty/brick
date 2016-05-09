@@ -31,7 +31,7 @@ module Brick.Widgets.Border
 where
 
 import Control.Applicative ((<$>))
-import Control.Lens ((^.), to)
+import Lens.Micro ((^.), to)
 import Data.Monoid ((<>))
 import Graphics.Vty (imageHeight, imageWidth)
 

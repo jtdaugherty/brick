@@ -8,7 +8,7 @@ module Brick.Widgets.ProgressBar
   )
 where
 
-import Control.Lens ((^.))
+import Lens.Micro ((^.))
 import Data.Maybe (fromMaybe)
 import Data.Monoid
 

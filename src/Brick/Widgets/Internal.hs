@@ -7,7 +7,7 @@ module Brick.Widgets.Internal
 where
 
 import Control.Applicative
-import Control.Lens ((^.), (&), (%~))
+import Lens.Micro ((^.), (&), (%~))
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Reader
 import Data.Default

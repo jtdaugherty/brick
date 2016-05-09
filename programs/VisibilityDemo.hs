@@ -3,7 +3,8 @@
 module Main where
 
 import Control.Monad (void)
-import Control.Lens
+import Lens.Micro
+import Lens.Micro.TH
 import Data.Monoid
 import qualified Graphics.Vty as V
 

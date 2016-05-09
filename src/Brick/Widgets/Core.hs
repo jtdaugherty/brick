@@ -66,7 +66,7 @@ module Brick.Widgets.Core
 where
 
 import Control.Applicative
-import Control.Lens ((^.), (.~), (&), (%~), to, _1, _2, each, to, ix, Lens')
+import Lens.Micro ((^.), (.~), (&), (%~), to, _1, _2, each, to, ix, Lens')
 import Control.Monad ((>=>),when)
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Reader

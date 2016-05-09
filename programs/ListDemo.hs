@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-import Control.Lens ((^.))
+import Lens.Micro ((^.))
 import Control.Monad (void)
 import Data.Monoid
 import Data.Maybe (fromMaybe)

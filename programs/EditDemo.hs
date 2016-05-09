@@ -3,7 +3,8 @@
 {-# LANGUAGE RankNTypes #-}
 module Main where
 
-import Control.Lens
+import Lens.Micro
+import Lens.Micro.TH
 import qualified Graphics.Vty as V
 
 import qualified Brick.Main as M

@@ -2,7 +2,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Main where
 
-import Control.Lens (makeLenses, (^.), (&), (.~), (%~))
+import Lens.Micro ((^.), (&), (.~), (%~))
+import Lens.Micro.TH (makeLenses)
 import Control.Monad (void, forever)
 import Control.Concurrent (newChan, writeChan, threadDelay, forkIO)
 import Data.Default

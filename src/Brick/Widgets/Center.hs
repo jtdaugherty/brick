@@ -14,7 +14,7 @@ module Brick.Widgets.Center
   )
 where
 
-import Control.Lens ((^.), (&), (.~), to)
+import Lens.Micro ((^.), (&), (.~), to)
 import Data.Maybe (fromMaybe)
 import Graphics.Vty (imageWidth, imageHeight, horizCat, charFill, vertCat)
 
