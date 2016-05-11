@@ -2,6 +2,15 @@
 Brick changelog
 ---------------
 
+0.6
+---
+
+API changes:
+ * Brick now uses the microlens family of packages instead of lens. This
+   version of brick also depends on vty 5.5.0, which was modified to use
+   microlens instead of lens. This change shouldn't impact functionality
+   but will greatly reduce build times.
+
 0.5.1
 -----
 
