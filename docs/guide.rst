@@ -69,15 +69,15 @@ Conventions
 documentation and as you explore the library source and write your own
 programs.
 
-- Use of `lens`_: ``brick`` uses ``lens`` functions internally and also
-  exposes lenses for many types in the library. However, if you prefer
-  not to use the ``lens`` interface in your program, all ``lens``
-  interfaces have non-`lens` equivalents exported by the same module. In
-  general, the "``L``" suffix on something tells you it is a ``lens``;
-  the name without the "``L``" suffix is the non-`lens` version. You can
-  get by without using ``brick``'s ``lens`` interface but your life will
-  probably be much more pleasant once your application state becomes
-  sufficiently complex if you use lenses to modify it (see
+- Use of `microlens`_ packages: ``brick`` uses ``microlens`` family of
+  packages internally and also exposes lenses for many types in the
+  library. However, if you prefer not to use the lens interface in your
+  program, all lens interfaces have non-lens equivalents exported by
+  the same module. In general, the "``L``" suffix on something tells
+  you it is a lens; the name without the "``L``" suffix is the non-lens
+  version. You can get by without using ``brick``'s lens interface but
+  your life will probably be much more pleasant once your application
+  state becomes sufficiently complex if you use lenses to modify it (see
   `appHandleEvent: Handling Events`_).
 - Attribute names: some modules export attribute names (see `How
   Attributes Work`_) associated with user interface elements. These tend
@@ -806,7 +806,7 @@ function. The context type is:
                 , ctxAttrMap :: AttrMap
                 }
 
-and has `lens` fields exported as described in `Conventions`_.
+and has lens fields exported as described in `Conventions`_.
 
 The job of the rendering function is to return a rendering result which,
 at a minimum, means producing a ``vty`` ``Image``. In addition, if you
@@ -874,4 +874,4 @@ desired.
 
 .. _vty: https://github.com/coreyoconnor/vty
 .. _Hackage: http://hackage.haskell.org/
-.. _lens: http://hackage.haskell.org/package/lens
+.. _microlens: http://hackage.haskell.org/package/microlens
