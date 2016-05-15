@@ -13,7 +13,7 @@ import qualified Brick.Widgets.Border as B
 import qualified Brick.Widgets.List as L
 import qualified Brick.Widgets.Center as C
 import qualified Brick.AttrMap as A
-import qualified Data.Vector as V
+import qualified Data.Vector as Vec
 import Brick.Types
   ( Widget
   )
@@ -34,7 +34,7 @@ drawUI l = [ui]
         cur = case l^.(L.listSelectedL) of
                 Nothing -> str "-"
                 Just i -> str (show (i + 1))
-        total = str $ show $ V.length $ l^.(L.listElementsL)
+        total = str $ show $ Vec.length $ l^.(L.listElementsL)
         box = B.borderWithLabel label $
               hLimit 25 $
               vLimit 15 $
@@ -50,7 +50,7 @@ appEvent l e =
     case e of
         V.EvKey (V.KChar '+') [] ->
             let el = nextElement (L.listElements l)
-                pos = V.length $ l^.(L.listElementsL)
+                pos = Vec.length $ l^.(L.listElementsL)
             in M.continue $ L.listInsert pos el l
 
         V.EvKey (V.KChar '-') [] ->
@@ -62,8 +62,8 @@ appEvent l e =
 
         ev -> M.continue =<< T.handleEvent ev l
     where
-      nextElement :: V.Vector Char -> Char
-      nextElement v = fromMaybe '?' $ V.find (flip V.notElem v) (V.fromList ['a' .. 'z'])
+      nextElement :: Vec.Vector Char -> Char
+      nextElement v = fromMaybe '?' $ Vec.find (flip Vec.notElem v) (Vec.fromList ['a' .. 'z'])
 
 listDrawElement :: (Show a) => Bool -> a -> Widget
 listDrawElement sel a =
@@ -73,7 +73,7 @@ listDrawElement sel a =
     in C.hCenter $ str "Item " <+> (selStr $ show a)
 
 initialState :: L.List Char
-initialState = L.list (T.Name "list") (V.fromList ['a','b','c']) 1
+initialState = L.list (T.Name "list") (Vec.fromList ['a','b','c']) 1
 
 customAttr :: A.AttrName
 customAttr = L.listSelectedAttr <> "custom"
