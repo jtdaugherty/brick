@@ -2,6 +2,21 @@
 Brick changelog
 ---------------
 
+0.6.1
+-----
+
+Package changes:
+ * Added lower bound for microlens >= 0.3.0.0 to fix build failure due
+   to Field1 not being defined (thanks Markus Hauck)
+
+Documentation changes:
+ * Updated user guide and README to link to and mention microlens
+   instead of lens
+
+Misc:
+ * Fixed a qualified import in the List demo to avoid ambiguity (thanks
+   Alan Gilbert)
+
 0.6
 ---
 
