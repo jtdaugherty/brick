@@ -81,7 +81,7 @@ library
                        transformers,
                        data-default,
                        containers,
-                       microlens,
+                       microlens >= 0.3.0.0,
                        microlens-th,
                        vector,
                        contravariant,
@@ -102,7 +102,7 @@ executable brick-visibility-demo
                        vty >= 5.5.0,
                        data-default,
                        text,
-                       microlens,
+                       microlens >= 0.3.0.0,
                        microlens-th
 
 executable brick-viewport-scroll-demo
@@ -145,7 +145,7 @@ executable brick-layer-demo
                        vty >= 5.5.0,
                        data-default,
                        text,
-                       microlens,
+                       microlens >= 0.3.0.0,
                        microlens-th
 
 executable brick-suspend-resume-demo
@@ -160,7 +160,7 @@ executable brick-suspend-resume-demo
                        vty >= 5.5.0,
                        data-default,
                        text,
-                       microlens,
+                       microlens >= 0.3.0.0,
                        microlens-th
 
 executable brick-padding-demo
@@ -217,7 +217,7 @@ executable brick-list-demo
                        vty >= 5.5.0,
                        data-default,
                        text,
-                       microlens,
+                       microlens >= 0.3.0.0,
                        vector
 
 executable brick-custom-event-demo
@@ -232,7 +232,7 @@ executable brick-custom-event-demo
                        vty >= 5.5.0,
                        data-default,
                        text,
-                       microlens,
+                       microlens >= 0.3.0.0,
                        microlens-th
 
 executable brick-hello-world-demo
@@ -261,7 +261,7 @@ executable brick-edit-demo
                        vty >= 5.5.0,
                        data-default,
                        text,
-                       microlens,
+                       microlens >= 0.3.0.0,
                        microlens-th
 
 executable brick-border-demo
