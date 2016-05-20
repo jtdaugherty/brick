@@ -61,10 +61,13 @@ import Brick.AttrMap
 -- | The library application abstraction. Your application's operations
 -- are represented here and passed to one of the various main functions
 -- in this module. An application is in terms of an application state
--- type 's' and an application event type 'e'. In the simplest case 'e' is
--- vty's 'Event' type, but you may define your own event type, permitted
--- that it has a constructor for wrapping Vty events, so that Vty events
--- can be handled by your event loop.
+-- type 's', an application event type 'e', and a name type 'n'. In the
+-- simplest case 'e' is vty's 'Event' type, but you may define your own
+-- event type, permitted that it has a constructor for wrapping Vty
+-- events, so that Vty events can be handled by your event loop. The
+-- state type is the type of application state to be provided by you and
+-- iteratively modified by event handlers. The name type is the type of
+-- names you can assign to viewports and widgets.
 data App s e n =
     App { appDraw :: s -> [Widget n]
         -- ^ This function turns your application state into a list of
