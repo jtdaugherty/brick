@@ -85,7 +85,7 @@ editor :: Name
        -> String
        -- ^ The initial content
        -> Editor
-editor name draw limit s = Editor (Z.stringZipper [s] limit) draw name
+editor name draw limit s = Editor (Z.stringZipper (lines s) limit) draw name
 
 -- | Apply an editing operation to the editor's contents. Bear in mind
 -- that you should only apply zipper operations that operate on the
