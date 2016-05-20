@@ -2,6 +2,14 @@
 Brick changelog
 ---------------
 
+0.6.2
+-----
+
+Bug fixes:
+ * Editor: the 'editor' initial content parameter is now correctly split
+   on newlines to ensure that the underlying editor zipper is
+   initialized properly. (fixes #56; thanks @listx)
+
 0.6.1
 -----
 
