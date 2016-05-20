@@ -2,6 +2,48 @@
 Brick changelog
 ---------------
 
+0.6.2
+-----
+
+Bug fixes:
+ * Editor: the 'editor' initial content parameter is now correctly split
+   on newlines to ensure that the underlying editor zipper is
+   initialized properly. (fixes #56; thanks @listx)
+
+0.6.1
+-----
+
+Package changes:
+ * Added lower bound for microlens >= 0.3.0.0 to fix build failure due
+   to Field1 not being defined (thanks Markus Hauck)
+
+Documentation changes:
+ * Updated user guide and README to link to and mention microlens
+   instead of lens
+
+Misc:
+ * Fixed a qualified import in the List demo to avoid ambiguity (thanks
+   Alan Gilbert)
+
+0.6
+---
+
+API changes:
+ * Brick now uses the microlens family of packages instead of lens. This
+   version of brick also depends on vty 5.5.0, which was modified to use
+   microlens instead of lens. This change shouldn't impact functionality
+   but will greatly reduce build times.
+
+0.5.1
+-----
+
+Bug fixes:
+ * Fix negative cropping in hCenter, vCenter, and cropResultToContext
+   (fixes #52)
+ * Remove unnecessary Eq constraint from listReplace (fixes #48; thanks
+   sifmelcara)
+ * Mention Google Group in README
+
 0.5
 ---
 

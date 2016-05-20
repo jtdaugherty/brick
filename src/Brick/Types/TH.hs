@@ -6,7 +6,8 @@ where
 import qualified Language.Haskell.TH.Syntax as TH
 import qualified Language.Haskell.TH.Lib as TH
 
-import Control.Lens (DefName(..), makeLensesWith, lensRules, (&), (.~), lensField)
+import Lens.Micro ((&), (.~))
+import Lens.Micro.TH (DefName(..), makeLensesWith, lensRules, lensField)
 
 -- | A template haskell function to build lenses for a record type. This
 -- function differs from the 'Control.Lens.makeLenses' function in that

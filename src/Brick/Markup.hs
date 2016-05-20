@@ -11,7 +11,7 @@ module Brick.Markup
   )
 where
 
-import Control.Lens ((.~), (&), (^.))
+import Lens.Micro ((.~), (&), (^.))
 import Control.Monad (forM)
 import qualified Data.Text as T
 import Data.Text.Markup

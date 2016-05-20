@@ -66,7 +66,8 @@ module Brick.Types
 where
 
 import Control.Applicative
-import Control.Lens (_1, _2, to, (^.), (&), (.~), Lens')
+import Lens.Micro (_1, _2, to, (^.), (&), (.~), Lens')
+import Lens.Micro.Type (Getting)
 import Data.Monoid (Monoid(..))
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Reader
@@ -166,7 +167,7 @@ suffixLenses ''Context
 suffixLenses ''Result
 
 -- | The rendering context's current drawing attribute.
-attrL :: (Contravariant f, Functor f) => (Attr -> f Attr) -> Context -> f Context
+attrL :: forall r. Getting r Context Attr
 attrL = to (\c -> attrMapLookup (c^.ctxAttrNameL) (c^.ctxAttrMapL))
 
 instance TerminalLocation (CursorLocation n) where

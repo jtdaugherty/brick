@@ -32,8 +32,8 @@ module Brick.Widgets.Edit
   )
 where
 
-import Control.Lens
 import Data.Monoid
+import Lens.Micro
 import Graphics.Vty (Event(..), Key(..), Modifier(..))
 
 import qualified Data.Text.Zipper as Z
@@ -94,7 +94,7 @@ editor :: n
        -> String
        -- ^ The initial content
        -> Editor n
-editor name draw limit s = Editor (Z.stringZipper [s] limit) draw name
+editor name draw limit s = Editor (Z.stringZipper (lines s) limit) draw name
 
 -- | Apply an editing operation to the editor's contents. Bear in mind
 -- that you should only apply zipper operations that operate on the

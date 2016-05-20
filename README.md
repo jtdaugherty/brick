@@ -45,11 +45,11 @@ right away:
  * Attribute management is flexible and can be customized at runtime on
    a per-widget basis.
 
-`brick` exports [lens](http://github.com/ekmett/lens) and non-`lens`
-interfaces for most things, so you can get the full power of `lens` if
-you want it or use plain Haskell if you don't. If a `brick` library
-function named `thing` has a `lens` version, the `lens` version is named
-`thingL`.
+`brick` exports
+[microlens](http://hackage.haskell.org/package/microlens) and non-lens
+interfaces for most things, so you can get the power of lenses if
+desired or use plain Haskell if you don't. If a `brick` library function
+named `thing` has a lens version, the lens version is named `thingL`.
 
 Getting Started
 ---------------

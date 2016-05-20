@@ -8,7 +8,7 @@ module Brick.Util
   )
 where
 
-import Control.Lens ((&), (%~))
+import Lens.Micro ((&), (%~))
 import Data.Monoid ((<>))
 import Graphics.Vty
 

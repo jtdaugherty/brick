@@ -1,5 +1,5 @@
 name:                brick
-version:             0.5
+version:             0.6.2
 synopsis:            A declarative terminal user interface library
 description:
   Write terminal applications painlessly with 'brick'! You write an
@@ -77,11 +77,12 @@ library
     Brick.Widgets.Internal
 
   build-depends:       base <= 5,
-                       vty >= 5.3.1,
+                       vty >= 5.5.0,
                        transformers,
                        data-default,
                        containers,
-                       lens,
+                       microlens >= 0.3.0.0,
+                       microlens-th,
                        vector,
                        contravariant,
                        text,
@@ -98,10 +99,11 @@ executable brick-visibility-demo
   main-is:             VisibilityDemo.hs
   build-depends:       base,
                        brick,
-                       vty >= 5.3.1,
+                       vty >= 5.5.0,
                        data-default,
                        text,
-                       lens
+                       microlens >= 0.3.0.0,
+                       microlens-th
 
 executable brick-viewport-scroll-demo
   if !flag(demos)
@@ -112,10 +114,10 @@ executable brick-viewport-scroll-demo
   main-is:             ViewportScrollDemo.hs
   build-depends:       base,
                        brick,
-                       vty >= 5.3.1,
+                       vty >= 5.5.0,
                        data-default,
                        text,
-                       lens
+                       microlens
 
 executable brick-dialog-demo
   if !flag(demos)
@@ -126,10 +128,10 @@ executable brick-dialog-demo
   main-is:             DialogDemo.hs
   build-depends:       base <= 5,
                        brick,
-                       vty >= 5.3.1,
+                       vty >= 5.5.0,
                        data-default,
                        text,
-                       lens
+                       microlens
 
 executable brick-layer-demo
   if !flag(demos)
@@ -140,10 +142,11 @@ executable brick-layer-demo
   main-is:             LayerDemo.hs
   build-depends:       base <= 5,
                        brick,
-                       vty >= 5.3.1,
+                       vty >= 5.5.0,
                        data-default,
                        text,
-                       lens
+                       microlens >= 0.3.0.0,
+                       microlens-th
 
 executable brick-suspend-resume-demo
   if !flag(demos)
@@ -154,10 +157,11 @@ executable brick-suspend-resume-demo
   main-is:             SuspendAndResumeDemo.hs
   build-depends:       base <= 5,
                        brick,
-                       vty >= 5.3.1,
+                       vty >= 5.5.0,
                        data-default,
                        text,
-                       lens
+                       microlens >= 0.3.0.0,
+                       microlens-th
 
 executable brick-padding-demo
   if !flag(demos)
@@ -168,10 +172,10 @@ executable brick-padding-demo
   main-is:             PaddingDemo.hs
   build-depends:       base <= 5,
                        brick,
-                       vty >= 5.3.1,
+                       vty >= 5.5.0,
                        data-default,
                        text,
-                       lens
+                       microlens
 
 executable brick-attr-demo
   if !flag(demos)
@@ -182,10 +186,10 @@ executable brick-attr-demo
   main-is:             AttrDemo.hs
   build-depends:       base <= 5,
                        brick,
-                       vty >= 5.3.1,
+                       vty >= 5.5.0,
                        data-default,
                        text,
-                       lens
+                       microlens
 
 executable brick-markup-demo
   if !flag(demos)
@@ -196,10 +200,10 @@ executable brick-markup-demo
   main-is:             MarkupDemo.hs
   build-depends:       base <= 5,
                        brick,
-                       vty >= 5.3.1,
+                       vty >= 5.5.0,
                        data-default,
                        text,
-                       lens
+                       microlens
 
 executable brick-list-demo
   if !flag(demos)
@@ -210,10 +214,10 @@ executable brick-list-demo
   main-is:             ListDemo.hs
   build-depends:       base <= 5,
                        brick,
-                       vty >= 5.3.1,
+                       vty >= 5.5.0,
                        data-default,
                        text,
-                       lens,
+                       microlens >= 0.3.0.0,
                        vector
 
 executable brick-custom-event-demo
@@ -225,10 +229,11 @@ executable brick-custom-event-demo
   main-is:             CustomEventDemo.hs
   build-depends:       base <= 5,
                        brick,
-                       vty >= 5.3.1,
+                       vty >= 5.5.0,
                        data-default,
                        text,
-                       lens
+                       microlens >= 0.3.0.0,
+                       microlens-th
 
 executable brick-hello-world-demo
   if !flag(demos)
@@ -239,10 +244,10 @@ executable brick-hello-world-demo
   main-is:             HelloWorldDemo.hs
   build-depends:       base <= 5,
                        brick,
-                       vty >= 5.3.1,
+                       vty >= 5.5.0,
                        data-default,
                        text,
-                       lens
+                       microlens
 
 executable brick-edit-demo
   if !flag(demos)
@@ -253,11 +258,12 @@ executable brick-edit-demo
   main-is:             EditDemo.hs
   build-depends:       base <= 5,
                        brick,
-                       vty >= 5.3.1,
+                       vty >= 5.5.0,
                        data-default,
                        text,
                        vector,
-                       lens
+                       microlens >= 0.3.0.0,
+                       microlens-th
 
 executable brick-border-demo
   if !flag(demos)
@@ -268,7 +274,7 @@ executable brick-border-demo
   main-is:             BorderDemo.hs
   build-depends:       base <= 5,
                        brick,
-                       vty >= 5.3.1,
+                       vty >= 5.5.0,
                        data-default,
                        text,
-                       lens
+                       microlens

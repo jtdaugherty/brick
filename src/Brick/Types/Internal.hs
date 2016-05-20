@@ -28,7 +28,9 @@ module Brick.Types.Internal
   )
 where
 
-import Control.Lens (Field1, Field2, _1, _2, Lens', makeLenses)
+import Lens.Micro (_1, _2, Lens')
+import Lens.Micro.TH (makeLenses)
+import Lens.Micro.Internal (Field1, Field2)
 import Data.Monoid
 import qualified Data.Map as M
 import Graphics.Vty (DisplayRegion)
