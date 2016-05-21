@@ -135,7 +135,22 @@ drawListElements l drawElem =
 
             start = max 0 $ idx - numPerHeight + 1
             num = min (numPerHeight * 2) (V.length (l^.listElementsL) - start)
-            numPerHeight = (c^.availHeightL) `div` (l^.listItemHeightL)
+
+            -- The number of items to show is the available height divided by
+            -- the item height...
+            initialNumPerHeight = (c^.availHeightL) `div` (l^.listItemHeightL)
+            -- ... but if the available height leaves a remainder of
+            -- an item height then we need to ensure that we render an
+            -- extra item to show a partial item at the top or bottom to
+            -- give the expected result when an item is more than one
+            -- row high. (Example: 5 rows available with item height
+            -- of 3 yields two items: one fully rendered, the other
+            -- rendered with only its top 2 or bottom 2 rows visible,
+            -- depending on how the viewport state changes.)
+            numPerHeight = initialNumPerHeight +
+                           if initialNumPerHeight * (l^.listItemHeightL) == c^.availHeightL
+                           then 0
+                           else 1
 
             off = start * (l^.listItemHeightL)
 
