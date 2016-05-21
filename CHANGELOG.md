@@ -2,6 +2,16 @@
 Brick changelog
 ---------------
 
+0.6.3
+-----
+
+Bug fixes:
+ * List: the list now properly renders when the available height is not
+   a multiple of the item height. Previously the list size would
+   decrease relative to the available height. Now the list renders
+   enough items to fill the space even if the top-most or bottom-most
+   item is partially visible, which is the expected behavior.
+
 0.6.2
 -----
 
