@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 module Brick.Types.Internal
@@ -97,6 +98,7 @@ type EventState = [(Name, ScrollRequest)]
 data Next a = Continue a
             | SuspendAndResume (IO a)
             | Halt a
+            deriving Functor
 
 -- | Scrolling direction.
 data Direction = Up
