@@ -332,7 +332,7 @@ type provides ``appStartEvent`` function for this purpose:
 
 .. code:: haskell
 
-   appStartEvent :: s -> EventM s
+   appStartEvent :: s -> EventM n s
 
 This function takes the initial application state and returns it in
 ``EventM``, possibly changing it and possibly making viewport requests.
