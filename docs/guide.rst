@@ -84,11 +84,12 @@ programs.
   to end in an "``Attr``" suffix (e.g. ``borderAttr``). In addition,
   hierarchical relationships between attributes are documented in
   Haddock documentation.
-- Use of qualified names: in this document, where sensible, I will use
-  fully-qualified names whenever I mention something for the first time
-  or whenever I use something that is not part of ``brick``. Use of
-  names in this way is not intended to produce executable examples, but
-  rather to guide you in writing your ``import`` statements.
+- Use of qualified Haskell identifiers: in this document, where
+  sensible, I will use fully-qualified identifiers whenever I mention
+  something for the first time or whenever I use something that is
+  not part of ``brick``. Use of qualified names is not intended to
+  produce executable examples, but rather to guide you in writing your
+  ``import`` statements.
 
 The App Type
 ============
