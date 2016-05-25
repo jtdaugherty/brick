@@ -482,8 +482,8 @@ that should have been done up front anyway: ``String`` names could be
 allocated ad-hoc but never centrally managed, resulting in troulbesome
 runtime problems.
 
-Note of Caution
-***************
+A Note of Caution
+*****************
 
 **NOTE: Unique names for all named widgets are required to ensure
 that the renderer correctly tracks widget states during application
