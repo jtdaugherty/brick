@@ -109,14 +109,16 @@ various functions:
            , appLiftVtyEvent :: Event -> e
            }
 
-The ``App`` type is parameterized over three types:
+The ``App`` type is parameterized over three types. These type variables
+will appear in the signatures of many library functions and types. They
+are:
 
-- The application state type ``s``: the type of data that will evolve
-  over the course of the application's execution. Your application will
-  provide the library with its starting value and event handling will
-  transform it as the program executes. When a ``brick`` application
-  exits, the final application state will be returned.
-- The event type ``e``: the type of events that your event
+- The **application state type** ``s``: the type of data that will
+  evolve over the course of the application's execution. Your
+  application will provide the library with its starting value and event
+  handling will transform it as the program executes. When a ``brick``
+  application exits, the final application state will be returned.
+- The **event type** ``e``: the type of events that your event
   handler (``appHandleEvent``) will handle. The underlying ``vty``
   library provides ``Graphics.Vty.Event`` and this forms the basis
   of all events we will handle with ``brick`` applications. The
@@ -126,7 +128,7 @@ The ``App`` type is parameterized over three types:
   ``Event`` will need to be embedded in the custom event type. ``brick``
   does this by calling ``appLiftVtyEvent``. For more details, see `Using
   Your Own Event Type`_.
-- The widget name type ``n``: during application execution we need a
+- The **widget name type** ``n``: during application execution we need a
   way to refer to widgets by name. Whether it's to distinguish two
   cursor position requests, make changes to a scrollable viewport, or
   any other situation where we need a unique handle to a given widget
