@@ -241,13 +241,15 @@ rendering viewport states via ``Brick.Main.lookupViewport`` and the
 ``IO`` monad via ``liftIO``.
 
 To use these handlers in your program, invoke them on the relevant piece
-of state in your application state, e.g.,
+of state in your application state. In the following example we use an
+``Edit`` state from ``Brick.Widgets.Edit``:
 
 .. code:: haskell
 
-   type MyState = Edit n
+   data Name = Edit1
+   type MyState = Edit Name
 
-   myEvent :: MyState -> e -> EventM n (Next MyState)
+   myEvent :: MyState -> e -> EventM Name (Next MyState)
    myEvent s e = continue =<< handleEditorEvent e s
 
 This pattern works fine when your application state has an event handler
@@ -259,18 +261,19 @@ for your application state fields, you can use the convenience function
 
 .. code:: haskell
 
-   data MyState = MyState { _theEdit :: Edit n
+   data Name = Edit1
+   data MyState = MyState { _theEdit :: Edit Name
                           }
    makeLenses ''MyState
 
-   myEvent :: MyState -> e -> EventM n (Next MyState)
+   myEvent :: MyState -> e -> EventM Name (Next MyState)
    myEvent s e = continue =<< handleEventLensed s theEdit handleEditorEvent e
 
 You might consider that preferable to the desugared version:
 
 .. code:: haskell
 
-   myEvent :: MyState -> e -> EventM n (Next MyState)
+   myEvent :: MyState -> e -> EventM Name (Next MyState)
    myEvent s e = do
      newVal <- handleEditorEvent e (s^.theEdit)
      continue $ s & theEdit .~ newVal
