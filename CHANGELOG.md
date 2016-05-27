@@ -2,6 +2,12 @@
 Brick changelog
 ---------------
 
+0.6.4
+-----
+
+Bug fixes:
+ * Add missing Functor instance for Next type (thanks Markus Hauck)
+
 0.6.3
 -----
 
