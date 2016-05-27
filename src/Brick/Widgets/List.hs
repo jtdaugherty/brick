@@ -45,10 +45,13 @@ module Brick.Widgets.List
   )
 where
 
+#if !MIN_VERSION_base(4,8,0)
 import Control.Applicative ((<$>),(<*>),pure)
-import Lens.Micro ((^.), (&), (.~), (%~), _2)
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
+#endif
+
+import Lens.Micro ((^.), (&), (.~), (%~), _2)
 import Data.Maybe (fromMaybe)
 import Data.Monoid ((<>))
 import Graphics.Vty (Event(..), Key(..))

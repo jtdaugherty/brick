@@ -30,9 +30,13 @@ module Brick.Widgets.Border
   )
 where
 
-import Control.Applicative ((<$>))
-import Lens.Micro ((^.), to)
 import Data.Monoid ((<>))
+
+#if !MIN_VERSION_base(4,8,0)
+import Control.Applicative ((<$>))
+#endif
+
+import Lens.Micro ((^.), to)
 import Graphics.Vty (imageHeight, imageWidth)
 
 import Brick.AttrMap

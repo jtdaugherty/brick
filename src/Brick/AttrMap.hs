@@ -38,9 +38,12 @@ module Brick.AttrMap
   )
 where
 
+#if !MIN_VERSION_base(4,8,0)
 import Control.Applicative ((<$>))
-import qualified Data.Map as M
 import Data.Monoid
+#endif
+
+import qualified Data.Map as M
 import Data.Maybe (catMaybes)
 import Data.List (inits)
 import Data.String (IsString(..))

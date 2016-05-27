@@ -6,7 +6,10 @@ module Brick.Widgets.Internal
   )
 where
 
+#if !MIN_VERSION_base(4,8,0)
 import Control.Applicative
+#endif
+
 import Lens.Micro ((^.), (&), (%~))
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Reader

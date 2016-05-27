@@ -69,7 +69,13 @@ module Brick.Widgets.Core
   )
 where
 
+#if MIN_VERSION_base(4,8,0)
+import Data.Monoid ((<>))
+#else
 import Control.Applicative
+import Data.Monoid ((<>), mempty)
+#endif
+
 import Lens.Micro ((^.), (.~), (&), (%~), to, _1, _2, each, to, ix, Lens')
 import Lens.Micro.Mtl (use, (%=))
 import Control.Monad ((>=>),when)
@@ -78,7 +84,6 @@ import Control.Monad.Trans.Reader
 import Control.Monad.Trans.Class (lift)
 import qualified Data.Text as T
 import Data.Default
-import Data.Monoid ((<>), mempty)
 import qualified Data.Map as M
 import qualified Data.Set as S
 import qualified Data.Function as DF

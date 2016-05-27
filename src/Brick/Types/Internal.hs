@@ -30,10 +30,13 @@ module Brick.Types.Internal
   )
 where
 
+#if !MIN_VERSION_base(4,8,0)
+import Data.Monoid
+#endif
+
 import Lens.Micro (_1, _2, Lens')
 import Lens.Micro.TH (makeLenses)
 import Lens.Micro.Internal (Field1, Field2)
-import Data.Monoid
 import qualified Data.Set as S
 import qualified Data.Map as M
 import Graphics.Vty (DisplayRegion)

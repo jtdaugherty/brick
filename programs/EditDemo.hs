@@ -14,7 +14,6 @@ import Brick.Widgets.Core
   , (<=>)
   , hLimit
   , vLimit
-  , fill
   , str
   )
 import qualified Brick.Widgets.Center as C

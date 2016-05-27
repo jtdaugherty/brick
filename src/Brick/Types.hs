@@ -65,16 +65,17 @@ module Brick.Types
   )
 where
 
+#if !MIN_VERSION_base(4,8,0)
 import Control.Applicative
+import Data.Monoid (Monoid(..))
+#endif
+
 import Lens.Micro (_1, _2, to, (^.), (&), (.~), Lens')
 import Lens.Micro.Type (Getting)
-import Data.Monoid (Monoid(..))
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Reader
-import Control.Monad.Trans.Class (lift)
 import Graphics.Vty (Event, Image, emptyImage, Attr)
 import Data.Default (Default(..))
-import Data.Functor.Contravariant
 import qualified Data.Map as M
 import Control.Monad.IO.Class
 

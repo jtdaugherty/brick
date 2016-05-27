@@ -27,8 +27,11 @@ module Brick.Widgets.Dialog
   )
 where
 
-import Lens.Micro
+#if !MIN_VERSION_base(4,8,0)
 import Control.Applicative
+#endif
+
+import Lens.Micro
 import Data.Monoid
 import Data.List (intersperse)
 import Graphics.Vty.Input (Event(..), Key(..))

@@ -53,6 +53,7 @@ Flag demos
 library
   default-language:    Haskell2010
   ghc-options:         -Wall -fno-warn-unused-do-bind -O3
+  default-extensions:  CPP
   hs-source-dirs:      src
   exposed-modules:
     Brick
@@ -112,6 +113,7 @@ executable brick-viewport-scroll-demo
   hs-source-dirs:      programs
   ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
   default-language:    Haskell2010
+  default-extensions:  CPP
   main-is:             ViewportScrollDemo.hs
   build-depends:       base,
                        brick,
@@ -271,6 +273,7 @@ executable brick-border-demo
     Buildable: False
   hs-source-dirs:      programs
   ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
+  default-extensions:  CPP
   default-language:    Haskell2010
   main-is:             BorderDemo.hs
   build-depends:       base <= 5,

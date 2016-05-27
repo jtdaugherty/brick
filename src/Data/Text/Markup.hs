@@ -16,9 +16,12 @@ module Data.Text.Markup
   )
 where
 
+#if !MIN_VERSION_base(4,8,0)
 import Control.Applicative ((<$>))
-import Data.Default (Default, def)
 import Data.Monoid
+#endif
+
+import Data.Default (Default, def)
 import Data.String (IsString(..))
 import qualified Data.Text as T
 
