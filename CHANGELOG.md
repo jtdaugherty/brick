@@ -34,8 +34,7 @@ API changes:
    The Editor uses the following attributes now:
    * When not focused, the widget is rendered with editAttr.
    * When focused, the widget is rendered with editFocusedAttr.
- * The Dialog's name type parameter, constructor parameter, and lens
-   were removed.
+ * The Dialog's name constructor parameter and lens were removed.
  * The 'viewport' function was modified to raise a runtime exception if
    the widget name it receives is used more than once during the
    rendering of a single frame.
