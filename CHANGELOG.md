@@ -2,6 +2,45 @@
 Brick changelog
 ---------------
 
+0.7
+---
+
+API changes:
+ * The "Name" type was removed. In its place we now have a name type
+   variable ("n") attached to many types. This change makes it possible
+   to:
+   * Avoid runtime errors due to name typos
+   * Achieve compile-time guarantees about name matching and usage
+   * Force widget functions to be name-agnostic by being polymorphic
+     in their name type
+   * Clean up focus handling by making it possible to pattern-match
+     on cursor location names
+ * The EditDemo demonstration program was updated to use a FocusRing.
+ * Added the "Named" type class to Brick.Widgets.Core for types that store
+   names. This type class is used to streamline the Focus interface; see
+   Brick.Focus.withFocusRing and EditDemo.hs.
+ * The List and Editor types are now parameterized on names.
+ * The List widget is now focus-aware; its rendering function now takes
+   a boolean indicating whether it should be rendered with focus. The
+   List uses the following attributes now:
+   * When not focused, the cursor is rendered with listSelectedAttr.
+   * When focused, the cursor is rendered with listSelectedFocusedAttr.
+ * The Editor widget is now focus-aware; its rendering function now
+   takes a boolean indicating whether it should be rendered with focus.
+   The Editor uses the following attributes now:
+   * When not focused, the widget is rendered with editAttr.
+   * When focused, the widget is rendered with editFocusedAttr.
+ * The Dialog's name type parameter, constructor parameter, and lens
+   were removed.
+ * The 'viewport' function was modified to raise a runtime exception if
+   the widget name it receives is used more than once during the
+   rendering of a single frame.
+
+Miscellaneous:
+ * Many modules now use conditional imports to silence redundancy
+   warnings on GHCs with newer Preludes (e.g. including Monoid,
+   Foldable, Traversable, Applicative, etc.)
+
 0.6.4
 -----
 
@@ -235,4 +274,5 @@ Package changes:
 
 0.1
 ---
+
 Initial release
