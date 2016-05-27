@@ -7,8 +7,9 @@ Brick changelog
 
 API changes:
  * The "Name" type was removed. In its place we now have a name type
-   variable ("n") attached to many types. This change makes it possible
-   to:
+   variable ("n") attached to many types (including EventM,
+   CursorLocation, App, Editor, List, and FocusRing). This change makes
+   it possible to:
    * Avoid runtime errors due to name typos
    * Achieve compile-time guarantees about name matching and usage
    * Force widget functions to be name-agnostic by being polymorphic
@@ -16,9 +17,9 @@ API changes:
    * Clean up focus handling by making it possible to pattern-match
      on cursor location names
  * The EditDemo demonstration program was updated to use a FocusRing.
- * Added the "Named" type class to Brick.Widgets.Core for types that store
-   names. This type class is used to streamline the Focus interface; see
-   Brick.Focus.withFocusRing and EditDemo.hs.
+ * Added the "Named" type class to Brick.Widgets.Core for types that
+   store names. This type class is used to streamline the Focus
+   interface; see Brick.Focus.withFocusRing and EditDemo.hs.
  * The List and Editor types are now parameterized on names.
  * The List widget is now focus-aware; its rendering function now takes
    a boolean indicating whether it should be rendered with focus. The
