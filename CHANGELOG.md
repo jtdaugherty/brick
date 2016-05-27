@@ -5,6 +5,9 @@ Brick changelog
 0.7
 ---
 
+NOTE: this release includes many API changes. Please see the "Widget
+Names" section of the Brick User Guide for details on the fundamentals!
+
 API changes:
  * The "Name" type was removed. In its place we now have a name type
    variable ("n") attached to many types (including EventM,
