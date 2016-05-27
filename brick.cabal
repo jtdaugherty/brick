@@ -83,6 +83,7 @@ library
                        containers,
                        microlens >= 0.3.0.0,
                        microlens-th,
+                       microlens-mtl,
                        vector,
                        contravariant,
                        text,

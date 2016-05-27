@@ -23,6 +23,7 @@ module Brick.Types.Internal
 
   , scrollRequestsL
   , viewportMapL
+  , observedNamesL
   , vpSize
   , vpLeft
   , vpTop
@@ -33,6 +34,7 @@ import Lens.Micro (_1, _2, Lens')
 import Lens.Micro.TH (makeLenses)
 import Lens.Micro.Internal (Field1, Field2)
 import Data.Monoid
+import qualified Data.Set as S
 import qualified Data.Map as M
 import Graphics.Vty (DisplayRegion)
 
@@ -43,6 +45,7 @@ import Brick.Widgets.Border.Style (BorderStyle)
 data RenderState n =
     RS { viewportMap :: M.Map n Viewport
        , scrollRequests :: [(n, ScrollRequest)]
+       , observedNames :: !(S.Set n)
        }
 
 data ScrollRequest = HScrollBy Int

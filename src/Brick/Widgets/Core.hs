@@ -71,6 +71,7 @@ where
 
 import Control.Applicative
 import Lens.Micro ((^.), (.~), (&), (%~), to, _1, _2, each, to, ix, Lens')
+import Lens.Micro.Mtl (use, (%=))
 import Control.Monad ((>=>),when)
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Reader
@@ -79,6 +80,7 @@ import qualified Data.Text as T
 import Data.Default
 import Data.Monoid ((<>), mempty)
 import qualified Data.Map as M
+import qualified Data.Set as S
 import qualified Data.Function as DF
 import Data.List (sortBy, partition)
 import qualified Graphics.Vty as V
@@ -580,6 +582,20 @@ viewport vpname typ p =
           newSize = (c^.availWidthL, c^.availHeightL)
           doInsert (Just vp) = Just $ vp & vpSize .~ newSize
           doInsert Nothing = Just newVp
+
+      let observeName :: (Ord n, Show n) => n -> RenderM n ()
+          observeName n = do
+              observed <- use observedNamesL
+              case S.member n observed of
+                  False -> observedNamesL %= S.insert n
+                  True -> error $ "Error: while rendering the interface, the name " <> show n <>
+                                  " was seen more than once. You should ensure that all of the widgets " <>
+                                  "in each interface have unique name values. This means either " <>
+                                  "using a different name type or adding constructors to your " <>
+                                  "existing one and using those to name your widgets.  For more " <>
+                                  "information, see the \"Widget Names\" section of the Brick User Guide."
+
+      observeName vpname
 
       lift $ modify (& viewportMapL %~ (M.alter doInsert vpname))
 

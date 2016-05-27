@@ -31,7 +31,7 @@ module Brick.Main
 where
 
 import Control.Exception (finally)
-import Lens.Micro ((^.))
+import Lens.Micro ((^.), (&), (.~))
 import Control.Monad (forever)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.State
@@ -40,6 +40,7 @@ import Control.Concurrent (forkIO, Chan, newChan, readChan, writeChan, killThrea
 import Data.Default
 import Data.Maybe (listToMaybe)
 import qualified Data.Map as M
+import qualified Data.Set as S
 import Graphics.Vty
   ( Vty
   , Picture(..)
@@ -54,7 +55,7 @@ import Graphics.Vty
   )
 
 import Brick.Types (Viewport, Direction, Widget, rowL, columnL, CursorLocation(..), cursorLocationNameL, EventM(..))
-import Brick.Types.Internal (ScrollRequest(..), RenderState(..), Next(..))
+import Brick.Types.Internal (ScrollRequest(..), RenderState(..), observedNamesL, Next(..))
 import Brick.Widgets.Internal (renderFinal)
 import Brick.AttrMap
 
@@ -142,7 +143,7 @@ runWithNewVty buildVty chan app initialRS initialSt =
     withVty buildVty $ \vty -> do
         pid <- forkIO $ supplyVtyEvents vty (appLiftVtyEvent app) chan
         let runInner rs st = do
-              (result, newRS) <- runVty vty chan app st rs
+              (result, newRS) <- runVty vty chan app st (rs & observedNamesL .~ S.empty)
               case result of
                   SuspendAndResume act -> do
                       killThread pid
@@ -178,7 +179,7 @@ customMain buildVty chan app initialAppState = do
                     run newRS newAppState
 
     (st, initialScrollReqs) <- runStateT (runReaderT (runEventM (appStartEvent app initialAppState)) M.empty) []
-    let initialRS = RS M.empty initialScrollReqs
+    let initialRS = RS M.empty initialScrollReqs S.empty
     run initialRS st
 
 supplyVtyEvents :: Vty -> (Event -> e) -> Chan e -> IO ()
