@@ -473,7 +473,7 @@ this approach:
   name clashes could arise if two widgets used the same name. But those
   clashes would not be easy to observe.
 - String names are not amenable to safe refactoring since an "invalid"
-  name could be used and silently fail to cuause the desired behavior at
+  name could be used and silently fail to cause the desired behavior at
   runtime.
 - String names are not amenable to compile-time checking when being
   matched; a custom type allows the user to do compile-time checking of
@@ -485,7 +485,7 @@ this approach:
 Although requiring the user to provide a custom name type means that
 more work must be done to manage the set of possible names, this is work
 that should have been done up front anyway: ``String`` names could be
-allocated ad-hoc but never centrally managed, resulting in troulbesome
+allocated ad-hoc but never centrally managed, resulting in troublesome
 runtime problems.
 
 A Note of Caution
@@ -493,7 +493,7 @@ A Note of Caution
 
 **NOTE: Unique names for all named widgets are required to ensure
 that the renderer correctly tracks widget states during application
-execution.** If you assign the same name two, say, two viewports, they
+execution.** If you assign the same name to, say, two viewports, they
 will both use the same viewport scrolling state! So unless you want that
 and know what you are doing, use a unique name for every widget that
 needs one.
@@ -571,7 +571,7 @@ underneath it, with 8 rows remaining occupied by vertical border
 characters ("``|``") one column wide. The vertical border widget is
 designed to take up however many rows it was given, but rendering the
 box layout algorithm has to be careful about rendering such ``Greedy``
-widgets because the won't leave room for anything else. Since the box
+widgets because they won't leave room for anything else. Since the box
 widget cannot know the sizes of its sub-widgets until they are rendered,
 the ``Fixed`` widgets get rendered and their sizes are used to determine
 how much space is left for ``Greedy`` widgets.
