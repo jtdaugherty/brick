@@ -101,7 +101,10 @@ buttonAttr = "button"
 buttonSelectedAttr :: AttrName
 buttonSelectedAttr = buttonAttr <> "selected"
 
--- | Render a dialog with the specified body widget.
+-- | Render a dialog with the specified body widget. This renders the
+-- dialog as a layer, which makes this suitable as a top-level layer in
+-- your rendering function to be rendered on top of the rest of your
+-- interface.
 renderDialog :: Dialog a -> Widget n -> Widget n
 renderDialog d body =
     let buttonPadding = str "   "
