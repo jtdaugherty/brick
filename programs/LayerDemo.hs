@@ -12,6 +12,7 @@ import qualified Brick.Types as T
 import Brick.Types (rowL, columnL, Widget)
 import qualified Brick.Main as M
 import qualified Brick.Widgets.Border as B
+import qualified Brick.Widgets.Center as C
 import Brick.Widgets.Core
   ( translateBy
   , str
@@ -26,7 +27,9 @@ makeLenses ''St
 
 drawUi :: St -> [Widget ()]
 drawUi st =
-    [ topLayer st
+    [ C.centerLayer $
+      B.border $ str "This layer is centered but other\nlayers are visible underneath it."
+    , topLayer st
     , bottomLayer st
     ]
 
