@@ -113,7 +113,7 @@ renderDialog d body =
                          mkButton <$> (zip [0..] (d^.dialogButtonsL))
 
         doBorder = maybe border borderWithLabel (str <$> d^.dialogTitleL)
-    in center $
+    in centerLayer $
        withDefAttr dialogAttr $
        hLimit (d^.dialogWidthL) $
        doBorder $
