@@ -2,6 +2,24 @@
 Brick changelog
 ---------------
 
+0.8
+---
+
+API changes:
+ * Center: added layer-friendly centering functions centerLayer,
+   hCenterLayer, and vCenterLayer.
+
+Functionality changes:
+ * Dialog now uses new layer-friendly centering functions. This makes it
+   possible to overlay a Dialog on top of your UI when you use a Dialog
+   rendering as a separate layer.
+ * Updated the LayerDemo to demonstrate a centered layer.
+ * The renderer now uses a default Vty Picture background
+   of spaces with the default attribute, rather than using
+   ClearBackground (the Vty default). This is to compensate for an
+   unexpected attribute behavior in Vty when ClearBackgrounds (see
+   https://github.com/coreyoconnor/vty/issues/95)
+
 0.7
 ---
 
