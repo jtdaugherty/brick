@@ -1,22 +1,12 @@
 Misc:
-  * Add note of caution to viewport documentation about rendering big
-    things, and on using alternative approaches e.g. List
   * Consider updating editor to use smart translation similiar to list
     to enable editing of big documents
 
 Features:
   * High priority:
     - Text wrapping (with markup)
-    - Load & save attribute map to on-disk configuration (vty change
-      pending: Read instance for Attr)
+    - Load & save attribute map to on-disk configuration
     - API for obtaining scrolling viewport state in EventM (will
       staleness be an issue here?)
   * Low priority:
     - Deal with multi-column characters everywhere
-
-Open issues:
-- Are there better or less error-prone ways of dealing with Names?
-- Operations that pad widgets with fills interact with layering poorly,
-depending on the user's intentions. Sometimes we want layers to be
-opaque and filled, other times we want them to be transparent. How do we
-deal with this in general?
