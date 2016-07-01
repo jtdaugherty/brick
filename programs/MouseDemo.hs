@@ -5,12 +5,13 @@ module Main where
 import Lens.Micro ((^.), (&), (%~), (.~))
 import Lens.Micro.TH (makeLenses)
 import Control.Monad (void)
-import Data.Default
 import Data.Monoid ((<>))
 import qualified Graphics.Vty as V
 
 import qualified Brick.Types as T
-import Brick.Types (rowL, columnL, Widget)
+import Brick.AttrMap
+import Brick.Util
+import Brick.Types (Widget)
 import qualified Brick.Main as M
 import qualified Brick.Widgets.Border as B
 import qualified Brick.Widgets.Center as C
@@ -22,9 +23,7 @@ data DragState =
     deriving (Show)
 
 data St =
-    St { _topLayerLocation :: T.Location
-       , _bottomLayerLocation :: T.Location
-       , _extent :: Maybe (T.Extent ())
+    St { _draggableLayerLocation :: T.Location
        , _lastDragLoc :: DragState
        }
 
@@ -32,29 +31,41 @@ makeLenses ''St
 
 drawUi :: St -> [Widget ()]
 drawUi st =
-    [ C.centerLayer $
-      B.border $ str $ "This layer is centered but other\nlayers are visible underneath it.\n" <>
-                     (show $ st^.extent) <> " " <> (show $ st^.lastDragLoc)
-    , topLayer st
-    , bottomLayer st
+    [ draggableLayer st
+    , infoLayer st
     ]
 
-topLayer :: St -> Widget ()
-topLayer st =
-    translateBy (st^.topLayerLocation) $
-    reportExtent () $
-    B.border $ str "Top layer\n(Arrow keys move)"
+infoLayer :: St -> Widget ()
+infoLayer st = fill ' ' <=> dragInfo st
 
-bottomLayer :: St -> Widget ()
-bottomLayer st =
-    translateBy (st^.bottomLayerLocation) $
-    B.border $ str "Bottom layer\n(Ctrl-arrow keys move)"
+dragInfo :: St -> Widget ()
+dragInfo st =
+    let infoStr = case st^.lastDragLoc of
+          NotDragging -> str "Not dragging"
+          LastLocation (T.Location (c,r)) b ->
+              str $ "Dragging at column " <> show c <> ", row " <> show r <> " " <>
+                    if b
+                    then "(dragging layer)"
+                    else "(dragging outside of layer)"
+    in withDefAttr "info" $ C.hCenter infoStr
+
+draggableLayer :: St -> Widget ()
+draggableLayer st =
+    let highlight = case st^.lastDragLoc of
+          LastLocation _ True -> withDefAttr "dragging"
+          _ -> id
+    in translateBy (st^.draggableLayerLocation) $
+       reportExtent () $
+       highlight $
+       B.border $ str $ "This layer can be dragged by\n" <>
+                        "clicking and dragging anywhere\n" <>
+                        "on or within its border."
 
 appEvent :: St -> V.Event -> T.EventM () (T.Next St)
 appEvent st (V.EvKey V.KEsc []) = M.halt st
 appEvent st ev = do
     Just e <- M.lookupExtent ()
-    let s = case ev of
+    M.continue $ case ev of
           (V.EvMouseUp _ _ _) ->
               st & lastDragLoc .~ NotDragging
           (V.EvMouseDown c r V.BLeft _) ->
@@ -66,18 +77,8 @@ appEvent st ev = do
                   LastLocation (T.Location (lc, lr)) bound ->
                       let off = T.Location (c-1-lc, r-1-lr)
                       in st & lastDragLoc .~ LastLocation mouseLoc bound
-                            & topLayerLocation %~ if bound then (<> off) else id
-
-          (V.EvKey V.KDown [])           -> st & topLayerLocation.rowL %~ (+ 1)
-          (V.EvKey V.KUp [])             -> st & topLayerLocation.rowL %~ (subtract 1)
-          (V.EvKey V.KRight [])          -> st & topLayerLocation.columnL %~ (+ 1)
-          (V.EvKey V.KLeft [])           -> st & topLayerLocation.columnL %~ (subtract 1)
-          (V.EvKey V.KDown  [V.MCtrl])   -> st & bottomLayerLocation.rowL %~ (+ 1)
-          (V.EvKey V.KUp    [V.MCtrl])   -> st & bottomLayerLocation.rowL %~ (subtract 1)
-          (V.EvKey V.KRight [V.MCtrl])   -> st & bottomLayerLocation.columnL %~ (+ 1)
-          (V.EvKey V.KLeft  [V.MCtrl])   -> st & bottomLayerLocation.columnL %~ (subtract 1)
+                            & draggableLayerLocation %~ if bound then (<> off) else id
           _ -> st
-    M.continue $ s & extent .~ (Just e)
 
 clickedExtent :: (Int, Int) -> T.Extent n -> Bool
 clickedExtent (c', r') (T.Extent _ (T.Location (lc, lr)) (w, h)) =
@@ -86,15 +87,21 @@ clickedExtent (c', r') (T.Extent _ (T.Location (lc, lr)) (w, h)) =
     in c >= lc && c < (lc + w) &&
        r >= lr && r < (lr + h)
 
+aMap :: AttrMap
+aMap = attrMap V.defAttr
+    [ ("info",      V.white `on` V.magenta)
+    , ("dragging",  V.black `on` V.yellow)
+    ]
+
 app :: M.App St V.Event ()
 app =
     M.App { M.appDraw = drawUi
           , M.appStartEvent = return
           , M.appHandleEvent = appEvent
-          , M.appAttrMap = const def
+          , M.appAttrMap = const aMap
           , M.appLiftVtyEvent = id
           , M.appChooseCursor = M.neverShowCursor
           }
 
 main :: IO ()
-main = void $ M.defaultMain app $ St (T.Location (0, 0)) (T.Location (0, 0)) Nothing NotDragging
+main = void $ M.defaultMain app $ St (T.Location (0, 0)) NotDragging
