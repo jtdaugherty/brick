@@ -66,14 +66,24 @@ appEvent st (V.EvKey V.KEsc []) = M.halt st
 appEvent st ev = do
     Just e <- M.lookupExtent ()
     M.continue $ case ev of
+          -- If the mouse button was released, stop dragging.
           (V.EvMouseUp _ _ _) ->
               st & lastDragLoc .~ NotDragging
           (V.EvMouseDown c r V.BLeft _) ->
               let mouseLoc = T.Location (c-1, r-1)
               in case st^.lastDragLoc of
                   NotDragging
+                      -- If the mouse button was down in the layer and
+                      -- we were not already dragging it, start dragging
+                      -- the layer.
                       | clickedExtent (c, r) e -> st & lastDragLoc .~ LastLocation mouseLoc True
+                      -- If the mouse button was down outside the layer,
+                      -- start dragging outside the layer.
                       | otherwise              -> st & lastDragLoc .~ LastLocation mouseLoc False
+                  -- If the mouse button was down and we were already
+                  -- dragging, update the drag location. If the drag
+                  -- was a continuation of a layer movement, update the
+                  -- layer location.
                   LastLocation (T.Location (lc, lr)) bound ->
                       let off = T.Location (c-1-lc, r-1-lr)
                       in st & lastDragLoc .~ LastLocation mouseLoc bound
