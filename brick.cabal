@@ -136,6 +136,21 @@ executable brick-dialog-demo
                        text,
                        microlens
 
+executable brick-mouse-demo
+  if !flag(demos)
+    Buildable: False
+  hs-source-dirs:      programs
+  ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
+  default-language:    Haskell2010
+  main-is:             MouseDemo.hs
+  build-depends:       base <= 5,
+                       brick,
+                       vty >= 5.7,
+                       data-default,
+                       text,
+                       microlens >= 0.3.0.0,
+                       microlens-th
+
 executable brick-layer-demo
   if !flag(demos)
     Buildable: False
