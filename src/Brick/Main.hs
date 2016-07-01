@@ -10,6 +10,7 @@ module Brick.Main
   , halt
   , suspendAndResume
   , lookupViewport
+  , lookupExtent
 
   -- ** Viewport scrolling
   , viewportScroll
@@ -46,6 +47,8 @@ import Graphics.Vty
   , Picture(..)
   , Cursor(..)
   , Event(..)
+  , Mode(..)
+  , setMode
   , update
   , outputIface
   , displayBounds
@@ -54,7 +57,18 @@ import Graphics.Vty
   , mkVty
   )
 
-import Brick.Types (Viewport, Direction, Widget, rowL, columnL, CursorLocation(..), cursorLocationNameL, EventM(..))
+import Brick.Types
+  ( Viewport
+  , Direction
+  , Widget
+  , rowL
+  , columnL
+  , CursorLocation(..)
+  , cursorLocationNameL
+  , EventM(..)
+  , Extent(..)
+  , EventInfo(..)
+  )
 import Brick.Types.Internal (ScrollRequest(..), RenderState(..), observedNamesL, Next(..))
 import Brick.Widgets.Internal (renderFinal)
 import Brick.AttrMap
@@ -101,7 +115,8 @@ data App s e n =
 -- | The default main entry point which takes an application and an
 -- initial state and returns the final state returned by a 'halt'
 -- operation.
-defaultMain :: App s Event n
+defaultMain :: (Ord n)
+            => App s Event n
             -- ^ The application.
             -> s
             -- ^ The initial application state.
@@ -113,7 +128,8 @@ defaultMain app st = do
 -- | A simple main entry point which takes a widget and renders it. This
 -- event loop terminates when the user presses any key, but terminal
 -- resize events cause redraws.
-simpleMain :: Widget n
+simpleMain :: (Ord n)
+           => Widget n
            -- ^ The widget to draw.
            -> IO ()
 simpleMain w =
@@ -141,6 +157,7 @@ data InternalNext n a = InternalSuspendAndResume (RenderState n) (IO a)
 runWithNewVty :: IO Vty -> Chan e -> App s e n -> RenderState n -> s -> IO (InternalNext n s)
 runWithNewVty buildVty chan app initialRS initialSt =
     withVty buildVty $ \vty -> do
+        setMode (outputIface vty) Mouse True
         pid <- forkIO $ supplyVtyEvents vty (appLiftVtyEvent app) chan
         let runInner rs st = do
               (result, newRS) <- runVty vty chan app st (rs & observedNamesL .~ S.empty)
@@ -156,7 +173,8 @@ runWithNewVty buildVty chan app initialRS initialSt =
 
 -- | The custom event loop entry point to use when the simpler ones
 -- don't permit enough control.
-customMain :: IO Vty
+customMain :: (Ord n)
+           => IO Vty
            -- ^ An IO action to build a Vty handle. This is used to
            -- build a Vty handle whenever the event loop begins or is
            -- resumed after suspension.
@@ -178,7 +196,8 @@ customMain buildVty chan app initialAppState = do
                     newAppState <- action
                     run newRS newAppState
 
-    (st, initialScrollReqs) <- runStateT (runReaderT (runEventM (appStartEvent app initialAppState)) M.empty) []
+    let evi = EventInfo mempty mempty
+    (st, initialScrollReqs) <- runStateT (runReaderT (runEventM (appStartEvent app initialAppState)) evi) []
     let initialRS = RS M.empty initialScrollReqs S.empty
     run initialRS st
 
@@ -190,9 +209,10 @@ supplyVtyEvents vty mkEvent chan =
 
 runVty :: Vty -> Chan e -> App s e n -> s -> RenderState n -> IO (Next s, RenderState n)
 runVty vty chan app appState rs = do
-    firstRS <- renderApp vty app appState rs
+    (firstRS, exts) <- renderApp vty app appState rs
     e <- readChan chan
-    (next, scrollReqs) <- runStateT (runReaderT (runEventM (appHandleEvent app appState e)) (viewportMap rs)) []
+    let ei = EventInfo (viewportMap rs) exts
+    (next, scrollReqs) <- runStateT (runReaderT (runEventM (appHandleEvent app appState e)) ei) []
     return (next, firstRS { scrollRequests = scrollReqs })
 
 -- | Given a viewport name, get the viewport's size and offset
@@ -201,28 +221,35 @@ runVty vty chan app appState rs = do
 -- or because no rendering has occurred (e.g. in an 'appStartEvent'
 -- handler).
 lookupViewport :: (Ord n) => n -> EventM n (Maybe Viewport)
-lookupViewport = EventM . asks . M.lookup
+lookupViewport n = EventM $ asks (M.lookup n . latestViewports)
+
+-- | Given a name, get the most recent rendering extent for the name (if
+-- any).
+lookupExtent :: (Eq n) => n -> EventM n (Maybe (Extent n))
+lookupExtent n = EventM $ asks (listToMaybe . filter f . latestExtents)
+    where
+        f (Extent n' _ _) = n == n'
 
 withVty :: IO Vty -> (Vty -> IO a) -> IO a
 withVty buildVty useVty = do
     vty <- buildVty
     useVty vty `finally` shutdown vty
 
-renderApp :: Vty -> App s e n -> s -> RenderState n -> IO (RenderState n)
+renderApp :: Vty -> App s e n -> s -> RenderState n -> IO (RenderState n, [Extent n])
 renderApp vty app appState rs = do
     sz <- displayBounds $ outputIface vty
-    let (newRS, pic, theCursor) = renderFinal (appAttrMap app appState)
-                                    (appDraw app appState)
-                                    sz
-                                    (appChooseCursor app appState)
-                                    rs
+    let (newRS, pic, theCursor, exts) = renderFinal (appAttrMap app appState)
+                                        (appDraw app appState)
+                                        sz
+                                        (appChooseCursor app appState)
+                                        rs
         picWithCursor = case theCursor of
             Nothing -> pic { picCursor = NoCursor }
             Just loc -> pic { picCursor = Cursor (loc^.columnL) (loc^.rowL) }
 
     update vty picWithCursor
 
-    return newRS
+    return (newRS, exts)
 
 -- | Ignore all requested cursor positions returned by the rendering
 -- process. This is a convenience function useful as an

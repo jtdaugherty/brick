@@ -24,6 +24,7 @@ module Brick.Types
 
   -- * Event-handling types
   , EventM(..)
+  , EventInfo(..)
   , Next
   , handleEventLensed
 
@@ -43,11 +44,13 @@ module Brick.Types
   -- ** Rendering results
   , Result(..)
   , lookupAttrName
+  , Extent(..)
 
   -- ** Rendering result lenses
   , imageL
   , cursorsL
   , visibilityRequestsL
+  , extentsL
 
   -- ** Visibility requests
   , VisibilityRequest(..)
@@ -108,11 +111,16 @@ handleEventLensed v target handleEvent ev = do
     newB <- handleEvent ev (v^.target)
     return $ v & target .~ newB
 
+data EventInfo n =
+    EventInfo { latestViewports :: M.Map n Viewport
+              , latestExtents :: [Extent n]
+              }
+
 -- | The monad in which event handlers run. Although it may be tempting
 -- to dig into the reader value yourself, just use
 -- 'Brick.Main.lookupViewport'.
 newtype EventM n a =
-    EventM { runEventM :: ReaderT (M.Map n Viewport) (StateT (EventState n) IO) a
+    EventM { runEventM :: ReaderT (EventInfo n) (StateT (EventState n) IO) a
            }
            deriving (Functor, Applicative, Monad, MonadIO)
 
@@ -142,6 +150,11 @@ data Widget n =
 -- communicate rendering parameters to widgets' rendering functions.
 type RenderM n a = ReaderT Context (State (RenderState n)) a
 
+-- | An extent of a named area indicating the location of its upper-left
+-- corner and its size (width, height).
+data Extent n = Extent n Location (Int, Int)
+              deriving (Show)
+
 -- | The type of result returned by a widget's rendering function. The
 -- result provides the image, cursor positions, and visibility requests
 -- that resulted from the rendering process.
@@ -154,11 +167,12 @@ data Result n =
            , visibilityRequests :: [VisibilityRequest]
            -- ^ The list of visibility requests made by widgets rendered
            -- while rendering this one (used by viewports)
+           , extents :: [Extent n]
            }
            deriving Show
 
 instance Default (Result n) where
-    def = Result emptyImage [] []
+    def = Result emptyImage [] [] []
 
 -- | Get the current rendering context.
 getContext :: RenderM n Context
