@@ -247,7 +247,7 @@ of state in your application state. In the following example we use an
 .. code:: haskell
 
    data Name = Edit1
-   type MyState = Edit Name
+   type MyState = Editor Name
 
    myEvent :: MyState -> e -> EventM Name (Next MyState)
    myEvent s e = continue =<< handleEditorEvent e s
