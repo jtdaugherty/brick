@@ -262,7 +262,7 @@ for your application state fields, you can use the convenience function
 .. code:: haskell
 
    data Name = Edit1
-   data MyState = MyState { _theEdit :: Edit Name
+   data MyState = MyState { _theEdit :: Editor Name
                           }
    makeLenses ''MyState
 
