@@ -150,7 +150,7 @@ data CursorLocation n =
 
 -- | The rendering context. This tells widgets how to render: how much
 -- space they have in which to render, which attribute they should use
--- to render, which bordring style should be used, and the attribute map
+-- to render, which bordering style should be used, and the attribute map
 -- available for rendering.
 data Context =
     Context { ctxAttrName :: AttrName
