@@ -49,6 +49,7 @@ import Brick.AttrMap
 -- * Ctrl-d, Del: delete character at cursor position
 -- * Backspace: delete character prior to cursor position
 -- * Ctrl-k: delete all from cursor to end of line
+-- * Ctrl-u: delete all from cursor to beginning of line
 -- * Arrow keys: move cursor
 -- * Enter: break the current line at the cursor position
 data Editor n =
@@ -72,6 +73,7 @@ handleEditorEvent e ed =
                   EvKey (KChar 'e') [MCtrl] -> Z.gotoEOL
                   EvKey (KChar 'd') [MCtrl] -> Z.deleteChar
                   EvKey (KChar 'k') [MCtrl] -> Z.killToEOL
+                  EvKey (KChar 'u') [MCtrl] -> Z.killToBOL
                   EvKey KEnter [] -> Z.breakLine
                   EvKey KDel [] -> Z.deleteChar
                   EvKey (KChar c) [] | c /= '\t' -> Z.insertChar c
