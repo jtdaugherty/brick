@@ -79,7 +79,7 @@ instance IsString AttrName where
 -- | An attribute map which maps 'AttrName' values to 'Attr' values.
 data AttrMap = AttrMap Attr (M.Map AttrName Attr)
              | ForceAttr Attr
-             deriving Show
+             deriving (Show, Eq)
 
 instance Default AttrMap where
     def = AttrMap def mempty

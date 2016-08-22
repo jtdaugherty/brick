@@ -64,7 +64,7 @@ data VisibilityRequest =
     VR { vrPosition :: Location
        , vrSize :: DisplayRegion
        }
-       deriving Show
+       deriving (Show, Eq)
 
 -- | Describes the state of a viewport as it appears as its most recent
 -- rendering.
@@ -76,7 +76,7 @@ data Viewport =
        , _vpSize :: DisplayRegion
        -- ^ The size of the viewport.
        }
-       deriving Show
+       deriving (Show, Eq)
 
 -- | The type of viewports that indicates the direction(s) in which a
 -- viewport is scrollable.
@@ -86,7 +86,7 @@ data ViewportType = Vertical
                   -- ^ Viewports of this type are scrollable only horizontally.
                   | Both
                   -- ^ Viewports of this type are scrollable vertically and horizontally.
-                  deriving Show
+                  deriving (Show, Eq)
 
 type EventState n = [(n, ScrollRequest)]
 
@@ -101,12 +101,13 @@ data Direction = Up
                -- ^ Up/left
                | Down
                -- ^ Down/right
+               deriving (Show, Eq)
 
 -- | A terminal screen location.
 data Location = Location { loc :: (Int, Int)
                          -- ^ (Column, Row)
                          }
-                deriving Show
+                deriving (Show, Eq)
 
 suffixLenses ''Location
 
@@ -146,7 +147,7 @@ data CursorLocation n =
                    , cursorLocationName :: !(Maybe n)
                    -- ^ The name of the widget associated with the location
                    }
-                   deriving Show
+                   deriving (Show, Eq)
 
 -- | The rendering context. This tells widgets how to render: how much
 -- space they have in which to render, which attribute they should use
@@ -159,6 +160,7 @@ data Context =
             , ctxBorderStyle :: BorderStyle
             , ctxAttrMap :: AttrMap
             }
+            deriving (Show, Eq)
 
 suffixLenses ''RenderState
 suffixLenses ''VisibilityRequest
