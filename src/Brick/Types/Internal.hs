@@ -76,7 +76,7 @@ data Viewport =
        , _vpSize :: DisplayRegion
        -- ^ The size of the viewport.
        }
-       deriving (Show, Eq)
+       deriving Show
 
 -- | The type of viewports that indicates the direction(s) in which a
 -- viewport is scrollable.
@@ -147,7 +147,7 @@ data CursorLocation n =
                    , cursorLocationName :: !(Maybe n)
                    -- ^ The name of the widget associated with the location
                    }
-                   deriving (Show, Eq)
+                   deriving Show
 
 -- | The rendering context. This tells widgets how to render: how much
 -- space they have in which to render, which attribute they should use
@@ -160,7 +160,7 @@ data Context =
             , ctxBorderStyle :: BorderStyle
             , ctxAttrMap :: AttrMap
             }
-            deriving (Show, Eq)
+            deriving Show
 
 suffixLenses ''RenderState
 suffixLenses ''VisibilityRequest
