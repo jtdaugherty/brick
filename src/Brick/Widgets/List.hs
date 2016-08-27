@@ -127,7 +127,8 @@ list :: n
      -> List n e
 list name es h =
     let selIndex = if V.null es then Nothing else Just 0
-    in List es selIndex name h
+        safeHeight = max 1 h
+    in List es selIndex name safeHeight
 
 -- | Turn a list state value into a widget given an item drawing
 -- function.
