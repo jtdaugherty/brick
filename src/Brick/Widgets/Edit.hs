@@ -38,7 +38,8 @@ import Lens.Micro
 import Graphics.Vty (Event(..), Key(..), Modifier(..))
 
 import qualified Data.Text as T
-import qualified Data.Text.Zipper as Z
+import qualified Data.Text.Zipper as Z hiding ( textZipper )
+import qualified Data.Text.Zipper.Generic as Z
 
 import Brick.Types
 import Brick.Widgets.Core
@@ -99,20 +100,21 @@ editorText :: n
        -> T.Text
        -- ^ The initial content
        -> Editor T.Text n
-editorText name draw limit s = Editor (Z.textZipper (T.lines s) limit) draw name
+editorText = editor
 
 -- | Construct an editor over 'String' values
-editor :: n
+editor :: Z.GenericTextZipper a
+       => n
        -- ^ The editor's name (must be unique)
-       -> ([String] -> Widget n)
+       -> ([a] -> Widget n)
        -- ^ The content rendering function
        -> Maybe Int
        -- ^ The limit on the number of lines in the editor ('Nothing'
        -- means no limit)
-       -> String
+       -> a
        -- ^ The initial content
-       -> Editor String n
-editor name draw limit s = Editor (Z.stringZipper (lines s) limit) draw name
+       -> Editor a n
+editor name draw limit s = Editor (Z.textZipper (Z.lines s) limit) draw name
 
 -- | Apply an editing operation to the editor's contents. Bear in mind
 -- that you should only apply zipper operations that operate on the
