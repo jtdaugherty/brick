@@ -28,8 +28,8 @@ data Name = Edit1
 
 data St =
     St { _focusRing :: F.FocusRing Name
-       , _edit1 :: E.Editor Name
-       , _edit2 :: E.Editor Name
+       , _edit1 :: E.Editor String Name
+       , _edit2 :: E.Editor String Name
        }
 
 makeLenses ''St

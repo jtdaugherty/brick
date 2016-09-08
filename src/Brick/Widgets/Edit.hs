@@ -15,6 +15,7 @@ module Brick.Widgets.Edit
   ( Editor(editContents, editorName, editDrawContents)
   -- * Constructing an editor
   , editor
+  , editorText
   -- * Reading editor contents
   , getEditContents
   -- * Handling events
@@ -36,11 +37,13 @@ import Data.Monoid
 import Lens.Micro
 import Graphics.Vty (Event(..), Key(..), Modifier(..))
 
+import qualified Data.Text as T
 import qualified Data.Text.Zipper as Z
 
 import Brick.Types
 import Brick.Widgets.Core
 import Brick.AttrMap
+
 
 -- | Editor state.  Editors support the following events by default:
 --
@@ -52,10 +55,10 @@ import Brick.AttrMap
 -- * Ctrl-u: delete all from cursor to beginning of line
 -- * Arrow keys: move cursor
 -- * Enter: break the current line at the cursor position
-data Editor n =
-    Editor { editContents :: Z.TextZipper String
+data Editor t n =
+    Editor { editContents :: Z.TextZipper t
            -- ^ The contents of the editor
-           , editDrawContents :: [String] -> Widget n
+           , editDrawContents :: [t] -> Widget n
            -- ^ The function the editor uses to draw its contents
            , editorName :: n
            -- ^ The name of the editor
@@ -63,10 +66,10 @@ data Editor n =
 
 suffixLenses ''Editor
 
-instance Named (Editor n) n where
+instance Named (Editor t n) n where
     getName = editorName
 
-handleEditorEvent :: Event -> Editor n -> EventM n (Editor n)
+handleEditorEvent :: (Eq t, Monoid t) => Event -> Editor t n -> EventM n (Editor t n)
 handleEditorEvent e ed =
         let f = case e of
                   EvKey (KChar 'a') [MCtrl] -> Z.gotoBOL
@@ -85,7 +88,20 @@ handleEditorEvent e ed =
                   _ -> id
         in return $ applyEdit f ed
 
--- | Construct an editor.
+-- | Construct an editor over 'Text' values
+editorText :: n
+       -- ^ The editor's name (must be unique)
+       -> ([T.Text] -> Widget n)
+       -- ^ The content rendering function
+       -> Maybe Int
+       -- ^ The limit on the number of lines in the editor ('Nothing'
+       -- means no limit)
+       -> T.Text
+       -- ^ The initial content
+       -> Editor T.Text n
+editorText name draw limit s = Editor (Z.textZipper (T.lines s) limit) draw name
+
+-- | Construct an editor over 'String' values
 editor :: n
        -- ^ The editor's name (must be unique)
        -> ([String] -> Widget n)
@@ -95,17 +111,17 @@ editor :: n
        -- means no limit)
        -> String
        -- ^ The initial content
-       -> Editor n
+       -> Editor String n
 editor name draw limit s = Editor (Z.stringZipper (lines s) limit) draw name
 
 -- | Apply an editing operation to the editor's contents. Bear in mind
 -- that you should only apply zipper operations that operate on the
 -- current line; the editor will only ever render the first line of
 -- text.
-applyEdit :: (Z.TextZipper String -> Z.TextZipper String)
+applyEdit :: (Z.TextZipper t -> Z.TextZipper t)
           -- ^ The 'Data.Text.Zipper' editing transformation to apply
-          -> Editor n
-          -> Editor n
+          -> Editor t n
+          -> Editor t n
 applyEdit f e = e & editContentsL %~ f
 
 -- | The attribute assigned to the editor when it does not have focus.
@@ -118,15 +134,15 @@ editFocusedAttr :: AttrName
 editFocusedAttr = editAttr <> "focused"
 
 -- | Get the contents of the editor.
-getEditContents :: Editor n -> [String]
+getEditContents :: Monoid t => Editor t n -> [t]
 getEditContents e = Z.getText $ e^.editContentsL
 
 -- | Turn an editor state value into a widget
-renderEditor :: (Ord n, Show n)
+renderEditor :: (Ord n, Show n, Monoid t)
              => Bool
              -- ^ Whether the editor has focus. It will report a cursor
              -- position if and only if it has focus.
-             -> Editor n
+             -> Editor t n
              -- ^ The editor.
              -> Widget n
 renderEditor foc e =
