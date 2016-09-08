@@ -12,7 +12,7 @@
 -- events that should suffice for most purposes; see the source for a
 -- complete list.
 module Brick.Widgets.Edit
-  ( Editor(editContents, editorName, editDRawContents)
+  ( Editor(editContents, editorName, editDrawContents)
   -- * Constructing an editor
   , editor
   , editorText
