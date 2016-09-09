@@ -2,6 +2,28 @@
 Brick changelog
 ---------------
 
+0.9
+---
+
+Package changes:
+ * Depend on text-zipper 0.7.1
+
+API changes:
+ * The editor widget state value is now polymorphic over the type of
+   "string" value that can be edited, so you can now create editors over
+   Text values as well as Strings. This is a breaking change but it only
+   requires the addition of the string type variable to any uses of
+   Editor. (thanks Jason Dagit and Getty Ritter)
+ * Added some missing Eq and Show instances (thanks Grégoire Charvet)
+
+New features:
+ * The editor now binds Control-U to delete to beginning of line (thanks
+   Hans-Peter Deifel)
+
+Bug fixes:
+ * List: avoid runtime exception by ensuring item height is always at
+   least 1
+
 0.8
 ---
 
