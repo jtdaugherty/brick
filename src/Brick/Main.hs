@@ -41,6 +41,10 @@ import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.State
 import Control.Monad.Trans.Reader
 import Control.Concurrent (forkIO, Chan, newChan, readChan, writeChan, killThread)
+#if !MIN_VERSION_base(4,8,0)
+import Control.Applicative ((<$>))
+import Data.Monoid (mempty)
+#endif
 import Data.Default
 import Data.Maybe (listToMaybe)
 import qualified Data.Map as M
