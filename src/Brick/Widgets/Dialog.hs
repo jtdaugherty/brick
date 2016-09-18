@@ -45,7 +45,8 @@ import Brick.AttrMap
 
 -- | Dialogs present a window with a title (optional), a body, and
 -- buttons (optional). They provide a 'HandleEvent' instance that knows
--- about Tab and Shift-Tab for changing which button is active. Dialog
+-- about Tab and Shift-Tab as well as ArrowLeft and ArrowRight
+-- for changing which button is active. Dialog
 -- buttons are labeled with strings and map to values of type 'a', which
 -- you choose.
 --
@@ -71,6 +72,8 @@ handleDialogEvent ev d =
     return $ case ev of
         EvKey (KChar '\t') [] -> nextButtonBy 1 d
         EvKey KBackTab [] -> nextButtonBy (-1) d
+        EvKey KRight [] -> nextButtonBy 1 d
+        EvKey KLeft [] -> nextButtonBy (-1) d
         _ -> d
 
 -- | Create a dialog.
