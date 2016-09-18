@@ -18,15 +18,21 @@ module Brick.Types.Internal
   , cursorLocationL
   , cursorLocationNameL
   , Context(..)
-  , EventState
+  , EventState(..)
   , Next(..)
+  , Result(..)
+  , CacheInvalidateRequest(..)
 
-  , scrollRequestsL
+  , rsScrollRequestsL
   , viewportMapL
+  , renderCacheL
   , observedNamesL
   , vpSize
   , vpLeft
   , vpTop
+  , imageL
+  , cursorsL
+  , visibilityRequestsL
   )
 where
 
@@ -39,17 +45,12 @@ import Lens.Micro.TH (makeLenses)
 import Lens.Micro.Internal (Field1, Field2)
 import qualified Data.Set as S
 import qualified Data.Map as M
-import Graphics.Vty (DisplayRegion)
+import Graphics.Vty (DisplayRegion, Image, emptyImage)
+import Data.Default (Default(..))
 
 import Brick.Types.TH
 import Brick.AttrMap (AttrName, AttrMap)
 import Brick.Widgets.Border.Style (BorderStyle)
-
-data RenderState n =
-    RS { viewportMap :: M.Map n Viewport
-       , scrollRequests :: [(n, ScrollRequest)]
-       , observedNames :: !(S.Set n)
-       }
 
 data ScrollRequest = HScrollBy Int
                    | HScrollPage Direction
@@ -88,7 +89,12 @@ data ViewportType = Vertical
                   -- ^ Viewports of this type are scrollable vertically and horizontally.
                   deriving (Show, Eq)
 
-type EventState n = [(n, ScrollRequest)]
+data CacheInvalidateRequest n = InvalidateSingle n
+                              | InvalidateEntire
+
+data EventState n = ES { esScrollRequests :: [(n, ScrollRequest)]
+                       , cacheInvalidateRequests :: [CacheInvalidateRequest n]
+                       }
 
 -- | The type of actions to take upon completion of an event handler.
 data Next a = Continue a
@@ -148,6 +154,33 @@ data CursorLocation n =
                    -- ^ The name of the widget associated with the location
                    }
                    deriving Show
+
+-- | The type of result returned by a widget's rendering function. The
+-- result provides the image, cursor positions, and visibility requests
+-- that resulted from the rendering process.
+data Result n =
+    Result { image :: Image
+           -- ^ The final rendered image for a widget
+           , cursors :: [CursorLocation n]
+           -- ^ The list of reported cursor positions for the
+           -- application to choose from
+           , visibilityRequests :: [VisibilityRequest]
+           -- ^ The list of visibility requests made by widgets rendered
+           -- while rendering this one (used by viewports)
+           }
+           deriving Show
+
+suffixLenses ''Result
+
+instance Default (Result n) where
+    def = Result emptyImage [] []
+
+data RenderState n =
+    RS { viewportMap :: M.Map n Viewport
+       , rsScrollRequests :: [(n, ScrollRequest)]
+       , observedNames :: !(S.Set n)
+       , renderCache :: M.Map n (Result n)
+       }
 
 -- | The rendering context. This tells widgets how to render: how much
 -- space they have in which to render, which attribute they should use

@@ -27,6 +27,10 @@ module Brick.Main
   , neverShowCursor
   , showFirstCursor
   , showCursorNamed
+
+  -- * Rendering cache management
+  , invalidateCacheEntry
+  , invalidateCache
   )
 where
 
@@ -55,7 +59,7 @@ import Graphics.Vty
   )
 
 import Brick.Types (Viewport, Direction, Widget, rowL, columnL, CursorLocation(..), cursorLocationNameL, EventM(..))
-import Brick.Types.Internal (ScrollRequest(..), RenderState(..), observedNamesL, Next(..))
+import Brick.Types.Internal (ScrollRequest(..), RenderState(..), observedNamesL, Next(..), EventState(..), CacheInvalidateRequest(..))
 import Brick.Widgets.Internal (renderFinal)
 import Brick.AttrMap
 
@@ -101,7 +105,8 @@ data App s e n =
 -- | The default main entry point which takes an application and an
 -- initial state and returns the final state returned by a 'halt'
 -- operation.
-defaultMain :: App s Event n
+defaultMain :: (Ord n)
+            => App s Event n
             -- ^ The application.
             -> s
             -- ^ The initial application state.
@@ -113,7 +118,8 @@ defaultMain app st = do
 -- | A simple main entry point which takes a widget and renders it. This
 -- event loop terminates when the user presses any key, but terminal
 -- resize events cause redraws.
-simpleMain :: Widget n
+simpleMain :: (Ord n)
+           => Widget n
            -- ^ The widget to draw.
            -> IO ()
 simpleMain w =
@@ -138,7 +144,7 @@ resizeOrQuit s _ = halt s
 data InternalNext n a = InternalSuspendAndResume (RenderState n) (IO a)
                       | InternalHalt a
 
-runWithNewVty :: IO Vty -> Chan e -> App s e n -> RenderState n -> s -> IO (InternalNext n s)
+runWithNewVty :: (Ord n) => IO Vty -> Chan e -> App s e n -> RenderState n -> s -> IO (InternalNext n s)
 runWithNewVty buildVty chan app initialRS initialSt =
     withVty buildVty $ \vty -> do
         pid <- forkIO $ supplyVtyEvents vty (appLiftVtyEvent app) chan
@@ -156,7 +162,8 @@ runWithNewVty buildVty chan app initialRS initialSt =
 
 -- | The custom event loop entry point to use when the simpler ones
 -- don't permit enough control.
-customMain :: IO Vty
+customMain :: (Ord n)
+           => IO Vty
            -- ^ An IO action to build a Vty handle. This is used to
            -- build a Vty handle whenever the event loop begins or is
            -- resumed after suspension.
@@ -178,8 +185,9 @@ customMain buildVty chan app initialAppState = do
                     newAppState <- action
                     run newRS newAppState
 
-    (st, initialScrollReqs) <- runStateT (runReaderT (runEventM (appStartEvent app initialAppState)) M.empty) []
-    let initialRS = RS M.empty initialScrollReqs S.empty
+        emptyES = ES [] []
+    (st, eState) <- runStateT (runReaderT (runEventM (appStartEvent app initialAppState)) M.empty) emptyES
+    let initialRS = RS M.empty (esScrollRequests eState) S.empty mempty
     run initialRS st
 
 supplyVtyEvents :: Vty -> (Event -> e) -> Chan e -> IO ()
@@ -188,12 +196,22 @@ supplyVtyEvents vty mkEvent chan =
         e <- nextEvent vty
         writeChan chan $ mkEvent e
 
-runVty :: Vty -> Chan e -> App s e n -> s -> RenderState n -> IO (Next s, RenderState n)
+runVty :: (Ord n) => Vty -> Chan e -> App s e n -> s -> RenderState n -> IO (Next s, RenderState n)
 runVty vty chan app appState rs = do
     firstRS <- renderApp vty app appState rs
     e <- readChan chan
-    (next, scrollReqs) <- runStateT (runReaderT (runEventM (appHandleEvent app appState e)) (viewportMap rs)) []
-    return (next, firstRS { scrollRequests = scrollReqs })
+    let emptyES = ES [] []
+    (next, eState) <- runStateT (runReaderT (runEventM (appHandleEvent app appState e)) (viewportMap rs)) emptyES
+    return (next, firstRS { rsScrollRequests = esScrollRequests eState
+                          , renderCache = applyInvalidations (cacheInvalidateRequests eState) $
+                                          renderCache firstRS
+                          })
+
+applyInvalidations :: (Ord n) => [CacheInvalidateRequest n] -> M.Map n v -> M.Map n v
+applyInvalidations ns cache = foldr (.) id (mkFunc <$> ns) cache
+    where
+    mkFunc InvalidateEntire = const mempty
+    mkFunc (InvalidateSingle n) = M.delete n
 
 -- | Given a viewport name, get the viewport's size and offset
 -- information from the most recent rendering. Returns 'Nothing' if
@@ -202,6 +220,16 @@ runVty vty chan app appState rs = do
 -- handler).
 lookupViewport :: (Ord n) => n -> EventM n (Maybe Viewport)
 lookupViewport = EventM . asks . M.lookup
+
+-- | Invalidate the rendering cache entry with the specified name.
+invalidateCacheEntry :: n -> EventM n ()
+invalidateCacheEntry n = EventM $ do
+    lift $ modify (\s -> s { cacheInvalidateRequests = InvalidateSingle n : cacheInvalidateRequests s })
+
+-- | Invalidate the entire rendering cache.
+invalidateCache :: EventM n ()
+invalidateCache = EventM $ do
+    lift $ modify (\s -> s { cacheInvalidateRequests = InvalidateEntire : cacheInvalidateRequests s })
 
 withVty :: IO Vty -> (Vty -> IO a) -> IO a
 withVty buildVty useVty = do
@@ -276,18 +304,22 @@ data ViewportScroll n =
                    -- ^ Scroll vertically to the end of the viewport.
                    }
 
+addScrollRequest :: (n, ScrollRequest) -> EventM n ()
+addScrollRequest req = EventM $ do
+    lift $ modify (\s -> s { esScrollRequests = req : esScrollRequests s })
+
 -- | Build a viewport scroller for the viewport with the specified name.
 viewportScroll :: n -> ViewportScroll n
 viewportScroll n =
-    ViewportScroll { viewportName = n
-                   , hScrollPage = \dir -> EventM $ lift $ modify ((n, HScrollPage dir) :)
-                   , hScrollBy = \i -> EventM $ lift $ modify ((n, HScrollBy i) :)
-                   , hScrollToBeginning = EventM $ lift $ modify ((n, HScrollToBeginning) :)
-                   , hScrollToEnd = EventM $ lift $ modify ((n, HScrollToEnd) :)
-                   , vScrollPage = \dir -> EventM $ lift $ modify ((n, VScrollPage dir) :)
-                   , vScrollBy = \i -> EventM $ lift $ modify ((n, VScrollBy i) :)
-                   , vScrollToBeginning = EventM $ lift $ modify ((n, VScrollToBeginning) :)
-                   , vScrollToEnd = EventM $ lift $ modify ((n, VScrollToEnd) :)
+    ViewportScroll { viewportName       = n
+                   , hScrollPage        = \dir -> addScrollRequest (n, HScrollPage dir)
+                   , hScrollBy          = \i ->   addScrollRequest (n, HScrollBy i)
+                   , hScrollToBeginning =         addScrollRequest (n, HScrollToBeginning)
+                   , hScrollToEnd       =         addScrollRequest (n, HScrollToEnd)
+                   , vScrollPage        = \dir -> addScrollRequest (n, VScrollPage dir)
+                   , vScrollBy          = \i ->   addScrollRequest (n, VScrollBy i)
+                   , vScrollToBeginning =         addScrollRequest (n, VScrollToBeginning)
+                   , vScrollToEnd       =         addScrollRequest (n, VScrollToEnd)
                    }
 
 -- | Continue running the event loop with the specified application

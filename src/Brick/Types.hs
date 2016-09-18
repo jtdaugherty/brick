@@ -74,8 +74,7 @@ import Lens.Micro (_1, _2, to, (^.), (&), (.~), Lens')
 import Lens.Micro.Type (Getting)
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Reader
-import Graphics.Vty (Event, Image, emptyImage, Attr)
-import Data.Default (Default(..))
+import Graphics.Vty (Event, Attr)
 import qualified Data.Map as M
 import Control.Monad.IO.Class
 
@@ -142,30 +141,11 @@ data Widget n =
 -- communicate rendering parameters to widgets' rendering functions.
 type RenderM n a = ReaderT Context (State (RenderState n)) a
 
--- | The type of result returned by a widget's rendering function. The
--- result provides the image, cursor positions, and visibility requests
--- that resulted from the rendering process.
-data Result n =
-    Result { image :: Image
-           -- ^ The final rendered image for a widget
-           , cursors :: [CursorLocation n]
-           -- ^ The list of reported cursor positions for the
-           -- application to choose from
-           , visibilityRequests :: [VisibilityRequest]
-           -- ^ The list of visibility requests made by widgets rendered
-           -- while rendering this one (used by viewports)
-           }
-           deriving Show
-
-instance Default (Result n) where
-    def = Result emptyImage [] []
-
 -- | Get the current rendering context.
 getContext :: RenderM n Context
 getContext = ask
 
 suffixLenses ''Context
-suffixLenses ''Result
 
 -- | The rendering context's current drawing attribute.
 attrL :: forall r. Getting r Context Attr
