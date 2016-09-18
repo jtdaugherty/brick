@@ -148,10 +148,16 @@ resizeOrQuit s _ = halt s
 data InternalNext n a = InternalSuspendAndResume (RenderState n) (IO a)
                       | InternalHalt a
 
-runWithNewVty :: (Ord n) => IO Vty -> Chan e -> App s e n -> RenderState n -> s -> IO (InternalNext n s)
+runWithNewVty :: (Ord n)
+              => IO Vty
+              -> Chan (Either Event e)
+              -> App s e n
+              -> RenderState n
+              -> s
+              -> IO (InternalNext n s)
 runWithNewVty buildVty chan app initialRS initialSt =
     withVty buildVty $ \vty -> do
-        pid <- forkIO $ supplyVtyEvents vty (appLiftVtyEvent app) chan
+        pid <- forkIO $ supplyVtyEvents vty chan
         let runInner rs st = do
               (result, newRS) <- runVty vty chan app st (rs & observedNamesL .~ S.empty)
               case result of
@@ -180,36 +186,58 @@ customMain :: (Ord n)
            -> s
            -- ^ The initial application state.
            -> IO s
-customMain buildVty chan app initialAppState = do
-    let run rs st = do
+customMain buildVty userChan app initialAppState = do
+    let run rs st chan = do
             result <- runWithNewVty buildVty chan app rs st
             case result of
                 InternalHalt s -> return s
                 InternalSuspendAndResume newRS action -> do
                     newAppState <- action
-                    run newRS newAppState
+                    run newRS newAppState chan
 
         emptyES = ES [] []
     (st, eState) <- runStateT (runReaderT (runEventM (appStartEvent app initialAppState)) M.empty) emptyES
     let initialRS = RS M.empty (esScrollRequests eState) S.empty mempty
-    run initialRS st
+    chan <- newChan
+    forkIO $ forever $ readChan userChan >>= (\userEvent -> writeChan chan (Right userEvent))
+    run initialRS st chan
 
-supplyVtyEvents :: Vty -> (Event -> e) -> Chan e -> IO ()
-supplyVtyEvents vty mkEvent chan =
+supplyVtyEvents :: Vty -> Chan (Either Event e) -> IO ()
+supplyVtyEvents vty chan =
     forever $ do
         e <- nextEvent vty
-        writeChan chan $ mkEvent e
+        writeChan chan $ Left e
 
-runVty :: (Ord n) => Vty -> Chan e -> App s e n -> s -> RenderState n -> IO (Next s, RenderState n)
+runVty :: (Ord n)
+       => Vty
+       -> Chan (Either Event e)
+       -> App s e n
+       -> s
+       -> RenderState n
+       -> IO (Next s, RenderState n)
 runVty vty chan app appState rs = do
     firstRS <- renderApp vty app appState rs
     e <- readChan chan
+
+    -- If the event was a resize, redraw the UI to update the viewport
+    -- states before we invoke the event handler since we want the event
+    -- handler to have access to accurate viewport information.
+    nextRS <- case e of
+        Left (EvResize _ _) ->
+            renderApp vty app appState $ firstRS & observedNamesL .~ S.empty
+        _ -> return firstRS
+
     let emptyES = ES [] []
-    (next, eState) <- runStateT (runReaderT (runEventM (appHandleEvent app appState e)) (viewportMap firstRS)) emptyES
-    return (next, firstRS { rsScrollRequests = esScrollRequests eState
-                          , renderCache = applyInvalidations (cacheInvalidateRequests eState) $
-                                          renderCache firstRS
-                          })
+        userEvent = case e of
+            Left e' -> appLiftVtyEvent app e'
+            Right e' -> e'
+
+    (next, eState) <- runStateT (runReaderT (runEventM (appHandleEvent app appState userEvent))
+                                (viewportMap nextRS)) emptyES
+    return (next, nextRS { rsScrollRequests = esScrollRequests eState
+                         , renderCache = applyInvalidations (cacheInvalidateRequests eState) $
+                                         renderCache nextRS
+                         })
 
 applyInvalidations :: (Ord n) => [CacheInvalidateRequest n] -> M.Map n v -> M.Map n v
 applyInvalidations ns cache = foldr (.) id (mkFunc <$> ns) cache
