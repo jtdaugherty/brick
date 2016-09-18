@@ -205,7 +205,7 @@ runVty vty chan app appState rs = do
     firstRS <- renderApp vty app appState rs
     e <- readChan chan
     let emptyES = ES [] []
-    (next, eState) <- runStateT (runReaderT (runEventM (appHandleEvent app appState e)) (viewportMap rs)) emptyES
+    (next, eState) <- runStateT (runReaderT (runEventM (appHandleEvent app appState e)) (viewportMap firstRS)) emptyES
     return (next, firstRS { rsScrollRequests = esScrollRequests eState
                           , renderCache = applyInvalidations (cacheInvalidateRequests eState) $
                                           renderCache firstRS
