@@ -22,6 +22,8 @@ module Brick.Main
   , hScrollPage
   , hScrollToBeginning
   , hScrollToEnd
+  , setTop
+  , setLeft
 
   -- * Cursor management functions
   , neverShowCursor
@@ -334,6 +336,10 @@ data ViewportScroll n =
                    -- ^ Scroll vertically to the beginning of the viewport.
                    , vScrollToEnd :: EventM n ()
                    -- ^ Scroll vertically to the end of the viewport.
+                   , setTop :: Int -> EventM n ()
+                   -- ^ Set the top row offset of the viewport.
+                   , setLeft :: Int -> EventM n ()
+                   -- ^ Set the left column offset of the viewport.
                    }
 
 addScrollRequest :: (n, ScrollRequest) -> EventM n ()
@@ -352,6 +358,8 @@ viewportScroll n =
                    , vScrollBy          = \i ->   addScrollRequest (n, VScrollBy i)
                    , vScrollToBeginning =         addScrollRequest (n, VScrollToBeginning)
                    , vScrollToEnd       =         addScrollRequest (n, VScrollToEnd)
+                   , setTop             = \i ->   addScrollRequest (n, SetTop i)
+                   , setLeft            = \i ->   addScrollRequest (n, SetLeft i)
                    }
 
 -- | Continue running the event loop with the specified application

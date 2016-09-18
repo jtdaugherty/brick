@@ -736,6 +736,7 @@ scrollTo Vertical req img vp = vp & vpTop .~ newVStart
             VScrollPage Down -> vp^.vpTop + vp^.vpSize._2
             VScrollToBeginning -> 0
             VScrollToEnd -> V.imageHeight img - vp^.vpSize._2
+            SetTop i -> i
             _ -> vp^.vpTop
 scrollTo Horizontal req img vp = vp & vpLeft .~ newHStart
     where
@@ -746,6 +747,7 @@ scrollTo Horizontal req img vp = vp & vpLeft .~ newHStart
             HScrollPage Down -> vp^.vpLeft + vp^.vpSize._1
             HScrollToBeginning -> 0
             HScrollToEnd -> V.imageWidth img - vp^.vpSize._1
+            SetLeft i -> i
             _ -> vp^.vpLeft
 
 scrollToView :: ViewportType -> VisibilityRequest -> Viewport -> Viewport

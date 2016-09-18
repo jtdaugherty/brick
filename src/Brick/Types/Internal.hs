@@ -60,6 +60,8 @@ data ScrollRequest = HScrollBy Int
                    | VScrollPage Direction
                    | VScrollToBeginning
                    | VScrollToEnd
+                   | SetTop Int
+                   | SetLeft Int
 
 data VisibilityRequest =
     VR { vrPosition :: Location
