@@ -2,6 +2,34 @@
 Brick changelog
 ---------------
 
+0.10
+----
+
+New features:
+ * Added a rendering cache. To use the rendering cache, use the 'cached'
+   widget combinator. This causes drawings of the specified widget to
+   re-use a cached rendering until the rendering cache is invalidated
+   with 'invalidateCacheEntry' or 'invalidateCache'. This change also
+   includes programs/CacheDemo.hs. This change introduced an Ord
+   constraint on the name type variable 'n'.
+ * Added setTop and setLeft for setting viewport offsets directly in
+   EventM.
+ * Dialog event handlers now support left and right arrow keys (thanks
+   Grégoire Charvet)
+
+Library changes:
+ * On resizes brick now draws the application twice before handling the
+   resize event. This change makes it possible for event handlers to
+   get the latest viewport states on a resize rather than getting the
+   most recent (but stale) versions as before, at the cost of a second
+   redraw.
+
+Bug fixes:
+ * We now use the most recent rendering state when setting up event handler
+   viewport data. This mostly won't matter to anyone except in cases
+   where a viewport name was expected to be in the viewport map but
+   wasn't due to using stale rendering state to set up EventM.
+
 0.9
 ---
 
