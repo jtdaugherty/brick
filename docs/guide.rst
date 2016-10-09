@@ -906,7 +906,7 @@ write:
        Widget Greedy Greedy $ do
            ctx <- getContext
            let a = ctx^.attrL
-           return $ Result (Graphics.Vty.charFill ch a (ctx^.availWidth) (ctx^.availHeight))
+           return $ Result (Graphics.Vty.charFill a ch (ctx^.availWidthL) (ctx^.availHeightL))
                            [] []
 
 Rendering Sub-Widgets
