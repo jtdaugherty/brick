@@ -2,6 +2,14 @@
 Brick changelog
 ---------------
 
+0.11
+----
+
+API changes:
+ * Added getVtyHandle in EventM for obtaining the current Vty context.
+   It returns Nothing when calling the appStartEvent handler but after
+   that a context is always available.
+
 0.10
 ----
 
