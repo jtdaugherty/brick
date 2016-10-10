@@ -19,6 +19,7 @@ module Brick.Types.Internal
   , cursorLocationNameL
   , Context(..)
   , EventState(..)
+  , EventRO(..)
   , Next(..)
   , Result(..)
   , CacheInvalidateRequest(..)
@@ -45,7 +46,7 @@ import Lens.Micro.TH (makeLenses)
 import Lens.Micro.Internal (Field1, Field2)
 import qualified Data.Set as S
 import qualified Data.Map as M
-import Graphics.Vty (DisplayRegion, Image, emptyImage)
+import Graphics.Vty (Vty, DisplayRegion, Image, emptyImage)
 import Data.Default (Default(..))
 
 import Brick.Types.TH
@@ -97,6 +98,10 @@ data CacheInvalidateRequest n = InvalidateSingle n
 data EventState n = ES { esScrollRequests :: [(n, ScrollRequest)]
                        , cacheInvalidateRequests :: [CacheInvalidateRequest n]
                        }
+
+data EventRO n = EventRO { eventViewportMap :: M.Map n Viewport
+                         , eventVtyHandle :: Maybe Vty
+                         }
 
 -- | The type of actions to take upon completion of an event handler.
 data Next a = Continue a

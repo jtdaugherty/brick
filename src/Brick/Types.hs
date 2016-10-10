@@ -75,7 +75,6 @@ import Lens.Micro.Type (Getting)
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Reader
 import Graphics.Vty (Event, Attr)
-import qualified Data.Map as M
 import Control.Monad.IO.Class
 
 import Brick.Types.TH
@@ -111,7 +110,7 @@ handleEventLensed v target handleEvent ev = do
 -- to dig into the reader value yourself, just use
 -- 'Brick.Main.lookupViewport'.
 newtype EventM n a =
-    EventM { runEventM :: ReaderT (M.Map n Viewport) (StateT (EventState n) IO) a
+    EventM { runEventM :: ReaderT (EventRO n) (StateT (EventState n) IO) a
            }
            deriving (Functor, Applicative, Monad, MonadIO)
 

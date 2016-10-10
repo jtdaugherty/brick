@@ -10,6 +10,7 @@ module Brick.Main
   , halt
   , suspendAndResume
   , lookupViewport
+  , getVtyHandle
 
   -- ** Viewport scrolling
   , viewportScroll
@@ -65,7 +66,7 @@ import Graphics.Vty
   )
 
 import Brick.Types (Viewport, Direction, Widget, rowL, columnL, CursorLocation(..), cursorLocationNameL, EventM(..))
-import Brick.Types.Internal (ScrollRequest(..), RenderState(..), observedNamesL, Next(..), EventState(..), CacheInvalidateRequest(..))
+import Brick.Types.Internal (EventRO(..), ScrollRequest(..), RenderState(..), observedNamesL, Next(..), EventState(..), CacheInvalidateRequest(..))
 import Brick.Widgets.Internal (renderFinal)
 import Brick.AttrMap
 
@@ -198,7 +199,8 @@ customMain buildVty userChan app initialAppState = do
                     run newRS newAppState chan
 
         emptyES = ES [] []
-    (st, eState) <- runStateT (runReaderT (runEventM (appStartEvent app initialAppState)) M.empty) emptyES
+        eventRO = EventRO M.empty Nothing
+    (st, eState) <- runStateT (runReaderT (runEventM (appStartEvent app initialAppState)) eventRO) emptyES
     let initialRS = RS M.empty (esScrollRequests eState) S.empty mempty
     chan <- newChan
     forkIO $ forever $ readChan userChan >>= (\userEvent -> writeChan chan (Right userEvent))
@@ -234,8 +236,9 @@ runVty vty chan app appState rs = do
             Left e' -> appLiftVtyEvent app e'
             Right e' -> e'
 
+    let eventRO = EventRO (viewportMap nextRS) (Just vty)
     (next, eState) <- runStateT (runReaderT (runEventM (appHandleEvent app appState userEvent))
-                                (viewportMap nextRS)) emptyES
+                                eventRO) emptyES
     return (next, nextRS { rsScrollRequests = esScrollRequests eState
                          , renderCache = applyInvalidations (cacheInvalidateRequests eState) $
                                          renderCache nextRS
@@ -253,7 +256,11 @@ applyInvalidations ns cache = foldr (.) id (mkFunc <$> ns) cache
 -- or because no rendering has occurred (e.g. in an 'appStartEvent'
 -- handler).
 lookupViewport :: (Ord n) => n -> EventM n (Maybe Viewport)
-lookupViewport = EventM . asks . M.lookup
+lookupViewport n = EventM $ asks (M.lookup n . eventViewportMap)
+
+-- | Get the Vty handle currently in use.
+getVtyHandle :: EventM n (Maybe Vty)
+getVtyHandle = EventM $ asks eventVtyHandle
 
 -- | Invalidate the rendering cache entry with the specified name.
 invalidateCacheEntry :: n -> EventM n ()
