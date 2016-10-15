@@ -97,9 +97,9 @@ handleEventLensed :: a
                   -> Lens' a b
                   -- ^ The lens to use to extract and store the target
                   -- of the event.
-                  -> (Event -> b -> EventM n b)
+                  -> (e -> b -> EventM n b)
                   -- ^ The event handler.
-                  -> Event
+                  -> e
                   -- ^ The event to handle.
                   -> EventM n a
 handleEventLensed v target handleEvent ev = do
