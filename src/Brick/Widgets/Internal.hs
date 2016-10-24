@@ -37,7 +37,7 @@ renderFinal aMap layerRenders sz chooseCursor rs = (newRS, picWithBg, theCursor,
         -- See https://github.com/coreyoconnor/vty/issues/95
         picWithBg = pic { V.picBackground = V.Background ' ' V.defAttr }
         layerCursors = (^.cursorsL) <$> layerResults
-        layerExtents = (^.extentsL) <$> layerResults
+        layerExtents = reverse $ (^.extentsL) <$> layerResults
         theCursor = chooseCursor $ concat layerCursors
 
 -- | After rendering the specified widget, crop its result image to the
