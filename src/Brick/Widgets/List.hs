@@ -76,7 +76,7 @@ data List n e =
          , listSelected :: !(Maybe Int)
          , listName :: n
          , listItemHeight :: Int
-         } deriving (Functor, Foldable, Traversable)
+         } deriving (Functor, Foldable, Traversable, Show)
 
 suffixLenses ''List
 

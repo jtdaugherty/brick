@@ -67,6 +67,14 @@ data Editor t n =
 
 suffixLenses ''Editor
 
+instance (Show t, Show n) => Show (Editor t n) where
+    show e =
+        concat [ "Editor { "
+               , "editContents = " <> show (editContents e)
+               , ", editorName = " <> show (editorName e)
+               , "}"
+               ]
+
 instance Named (Editor t n) n where
     getName = editorName
 
