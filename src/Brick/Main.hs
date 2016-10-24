@@ -11,6 +11,7 @@ module Brick.Main
   , suspendAndResume
   , lookupViewport
   , lookupExtent
+  , clickedExtent
   , getVtyHandle
 
   -- ** Viewport scrolling
@@ -271,6 +272,13 @@ applyInvalidations ns cache = foldr (.) id (mkFunc <$> ns) cache
 -- handler).
 lookupViewport :: (Ord n) => n -> EventM n (Maybe Viewport)
 lookupViewport n = EventM $ asks (M.lookup n . eventViewportMap)
+
+-- | Did the specified mouse coordinates (column, row) intersect the
+-- specified extent?
+clickedExtent :: (Int, Int) -> Extent n -> Bool
+clickedExtent (c, r) (Extent _ (Location (lc, lr)) (w, h)) =
+   c >= lc && c < (lc + w) &&
+   r >= lr && r < (lr + h)
 
 -- | Given a name, get the most recent rendering extent for the name (if
 -- any).

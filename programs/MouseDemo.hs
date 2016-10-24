@@ -76,7 +76,7 @@ appEvent st ev = do
                       -- If the mouse button was down in the layer and
                       -- we were not already dragging it, start dragging
                       -- the layer.
-                      | clickedExtent (c, r) e -> st & lastDragLoc .~ LastLocation mouseLoc True
+                      | M.clickedExtent (c, r) e -> st & lastDragLoc .~ LastLocation mouseLoc True
                       -- If the mouse button was down outside the layer,
                       -- start dragging outside the layer.
                       | otherwise              -> st & lastDragLoc .~ LastLocation mouseLoc False
@@ -89,11 +89,6 @@ appEvent st ev = do
                       in st & lastDragLoc .~ LastLocation mouseLoc bound
                             & draggableLayerLocation %~ if bound then (<> off) else id
           _ -> st
-
-clickedExtent :: (Int, Int) -> T.Extent n -> Bool
-clickedExtent (c, r) (T.Extent _ (T.Location (lc, lr)) (w, h)) =
-   c >= lc && c < (lc + w) &&
-   r >= lr && r < (lr + h)
 
 aMap :: AttrMap
 aMap = attrMap V.defAttr
