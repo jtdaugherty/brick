@@ -70,7 +70,7 @@ appEvent st ev = do
           (V.EvMouseUp _ _ _) ->
               st & lastDragLoc .~ NotDragging
           (V.EvMouseDown c r V.BLeft _) ->
-              let mouseLoc = T.Location (c-1, r-1)
+              let mouseLoc = T.Location (c, r)
               in case st^.lastDragLoc of
                   NotDragging
                       -- If the mouse button was down in the layer and
@@ -85,17 +85,15 @@ appEvent st ev = do
                   -- was a continuation of a layer movement, update the
                   -- layer location.
                   LastLocation (T.Location (lc, lr)) bound ->
-                      let off = T.Location (c-1-lc, r-1-lr)
+                      let off = T.Location (c-lc, r-lr)
                       in st & lastDragLoc .~ LastLocation mouseLoc bound
                             & draggableLayerLocation %~ if bound then (<> off) else id
           _ -> st
 
 clickedExtent :: (Int, Int) -> T.Extent n -> Bool
-clickedExtent (c', r') (T.Extent _ (T.Location (lc, lr)) (w, h)) =
-    let c = c' - 1
-        r = r' - 1
-    in c >= lc && c < (lc + w) &&
-       r >= lr && r < (lr + h)
+clickedExtent (c, r) (T.Extent _ (T.Location (lc, lr)) (w, h)) =
+   c >= lc && c < (lc + w) &&
+   r >= lr && r < (lr + h)
 
 aMap :: AttrMap
 aMap = attrMap V.defAttr
