@@ -42,8 +42,7 @@ infoLayer :: St -> Widget Name
 infoLayer st = T.Widget T.Fixed T.Fixed $ do
     c <- T.getContext
     let h = c^.T.availHeightL
-    T.render $ translateBy (T.Location (0, h-2)) $
-    reportExtent Info $ dragInfo st
+    T.render $ translateBy (T.Location (0, h-2)) $ reportExtent Info $ dragInfo st
 
 dragInfo :: St -> Widget Name
 dragInfo st =
