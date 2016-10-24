@@ -24,7 +24,6 @@ module Brick.Types
 
   -- * Event-handling types
   , EventM(..)
-  , EventInfo(..)
   , Next
   , handleEventLensed
 
@@ -77,9 +76,7 @@ import Lens.Micro (_1, _2, to, (^.), (&), (.~), Lens')
 import Lens.Micro.Type (Getting)
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Reader
-import Graphics.Vty (Event, Image, emptyImage, Attr)
-import Data.Default (Default(..))
-import qualified Data.Map as M
+import Graphics.Vty (Event, Attr)
 import Control.Monad.IO.Class
 
 import Brick.Types.TH
@@ -102,25 +99,20 @@ handleEventLensed :: a
                   -> Lens' a b
                   -- ^ The lens to use to extract and store the target
                   -- of the event.
-                  -> (Event -> b -> EventM n b)
+                  -> (e -> b -> EventM n b)
                   -- ^ The event handler.
-                  -> Event
+                  -> e
                   -- ^ The event to handle.
                   -> EventM n a
 handleEventLensed v target handleEvent ev = do
     newB <- handleEvent ev (v^.target)
     return $ v & target .~ newB
 
-data EventInfo n =
-    EventInfo { latestViewports :: M.Map n Viewport
-              , latestExtents :: [Extent n]
-              }
-
 -- | The monad in which event handlers run. Although it may be tempting
 -- to dig into the reader value yourself, just use
 -- 'Brick.Main.lookupViewport'.
 newtype EventM n a =
-    EventM { runEventM :: ReaderT (EventInfo n) (StateT (EventState n) IO) a
+    EventM { runEventM :: ReaderT (EventRO n) (StateT (EventState n) IO) a
            }
            deriving (Functor, Applicative, Monad, MonadIO)
 
@@ -150,36 +142,11 @@ data Widget n =
 -- communicate rendering parameters to widgets' rendering functions.
 type RenderM n a = ReaderT Context (State (RenderState n)) a
 
--- | An extent of a named area indicating the location of its upper-left
--- corner and its size (width, height).
-data Extent n = Extent n Location (Int, Int)
-              deriving (Show)
-
--- | The type of result returned by a widget's rendering function. The
--- result provides the image, cursor positions, and visibility requests
--- that resulted from the rendering process.
-data Result n =
-    Result { image :: Image
-           -- ^ The final rendered image for a widget
-           , cursors :: [CursorLocation n]
-           -- ^ The list of reported cursor positions for the
-           -- application to choose from
-           , visibilityRequests :: [VisibilityRequest]
-           -- ^ The list of visibility requests made by widgets rendered
-           -- while rendering this one (used by viewports)
-           , extents :: [Extent n]
-           }
-           deriving Show
-
-instance Default (Result n) where
-    def = Result emptyImage [] [] []
-
 -- | Get the current rendering context.
 getContext :: RenderM n Context
 getContext = ask
 
 suffixLenses ''Context
-suffixLenses ''Result
 
 -- | The rendering context's current drawing attribute.
 attrL :: forall r. Getting r Context Attr

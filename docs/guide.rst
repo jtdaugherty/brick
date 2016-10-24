@@ -247,7 +247,7 @@ of state in your application state. In the following example we use an
 .. code:: haskell
 
    data Name = Edit1
-   type MyState = Edit Name
+   type MyState = Editor String Name
 
    myEvent :: MyState -> e -> EventM Name (Next MyState)
    myEvent s e = continue =<< handleEditorEvent e s
@@ -262,7 +262,7 @@ for your application state fields, you can use the convenience function
 .. code:: haskell
 
    data Name = Edit1
-   data MyState = MyState { _theEdit :: Edit Name
+   data MyState = MyState { _theEdit :: Editor String Name
                           }
    makeLenses ''MyState
 
@@ -906,7 +906,7 @@ write:
        Widget Greedy Greedy $ do
            ctx <- getContext
            let a = ctx^.attrL
-           return $ Result (Graphics.Vty.charFill ch a (ctx^.availWidth) (ctx^.availHeight))
+           return $ Result (Graphics.Vty.charFill a ch (ctx^.availWidthL) (ctx^.availHeightL))
                            [] []
 
 Rendering Sub-Widgets

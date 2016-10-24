@@ -1,5 +1,5 @@
 name:                brick
-version:             0.8
+version:             0.11
 synopsis:            A declarative terminal user interface library
 description:
   Write terminal applications painlessly with 'brick'! You write an
@@ -88,9 +88,24 @@ library
                        vector,
                        contravariant,
                        text,
-                       text-zipper >= 0.2.1,
+                       text-zipper >= 0.7.1,
                        template-haskell,
                        deepseq >= 1.3 && < 1.5
+
+executable brick-cache-demo
+  if !flag(demos)
+    Buildable: False
+  hs-source-dirs:      programs
+  ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
+  default-language:    Haskell2010
+  default-extensions:  CPP
+  main-is:             CacheDemo.hs
+  build-depends:       base,
+                       brick,
+                       vty >= 5.5.0,
+                       text,
+                       microlens >= 0.3.0.0,
+                       microlens-th
 
 executable brick-visibility-demo
   if !flag(demos)

@@ -1,7 +1,7 @@
 brick
 -----
 
-[![Build Status](https://travis-ci.org/jtdaugherty/brick.png)](https://travis-ci.org/jtdaugherty/brick)
+[![Build Status](https://travis-ci.org/jtdaugherty/brick.svg?branch=master)](https://travis-ci.org/jtdaugherty/brick)
 
 `brick` is a terminal user interface programming
 library written in Haskell, in the style of

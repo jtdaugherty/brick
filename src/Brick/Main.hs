@@ -11,6 +11,7 @@ module Brick.Main
   , suspendAndResume
   , lookupViewport
   , lookupExtent
+  , getVtyHandle
 
   -- ** Viewport scrolling
   , viewportScroll
@@ -23,11 +24,17 @@ module Brick.Main
   , hScrollPage
   , hScrollToBeginning
   , hScrollToEnd
+  , setTop
+  , setLeft
 
   -- * Cursor management functions
   , neverShowCursor
   , showFirstCursor
   , showCursorNamed
+
+  -- * Rendering cache management
+  , invalidateCacheEntry
+  , invalidateCache
   )
 where
 
@@ -38,6 +45,10 @@ import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.State
 import Control.Monad.Trans.Reader
 import Control.Concurrent (forkIO, Chan, newChan, readChan, writeChan, killThread)
+#if !MIN_VERSION_base(4,8,0)
+import Control.Applicative ((<$>))
+import Data.Monoid (mempty)
+#endif
 import Data.Default
 import Data.Maybe (listToMaybe)
 import qualified Data.Map as M
@@ -67,10 +78,9 @@ import Brick.Types
   , cursorLocationNameL
   , EventM(..)
   , Extent(..)
-  , EventInfo(..)
   )
-import Brick.Types.Internal (ScrollRequest(..), RenderState(..), observedNamesL, Next(..))
-import Brick.Widgets.Internal (renderFinal)
+import Brick.Types.Internal
+import Brick.Widgets.Internal
 import Brick.AttrMap
 
 -- | The library application abstraction. Your application's operations
@@ -154,11 +164,17 @@ resizeOrQuit s _ = halt s
 data InternalNext n a = InternalSuspendAndResume (RenderState n) (IO a)
                       | InternalHalt a
 
-runWithNewVty :: IO Vty -> Chan e -> App s e n -> RenderState n -> s -> IO (InternalNext n s)
+runWithNewVty :: (Ord n)
+              => IO Vty
+              -> Chan (Either Event e)
+              -> App s e n
+              -> RenderState n
+              -> s
+              -> IO (InternalNext n s)
 runWithNewVty buildVty chan app initialRS initialSt =
     withVty buildVty $ \vty -> do
         setMode (outputIface vty) Mouse True
-        pid <- forkIO $ supplyVtyEvents vty (appLiftVtyEvent app) chan
+        pid <- forkIO $ supplyVtyEvents vty chan
         let runInner rs st = do
               (result, newRS) <- runVty vty chan app st (rs & observedNamesL .~ S.empty)
               case result of
@@ -187,33 +203,66 @@ customMain :: (Ord n)
            -> s
            -- ^ The initial application state.
            -> IO s
-customMain buildVty chan app initialAppState = do
-    let run rs st = do
+customMain buildVty userChan app initialAppState = do
+    let run rs st chan = do
             result <- runWithNewVty buildVty chan app rs st
             case result of
                 InternalHalt s -> return s
                 InternalSuspendAndResume newRS action -> do
                     newAppState <- action
-                    run newRS newAppState
+                    run newRS newAppState chan
 
-    let evi = EventInfo mempty mempty
-    (st, initialScrollReqs) <- runStateT (runReaderT (runEventM (appStartEvent app initialAppState)) evi) []
-    let initialRS = RS M.empty initialScrollReqs S.empty
-    run initialRS st
+        emptyES = ES [] []
+        eventRO = EventRO M.empty Nothing mempty
+    (st, eState) <- runStateT (runReaderT (runEventM (appStartEvent app initialAppState)) eventRO) emptyES
+    let initialRS = RS M.empty (esScrollRequests eState) S.empty mempty
+    chan <- newChan
+    forkIO $ forever $ readChan userChan >>= (\userEvent -> writeChan chan (Right userEvent))
+    run initialRS st chan
 
-supplyVtyEvents :: Vty -> (Event -> e) -> Chan e -> IO ()
-supplyVtyEvents vty mkEvent chan =
+supplyVtyEvents :: Vty -> Chan (Either Event e) -> IO ()
+supplyVtyEvents vty chan =
     forever $ do
         e <- nextEvent vty
-        writeChan chan $ mkEvent e
+        writeChan chan $ Left e
 
-runVty :: Vty -> Chan e -> App s e n -> s -> RenderState n -> IO (Next s, RenderState n)
+runVty :: (Ord n)
+       => Vty
+       -> Chan (Either Event e)
+       -> App s e n
+       -> s
+       -> RenderState n
+       -> IO (Next s, RenderState n)
 runVty vty chan app appState rs = do
     (firstRS, exts) <- renderApp vty app appState rs
     e <- readChan chan
-    let ei = EventInfo (viewportMap rs) exts
-    (next, scrollReqs) <- runStateT (runReaderT (runEventM (appHandleEvent app appState e)) ei) []
-    return (next, firstRS { scrollRequests = scrollReqs })
+
+    -- If the event was a resize, redraw the UI to update the viewport
+    -- states before we invoke the event handler since we want the event
+    -- handler to have access to accurate viewport information.
+    (nextRS, nextExts) <- case e of
+        Left (EvResize _ _) ->
+            renderApp vty app appState $ firstRS & observedNamesL .~ S.empty
+        _ -> return (firstRS, exts)
+
+    let emptyES = ES [] []
+        userEvent = case e of
+            Left e' -> appLiftVtyEvent app e'
+            Right e' -> e'
+
+    let eventRO = EventRO (viewportMap nextRS) (Just vty) nextExts
+    (next, eState) <- runStateT (runReaderT (runEventM (appHandleEvent app appState userEvent))
+                                eventRO) emptyES
+    return (next, nextRS { rsScrollRequests = esScrollRequests eState
+                         , renderCache = applyInvalidations (cacheInvalidateRequests eState) $
+                                         renderCache nextRS
+                         })
+
+applyInvalidations :: (Ord n) => [CacheInvalidateRequest n] -> M.Map n v -> M.Map n v
+applyInvalidations ns cache = foldr (.) id (mkFunc <$> ns) cache
+    where
+    mkFunc InvalidateEntire = const mempty
+    mkFunc (InvalidateSingle n) = M.delete n
 
 -- | Given a viewport name, get the viewport's size and offset
 -- information from the most recent rendering. Returns 'Nothing' if
@@ -221,7 +270,7 @@ runVty vty chan app appState rs = do
 -- or because no rendering has occurred (e.g. in an 'appStartEvent'
 -- handler).
 lookupViewport :: (Ord n) => n -> EventM n (Maybe Viewport)
-lookupViewport n = EventM $ asks (M.lookup n . latestViewports)
+lookupViewport n = EventM $ asks (M.lookup n . eventViewportMap)
 
 -- | Given a name, get the most recent rendering extent for the name (if
 -- any).
@@ -229,6 +278,20 @@ lookupExtent :: (Eq n) => n -> EventM n (Maybe (Extent n))
 lookupExtent n = EventM $ asks (listToMaybe . filter f . latestExtents)
     where
         f (Extent n' _ _) = n == n'
+
+-- | Get the Vty handle currently in use.
+getVtyHandle :: EventM n (Maybe Vty)
+getVtyHandle = EventM $ asks eventVtyHandle
+
+-- | Invalidate the rendering cache entry with the specified name.
+invalidateCacheEntry :: n -> EventM n ()
+invalidateCacheEntry n = EventM $ do
+    lift $ modify (\s -> s { cacheInvalidateRequests = InvalidateSingle n : cacheInvalidateRequests s })
+
+-- | Invalidate the entire rendering cache.
+invalidateCache :: EventM n ()
+invalidateCache = EventM $ do
+    lift $ modify (\s -> s { cacheInvalidateRequests = InvalidateEntire : cacheInvalidateRequests s })
 
 withVty :: IO Vty -> (Vty -> IO a) -> IO a
 withVty buildVty useVty = do
@@ -245,7 +308,7 @@ renderApp vty app appState rs = do
                                         rs
         picWithCursor = case theCursor of
             Nothing -> pic { picCursor = NoCursor }
-            Just loc -> pic { picCursor = Cursor (loc^.columnL) (loc^.rowL) }
+            Just cloc -> pic { picCursor = Cursor (cloc^.columnL) (cloc^.rowL) }
 
     update vty picWithCursor
 
@@ -269,7 +332,7 @@ showFirstCursor = const listToMaybe
 -- has been reported.
 showCursorNamed :: (Eq n) => n -> [CursorLocation n] -> Maybe (CursorLocation n)
 showCursorNamed name locs =
-    let matches loc = loc^.cursorLocationNameL == Just name
+    let matches l = l^.cursorLocationNameL == Just name
     in listToMaybe $ filter matches locs
 
 -- | A viewport scrolling handle for managing the scroll state of
@@ -301,20 +364,30 @@ data ViewportScroll n =
                    -- ^ Scroll vertically to the beginning of the viewport.
                    , vScrollToEnd :: EventM n ()
                    -- ^ Scroll vertically to the end of the viewport.
+                   , setTop :: Int -> EventM n ()
+                   -- ^ Set the top row offset of the viewport.
+                   , setLeft :: Int -> EventM n ()
+                   -- ^ Set the left column offset of the viewport.
                    }
+
+addScrollRequest :: (n, ScrollRequest) -> EventM n ()
+addScrollRequest req = EventM $ do
+    lift $ modify (\s -> s { esScrollRequests = req : esScrollRequests s })
 
 -- | Build a viewport scroller for the viewport with the specified name.
 viewportScroll :: n -> ViewportScroll n
 viewportScroll n =
-    ViewportScroll { viewportName = n
-                   , hScrollPage = \dir -> EventM $ lift $ modify ((n, HScrollPage dir) :)
-                   , hScrollBy = \i -> EventM $ lift $ modify ((n, HScrollBy i) :)
-                   , hScrollToBeginning = EventM $ lift $ modify ((n, HScrollToBeginning) :)
-                   , hScrollToEnd = EventM $ lift $ modify ((n, HScrollToEnd) :)
-                   , vScrollPage = \dir -> EventM $ lift $ modify ((n, VScrollPage dir) :)
-                   , vScrollBy = \i -> EventM $ lift $ modify ((n, VScrollBy i) :)
-                   , vScrollToBeginning = EventM $ lift $ modify ((n, VScrollToBeginning) :)
-                   , vScrollToEnd = EventM $ lift $ modify ((n, VScrollToEnd) :)
+    ViewportScroll { viewportName       = n
+                   , hScrollPage        = \dir -> addScrollRequest (n, HScrollPage dir)
+                   , hScrollBy          = \i ->   addScrollRequest (n, HScrollBy i)
+                   , hScrollToBeginning =         addScrollRequest (n, HScrollToBeginning)
+                   , hScrollToEnd       =         addScrollRequest (n, HScrollToEnd)
+                   , vScrollPage        = \dir -> addScrollRequest (n, VScrollPage dir)
+                   , vScrollBy          = \i ->   addScrollRequest (n, VScrollBy i)
+                   , vScrollToBeginning =         addScrollRequest (n, VScrollToBeginning)
+                   , vScrollToEnd       =         addScrollRequest (n, VScrollToEnd)
+                   , setTop             = \i ->   addScrollRequest (n, SetTop i)
+                   , setLeft            = \i ->   addScrollRequest (n, SetLeft i)
                    }
 
 -- | Continue running the event loop with the specified application

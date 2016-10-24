@@ -28,7 +28,7 @@ makeLenses ''St
 drawUi :: St -> [Widget ()]
 drawUi st =
     [ C.centerLayer $
-      B.border $ str "This layer is centered but other\nlayers are visible underneath it."
+      B.border $ str "This layer is centered but other\nlayers are placed underneath it."
     , topLayer st
     , bottomLayer st
     ]

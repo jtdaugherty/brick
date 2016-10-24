@@ -76,14 +76,14 @@ data List n e =
          , listSelected :: !(Maybe Int)
          , listName :: n
          , listItemHeight :: Int
-         } deriving (Functor, Foldable, Traversable)
+         } deriving (Functor, Foldable, Traversable, Show)
 
 suffixLenses ''List
 
 instance Named (List n e) n where
     getName = listName
 
-handleListEvent :: (Show n, Ord n) => Event -> List n e -> EventM n (List n e)
+handleListEvent :: (Ord n) => Event -> List n e -> EventM n (List n e)
 handleListEvent e theList =
     case e of
         EvKey KUp [] -> return $ listMoveUp theList
@@ -127,7 +127,8 @@ list :: n
      -> List n e
 list name es h =
     let selIndex = if V.null es then Nothing else Just 0
-    in List es selIndex name h
+        safeHeight = max 1 h
+    in List es selIndex name safeHeight
 
 -- | Turn a list state value into a widget given an item drawing
 -- function.

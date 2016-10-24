@@ -63,6 +63,7 @@ module Brick.Widgets.Core
   , visible
   , visibleRegion
   , unsafeLookupViewport
+  , cached
 
   -- ** Adding offsets to cursor positions and visibility requests
   , addResultOffset
@@ -574,6 +575,31 @@ vRelease p =
         Fixed -> Just $ Widget (hSize p) Greedy $ withReaderT (& availHeightL .~ unrestricted) (render p)
         Greedy -> Nothing
 
+-- | Render the specified widget. If the widget has an entry in the
+-- rendering cache using the specified name as the cache key, use the
+-- rendered version from the cache instead. If not, render the widget
+-- and update the cache.
+--
+-- See also 'invalidateCacheEntry'.
+cached :: (Ord n) => n -> Widget n -> Widget n
+cached n w =
+    Widget (hSize w) (vSize w) $ do
+        result <- cacheLookup n
+        case result of
+            Just prevResult -> return prevResult
+            Nothing  -> do
+                wResult <- render w
+                cacheUpdate n wResult
+                return wResult
+
+cacheLookup :: (Ord n) => n -> RenderM n (Maybe (Result n))
+cacheLookup n = do
+    cache <- lift $ gets (^.renderCacheL)
+    return $ M.lookup n cache
+
+cacheUpdate :: (Ord n) => n -> Result n -> RenderM n ()
+cacheUpdate n r = lift $ modify (& renderCacheL %~ M.insert n r)
+
 -- | Render the specified widget in a named viewport with the
 -- specified type. This permits widgets to be scrolled without being
 -- scrolling-aware. To make the most use of viewports, the specified
@@ -642,7 +668,7 @@ viewport vpname typ p =
 
       -- If the rendering state includes any scrolling requests for this
       -- viewport, apply those
-      reqs <- lift $ gets $ (^.scrollRequestsL)
+      reqs <- lift $ gets $ (^.rsScrollRequestsL)
       let relevantRequests = snd <$> filter (\(n, _) -> n == vpname) reqs
       when (not $ null relevantRequests) $ do
           Just vp <- lift $ gets $ (^.viewportMapL.to (M.lookup vpname))
@@ -729,6 +755,7 @@ scrollTo Vertical req img vp = vp & vpTop .~ newVStart
             VScrollPage Down -> vp^.vpTop + vp^.vpSize._2
             VScrollToBeginning -> 0
             VScrollToEnd -> V.imageHeight img - vp^.vpSize._2
+            SetTop i -> i
             _ -> vp^.vpTop
 scrollTo Horizontal req img vp = vp & vpLeft .~ newHStart
     where
@@ -739,6 +766,7 @@ scrollTo Horizontal req img vp = vp & vpLeft .~ newHStart
             HScrollPage Down -> vp^.vpLeft + vp^.vpSize._1
             HScrollToBeginning -> 0
             HScrollToEnd -> V.imageWidth img - vp^.vpSize._1
+            SetLeft i -> i
             _ -> vp^.vpLeft
 
 scrollToView :: ViewportType -> VisibilityRequest -> Viewport -> Viewport

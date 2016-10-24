@@ -48,7 +48,7 @@ data BorderStyle =
                 , bsVertical :: Char
                 -- ^ Vertical border character
                 }
-                deriving (Show, Read)
+                deriving (Show, Read, Eq)
 
 instance Default BorderStyle where
     def = unicode

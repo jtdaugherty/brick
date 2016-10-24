@@ -18,15 +18,24 @@ module Brick.Types.Internal
   , cursorLocationL
   , cursorLocationNameL
   , Context(..)
-  , EventState
+  , EventState(..)
+  , EventRO(..)
   , Next(..)
+  , Result(..)
+  , Extent(..)
+  , CacheInvalidateRequest(..)
 
-  , scrollRequestsL
+  , rsScrollRequestsL
   , viewportMapL
+  , renderCacheL
   , observedNamesL
   , vpSize
   , vpLeft
   , vpTop
+  , imageL
+  , cursorsL
+  , extentsL
+  , visibilityRequestsL
   )
 where
 
@@ -39,17 +48,12 @@ import Lens.Micro.TH (makeLenses)
 import Lens.Micro.Internal (Field1, Field2)
 import qualified Data.Set as S
 import qualified Data.Map as M
-import Graphics.Vty (DisplayRegion)
+import Graphics.Vty (Vty, DisplayRegion, Image, emptyImage)
+import Data.Default (Default(..))
 
 import Brick.Types.TH
 import Brick.AttrMap (AttrName, AttrMap)
 import Brick.Widgets.Border.Style (BorderStyle)
-
-data RenderState n =
-    RS { viewportMap :: M.Map n Viewport
-       , scrollRequests :: [(n, ScrollRequest)]
-       , observedNames :: !(S.Set n)
-       }
 
 data ScrollRequest = HScrollBy Int
                    | HScrollPage Direction
@@ -59,12 +63,14 @@ data ScrollRequest = HScrollBy Int
                    | VScrollPage Direction
                    | VScrollToBeginning
                    | VScrollToEnd
+                   | SetTop Int
+                   | SetLeft Int
 
 data VisibilityRequest =
     VR { vrPosition :: Location
        , vrSize :: DisplayRegion
        }
-       deriving Show
+       deriving (Show, Eq)
 
 -- | Describes the state of a viewport as it appears as its most recent
 -- rendering.
@@ -86,9 +92,24 @@ data ViewportType = Vertical
                   -- ^ Viewports of this type are scrollable only horizontally.
                   | Both
                   -- ^ Viewports of this type are scrollable vertically and horizontally.
-                  deriving Show
+                  deriving (Show, Eq)
 
-type EventState n = [(n, ScrollRequest)]
+data CacheInvalidateRequest n = InvalidateSingle n
+                              | InvalidateEntire
+
+data EventState n = ES { esScrollRequests :: [(n, ScrollRequest)]
+                       , cacheInvalidateRequests :: [CacheInvalidateRequest n]
+                       }
+
+-- | An extent of a named area indicating the location of its upper-left
+-- corner and its size (width, height).
+data Extent n = Extent n Location (Int, Int)
+              deriving (Show)
+
+data EventRO n = EventRO { eventViewportMap :: M.Map n Viewport
+                         , eventVtyHandle :: Maybe Vty
+                         , latestExtents :: [Extent n]
+                         }
 
 -- | The type of actions to take upon completion of an event handler.
 data Next a = Continue a
@@ -101,12 +122,13 @@ data Direction = Up
                -- ^ Up/left
                | Down
                -- ^ Down/right
+               deriving (Show, Eq)
 
 -- | A terminal screen location.
 data Location = Location { loc :: (Int, Int)
                          -- ^ (Column, Row)
                          }
-                deriving Show
+                deriving (Show, Eq)
 
 suffixLenses ''Location
 
@@ -148,9 +170,37 @@ data CursorLocation n =
                    }
                    deriving Show
 
+-- | The type of result returned by a widget's rendering function. The
+-- result provides the image, cursor positions, and visibility requests
+-- that resulted from the rendering process.
+data Result n =
+    Result { image :: Image
+           -- ^ The final rendered image for a widget
+           , cursors :: [CursorLocation n]
+           -- ^ The list of reported cursor positions for the
+           -- application to choose from
+           , visibilityRequests :: [VisibilityRequest]
+           -- ^ The list of visibility requests made by widgets rendered
+           -- while rendering this one (used by viewports)
+           , extents :: [Extent n]
+           }
+           deriving Show
+
+suffixLenses ''Result
+
+instance Default (Result n) where
+    def = Result emptyImage [] [] []
+
+data RenderState n =
+    RS { viewportMap :: M.Map n Viewport
+       , rsScrollRequests :: [(n, ScrollRequest)]
+       , observedNames :: !(S.Set n)
+       , renderCache :: M.Map n (Result n)
+       }
+
 -- | The rendering context. This tells widgets how to render: how much
 -- space they have in which to render, which attribute they should use
--- to render, which bordring style should be used, and the attribute map
+-- to render, which bordering style should be used, and the attribute map
 -- available for rendering.
 data Context =
     Context { ctxAttrName :: AttrName
@@ -159,6 +209,7 @@ data Context =
             , ctxBorderStyle :: BorderStyle
             , ctxAttrMap :: AttrMap
             }
+            deriving Show
 
 suffixLenses ''RenderState
 suffixLenses ''VisibilityRequest

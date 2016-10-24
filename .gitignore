@@ -1,5 +1,6 @@
 .*.swp
 .cabal-sandbox
 dist
+dist-newstyle
 cabal.sandbox.config
 .DS_Store
