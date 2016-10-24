@@ -11,6 +11,7 @@ module Brick.Main
   , suspendAndResume
   , lookupViewport
   , lookupExtent
+  , findClickedExtents
   , clickedExtent
   , getVtyHandle
 
@@ -286,6 +287,16 @@ lookupExtent :: (Eq n) => n -> EventM n (Maybe (Extent n))
 lookupExtent n = EventM $ asks (listToMaybe . filter f . latestExtents)
     where
         f (Extent n' _ _) = n == n'
+
+-- | Given a mouse click location, return the extents intersected by the
+-- click. The returned extents are sorted such that the first extent in
+-- the list is the most specific extent and the last extent is the most
+-- generic (top-level). So if two extents A and B both intersected the
+-- mouse click but A contains B, then they would be returned [B, A].
+findClickedExtents :: (Int, Int) -> EventM n [Extent n]
+findClickedExtents (c, r) = EventM $ asks (reverse . filter f . latestExtents)
+    where
+        f = clickedExtent (c, r)
 
 -- | Get the Vty handle currently in use.
 getVtyHandle :: EventM n (Maybe Vty)
