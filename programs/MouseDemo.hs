@@ -76,6 +76,7 @@ appEvent st ev = do
           -- If the mouse button was released, stop dragging.
           (V.EvMouseUp _ _ _) ->
               return $ st & lastDragLoc .~ NotDragging
+                          & clicked .~ []
           (V.EvMouseDown c r V.BLeft _) -> do
               let mouseLoc = T.Location (c, r)
                   st' = case st^.lastDragLoc of
