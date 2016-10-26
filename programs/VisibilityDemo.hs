@@ -99,16 +99,16 @@ vp2Scroll = M.viewportScroll VP2
 vp3Scroll :: M.ViewportScroll Name
 vp3Scroll = M.viewportScroll VP3
 
-appEvent :: St -> V.Event -> T.EventM Name (T.Next St)
-appEvent st (V.EvKey V.KDown  [V.MCtrl]) = M.continue $ st & vp3Index._1 %~ min (vp3Size^._1) . (+ 1)
-appEvent st (V.EvKey V.KUp    [V.MCtrl]) = M.continue $ st & vp3Index._1 %~ max 1 . subtract 1
-appEvent st (V.EvKey V.KRight [V.MCtrl]) = M.continue $ st & vp3Index._2 %~ min (vp3Size^._1) . (+ 1)
-appEvent st (V.EvKey V.KLeft  [V.MCtrl]) = M.continue $ st & vp3Index._2 %~ max 1 .  subtract 1
-appEvent st (V.EvKey V.KDown [])         = M.continue $ st & vp1Index %~ min vp1Size . (+ 1)
-appEvent st (V.EvKey V.KUp [])           = M.continue $ st & vp1Index %~ max 1 . subtract 1
-appEvent st (V.EvKey V.KRight [])        = M.continue $ st & vp2Index %~ min vp2Size . (+ 1)
-appEvent st (V.EvKey V.KLeft [])         = M.continue $ st & vp2Index %~ max 1 . subtract 1
-appEvent st (V.EvKey V.KEsc []) = M.halt st
+appEvent :: St -> T.BrickEvent Name e -> T.EventM Name (T.Next St)
+appEvent st (T.VtyEvent (V.EvKey V.KDown  [V.MCtrl])) = M.continue $ st & vp3Index._1 %~ min (vp3Size^._1) . (+ 1)
+appEvent st (T.VtyEvent (V.EvKey V.KUp    [V.MCtrl])) = M.continue $ st & vp3Index._1 %~ max 1 . subtract 1
+appEvent st (T.VtyEvent (V.EvKey V.KRight [V.MCtrl])) = M.continue $ st & vp3Index._2 %~ min (vp3Size^._1) . (+ 1)
+appEvent st (T.VtyEvent (V.EvKey V.KLeft  [V.MCtrl])) = M.continue $ st & vp3Index._2 %~ max 1 .  subtract 1
+appEvent st (T.VtyEvent (V.EvKey V.KDown []))         = M.continue $ st & vp1Index %~ min vp1Size . (+ 1)
+appEvent st (T.VtyEvent (V.EvKey V.KUp []))           = M.continue $ st & vp1Index %~ max 1 . subtract 1
+appEvent st (T.VtyEvent (V.EvKey V.KRight []))        = M.continue $ st & vp2Index %~ min vp2Size . (+ 1)
+appEvent st (T.VtyEvent (V.EvKey V.KLeft []))         = M.continue $ st & vp2Index %~ max 1 . subtract 1
+appEvent st (T.VtyEvent (V.EvKey V.KEsc [])) = M.halt st
 appEvent st _ = M.continue st
 
 theMap :: AttrMap
@@ -116,13 +116,12 @@ theMap = attrMap V.defAttr
     [ (selectedAttr, V.black `on` V.yellow)
     ]
 
-app :: M.App St V.Event Name
+app :: M.App St e Name
 app =
     M.App { M.appDraw = drawUi
           , M.appStartEvent = return
           , M.appHandleEvent = appEvent
           , M.appAttrMap = const theMap
-          , M.appLiftVtyEvent = id
           , M.appChooseCursor = M.neverShowCursor
           }
 

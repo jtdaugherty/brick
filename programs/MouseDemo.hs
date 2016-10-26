@@ -68,9 +68,9 @@ draggableLayer st =
                         "clicking and dragging anywhere\n" <>
                         "on or within its border.") <+> fill ' '
 
-appEvent :: St -> V.Event -> T.EventM Name (T.Next St)
-appEvent st (V.EvKey V.KEsc []) = M.halt st
-appEvent st ev = do
+appEvent :: St -> T.BrickEvent Name e -> T.EventM Name (T.Next St)
+appEvent st (T.VtyEvent (V.EvKey V.KEsc [])) = M.halt st
+appEvent st (T.VtyEvent ev) = do
     Just e <- M.lookupExtent Layer
     M.continue =<< case ev of
           -- If the mouse button was released, stop dragging.
@@ -99,6 +99,7 @@ appEvent st ev = do
               es <- M.findClickedExtents (c, r)
               return $ st' & clicked .~ es
           _ -> return st
+appEvent st _ = M.continue st
 
 aMap :: AttrMap
 aMap = attrMap V.defAttr
@@ -106,13 +107,12 @@ aMap = attrMap V.defAttr
     , ("dragging",  V.black `on` V.yellow)
     ]
 
-app :: M.App St V.Event Name
+app :: M.App St e Name
 app =
     M.App { M.appDraw = drawUi
           , M.appStartEvent = return
           , M.appHandleEvent = appEvent
           , M.appAttrMap = const aMap
-          , M.appLiftVtyEvent = id
           , M.appChooseCursor = M.neverShowCursor
           }
 

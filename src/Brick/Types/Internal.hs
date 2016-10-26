@@ -24,6 +24,7 @@ module Brick.Types.Internal
   , Result(..)
   , Extent(..)
   , CacheInvalidateRequest(..)
+  , BrickEvent(..)
 
   , rsScrollRequestsL
   , viewportMapL
@@ -48,7 +49,7 @@ import Lens.Micro.TH (makeLenses)
 import Lens.Micro.Internal (Field1, Field2)
 import qualified Data.Set as S
 import qualified Data.Map as M
-import Graphics.Vty (Vty, DisplayRegion, Image, emptyImage)
+import Graphics.Vty (Vty, Event, DisplayRegion, Image, emptyImage)
 import Data.Default (Default(..))
 
 import Brick.Types.TH
@@ -190,6 +191,13 @@ suffixLenses ''Result
 
 instance Default (Result n) where
     def = Result emptyImage [] [] []
+
+-- | The type of events.
+data BrickEvent n e = VtyEvent Event
+                    -- ^ The event was a Vty event.
+                    | AppEvent e
+                    -- ^ The event was an application event.
+                    deriving (Show, Eq)
 
 data RenderState n =
     RS { viewportMap :: M.Map n Viewport

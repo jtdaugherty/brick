@@ -3,7 +3,7 @@ module Main where
 
 import Data.Monoid
 import Graphics.Vty
-  ( Event, Attr, white, blue, cyan, green, red, yellow
+  ( Attr, white, blue, cyan, green, red, yellow
   , black
   )
 
@@ -20,7 +20,7 @@ import Brick.Widgets.Core
 import Brick.Util (on, fg)
 import Brick.AttrMap (attrMap, AttrMap)
 
-ui :: Widget ()
+ui :: Widget n
 ui =
     vBox [ str "This text uses the global default attribute."
          , withAttr "foundFull" $
@@ -51,14 +51,13 @@ theMap = attrMap globalDefault
     , ("general" <> "specific",   fg cyan)
     ]
 
-app :: App () Event ()
+app :: App () e ()
 app =
     App { appDraw = const [ui]
         , appHandleEvent = resizeOrQuit
         , appStartEvent = return
         , appAttrMap = const theMap
         , appChooseCursor = neverShowCursor
-        , appLiftVtyEvent = id
         }
 
 main :: IO ()

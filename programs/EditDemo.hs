@@ -47,8 +47,8 @@ drawUI st = [ui]
             str " " <=>
             str "Press Tab to switch between editors, Esc to quit."
 
-appEvent :: St -> V.Event -> T.EventM Name (T.Next St)
-appEvent st ev =
+appEvent :: St -> T.BrickEvent Name e -> T.EventM Name (T.Next St)
+appEvent st (T.VtyEvent ev) =
     case ev of
         V.EvKey V.KEsc [] -> M.halt st
         V.EvKey (V.KChar '\t') [] -> M.continue $ st & focusRing %~ F.focusNext
@@ -58,6 +58,7 @@ appEvent st ev =
                Just Edit1 -> T.handleEventLensed st edit1 E.handleEditorEvent ev
                Just Edit2 -> T.handleEventLensed st edit2 E.handleEditorEvent ev
                Nothing -> return st
+appEvent st _ = M.continue st
 
 initialState :: St
 initialState =
@@ -74,14 +75,13 @@ theMap = A.attrMap V.defAttr
 appCursor :: St -> [T.CursorLocation Name] -> Maybe (T.CursorLocation Name)
 appCursor = F.focusRingCursor (^.focusRing)
 
-theApp :: M.App St V.Event Name
+theApp :: M.App St e Name
 theApp =
     M.App { M.appDraw = drawUI
           , M.appChooseCursor = appCursor
           , M.appHandleEvent = appEvent
           , M.appStartEvent = return
           , M.appAttrMap = const theMap
-          , M.appLiftVtyEvent = id
           }
 
 main :: IO ()

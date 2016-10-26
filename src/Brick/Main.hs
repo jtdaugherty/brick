@@ -107,7 +107,7 @@ data App s e n =
         -- is that many widgets may request a cursor placement but your
         -- application state is what you probably want to use to decide
         -- which one wins.
-        , appHandleEvent :: s -> e -> EventM n (Next s)
+        , appHandleEvent :: s -> BrickEvent n e -> EventM n (Next s)
         -- ^ This function takes the current application state and an
         -- event and returns an action to be taken and a corresponding
         -- transformed application state. Possible options are
@@ -118,17 +118,13 @@ data App s e n =
         -- initial scrolling requests, for example.
         , appAttrMap :: s -> AttrMap
         -- ^ The attribute map that should be used during rendering.
-        , appLiftVtyEvent :: Event -> e
-        -- ^ The event constructor to use to wrap Vty events in your own
-        -- event type. For example, if the application's event type is
-        -- 'Event', this is just 'id'.
         }
 
 -- | The default main entry point which takes an application and an
 -- initial state and returns the final state returned by a 'halt'
 -- operation.
 defaultMain :: (Ord n)
-            => App s Event n
+            => App s e n
             -- ^ The application.
             -> s
             -- ^ The initial application state.
@@ -149,7 +145,6 @@ simpleMain w =
                   , appHandleEvent = resizeOrQuit
                   , appStartEvent = return
                   , appAttrMap = def
-                  , appLiftVtyEvent = id
                   , appChooseCursor = neverShowCursor
                   }
     in defaultMain app ()
@@ -159,8 +154,8 @@ simpleMain w =
 -- a halt. This is a convenience function useful as an 'appHandleEvent'
 -- value for simple applications using the 'Event' type that do not need
 -- to get more sophisticated user input.
-resizeOrQuit :: s -> Event -> EventM n (Next s)
-resizeOrQuit s (EvResize _ _) = continue s
+resizeOrQuit :: s -> BrickEvent n e -> EventM n (Next s)
+resizeOrQuit s (VtyEvent (EvResize _ _)) = continue s
 resizeOrQuit s _ = halt s
 
 data InternalNext n a = InternalSuspendAndResume (RenderState n) (IO a)
@@ -168,7 +163,7 @@ data InternalNext n a = InternalSuspendAndResume (RenderState n) (IO a)
 
 runWithNewVty :: (Ord n)
               => IO Vty
-              -> Chan (Either Event e)
+              -> Chan (BrickEvent n e)
               -> App s e n
               -> RenderState n
               -> s
@@ -219,18 +214,18 @@ customMain buildVty userChan app initialAppState = do
     (st, eState) <- runStateT (runReaderT (runEventM (appStartEvent app initialAppState)) eventRO) emptyES
     let initialRS = RS M.empty (esScrollRequests eState) S.empty mempty
     chan <- newChan
-    forkIO $ forever $ readChan userChan >>= (\userEvent -> writeChan chan (Right userEvent))
+    forkIO $ forever $ readChan userChan >>= (\userEvent -> writeChan chan $ AppEvent userEvent)
     run initialRS st chan
 
-supplyVtyEvents :: Vty -> Chan (Either Event e) -> IO ()
+supplyVtyEvents :: Vty -> Chan (BrickEvent n e) -> IO ()
 supplyVtyEvents vty chan =
     forever $ do
         e <- nextEvent vty
-        writeChan chan $ Left e
+        writeChan chan $ VtyEvent e
 
 runVty :: (Ord n)
        => Vty
-       -> Chan (Either Event e)
+       -> Chan (BrickEvent n e)
        -> App s e n
        -> s
        -> RenderState n
@@ -243,17 +238,14 @@ runVty vty chan app appState rs = do
     -- states before we invoke the event handler since we want the event
     -- handler to have access to accurate viewport information.
     (nextRS, nextExts) <- case e of
-        Left (EvResize _ _) ->
+        (VtyEvent (EvResize _ _)) ->
             renderApp vty app appState $ firstRS & observedNamesL .~ S.empty
         _ -> return (firstRS, exts)
 
     let emptyES = ES [] []
-        userEvent = case e of
-            Left e' -> appLiftVtyEvent app e'
-            Right e' -> e'
+        eventRO = EventRO (viewportMap nextRS) (Just vty) nextExts
 
-    let eventRO = EventRO (viewportMap nextRS) (Just vty) nextExts
-    (next, eState) <- runStateT (runReaderT (runEventM (appHandleEvent app appState userEvent))
+    (next, eState) <- runStateT (runReaderT (runEventM (appHandleEvent app appState e))
                                 eventRO) emptyES
     return (next, nextRS { rsScrollRequests = esScrollRequests eState
                          , renderCache = applyInvalidations (cacheInvalidateRequests eState) $
