@@ -28,6 +28,7 @@ data St =
     St { _draggableLayerLocation :: T.Location
        , _lastDragLoc :: DragState
        , _clicked :: [T.Extent Name]
+       , _lastReportedClick :: Maybe Name
        }
 
 makeLenses ''St
@@ -42,7 +43,10 @@ infoLayer :: St -> Widget Name
 infoLayer st = T.Widget T.Fixed T.Fixed $ do
     c <- T.getContext
     let h = c^.T.availHeightL
-    T.render $ translateBy (T.Location (0, h-2)) $ reportExtent Info $ dragInfo st
+    T.render $ translateBy (T.Location (0, h-3)) $ clickable Info $
+               withDefAttr "info" $
+               dragInfo st <=>
+               C.hCenter (str ("Last reported click: " <> show (st^.lastReportedClick)))
 
 dragInfo :: St -> Widget Name
 dragInfo st =
@@ -53,7 +57,7 @@ dragInfo st =
                     if b
                     then "(dragging layer)"
                     else "(dragging outside of layer)"
-    in withDefAttr "info" $ C.hCenter (str $ show $ st^.clicked) <=> C.hCenter infoStr
+    in C.hCenter (str $ show $ st^.clicked) <=> C.hCenter infoStr
 
 draggableLayer :: St -> Widget Name
 draggableLayer st =
@@ -69,6 +73,7 @@ draggableLayer st =
                         "on or within its border.") <+> fill ' '
 
 appEvent :: St -> T.BrickEvent Name e -> T.EventM Name (T.Next St)
+appEvent st (T.Clicked n _ _) = M.continue $ st & lastReportedClick .~ Just n
 appEvent st (T.VtyEvent (V.EvKey V.KEsc [])) = M.halt st
 appEvent st (T.VtyEvent ev) = do
     Just e <- M.lookupExtent Layer
@@ -117,4 +122,4 @@ app =
           }
 
 main :: IO ()
-main = void $ M.defaultMain app $ St (T.Location (0, 0)) NotDragging []
+main = void $ M.defaultMain app $ St (T.Location (0, 0)) NotDragging [] Nothing

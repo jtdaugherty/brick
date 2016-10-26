@@ -51,6 +51,7 @@ appEvent st e =
         VtyEvent _ -> continue $ st & stLastBrickEvent .~ (Just e)
         AppEvent Counter -> continue $ st & stCounter %~ (+1)
                                           & stLastBrickEvent .~ (Just e)
+        _ -> continue st
 
 initialState :: St
 initialState =
