@@ -28,7 +28,7 @@ data St =
     St { _draggableLayerLocation :: T.Location
        , _lastDragLoc :: DragState
        , _clicked :: [T.Extent Name]
-       , _lastReportedClick :: Maybe Name
+       , _lastReportedClick :: Maybe (Name, T.Location)
        }
 
 makeLenses ''St
@@ -73,7 +73,7 @@ draggableLayer st =
                         "on or within its border.") <+> fill ' '
 
 appEvent :: St -> T.BrickEvent Name e -> T.EventM Name (T.Next St)
-appEvent st (T.Clicked n _ _) = M.continue $ st & lastReportedClick .~ Just n
+appEvent st (T.Clicked n _ _ loc) = M.continue $ st & lastReportedClick .~ Just (n, loc)
 appEvent st (T.VtyEvent (V.EvKey V.KEsc [])) = M.halt st
 appEvent st (T.VtyEvent ev) = do
     Just e <- M.lookupExtent Layer

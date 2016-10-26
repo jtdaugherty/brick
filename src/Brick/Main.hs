@@ -246,12 +246,16 @@ runVty vty chan app appState rs = do
         VtyEvent (EvMouseDown c r button mods) -> do
             let matching = findClickedExtents_ (c, r) exts
             case matching of
-                (Extent n _ _:_) ->
+                (Extent n (Location (ec, er)) _:_) ->
                     -- If the clicked extent was registered as
                     -- clickable, send a click event. Otherwise, just
                     -- send the raw mouse event
                     case n `elem` firstRS^.clickableNamesL of
-                        True -> return (Clicked n button mods, firstRS, exts)
+                        True -> do
+                            let localCoords = Location (lc, lr)
+                                lc = c - ec
+                                lr = r - er
+                            return (Clicked n button mods localCoords, firstRS, exts)
                         False -> return (e, firstRS, exts)
                 _ -> return (e, firstRS, exts)
         _ -> return (e, firstRS, exts)
