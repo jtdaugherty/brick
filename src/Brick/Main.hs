@@ -173,7 +173,8 @@ runWithNewVty buildVty chan app initialRS initialSt =
         setMode (outputIface vty) Mouse True
         pid <- forkIO $ supplyVtyEvents vty chan
         let runInner rs st = do
-              (result, newRS) <- runVty vty chan app st (rs & observedNamesL .~ S.empty)
+              (result, newRS) <- runVty vty chan app st (rs & observedNamesL .~ S.empty
+                                                            & clickableNamesL .~ mempty)
               case result of
                   SuspendAndResume act -> do
                       killThread pid
@@ -212,7 +213,7 @@ customMain buildVty userChan app initialAppState = do
         emptyES = ES [] []
         eventRO = EventRO M.empty Nothing mempty
     (st, eState) <- runStateT (runReaderT (runEventM (appStartEvent app initialAppState)) eventRO) emptyES
-    let initialRS = RS M.empty (esScrollRequests eState) S.empty mempty
+    let initialRS = RS M.empty (esScrollRequests eState) S.empty mempty []
     chan <- newChan
     forkIO $ forever $ readChan userChan >>= (\userEvent -> writeChan chan $ AppEvent userEvent)
     run initialRS st chan
@@ -234,18 +235,31 @@ runVty vty chan app appState rs = do
     (firstRS, exts) <- renderApp vty app appState rs
     e <- readChan chan
 
-    -- If the event was a resize, redraw the UI to update the viewport
-    -- states before we invoke the event handler since we want the event
-    -- handler to have access to accurate viewport information.
-    (nextRS, nextExts) <- case e of
-        (VtyEvent (EvResize _ _)) ->
-            renderApp vty app appState $ firstRS & observedNamesL .~ S.empty
-        _ -> return (firstRS, exts)
+    (e', nextRS, nextExts) <- case e of
+        -- If the event was a resize, redraw the UI to update the
+        -- viewport states before we invoke the event handler since we
+        -- want the event handler to have access to accurate viewport
+        -- information.
+        VtyEvent (EvResize _ _) -> do
+            (rs', exts') <- renderApp vty app appState $ firstRS & observedNamesL .~ S.empty
+            return (e, rs', exts')
+        VtyEvent (EvMouseDown c r button mods) -> do
+            let matching = findClickedExtents_ (c, r) exts
+            case matching of
+                (Extent n _ _:_) ->
+                    -- If the clicked extent was registered as
+                    -- clickable, send a click event. Otherwise, just
+                    -- send the raw mouse event
+                    case n `elem` firstRS^.clickableNamesL of
+                        True -> return (Clicked n button mods, firstRS, exts)
+                        False -> return (e, firstRS, exts)
+                _ -> return (e, firstRS, exts)
+        _ -> return (e, firstRS, exts)
 
     let emptyES = ES [] []
         eventRO = EventRO (viewportMap nextRS) (Just vty) nextExts
 
-    (next, eState) <- runStateT (runReaderT (runEventM (appHandleEvent app appState e))
+    (next, eState) <- runStateT (runReaderT (runEventM (appHandleEvent app appState e'))
                                 eventRO) emptyES
     return (next, nextRS { rsScrollRequests = esScrollRequests eState
                          , renderCache = applyInvalidations (cacheInvalidateRequests eState) $
@@ -286,9 +300,10 @@ lookupExtent n = EventM $ asks (listToMaybe . filter f . latestExtents)
 -- generic (top-level). So if two extents A and B both intersected the
 -- mouse click but A contains B, then they would be returned [B, A].
 findClickedExtents :: (Int, Int) -> EventM n [Extent n]
-findClickedExtents (c, r) = EventM $ asks (reverse . filter f . latestExtents)
-    where
-        f = clickedExtent (c, r)
+findClickedExtents pos = EventM $ asks (findClickedExtents_ pos . latestExtents)
+
+findClickedExtents_ :: (Int, Int) -> [Extent n] -> [Extent n]
+findClickedExtents_ pos = reverse . filter (clickedExtent pos)
 
 -- | Get the Vty handle currently in use.
 getVtyHandle :: EventM n (Maybe Vty)

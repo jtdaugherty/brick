@@ -28,6 +28,7 @@ module Brick.Types.Internal
 
   , rsScrollRequestsL
   , viewportMapL
+  , clickableNamesL
   , renderCacheL
   , observedNamesL
   , vpSize
@@ -49,7 +50,7 @@ import Lens.Micro.TH (makeLenses)
 import Lens.Micro.Internal (Field1, Field2)
 import qualified Data.Set as S
 import qualified Data.Map as M
-import Graphics.Vty (Vty, Event, DisplayRegion, Image, emptyImage)
+import Graphics.Vty (Vty, Event, Button, Modifier, DisplayRegion, Image, emptyImage)
 import Data.Default (Default(..))
 
 import Brick.Types.TH
@@ -197,6 +198,9 @@ data BrickEvent n e = VtyEvent Event
                     -- ^ The event was a Vty event.
                     | AppEvent e
                     -- ^ The event was an application event.
+                    | Clicked n Button [Modifier]
+                    -- ^ A mouse click on the specified region was
+                    -- received.
                     deriving (Show, Eq)
 
 data RenderState n =
@@ -204,6 +208,7 @@ data RenderState n =
        , rsScrollRequests :: [(n, ScrollRequest)]
        , observedNames :: !(S.Set n)
        , renderCache :: M.Map n (Result n)
+       , clickableNames :: [n]
        }
 
 -- | The rendering context. This tells widgets how to render: how much

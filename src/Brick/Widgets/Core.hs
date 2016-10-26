@@ -57,6 +57,7 @@ module Brick.Widgets.Core
 
   -- * Extent reporting
   , reportExtent
+  , clickable
 
   -- * Scrollable viewports
   , viewport
@@ -145,6 +146,13 @@ reportExtent n p =
                  , result^.imageL.to V.imageHeight
                  )
         return $ result & extentsL %~ (ext:)
+
+-- | Request mouse click events on the specified widget.
+clickable :: n -> Widget n -> Widget n
+clickable n p =
+    Widget (hSize p) (vSize p) $ do
+        clickableNamesL %= (n:)
+        render $ reportExtent n p
 
 addCursorOffset :: Location -> Result n -> Result n
 addCursorOffset off r =
