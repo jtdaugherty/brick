@@ -35,6 +35,8 @@ module Brick.AttrMap
   , setDefault
   , applyAttrMappings
   , mergeWithDefault
+  , mapAttrName
+  , mapAttrNames
   )
 where
 
@@ -169,3 +171,18 @@ combineMDs _ v = v
 applyAttrMappings :: [(AttrName, Attr)] -> AttrMap -> AttrMap
 applyAttrMappings _ (ForceAttr a) = ForceAttr a
 applyAttrMappings ms (AttrMap d m) = AttrMap d ((M.fromList ms) `M.union` m)
+
+-- | Update an attribute map such that a lookup of 'ontoName' returns
+-- the attribute value specified by 'fromName'.  This is useful for
+-- composite widgets with specific attribute names mapping those names
+-- to the sub-widget's expected name when calling that sub-widget's
+-- rendering function.  See the ProgressBarDemo for an example usage,
+-- and 'overrideAttr' for an alternate syntax.
+mapAttrName :: AttrName -> AttrName -> AttrMap -> AttrMap
+mapAttrName fromName ontoName inMap =
+    applyAttrMappings [(ontoName, attrMapLookup fromName inMap)] inMap
+
+-- | Map several attributes to return the value associated with an
+-- alternate name.  Applies 'mapAttrName' across a list of mappings.
+mapAttrNames :: [(AttrName, AttrName)] -> AttrMap -> AttrMap
+mapAttrNames names inMap = foldr (uncurry mapAttrName) inMap names
