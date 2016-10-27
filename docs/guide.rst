@@ -670,6 +670,7 @@ map combinators:
 * ``Brick.Widgets.Core.updateAttrMap``
 * ``Brick.Widgets.Core.forceAttr``
 * ``Brick.Widgets.Core.withDefAttr``
+* ``Brick.Widgets.Core.overrideAttr``
 
 Viewports
 =========
@@ -937,6 +938,12 @@ Widgets wrapped with ``cropToContext`` can be safely embedded in other
 widgets. If you don't want to crop in this way, you can use any of
 ``vty``'s cropping functions to operate on the ``Result`` image as
 desired.
+
+Sub-widgets may specify specific attribute name values influencing
+that sub-widget.  If the custom widget utilizes its own attribute
+names but needs to render the sub-widget, it can use ``overrideAttr``
+or ``mapAttrNames`` to convert its custom names to the names that the
+sub-widget uses for rendering its output.
 
 .. _vty: https://github.com/coreyoconnor/vty
 .. _Hackage: http://hackage.haskell.org/
