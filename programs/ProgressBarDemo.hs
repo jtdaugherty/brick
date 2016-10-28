@@ -1,10 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
--- import Lens.Micro ((^.))
 import Control.Monad (void)
 import Data.Monoid
--- import Data.Maybe (fromMaybe)
 import qualified Graphics.Vty as V
 
 import qualified Brick.AttrMap as A
@@ -49,7 +47,6 @@ drawUI p = [ui]
            (str "Z: " <+> zBar) <=>
            str "" <=>
            str "Hit 'x', 'y', or 'z' to advance progress, or 'q' to quit"
-
 
 appEvent :: MyAppState () -> V.Event -> T.EventM () (T.Next (MyAppState ()))
 appEvent p e =
