@@ -35,6 +35,7 @@ module Brick.Widgets.Core
   , withDefAttr
   , withAttr
   , forceAttr
+  , overrideAttr
   , updateAttrMap
 
   -- * Border style management
@@ -507,6 +508,13 @@ forceAttr an p =
     Widget (hSize p) (vSize p) $ do
         c <- getContext
         withReaderT (& ctxAttrMapL .~ (forceAttrMap (attrMapLookup an (c^.ctxAttrMapL)))) (render p)
+
+-- | Override the lookup of 'targetName' to return the attribute value
+-- associated with 'fromName' when rendering the specified widget.
+-- See also 'mapAttrName'.
+overrideAttr :: AttrName -> AttrName -> Widget n -> Widget n
+overrideAttr targetName fromName =
+    updateAttrMap (mapAttrName fromName targetName)
 
 -- | Build a widget directly from a raw Vty image.
 raw :: V.Image -> Widget n

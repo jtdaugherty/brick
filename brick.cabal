@@ -312,3 +312,18 @@ executable brick-border-demo
                        data-default,
                        text,
                        microlens
+
+executable brick-progressbar-demo
+  if !flag(demos)
+    Buildable: False
+  hs-source-dirs:      programs
+  ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
+  default-extensions:  CPP
+  default-language:    Haskell2010
+  main-is:             ProgressBarDemo.hs
+  build-depends:       base <= 5,
+                       brick,
+                       vty >= 5.5.0,
+                       data-default,
+                       text,
+                       microlens
