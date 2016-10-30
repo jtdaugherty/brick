@@ -6,7 +6,20 @@ Brick changelog
 ----
 
 This release primarily adds support for mouse interaction. For details,
-see the Mouse Support section of the User Guide.
+see the Mouse Support section of the User Guide. This release also
+includes breaking API changes for the App type. Here's a migration
+guide:
+
+ * Event handlers now take "BrickEvent n e" instead of "e", where "e"
+   was the custom event type used before this change. To recover your
+   own custom events, pattern-match on "AppEvent"; to recover Vty input
+   events, pattern-match on "VtyEvent".
+ * appLiftVtyEvent went away and can just be removed from your App
+   record constructor.
+ * If you aren't using the custom event type or were just using Vty's
+   "Event" type as your App's event type, you can set your event type to
+   just "e" because you'll now be able to get Vty events regardless of
+   whether you use a custom event type.
 
 API changes:
  * Added the Widget combinator "clickable" to indicate that a widget
