@@ -871,8 +871,8 @@ different layers? The next approach is to find all clicked extents:
      -- Then check to see if a specific extent is in the list, or just
      -- take the first one in the list.
 
-This approach finds all clicked extents and returns them a list with the
-following properties:
+This approach finds all clicked extents and returns them in a list with
+the following properties:
 
 * For extents ``A`` and ``B``, if ``A``'s layer is higher than ``B``'s
   layer, ``A`` comes before ``B`` in the list.
