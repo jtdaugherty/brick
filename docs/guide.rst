@@ -785,7 +785,7 @@ to the Vty library handle in ``EventM``:
      vty <- Brick.Main.getVtyHandle
      let output = outputIface vty
      when (supportsMode output BracketedPaste) $
-       setMode output BracketedPaste True
+       liftIO $ setMode output BracketedPaste True
 
 Once enabled, paste mode will generate Vty ``EvPaste`` events. These
 events will give you the entire pasted content as a ``ByteString`` which
@@ -806,7 +806,7 @@ To enable mouse mode, we need to get access to the Vty library handle in
      vty <- Brick.Main.getVtyHandle
      let output = outputIface vty
      when (supportsMode output Mouse) $
-       setMode output Mouse True
+       liftIO $ setMode output Mouse True
 
 Bear in mind that some terminals do not support mouse interaction, so
 use Vty's ``getModeStatus`` to find out whether your terminal will
@@ -903,7 +903,7 @@ offered by ``brick``. When rendering the interface we use
 
    handleEvent s (Clicked MyButton button modifiers coords) =
 
-This approach enables event handlers to use pattern-matching to check
+This approach enables event handlers to use pattern matching to check
 for mouse clicks on specific regions; this uses extent reporting
 under the hood but makes it possible to denote which widgets are
 clickable in the interface description. The event's click coordinates
