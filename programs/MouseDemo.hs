@@ -64,7 +64,9 @@ infoLayer st = T.Widget T.Fixed T.Fixed $ do
                C.hCenter (str ("Last reported click: " <> msg))
 
 appEvent :: St -> T.BrickEvent Name e -> T.EventM Name (T.Next St)
-appEvent st (T.Clicked n _ _ loc) = M.continue $ st & lastReportedClick .~ Just (n, loc)
+appEvent st (T.MouseDown n _ _ loc) = M.continue $ st & lastReportedClick .~ Just (n, loc)
+appEvent st (T.MouseUp _ _ _) = M.continue $ st & lastReportedClick .~ Nothing
+appEvent st (T.VtyEvent (V.EvMouseUp _ _ _)) = M.continue $ st & lastReportedClick .~ Nothing
 appEvent st (T.VtyEvent (V.EvKey V.KEsc [])) = M.halt st
 appEvent st _ = M.continue st
 

@@ -198,8 +198,11 @@ data BrickEvent n e = VtyEvent Event
                     -- ^ The event was a Vty event.
                     | AppEvent e
                     -- ^ The event was an application event.
-                    | Clicked n Button [Modifier] Location
-                    -- ^ A mouse click on the specified region was
+                    | MouseDown n Button [Modifier] Location
+                    -- ^ A mouse-down event on the specified region was
+                    -- received.
+                    | MouseUp n (Maybe Button) Location
+                    -- ^ A mouse-down event on the specified region was
                     -- received.
                     deriving (Show, Eq)
 

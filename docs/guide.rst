@@ -889,7 +889,7 @@ Click reporting
 The *click reporting* approach is the most high-level approach
 offered by ``brick``. When rendering the interface we use
 ``Brick.Widgets.Core.clickable`` to request that a given widget generate
-``Clicked`` events when it is clicked.
+``MouseDown`` and ``MouseUp`` events when it is clicked.
 
 .. code:: haskell
 
@@ -901,7 +901,8 @@ offered by ``brick``. When rendering the interface we use
         border $
         str "Click me"
 
-   handleEvent s (Clicked MyButton button modifiers coords) =
+   handleEvent s (MouseDown MyButton button modifiers coords) = ...
+   handleEvent s (MouseUp MyButton button coords) = ...
 
 This approach enables event handlers to use pattern matching to check
 for mouse clicks on specific regions; this uses extent reporting
