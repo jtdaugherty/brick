@@ -78,13 +78,13 @@ import Brick.AttrMap
 -- | The library application abstraction. Your application's operations
 -- are represented here and passed to one of the various main functions
 -- in this module. An application is in terms of an application state
--- type 's', an application event type 'e', and a name type 'n'. In the
--- simplest case 'e' is vty's 'Event' type, but you may define your own
--- event type, permitted that it has a constructor for wrapping Vty
--- events, so that Vty events can be handled by your event loop. The
--- state type is the type of application state to be provided by you and
--- iteratively modified by event handlers. The name type is the type of
--- names you can assign to viewports and widgets.
+-- type 's', an application event type 'e', and a resource name type
+-- 'n'. In the simplest case 'e' is unused (left polymorphic or set to
+-- '()'), but you may define your own event type and use 'customMain'
+-- to provide custom events. The state type is the type of application
+-- state to be provided by you and iteratively modified by event
+-- handlers. The resource name type is the type of names you can assign
+-- to rendering resources such as viewports and cursor locations.
 data App s e n =
     App { appDraw :: s -> [Widget n]
         -- ^ This function turns your application state into a list of
@@ -281,8 +281,8 @@ clickedExtent (c, r) (Extent _ (Location (lc, lr)) (w, h)) =
    c >= lc && c < (lc + w) &&
    r >= lr && r < (lr + h)
 
--- | Given a name, get the most recent rendering extent for the name (if
--- any).
+-- | Given a resource name, get the most recent rendering extent for the
+-- name (if any).
 lookupExtent :: (Eq n) => n -> EventM n (Maybe (Extent n))
 lookupExtent n = EventM $ asks (listToMaybe . filter f . latestExtents)
     where
@@ -303,7 +303,8 @@ findClickedExtents_ pos = reverse . filter (clickedExtent pos)
 getVtyHandle :: EventM n (Maybe Vty)
 getVtyHandle = EventM $ asks eventVtyHandle
 
--- | Invalidate the rendering cache entry with the specified name.
+-- | Invalidate the rendering cache entry with the specified resource
+-- name.
 invalidateCacheEntry :: n -> EventM n ()
 invalidateCacheEntry n = EventM $ do
     lift $ modify (\s -> s { cacheInvalidateRequests = InvalidateSingle n : cacheInvalidateRequests s })
@@ -348,8 +349,8 @@ neverShowCursor = const $ const Nothing
 showFirstCursor :: s -> [CursorLocation n] -> Maybe (CursorLocation n)
 showFirstCursor = const listToMaybe
 
--- | Show the cursor with the specified name, if such a cursor location
--- has been reported.
+-- | Show the cursor with the specified resource name, if such a cursor
+-- location has been reported.
 showCursorNamed :: (Eq n) => n -> [CursorLocation n] -> Maybe (CursorLocation n)
 showCursorNamed name locs =
     let matches l = l^.cursorLocationNameL == Just name

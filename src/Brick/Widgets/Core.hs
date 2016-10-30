@@ -659,7 +659,7 @@ viewport vpname typ p =
                                   "in each interface have unique name values. This means either " <>
                                   "using a different name type or adding constructors to your " <>
                                   "existing one and using those to name your widgets.  For more " <>
-                                  "information, see the \"Widget Names\" section of the Brick User Guide."
+                                  "information, see the \"Resource Names\" section of the Brick User Guide."
 
       observeName vpname
 
