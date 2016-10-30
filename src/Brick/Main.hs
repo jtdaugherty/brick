@@ -70,17 +70,7 @@ import Graphics.Vty
   , mkVty
   )
 
-import Brick.Types
-  ( Viewport
-  , Direction
-  , Widget
-  , rowL
-  , columnL
-  , CursorLocation(..)
-  , cursorLocationNameL
-  , EventM(..)
-  , Extent(..)
-  )
+import Brick.Types (Widget, EventM(..))
 import Brick.Types.Internal
 import Brick.Widgets.Internal
 import Brick.AttrMap
