@@ -136,8 +136,8 @@ addVisibilityOffset off r = r & visibilityRequestsL.each.vrPositionL %~ (off <>)
 addExtentOffset :: Location -> Result n -> Result n
 addExtentOffset off r = r & extentsL.each %~ (\(Extent n l sz) -> Extent n (off <> l) sz)
 
--- | Render the specified widget and report its rendering extent using
--- the specified name.
+-- | Render the specified widget and record its rendering extent using
+-- the specified name (see also 'lookupExtent').
 reportExtent :: n -> Widget n -> Widget n
 reportExtent n p =
     Widget (hSize p) (vSize p) $ do
