@@ -34,8 +34,6 @@ Feature Overview
  * Border-drawing widgets (put borders around or in between things)
  * Generic scrollable viewports
  * Extensible widget-building API
- * Mouse interaction
- * Rendering cache
  * (And many more general-purpose layout control combinators)
 
 In addition, some of `brick`'s more powerful features may not be obvious
