@@ -2,6 +2,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Main where
 
+import Control.Applicative ((<$>))
+import Data.Monoid ((<>))
 import Lens.Micro ((^.), (&), (.~))
 import Lens.Micro.TH (makeLenses)
 import Control.Monad (void)
