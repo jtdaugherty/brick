@@ -2,6 +2,45 @@
 Brick changelog
 ---------------
 
+0.12
+----
+
+This release primarily adds support for mouse interaction. For details,
+see the Mouse Support section of the User Guide.
+
+API changes:
+ * Added the Widget combinator "clickable" to indicate that a widget
+   should generate mouse click events
+ * Added the Extent data type and the "reportExtent" widget combinator
+   to report the positions and sizes of widgets
+ * Rendering "Result" values now include reported extents and update
+   their offsets (adds "extents" field and "extentsL" lens)
+ * Added "lookupExtent", "findClickedExtents", and "clickedExtent" in
+   EventM to find extents and check them for mouse clicks
+ * Removed appLiftVtyEvent. Instead of wrapping Vty's events in your own
+   type, you now get a "BrickEvent" that always contains Vty events but
+   has the ability to embed *your* custom events. See the User Guide for
+   details.
+ * Added demo program MouseDemo.hs
+ * Added demo program ProgressBarDemo.hs (thanks Kevin Quick)
+ * Added mapAttrname, mapAttrNames, and overrideAttr functions (thanks
+   Kevin Quick)
+ * Make handleEventLensed polymorphic over event type to allow use with
+   custom events (thanks Kevin Quick)
+ * Added Ord constraint to some library startup functions
+
+Bug fixes:
+ * Added Show instance for Editor, List (fixes #63)
+
+Documentation changes:
+ * Updated documentation to use new "resource name" terminology to
+   reduce confusion and better explain the purpose of names.
+ * Updated user guide with sections on mouse support, the rendering
+   cache, resource names, paste mode, and extents
+
+Package changes:
+ * Depend on Vty 5.11.3 to get mouse mode support
+
 0.11
 ----
 
