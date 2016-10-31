@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveFunctor #-}
+
 -- | This module provides a type and functions for handling focus rings
 -- of widgets. Note that this interface is merely provided for managing
 -- the focus state for a sequence of resource names; it does not do
@@ -25,6 +27,7 @@ import Brick.Widgets.Core (Named(..))
 -- currently-focused name.
 data FocusRing n = FocusRingEmpty
                  | FocusRingNonempty ![n] !Int
+                 deriving Functor
 
 -- | Construct a focus ring from the list of resource names.
 focusRing :: [n] -> FocusRing n
