@@ -2,6 +2,8 @@
 Brick changelog
 ---------------
 
+ * Make FocusRing a Functor.
+
 0.12
 ----
 
