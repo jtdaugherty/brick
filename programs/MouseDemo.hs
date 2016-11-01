@@ -3,6 +3,7 @@
 module Main where
 
 import Control.Applicative ((<$>))
+import Control.Concurrent (newChan)
 import Data.Monoid ((<>))
 import Lens.Micro ((^.), (&), (.~))
 import Lens.Micro.TH (makeLenses)
@@ -88,4 +89,10 @@ app =
           }
 
 main :: IO ()
-main = void $ M.defaultMain app $ St [] Nothing
+main = do
+    let buildVty = do
+          v <- V.mkVty =<< V.standardIOConfig
+          V.setMode (V.outputIface v) V.Mouse True
+          return v
+
+    void $ M.customMain buildVty Nothing app $ St [] Nothing

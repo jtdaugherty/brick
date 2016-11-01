@@ -76,4 +76,4 @@ main = do
         writeChan chan Counter
         threadDelay 1000000
 
-    void $ customMain (V.mkVty def) chan theApp initialState
+    void $ customMain (V.mkVty def) (Just chan) theApp initialState

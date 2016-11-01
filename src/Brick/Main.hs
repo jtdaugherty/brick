@@ -42,7 +42,7 @@ where
 
 import Control.Exception (finally)
 import Lens.Micro ((^.), (&), (.~))
-import Control.Monad (forever)
+import Control.Monad (forever, void)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.State
 import Control.Monad.Trans.Reader
@@ -60,8 +60,6 @@ import Graphics.Vty
   , Picture(..)
   , Cursor(..)
   , Event(..)
-  , Mode(..)
-  , setMode
   , update
   , outputIface
   , displayBounds
@@ -121,7 +119,7 @@ defaultMain :: (Ord n)
             -> IO s
 defaultMain app st = do
     chan <- newChan
-    customMain (mkVty def) chan app st
+    customMain (mkVty def) (Just chan) app st
 
 -- | A simple main entry point which takes a widget and renders it. This
 -- event loop terminates when the user presses any key, but terminal
@@ -160,7 +158,6 @@ runWithNewVty :: (Ord n)
               -> IO (InternalNext n s)
 runWithNewVty buildVty chan app initialRS initialSt =
     withVty buildVty $ \vty -> do
-        setMode (outputIface vty) Mouse True
         pid <- forkIO $ supplyVtyEvents vty chan
         let runInner rs st = do
               (result, newRS) <- runVty vty chan app st (rs & observedNamesL .~ S.empty
@@ -182,16 +179,17 @@ customMain :: (Ord n)
            -- ^ An IO action to build a Vty handle. This is used to
            -- build a Vty handle whenever the event loop begins or is
            -- resumed after suspension.
-           -> Chan e
+           -> Maybe (Chan e)
            -- ^ An event channel for sending custom events to the event
            -- loop (you write to this channel, the event loop reads from
-           -- it).
+           -- it). Provide 'Nothing' if you don't plan on sending custom
+           -- events.
            -> App s e n
            -- ^ The application.
            -> s
            -- ^ The initial application state.
            -> IO s
-customMain buildVty userChan app initialAppState = do
+customMain buildVty mUserChan app initialAppState = do
     let run rs st chan = do
             result <- runWithNewVty buildVty chan app rs st
             case result of
@@ -205,7 +203,11 @@ customMain buildVty userChan app initialAppState = do
     (st, eState) <- runStateT (runReaderT (runEventM (appStartEvent app initialAppState)) eventRO) emptyES
     let initialRS = RS M.empty (esScrollRequests eState) S.empty mempty []
     chan <- newChan
-    forkIO $ forever $ readChan userChan >>= (\userEvent -> writeChan chan $ AppEvent userEvent)
+    case mUserChan of
+        Just userChan ->
+            void $ forkIO $ forever $ readChan userChan >>= (\userEvent -> writeChan chan $ AppEvent userEvent)
+        Nothing -> return ()
+
     run initialRS st chan
 
 supplyVtyEvents :: Vty -> Chan (BrickEvent n e) -> IO ()
