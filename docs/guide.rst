@@ -106,7 +106,6 @@ various functions:
            , appHandleEvent  :: s -> e -> EventM n (Next s)
            , appStartEvent   :: s -> EventM n s
            , appAttrMap      :: s -> AttrMap
-           , appLiftVtyEvent :: Event -> e
            }
 
 The ``App`` type is parameterized over three types. These type variables
@@ -118,27 +117,41 @@ are:
   application will provide the library with its starting value and event
   handling will transform it as the program executes. When a ``brick``
   application exits, the final application state will be returned.
-- The **event type** ``e``: the type of events that your event
-  handler (``appHandleEvent``) will handle. The underlying ``vty``
-  library provides ``Graphics.Vty.Event`` and this forms the basis
-  of all events we will handle with ``brick`` applications. The
-  ``Brick.Main.defaultMain`` function expects an ``App s Event n``
-  since this is a common case. Applications with higher levels of
-  sophistication will need to use their own events; in that case Vty's
-  ``Event`` will need to be embedded in the custom event type. ``brick``
-  does this by calling ``appLiftVtyEvent``. For more details, see `Using
-  Your Own Event Type`_.
-- The **widget name type** ``n``: during application execution we need a
-  way to refer to widgets by name. Whether it's to distinguish two
-  cursor position requests, make changes to a scrollable viewport, or
-  any other situation where we need a unique handle to a given widget
-  state, some data type is needed. ``brick`` applications require you to
-  provide that type for ``n``.  For more details, see `Widget Names`_.
+- The **event type** ``e``: the type of custom application events
+  that your application will need to produce and handle in
+  ``appHandleEvent``. All applications will be provided with events from
+  the underlying ``vty`` library, such as keyboard events or resize
+  events; this type variable indicates the type of *additional* events
+  the application will need. For more details, see `Using Your Own Event
+  Type`_.
+- The **resource name type** ``n``: during application execution we
+  sometimes need a way to refer to rendering state, such as the space
+  taken up by a given widget, the state for a scrollable viewport, a
+  mouse click, or a cursor position. For these situations we need a
+  unique handle called a *resource name*. The type ``n`` specifies the
+  name type the application will use to identify these bits of state
+  produced and managed by the renderer. The resource name type must be
+  provided by your application; for more details, see `Resource Names`_.
 
 The various fields of ``App`` will be described in the sections below.
 
+Running an Application
+----------------------
+
 To run an ``App``, we pass it to ``Brick.Main.defaultMain`` or
-``Brick.Main.customMain`` along with an initial application state value.
+``Brick.Main.customMain`` along with an initial application state value:
+
+.. code:: haskell
+
+   main :: IO ()
+   main = do
+     let app = App { ... }
+         initialState = ...
+     finalState <- defaultMain app initialState
+     -- Use finalState and exit
+
+The ``customMain`` function is for more advanced uses; for details see
+`Using Your Own Event Type`_.
 
 appDraw: Drawing an Interface
 -----------------------------
@@ -187,25 +200,23 @@ appHandleEvent: Handling Events
 -------------------------------
 
 The value of ``appHandleEvent`` is a function that decides how to modify
-the application state as a result of an event. It also decides whether
-to continue program execution. The function takes the current
-application state and the event and returns the *next application
-state*:
+the application state as a result of an event:
 
 .. code:: haskell
 
-   appHandleEvent :: s -> e -> EventM n (Next s)
+   appHandleEvent :: s -> BrickEvent n e -> EventM n (Next s)
 
-The ``EventM`` monad is the event-handling monad. This monad is a
-transformer around ``IO``, so you are free to do I/O in this monad by
-using ``liftIO``. Beyond I/O, this monad is just used to make scrolling
-requests to the renderer (see `Viewports`_). Keep in mind that time
-spent blocking in your event handler is time during which your UI is
-unresponsive, so consider this when deciding whether to have background
-threads do work instead of inlining the work in the event handler.
+The first parameter of type ``s`` is your application's state at the
+time the event arrives. ``appHandleEvent`` is responsible for deciding
+how to change the state based on the event and then return it.
 
-The ``Next s`` value describes what should happen after the event
-handler is finished. We have three choices:
+The second parameter of type ``BrickEvent n e`` is the event itself.
+The type variables ``n`` and ``e`` correspond to the *resource name
+type* and *event type* of your application, respectively, and must match
+the corresponding types in ``App`` and ``EventM``.
+
+The return value type ``Next s`` value describes what should happen
+after the event handler is finished. We have three choices:
 
 * ``Brick.Main.continue s``: continue executing the event loop with the
   specified application state ``s`` as the next value. Commonly this is
@@ -224,6 +235,15 @@ handler is finished. We have three choices:
   value. This is useful for situations where your program needs to
   suspend your interface and execute some other program that needs to
   gain control of the terminal (such as an external editor).
+
+The ``EventM`` monad is the event-handling monad. This monad is a
+transformer around ``IO`` so you are free to do I/O in this monad by
+using ``liftIO``. Beyond I/O, this monad is used to make scrolling
+requests to the renderer (see `Viewports`_) and obtain named extents
+(see `Extents`_). Keep in mind that time spent blocking in your event
+handler is time during which your UI is unresponsive, so consider this
+when deciding whether to have background threads do work instead of
+inlining the work in the event handler.
 
 Widget Event Handlers
 *********************
@@ -249,15 +269,16 @@ of state in your application state. In the following example we use an
    data Name = Edit1
    type MyState = Editor String Name
 
-   myEvent :: MyState -> e -> EventM Name (Next MyState)
-   myEvent s e = continue =<< handleEditorEvent e s
+   myEvent :: MyState -> BrickEvent n e -> EventM Name (Next MyState)
+   myEvent s (VtyEvent e) = continue =<< handleEditorEvent e s
 
-This pattern works fine when your application state has an event handler
-as shown in the ``Edit`` example above, but it can become unpleasant
-if the value on which you want to invoke a handler is embedded deeply
-within your application state. If you have chosen to generate lenses
-for your application state fields, you can use the convenience function
-``handleEventLensed`` by specifying your state, a lens, and the event:
+This pattern works well enough when your application state has an
+event handler as shown in the ``Edit`` example above, but it can
+become unpleasant if the value on which you want to invoke a handler
+is embedded deeply within your application state. If you have chosen
+to generate lenses for your application state fields, you can use the
+convenience function ``handleEventLensed`` by specifying your state, a
+lens, and the event:
 
 .. code:: haskell
 
@@ -266,52 +287,56 @@ for your application state fields, you can use the convenience function
                           }
    makeLenses ''MyState
 
-   myEvent :: MyState -> e -> EventM Name (Next MyState)
-   myEvent s e = continue =<< handleEventLensed s theEdit handleEditorEvent e
+   myEvent :: MyState -> BrickEvent n e -> EventM Name (Next MyState)
+   myEvent s (VtyEvent e) = continue =<< handleEventLensed s theEdit handleEditorEvent e
 
 You might consider that preferable to the desugared version:
 
 .. code:: haskell
 
-   myEvent :: MyState -> e -> EventM Name (Next MyState)
-   myEvent s e = do
+   myEvent :: MyState -> BrickEvent n e -> EventM Name (Next MyState)
+   myEvent s (VtyEvent e) = do
      newVal <- handleEditorEvent e (s^.theEdit)
      continue $ s & theEdit .~ newVal
 
 Using Your Own Event Type
 *************************
 
-Since we often need to communicate application-specific events
-beyond input events to the event handler, the ``App`` type is
-polymorphic over the event type ``e`` that we want to handle. If we
-use ``Brick.Main.defaultMain`` to run our ``App``, we have to use
-``Graphics.Vty.Event`` as our event type since ``defaultMain`` is
-provided as a convenience so that no extra event type is needed. But if
-our application has other event-handling needs, we need to use our own
-event type.
+Since we often need to communicate application-specific events beyond
+Vty input events to the event handler, brick supports embedding your
+application's custom events in the stream of ``BrickEvent``s that
+your handler will receive. The type of these events is the type ``e``
+mentioned in ``BrickEvent n e`` and ``App s e n``.
 
-To do this, we first define an event type:
+Note: ordinarily your application will not have its own custom event
+type, so you can leave this type unused (e.g. ``App MyState e MyName``)
+or just set it to unit (``App MyState () MyName``).
+
+Here's an example of using a custom event type. Suppose that you'd like
+to be able to handle counter events in your event handler. First we
+define the counter event type:
 
 .. code:: haskell
 
-   data CustomEvent =
-       VtyEvent Graphics.Vty.Event
-       | CustomEvent1
-       | CustomEvent2
+   data CounterEvent = Counter Int
 
-Our custom event type *must* provide a constructor capable of taking
-a ``Graphics.Vty.Event`` value. This allows the ``brick`` event loop
-to send us ``vty`` events in the midst of our custom ones. To allow
-``brick`` to do this, we provide this constructor as the value of
-``appLiftVtyEvent``. This way, ``brick`` can wrap a ``vty`` event using
-our custom event type and then pass it to our event handler (which takes
-``CustomEvent`` values). In this case we'd set ``appLiftVtyEvent =
-VtyEvent``.
+With this type declaration we can now use counter events in our app by
+using the application type ``App s e CounterEvent``. To handle these
+events we'll just need to look for ``AppEvent`` values in the event
+handler:
 
-Once we have set ``appLiftVtyEvent`` in this way, we also need to set up
-a mechanism for getting our custom events into the ``brick`` event loop
-from other threads. To do this we use a ``Control.Concurrent.Chan`` and
-call ``Brick.Main.customMain`` instead of ``Brick.Main.defaultMain``:
+.. code:: haskell
+
+   myEvent :: s -> BrickEvent n CounterEvent -> EventM n (Next s)
+   myEvent s (AppEvent (CounterEvent i)) = ...
+
+The next step is to actually *generate* our custom events and
+inject them into the ``brick`` event stream so they make it to the
+event handler. To do that we need to create a ``Chan`` for our
+custom events, provide that ``Chan`` to ``brick``, and then send
+our events over that channel. Once we've created the channel with
+``Control.Concurrent.newChan``, we provide it to ``brick`` with
+``customMain`` instead of ``defaultMain``:
 
 .. code:: haskell
 
@@ -322,9 +347,18 @@ call ``Brick.Main.customMain`` instead of ``Brick.Main.defaultMain``:
        -- Use finalState and exit
 
 The ``customMain`` function lets us have control over how the ``vty``
-library is initialized and how ``brick`` gets custom events to give to
+library is initialized *and* how ``brick`` gets custom events to give to
 our event handler. ``customMain`` is the entry point into ``brick`` when
-you need to use your own event type.
+you need to use your own event type as shown here.
+
+With all of this in place, sending our custom events to the event
+handler is straightforward:
+
+.. code:: haskell
+
+   counterThread :: Chan CounterEvent -> IO ()
+   counterThread chan = do
+       Control.Concurrent.writeChan chan $ Counter 1
 
 Starting up: appStartEvent
 **************************
@@ -370,13 +404,13 @@ function. Using your application state (to track which text input box
 is "focused," say) you can decide which of the locations to return or
 return ``Nothing`` if you do not want to show a cursor.
 
-We decide which location to show by looking at the name value contained
-in the ``cursorLocationName`` field. The name value associated
-with a cursor location will be the name used to request the cursor
-position, which is usually going to be the name you passed to the
-widget's constructor. This is why constructors for widgets like
-``Brick.Widgets.Edit.editor`` require a name parameter. The name lets us
-distinguish between many cursor-placing widgets of the same type.
+Many widgets in the rendering process can request cursor placements, but
+it is up to our application to determine which one (if any) should be
+used. Since we can only show at most a single cursor in the terminal,
+we need to decide which location to show. One way is by looking at the
+resource name contained in the ``cursorLocationName`` field. The name
+value associated with a cursor location will be the name used to request
+the cursor position with ``Brick.Widgets.Core.showCursor``.
 
 ``Brick.Main`` provides various convenience functions to make cursor
 selection easy in common cases:
@@ -384,16 +418,12 @@ selection easy in common cases:
 * ``neverShowCursor``: never show any cursor.
 * ``showFirstCursor``: always show the first cursor request given; good
   for applications with only one cursor-placing widget.
-* ``showCursorNamed``: show the cursor with the specified name or show
-  no cursor if the name was not associated with any requested cursor
-  position.
+* ``showCursorNamed``: show the cursor with the specified resource name
+  or show no cursor if the name was not associated with any requested
+  cursor position.
 
-Widgets request cursor placement by using the
-``Brick.Widgets.Core.showCursor`` combinator. For example, this widget
-places a cursor on the first "``o``" in "``foo``" assocated with the
-cursor name "``myCursor``". The event handler for this application would
-use ``MyName`` as its name type ``n`` and would be able to pattern-match
-on ``CustomName`` to match cursor requests when this widget is rendered:
+For example, this widget requests a cursor placement on the first
+"``o``" in "``foo``" assocated with the cursor name "``myCursor``":
 
 .. code:: haskell
 
@@ -401,6 +431,80 @@ on ``CustomName`` to match cursor requests when this widget is rendered:
 
    let w = showCursor CustomName (Brick.Types.Location (1, 0))
              (Brick.Widgets.Core.str "foobar")
+
+The event handler for this application would use ``MyName`` as its
+resource name type ``n`` and would be able to pattern-match on
+``CustomName`` to match cursor requests when this widget is rendered:
+
+.. code:: haskell
+
+   myApp = App { ...
+               , appChooseCursor = showCursorNamed CustomName
+               }
+
+See the next section for more information on using names.
+
+Resource Names
+--------------
+
+We saw above in `appChooseCursor: Placing the Cursor`_ that resource
+names are used to describe cursor locations. Resource names are also
+used to name other kinds of resources:
+
+* viewports (see `Viewports`_)
+* rendering extents (see `Extents`_)
+* mouse events (see `Mouse Support`_)
+
+Assigning names to these resource types allows us to distinguish between
+events based on the part of the interface to which an event is related.
+
+Your application must provide some type of name. For simple applications
+that don't make use of resource names, you may use ``()``. But if your
+application has more than one named resource, you *must* provide a type
+capable of assigning a unique name to every resource that needs one.
+
+A Note of Caution
+*****************
+
+Resource names can be assigned to any of the resource types mentioned
+above, but some resource types--viewports, extents, the render cache,
+and cursor locations--form separate resource namespaces. So, for
+example, the same name can be assigned to both a viewport and an extent,
+since the ``brick`` API provides access to viewports and extents using
+separate APIs and data structures. However, if the same name is used for
+two resources of the same kind, it is undefined *which* of those you'll
+be getting access to when you go to use one of those resources in your
+event handler.
+
+For example, if the same name is assigned to two viewports:
+
+.. code:: haskell
+
+   data Name = Viewport1
+
+   ui :: Widget Name
+   ui = (viewport Viewport1 Vertical $ str "Foo") <+>
+        (viewport Viewport1 Vertical $ str "Bar") <+>
+
+then in ``EventM`` when we attempt to scroll the viewport ``Viewport1``
+we don't know which of the two uses of ``Viewport1`` will be affected:
+
+.. code:: haskell
+
+   do
+     let vp = viewportScroll Viewport1
+     vScrollBy vp 1
+
+The solution is to ensure that for a given resource type (in this case
+viewport), a unique name is assigned in each use.
+
+.. code:: haskell
+
+   data Name = Viewport1 | Viewport2
+
+   ui :: Widget Name
+   ui = (viewport Viewport1 Vertical $ str "Foo") <+>
+        (viewport Viewport2 Vertical $ str "Bar") <+>
 
 appAttrMap: Managing Attributes
 -------------------------------
@@ -453,56 +557,6 @@ To draw a widget using an attribute name in the map, use
 For complete details on how attribute maps and attribute names work, see
 the Haddock documentation for the ``Brick.AttrMap`` module. See also
 `How Attributes Work`_.
-
-Widget Names
-------------
-
-We saw above in `appChooseCursor: Placing the Cursor`_ that names are
-used to describe cursor locations. Names are also used to name viewports
-(see `Viewports`_). Assigning names to viewports, cursors, and widgets
-allows us to distinguish between events during execution. We need some
-way to associate events with the widgets that generated them, and names
-give us a mechanism.
-
-You might be wondering why we don't just use ``String`` as the name type
-instead of making the application developer supply a type. In fact,
-``brick`` used to use ``String`` but there were several problems with
-this approach:
-
-- Since any widget could choose its own name by using any ``String``,
-  name clashes could arise if two widgets used the same name. But those
-  clashes would not be easy to observe.
-- String names are not amenable to safe refactoring since an "invalid"
-  name could be used and silently fail to cause the desired behavior at
-  runtime.
-- String names are not amenable to compile-time checking when being
-  matched; a custom type allows the user to do compile-time checking of
-  e.g. ``case`` expressions checking names.
-- Extension widgets were not forced to be polymorphic in their names,
-  which breaks good abstraction boundaries if extension authors elect to
-  choose their own widget names.
-
-Although requiring the user to provide a custom name type means that
-more work must be done to manage the set of possible names, this is work
-that should have been done up front anyway: ``String`` names could be
-allocated ad-hoc but never centrally managed, resulting in troublesome
-runtime problems.
-
-A Note of Caution
-*****************
-
-**NOTE: Unique names for all named widgets are required to ensure
-that the renderer correctly tracks widget states during application
-execution.** If you assign the same name to, say, two viewports, they
-will both use the same viewport scrolling state! So unless you want that
-and know what you are doing, use a unique name for every widget that
-needs one.
-
-Your application must provide some type of name to be used to name
-widgets that need names. For simple applications with only one such
-widget, you may use ``()``, but if your application has more than one
-named widget, you *must* provide a type capable of assigning a unique
-name value to every named widget.
 
 How Widgets and Rendering Work
 ==============================
@@ -672,12 +726,198 @@ map combinators:
 * ``Brick.Widgets.Core.withDefAttr``
 * ``Brick.Widgets.Core.overrideAttr``
 
+Extents
+=======
+
+When an application needs to know where a particular widget was drawn by
+the renderer, the application can request that the renderer record the
+*extent* of the widget--its upper-left corner and size--and provide it
+in an event handler. In the following example, the application needs to
+know where the bordered box containing "Foo" is rendered:
+
+.. code:: haskell
+
+   ui = center $ border $ str "Foo"
+
+We don't want to have to care about the particulars of the layout to
+find out where the bordered box got placed during rendering. To get this
+information we request that the extent of the box be reported to us by
+the renderer using a resource name:
+
+.. code:: haskell
+
+   data Name = FooBox
+
+   ui = center $
+        reportExtent FooBox $
+        border $ str "Foo"
+
+Now, whenever the ``ui`` is rendered, the location and size of the
+bordered box containing "Foo" will be recorded. We can then look it up
+in event handlers in ``EventM``:
+
+.. code:: haskell
+
+   do
+     mExtent <- Brick.Main.lookupExtent FooBox
+     case mExtent of
+       Nothing -> ...
+       Just (Extent _ upperLeft (width, height)) -> ...
+
+Paste Support
+=============
+
+Some terminal emulators support "bracketed paste" support. This feature
+enables OS-level paste operations to send the pasted content as a
+single chunk of data and bypass the usual input processing that the
+application does. This enales more secure handling of pasted data since
+the application can detect that a pasted occurred and avoid processing
+the pasted data as ordinary keyboard input. For more information, see
+`bracketed paste mode`_.
+
+The Vty library used by brick provides support for bracketed pastes, but
+this mode must be enabled. To enable paste mode, we need to get access
+to the Vty library handle in ``EventM``:
+
+.. code:: haskell
+
+   do
+     vty <- Brick.Main.getVtyHandle
+     let output = outputIface vty
+     when (supportsMode output BracketedPaste) $
+       liftIO $ setMode output BracketedPaste True
+
+Once enabled, paste mode will generate Vty ``EvPaste`` events. These
+events will give you the entire pasted content as a ``ByteString`` which
+you must decode yourself if, for example, you expect it to contain UTF-8
+text data.
+
+Mouse Support
+=============
+
+Some terminal emulators support mouse interaction. The Vty library used
+by brick provides these low-level events if mouse mode has been enabled.
+To enable mouse mode, we need to get access to the Vty library handle in
+``EventM``:
+
+.. code:: haskell
+
+   do
+     vty <- Brick.Main.getVtyHandle
+     let output = outputIface vty
+     when (supportsMode output Mouse) $
+       liftIO $ setMode output Mouse True
+
+Bear in mind that some terminals do not support mouse interaction, so
+use Vty's ``getModeStatus`` to find out whether your terminal will
+provide mouse events.
+
+Also bear in mind that terminal users will usually expect to be able
+to interact with your application entirely without a mouse, so if you
+do choose to enable mouse interaction, consider using it to improve
+existing interactions rather than provide new functionality that cannot
+already be managed with a keyboard.
+
+Low-level Mouse Events
+----------------------
+
+Once mouse events have been enabled, Vty will generate ``EvMouseDown``
+and ``EvMouseUp`` events containing the mouse button clicked, the
+location in the terminal, and any modifier keys pressed.
+
+.. code:: haskell
+
+   handleEvent s (VtyEvent (EvMouseDown col row button mods) = ...
+
+Brick Mouse Events
+------------------
+
+Although these events may be adequate for your needs, ``brick`` provides
+a higher-level mouse event interface that ties into the drawing
+language. The disadvantage to the low-level interface described above is
+that you still need to determine *what* was clicked, i.e., the part of
+the interface that was under the mouse cursor. There are two ways to do
+this with ``brick``: with *extent checking* and *click reporting*.
+
+Extent checking
+***************
+
+The *extent checking* approach entails requesting extents (see
+`Extents`_) for parts of your interface, then checking the Vty mouse
+click event's coordinates against one or more extents.
+
+The most direct way to do this is to check a specific extent:
+
+.. code:: haskell
+
+   handleEvent s (VtyEvent (EvMouseDown col row _ _)) = do
+     mExtent <- lookupExtent SomeExtent
+     case mExtent of
+       Nothing -> continue s
+       Just e -> do
+         if Brick.Main.clickedExtent (col, row) e
+           then ...
+           else ...
+
+This approach works well enough if you know which extent you're
+interested in checking, but what if there are many extents and you
+want to know which one was clicked? And what if those extents are in
+different layers? The next approach is to find all clicked extents:
+
+.. code:: haskell
+
+   handleEvent s (VtyEvent (EvMouseDown col row _ _)) = do
+     extents <- Brick.Main.findClickedExtents (col, row)
+     -- Then check to see if a specific extent is in the list, or just
+     -- take the first one in the list.
+
+This approach finds all clicked extents and returns them in a list with
+the following properties:
+
+* For extents ``A`` and ``B``, if ``A``'s layer is higher than ``B``'s
+  layer, ``A`` comes before ``B`` in the list.
+* For extents ``A`` and ``B``, if ``A`` and ``B`` are in the same layer
+  and ``A`` is contained within ``B``, ``A`` comes before ``B`` in the
+  list.
+
+As a result, the extents are ordered in a natural way, starting with the
+most specific extents and proceeding to the most general.
+
+Click reporting
+***************
+
+The *click reporting* approach is the most high-level approach
+offered by ``brick``. When rendering the interface we use
+``Brick.Widgets.Core.clickable`` to request that a given widget generate
+``MouseDown`` and ``MouseUp`` events when it is clicked.
+
+.. code:: haskell
+
+   data Name = MyButton
+
+   ui :: Widget Name
+   ui = center $
+        clickable MyButton $
+        border $
+        str "Click me"
+
+   handleEvent s (MouseDown MyButton button modifiers coords) = ...
+   handleEvent s (MouseUp MyButton button coords) = ...
+
+This approach enables event handlers to use pattern matching to check
+for mouse clicks on specific regions; this uses extent reporting
+under the hood but makes it possible to denote which widgets are
+clickable in the interface description. The event's click coordinates
+are local to the widget being clicked. In the above example, a click
+on the upper-left corner of the border would result in coordinates of
+``(0,0)``.
+
 Viewports
 =========
 
-A *viewport* is a scrollable window onto another widget. Viewports have
-a *scrolling direction* of type ``Brick.Types.ViewportType`` which can
-be one of:
+A *viewport* is a scrollable window onto a widget. Viewports have a
+*scrolling direction* of type ``Brick.Types.ViewportType`` which can be
+one of:
 
 * ``Horizontal``: the viewport can only scroll horizontally.
 * ``Vertical``: the viewport can only scroll vertically.
@@ -687,7 +927,7 @@ The ``Brick.Widgets.Core.viewport`` combinator takes another widget
 and embeds it in a named viewport. We name the viewport so that we can
 keep track of its scrolling state in the renderer, and so that you can
 make scrolling requests. The viewport's name is its handle for these
-operations (see `Scrolling Viewports in Event Handlers`_ and `Widget
+operations (see `Scrolling Viewports in Event Handlers`_ and `Resource
 Names`_). **The viewport name must be unique across your application.**
 
 For example, the following puts a string in a horizontally-scrollable
@@ -695,7 +935,7 @@ viewport:
 
 .. code:: haskell
 
-   -- Assuming that App uses 'Name' for its names:
+   -- Assuming that App uses 'Name' for its resource names:
    data Name = Viewport1
    let w = viewport Viewport1 Horizontal $ str "Hello, world!"
 
@@ -735,7 +975,7 @@ To make scrolling requests, we first create a
 
 .. code:: haskell
 
-   -- Assuming that App uses 'Name' for its names:
+   -- Assuming that App uses 'Name' for its resource names:
    data Name = Viewport1
    let vp = viewportScroll Viewport1
 
@@ -777,8 +1017,8 @@ column to the right:
 Scrolling Viewports With Visibility Requests
 --------------------------------------------
 
-When we need to scroll widgets only when a cursor in the viewport leaves
-the viewport's bounds, we need to use *visibility requests*. A
+When we need to scroll widgets only when a cursor in the viewport
+leaves the viewport's bounds, we need to use *visibility requests*. A
 visibility request is a hint to the renderer that some element of a
 widget inside a viewport should be made visible, i.e., that the viewport
 should be scrolled to bring the requested element into view.
@@ -788,13 +1028,13 @@ simply wrap it with ``visible``:
 
 .. code:: haskell
 
-   -- Assuming that App uses 'Name' for its names:
+   -- Assuming that App uses 'Name' for its resource names:
    data Name = Viewport1
    let w = viewport Viewport1 Horizontal $
            (visible $ str "Hello," <+> (str " world!")
 
-This example requests that the "``myViewport``" viewport be scrolled so
-that "Hello," is visible. We could extend this example with a value
+This example requests that the "``myViewport``" viewport be scrolled
+so that "Hello," is visible. We could extend this example with a value
 in the application state indicating which word in our string should
 be visible and then use that to change which string gets wrapped with
 ``visible``; this is the basis of cursor-based scrolling.
@@ -814,16 +1054,58 @@ capture various cursor-based scenarios:
 Viewport Restrictions
 ---------------------
 
-Viewports impose one restriction: a viewport that is scrollable in some
-direction can only embed a widget that has a ``Fixed`` size in that
-direction. This extends to ``Both`` type viewports: they can only embed
-widgets that are ``Fixed`` in both directions. This restriction is
-because when viewports embed a widget, they relax the rendering area
+Viewports impose one restriction: a viewport that is scrollable in
+some direction can only embed a widget that has a ``Fixed`` size in
+that direction. This extends to ``Both`` type viewports: they can only
+embed widgets that are ``Fixed`` in both directions. This restriction
+is because when viewports embed a widget, they relax the rendering area
 constraint in the rendering context, but doing so to a large enough
 number for ``Greedy`` widgets would result in a widget that is too big
 and not scrollable in a useful way.
 
 Violating this restriction will result in a runtime exception.
+
+The Rendering Cache
+===================
+
+When widgets become expensive to render, ``brick`` provides a *rendering
+cache* that automatically caches and re-uses stored Vty images from
+previous renderings to avoid expensive renderings. To cache the
+rendering of a widget, just wrap it in the ``Brick.Widgets.Core.cached``
+function:
+
+.. code:: haskell
+
+   data Name = ExpensiveThing
+
+   ui :: Widget Name
+   ui = center $
+        cached ExpensiveThing $
+        border $
+        str "This will be cached"
+
+In the example above, the first time the ``border $ str "This will be
+cached"`` widget is rendered, the resulting Vty image will be stored
+in the rendering cache under the key ``ExpensiveThing``. On subsequent
+renderings the cached Vty image will be used instead of re-rendering the
+widget. This example doesn't need caching to improve performance, but
+more sophisticated widgets might.
+
+Once ``cached`` has been used to store something in the rendering cache,
+periodic cache invalidation may be required. For example, if the cached
+widget is built from application state, the cache will need to be
+invalidated when the relevant state changes. The cache may also need to
+be invalidated when the terminal is resized. To invalidate the cache, we
+use the cache invalidation functions in ``EventM``:
+
+.. code:: haskell
+
+   handleEvent s ... = do
+     -- Invalidate just a single cache entry:
+     Brick.Main.invalidateCacheEntry ExpensiveThing
+
+     -- Invalidate the entire cache (useful on a resize):
+     Brick.Main.invalidateCache
 
 Implementing Your Own Widgets
 =============================
@@ -948,3 +1230,4 @@ sub-widget uses for rendering its output.
 .. _vty: https://github.com/coreyoconnor/vty
 .. _Hackage: http://hackage.haskell.org/
 .. _microlens: http://hackage.haskell.org/package/microlens
+.. _bracketed paste mode: https://cirw.in/blog/bracketed-paste

@@ -32,14 +32,13 @@ theMap = attrMap V.defAttr
     , ("keyword2",      V.white `on` V.blue)
     ]
 
-app :: App () V.Event ()
+app :: App () e ()
 app =
     App { appDraw = const [ui]
         , appHandleEvent = resizeOrQuit
         , appAttrMap = const theMap
         , appStartEvent = return
         , appChooseCursor = neverShowCursor
-        , appLiftVtyEvent = id
         }
 
 main :: IO ()

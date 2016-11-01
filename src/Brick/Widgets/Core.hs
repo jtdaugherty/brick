@@ -56,6 +56,10 @@ module Brick.Widgets.Core
   , cropTopBy
   , cropBottomBy
 
+  -- * Extent reporting
+  , reportExtent
+  , clickable
+
   -- * Scrollable viewports
   , viewport
   , visible
@@ -114,20 +118,42 @@ withBorderStyle bs p = Widget (hSize p) (vSize p) $ withReaderT (& ctxBorderStyl
 emptyWidget :: Widget n
 emptyWidget = raw V.emptyImage
 
--- | Add an offset to all cursor locations and visbility requests
--- in the specified rendering result. This function is critical for
--- maintaining correctness in the rendering results as they are
+-- | Add an offset to all cursor locations, visbility requests, and
+-- extents in the specified rendering result. This function is critical
+-- for maintaining correctness in the rendering results as they are
 -- processed successively by box layouts and other wrapping combinators,
 -- since calls to this function result in converting from widget-local
--- coordinates to (ultimately) terminal-global ones so they can be used
--- by other combinators. You should call this any time you render
+-- coordinates to (ultimately) terminal-global ones so they can be
+-- used by other combinators. You should call this any time you render
 -- something and then translate it or otherwise offset it from its
 -- original origin.
 addResultOffset :: Location -> Result n -> Result n
-addResultOffset off = addCursorOffset off . addVisibilityOffset off
+addResultOffset off = addCursorOffset off . addVisibilityOffset off . addExtentOffset off
 
 addVisibilityOffset :: Location -> Result n -> Result n
 addVisibilityOffset off r = r & visibilityRequestsL.each.vrPositionL %~ (off <>)
+
+addExtentOffset :: Location -> Result n -> Result n
+addExtentOffset off r = r & extentsL.each %~ (\(Extent n l sz) -> Extent n (off <> l) sz)
+
+-- | Render the specified widget and record its rendering extent using
+-- the specified name (see also 'lookupExtent').
+reportExtent :: n -> Widget n -> Widget n
+reportExtent n p =
+    Widget (hSize p) (vSize p) $ do
+        result <- render p
+        let ext = Extent n (Location (0, 0)) sz
+            sz = ( result^.imageL.to V.imageWidth
+                 , result^.imageL.to V.imageHeight
+                 )
+        return $ result & extentsL %~ (ext:)
+
+-- | Request mouse click events on the specified widget.
+clickable :: n -> Widget n -> Widget n
+clickable n p =
+    Widget (hSize p) (vSize p) $ do
+        clickableNamesL %= (n:)
+        render $ reportExtent n p
 
 addCursorOffset :: Location -> Result n -> Result n
 addCursorOffset off r =
@@ -426,6 +452,7 @@ renderBox br ws =
       cropResultToContext $ Result (concatenatePrimary br paddedImages)
                             (concat $ cursors <$> allTranslatedResults)
                             (concat $ visibilityRequests <$> allTranslatedResults)
+                            (concat $ extents <$> allTranslatedResults)
 
 -- | Limit the space available to the specified widget to the specified
 -- number of columns. This is important for constraining the horizontal
@@ -632,7 +659,7 @@ viewport vpname typ p =
                                   "in each interface have unique name values. This means either " <>
                                   "using a different name type or adding constructors to your " <>
                                   "existing one and using those to name your widgets.  For more " <>
-                                  "information, see the \"Widget Names\" section of the Brick User Guide."
+                                  "information, see the \"Resource Names\" section of the Brick User Guide."
 
       observeName vpname
 

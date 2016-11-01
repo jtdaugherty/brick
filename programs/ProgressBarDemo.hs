@@ -1,10 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
--- import Lens.Micro ((^.))
 import Control.Monad (void)
 import Data.Monoid
--- import Data.Maybe (fromMaybe)
 import qualified Graphics.Vty as V
 
 import qualified Brick.AttrMap as A
@@ -50,9 +48,8 @@ drawUI p = [ui]
            str "" <=>
            str "Hit 'x', 'y', or 'z' to advance progress, or 'q' to quit"
 
-
-appEvent :: MyAppState () -> V.Event -> T.EventM () (T.Next (MyAppState ()))
-appEvent p e =
+appEvent :: MyAppState () -> T.BrickEvent () e -> T.EventM () (T.Next (MyAppState ()))
+appEvent p (T.VtyEvent e) =
     let valid = clamp (0.0 :: Float) 1.0
     in case e of
          V.EvKey (V.KChar 'x') [] -> M.continue $ p { x = valid $ x p + 0.05 }
@@ -60,6 +57,7 @@ appEvent p e =
          V.EvKey (V.KChar 'z') [] -> M.continue $ p { z = valid $ z p + 0.02 }
          V.EvKey (V.KChar 'q') [] -> M.halt p
          _ -> M.continue p
+appEvent p _ = M.continue p
 
 initialState :: MyAppState ()
 initialState = MyAppState 0.25 0.18 0.63
@@ -90,14 +88,13 @@ theMap = A.attrMap V.defAttr
          , (P.progressIncompleteAttr,  fg V.yellow)
          ]
 
-theApp :: M.App (MyAppState ()) V.Event ()
+theApp :: M.App (MyAppState ()) e ()
 theApp =
     M.App { M.appDraw = drawUI
           , M.appChooseCursor = M.showFirstCursor
           , M.appHandleEvent = appEvent
           , M.appStartEvent = return
           , M.appAttrMap = const theMap
-          , M.appLiftVtyEvent = id
           }
 
 main :: IO ()

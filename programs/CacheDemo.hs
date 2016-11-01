@@ -14,6 +14,7 @@ import qualified Brick.Main as M
 import qualified Brick.Widgets.Center as C
 import Brick.Types
   ( Widget
+  , BrickEvent(..)
   )
 import Brick.Widgets.Core
   ( vBox
@@ -57,22 +58,21 @@ drawUi i = [ui]
              , str "'Esc' to quit."
              ]
 
-appEvent :: Int -> V.Event -> T.EventM Name (T.Next Int)
-appEvent i (V.EvKey (V.KChar '+') []) = M.continue $ i + 1
-appEvent i (V.EvKey (V.KChar 'i') []) = M.invalidateCacheEntry ExpensiveWidget >> M.continue i
-appEvent i (V.EvKey V.KEsc []) = M.halt i
+appEvent :: Int -> BrickEvent Name e -> T.EventM Name (T.Next Int)
+appEvent i (VtyEvent (V.EvKey (V.KChar '+') [])) = M.continue $ i + 1
+appEvent i (VtyEvent (V.EvKey (V.KChar 'i') [])) = M.invalidateCacheEntry ExpensiveWidget >> M.continue i
+appEvent i (VtyEvent (V.EvKey V.KEsc [])) = M.halt i
 appEvent i _ = M.continue i
 
 emphAttr :: AttrName
 emphAttr = "emphasis"
 
-app :: M.App Int V.Event Name
+app :: M.App Int e Name
 app =
     M.App { M.appDraw = drawUi
           , M.appStartEvent = return
           , M.appHandleEvent = appEvent
           , M.appAttrMap = const $ attrMap V.defAttr [(emphAttr, V.white `on` V.blue)]
-          , M.appLiftVtyEvent = id
           , M.appChooseCursor = M.neverShowCursor
           }
 

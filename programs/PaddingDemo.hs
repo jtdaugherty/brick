@@ -2,7 +2,6 @@
 module Main where
 
 import Data.Default
-import qualified Graphics.Vty as V
 
 import Brick.Main (App(..), neverShowCursor, resizeOrQuit, defaultMain)
 import Brick.Types
@@ -46,14 +45,13 @@ ui =
          , padAll 2 $ str "Padded by 2 on all sides"
          ]
 
-app :: App () V.Event ()
+app :: App () e ()
 app =
     App { appDraw = const [ui]
         , appHandleEvent = resizeOrQuit
         , appStartEvent = return
         , appAttrMap = const def
         , appChooseCursor = neverShowCursor
-        , appLiftVtyEvent = id
         }
 
 main :: IO ()

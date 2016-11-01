@@ -25,8 +25,8 @@ renderFinal :: AttrMap
             -> V.DisplayRegion
             -> ([CursorLocation n] -> Maybe (CursorLocation n))
             -> RenderState n
-            -> (RenderState n, V.Picture, Maybe (CursorLocation n))
-renderFinal aMap layerRenders sz chooseCursor rs = (newRS, picWithBg, theCursor)
+            -> (RenderState n, V.Picture, Maybe (CursorLocation n), [Extent n])
+renderFinal aMap layerRenders sz chooseCursor rs = (newRS, picWithBg, theCursor, concat layerExtents)
     where
         (layerResults, !newRS) = flip runState rs $ sequence $
             (\p -> runReaderT p ctx) <$>
@@ -37,6 +37,7 @@ renderFinal aMap layerRenders sz chooseCursor rs = (newRS, picWithBg, theCursor)
         -- See https://github.com/coreyoconnor/vty/issues/95
         picWithBg = pic { V.picBackground = V.Background ' ' V.defAttr }
         layerCursors = (^.cursorsL) <$> layerResults
+        layerExtents = reverse $ (^.extentsL) <$> layerResults
         theCursor = chooseCursor $ concat layerCursors
 
 -- | After rendering the specified widget, crop its result image to the

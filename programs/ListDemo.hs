@@ -45,8 +45,8 @@ drawUI l = [ui]
                               , C.hCenter $ str "Press Esc to exit."
                               ]
 
-appEvent :: L.List () Char -> V.Event -> T.EventM () (T.Next (L.List () Char))
-appEvent l e =
+appEvent :: L.List () Char -> T.BrickEvent () e -> T.EventM () (T.Next (L.List () Char))
+appEvent l (T.VtyEvent e) =
     case e of
         V.EvKey (V.KChar '+') [] ->
             let el = nextElement (L.listElements l)
@@ -64,6 +64,7 @@ appEvent l e =
     where
       nextElement :: Vec.Vector Char -> Char
       nextElement v = fromMaybe '?' $ Vec.find (flip Vec.notElem v) (Vec.fromList ['a' .. 'z'])
+appEvent l _ = M.continue l
 
 listDrawElement :: (Show a) => Bool -> a -> Widget ()
 listDrawElement sel a =
@@ -85,14 +86,13 @@ theMap = A.attrMap V.defAttr
     , (customAttr,            fg V.cyan)
     ]
 
-theApp :: M.App (L.List () Char) V.Event ()
+theApp :: M.App (L.List () Char) e ()
 theApp =
     M.App { M.appDraw = drawUI
           , M.appChooseCursor = M.showFirstCursor
           , M.appHandleEvent = appEvent
           , M.appStartEvent = return
           , M.appAttrMap = const theMap
-          , M.appLiftVtyEvent = id
           }
 
 main :: IO ()

@@ -83,7 +83,7 @@ suffixLenses ''List
 instance Named (List n e) n where
     getName = listName
 
-handleListEvent :: (Show n, Ord n) => Event -> List n e -> EventM n (List n e)
+handleListEvent :: (Ord n) => Event -> List n e -> EventM n (List n e)
 handleListEvent e theList =
     case e of
         EvKey KUp [] -> return $ listMoveUp theList

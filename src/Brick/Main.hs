@@ -10,6 +10,9 @@ module Brick.Main
   , halt
   , suspendAndResume
   , lookupViewport
+  , lookupExtent
+  , findClickedExtents
+  , clickedExtent
   , getVtyHandle
 
   -- ** Viewport scrolling
@@ -57,6 +60,8 @@ import Graphics.Vty
   , Picture(..)
   , Cursor(..)
   , Event(..)
+  , Mode(..)
+  , setMode
   , update
   , outputIface
   , displayBounds
@@ -65,21 +70,21 @@ import Graphics.Vty
   , mkVty
   )
 
-import Brick.Types (Viewport, Direction, Widget, rowL, columnL, CursorLocation(..), cursorLocationNameL, EventM(..))
-import Brick.Types.Internal (EventRO(..), ScrollRequest(..), RenderState(..), observedNamesL, Next(..), EventState(..), CacheInvalidateRequest(..))
-import Brick.Widgets.Internal (renderFinal)
+import Brick.Types (Widget, EventM(..))
+import Brick.Types.Internal
+import Brick.Widgets.Internal
 import Brick.AttrMap
 
 -- | The library application abstraction. Your application's operations
 -- are represented here and passed to one of the various main functions
 -- in this module. An application is in terms of an application state
--- type 's', an application event type 'e', and a name type 'n'. In the
--- simplest case 'e' is vty's 'Event' type, but you may define your own
--- event type, permitted that it has a constructor for wrapping Vty
--- events, so that Vty events can be handled by your event loop. The
--- state type is the type of application state to be provided by you and
--- iteratively modified by event handlers. The name type is the type of
--- names you can assign to viewports and widgets.
+-- type 's', an application event type 'e', and a resource name type
+-- 'n'. In the simplest case 'e' is unused (left polymorphic or set to
+-- '()'), but you may define your own event type and use 'customMain'
+-- to provide custom events. The state type is the type of application
+-- state to be provided by you and iteratively modified by event
+-- handlers. The resource name type is the type of names you can assign
+-- to rendering resources such as viewports and cursor locations.
 data App s e n =
     App { appDraw :: s -> [Widget n]
         -- ^ This function turns your application state into a list of
@@ -92,7 +97,7 @@ data App s e n =
         -- is that many widgets may request a cursor placement but your
         -- application state is what you probably want to use to decide
         -- which one wins.
-        , appHandleEvent :: s -> e -> EventM n (Next s)
+        , appHandleEvent :: s -> BrickEvent n e -> EventM n (Next s)
         -- ^ This function takes the current application state and an
         -- event and returns an action to be taken and a corresponding
         -- transformed application state. Possible options are
@@ -103,17 +108,13 @@ data App s e n =
         -- initial scrolling requests, for example.
         , appAttrMap :: s -> AttrMap
         -- ^ The attribute map that should be used during rendering.
-        , appLiftVtyEvent :: Event -> e
-        -- ^ The event constructor to use to wrap Vty events in your own
-        -- event type. For example, if the application's event type is
-        -- 'Event', this is just 'id'.
         }
 
 -- | The default main entry point which takes an application and an
 -- initial state and returns the final state returned by a 'halt'
 -- operation.
 defaultMain :: (Ord n)
-            => App s Event n
+            => App s e n
             -- ^ The application.
             -> s
             -- ^ The initial application state.
@@ -134,7 +135,6 @@ simpleMain w =
                   , appHandleEvent = resizeOrQuit
                   , appStartEvent = return
                   , appAttrMap = def
-                  , appLiftVtyEvent = id
                   , appChooseCursor = neverShowCursor
                   }
     in defaultMain app ()
@@ -144,8 +144,8 @@ simpleMain w =
 -- a halt. This is a convenience function useful as an 'appHandleEvent'
 -- value for simple applications using the 'Event' type that do not need
 -- to get more sophisticated user input.
-resizeOrQuit :: s -> Event -> EventM n (Next s)
-resizeOrQuit s (EvResize _ _) = continue s
+resizeOrQuit :: s -> BrickEvent n e -> EventM n (Next s)
+resizeOrQuit s (VtyEvent (EvResize _ _)) = continue s
 resizeOrQuit s _ = halt s
 
 data InternalNext n a = InternalSuspendAndResume (RenderState n) (IO a)
@@ -153,16 +153,18 @@ data InternalNext n a = InternalSuspendAndResume (RenderState n) (IO a)
 
 runWithNewVty :: (Ord n)
               => IO Vty
-              -> Chan (Either Event e)
+              -> Chan (BrickEvent n e)
               -> App s e n
               -> RenderState n
               -> s
               -> IO (InternalNext n s)
 runWithNewVty buildVty chan app initialRS initialSt =
     withVty buildVty $ \vty -> do
+        setMode (outputIface vty) Mouse True
         pid <- forkIO $ supplyVtyEvents vty chan
         let runInner rs st = do
-              (result, newRS) <- runVty vty chan app st (rs & observedNamesL .~ S.empty)
+              (result, newRS) <- runVty vty chan app st (rs & observedNamesL .~ S.empty
+                                                            & clickableNamesL .~ mempty)
               case result of
                   SuspendAndResume act -> do
                       killThread pid
@@ -199,45 +201,74 @@ customMain buildVty userChan app initialAppState = do
                     run newRS newAppState chan
 
         emptyES = ES [] []
-        eventRO = EventRO M.empty Nothing
+        eventRO = EventRO M.empty Nothing mempty
     (st, eState) <- runStateT (runReaderT (runEventM (appStartEvent app initialAppState)) eventRO) emptyES
-    let initialRS = RS M.empty (esScrollRequests eState) S.empty mempty
+    let initialRS = RS M.empty (esScrollRequests eState) S.empty mempty []
     chan <- newChan
-    forkIO $ forever $ readChan userChan >>= (\userEvent -> writeChan chan (Right userEvent))
+    forkIO $ forever $ readChan userChan >>= (\userEvent -> writeChan chan $ AppEvent userEvent)
     run initialRS st chan
 
-supplyVtyEvents :: Vty -> Chan (Either Event e) -> IO ()
+supplyVtyEvents :: Vty -> Chan (BrickEvent n e) -> IO ()
 supplyVtyEvents vty chan =
     forever $ do
         e <- nextEvent vty
-        writeChan chan $ Left e
+        writeChan chan $ VtyEvent e
 
 runVty :: (Ord n)
        => Vty
-       -> Chan (Either Event e)
+       -> Chan (BrickEvent n e)
        -> App s e n
        -> s
        -> RenderState n
        -> IO (Next s, RenderState n)
 runVty vty chan app appState rs = do
-    firstRS <- renderApp vty app appState rs
+    (firstRS, exts) <- renderApp vty app appState rs
     e <- readChan chan
 
-    -- If the event was a resize, redraw the UI to update the viewport
-    -- states before we invoke the event handler since we want the event
-    -- handler to have access to accurate viewport information.
-    nextRS <- case e of
-        Left (EvResize _ _) ->
-            renderApp vty app appState $ firstRS & observedNamesL .~ S.empty
-        _ -> return firstRS
+    (e', nextRS, nextExts) <- case e of
+        -- If the event was a resize, redraw the UI to update the
+        -- viewport states before we invoke the event handler since we
+        -- want the event handler to have access to accurate viewport
+        -- information.
+        VtyEvent (EvResize _ _) -> do
+            (rs', exts') <- renderApp vty app appState $ firstRS & observedNamesL .~ S.empty
+            return (e, rs', exts')
+        VtyEvent (EvMouseDown c r button mods) -> do
+            let matching = findClickedExtents_ (c, r) exts
+            case matching of
+                (Extent n (Location (ec, er)) _:_) ->
+                    -- If the clicked extent was registered as
+                    -- clickable, send a click event. Otherwise, just
+                    -- send the raw mouse event
+                    case n `elem` firstRS^.clickableNamesL of
+                        True -> do
+                            let localCoords = Location (lc, lr)
+                                lc = c - ec
+                                lr = r - er
+                            return (MouseDown n button mods localCoords, firstRS, exts)
+                        False -> return (e, firstRS, exts)
+                _ -> return (e, firstRS, exts)
+        VtyEvent (EvMouseUp c r button) -> do
+            let matching = findClickedExtents_ (c, r) exts
+            case matching of
+                (Extent n (Location (ec, er)) _:_) ->
+                    -- If the clicked extent was registered as
+                    -- clickable, send a click event. Otherwise, just
+                    -- send the raw mouse event
+                    case n `elem` firstRS^.clickableNamesL of
+                        True -> do
+                            let localCoords = Location (lc, lr)
+                                lc = c - ec
+                                lr = r - er
+                            return (MouseUp n button localCoords, firstRS, exts)
+                        False -> return (e, firstRS, exts)
+                _ -> return (e, firstRS, exts)
+        _ -> return (e, firstRS, exts)
 
     let emptyES = ES [] []
-        userEvent = case e of
-            Left e' -> appLiftVtyEvent app e'
-            Right e' -> e'
+        eventRO = EventRO (viewportMap nextRS) (Just vty) nextExts
 
-    let eventRO = EventRO (viewportMap nextRS) (Just vty)
-    (next, eState) <- runStateT (runReaderT (runEventM (appHandleEvent app appState userEvent))
+    (next, eState) <- runStateT (runReaderT (runEventM (appHandleEvent app appState e'))
                                 eventRO) emptyES
     return (next, nextRS { rsScrollRequests = esScrollRequests eState
                          , renderCache = applyInvalidations (cacheInvalidateRequests eState) $
@@ -258,11 +289,37 @@ applyInvalidations ns cache = foldr (.) id (mkFunc <$> ns) cache
 lookupViewport :: (Ord n) => n -> EventM n (Maybe Viewport)
 lookupViewport n = EventM $ asks (M.lookup n . eventViewportMap)
 
+-- | Did the specified mouse coordinates (column, row) intersect the
+-- specified extent?
+clickedExtent :: (Int, Int) -> Extent n -> Bool
+clickedExtent (c, r) (Extent _ (Location (lc, lr)) (w, h)) =
+   c >= lc && c < (lc + w) &&
+   r >= lr && r < (lr + h)
+
+-- | Given a resource name, get the most recent rendering extent for the
+-- name (if any).
+lookupExtent :: (Eq n) => n -> EventM n (Maybe (Extent n))
+lookupExtent n = EventM $ asks (listToMaybe . filter f . latestExtents)
+    where
+        f (Extent n' _ _) = n == n'
+
+-- | Given a mouse click location, return the extents intersected by the
+-- click. The returned extents are sorted such that the first extent in
+-- the list is the most specific extent and the last extent is the most
+-- generic (top-level). So if two extents A and B both intersected the
+-- mouse click but A contains B, then they would be returned [B, A].
+findClickedExtents :: (Int, Int) -> EventM n [Extent n]
+findClickedExtents pos = EventM $ asks (findClickedExtents_ pos . latestExtents)
+
+findClickedExtents_ :: (Int, Int) -> [Extent n] -> [Extent n]
+findClickedExtents_ pos = reverse . filter (clickedExtent pos)
+
 -- | Get the Vty handle currently in use.
 getVtyHandle :: EventM n (Maybe Vty)
 getVtyHandle = EventM $ asks eventVtyHandle
 
--- | Invalidate the rendering cache entry with the specified name.
+-- | Invalidate the rendering cache entry with the specified resource
+-- name.
 invalidateCacheEntry :: n -> EventM n ()
 invalidateCacheEntry n = EventM $ do
     lift $ modify (\s -> s { cacheInvalidateRequests = InvalidateSingle n : cacheInvalidateRequests s })
@@ -277,21 +334,21 @@ withVty buildVty useVty = do
     vty <- buildVty
     useVty vty `finally` shutdown vty
 
-renderApp :: Vty -> App s e n -> s -> RenderState n -> IO (RenderState n)
+renderApp :: Vty -> App s e n -> s -> RenderState n -> IO (RenderState n, [Extent n])
 renderApp vty app appState rs = do
     sz <- displayBounds $ outputIface vty
-    let (newRS, pic, theCursor) = renderFinal (appAttrMap app appState)
-                                    (appDraw app appState)
-                                    sz
-                                    (appChooseCursor app appState)
-                                    rs
+    let (newRS, pic, theCursor, exts) = renderFinal (appAttrMap app appState)
+                                        (appDraw app appState)
+                                        sz
+                                        (appChooseCursor app appState)
+                                        rs
         picWithCursor = case theCursor of
             Nothing -> pic { picCursor = NoCursor }
-            Just loc -> pic { picCursor = Cursor (loc^.columnL) (loc^.rowL) }
+            Just cloc -> pic { picCursor = Cursor (cloc^.columnL) (cloc^.rowL) }
 
     update vty picWithCursor
 
-    return newRS
+    return (newRS, exts)
 
 -- | Ignore all requested cursor positions returned by the rendering
 -- process. This is a convenience function useful as an
@@ -307,11 +364,11 @@ neverShowCursor = const $ const Nothing
 showFirstCursor :: s -> [CursorLocation n] -> Maybe (CursorLocation n)
 showFirstCursor = const listToMaybe
 
--- | Show the cursor with the specified name, if such a cursor location
--- has been reported.
+-- | Show the cursor with the specified resource name, if such a cursor
+-- location has been reported.
 showCursorNamed :: (Eq n) => n -> [CursorLocation n] -> Maybe (CursorLocation n)
 showCursorNamed name locs =
-    let matches loc = loc^.cursorLocationNameL == Just name
+    let matches l = l^.cursorLocationNameL == Just name
     in listToMaybe $ filter matches locs
 
 -- | A viewport scrolling handle for managing the scroll state of

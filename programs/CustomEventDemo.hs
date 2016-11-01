@@ -21,39 +21,41 @@ import Brick.Types
   ( Widget
   , Next
   , EventM
+  , BrickEvent(..)
   )
 import Brick.Widgets.Core
   ( (<=>)
   , str
   )
 
+data CustomEvent = Counter deriving Show
+
 data St =
-    St { _stLastVtyEvent :: Maybe V.Event
+    St { _stLastBrickEvent :: Maybe (BrickEvent () CustomEvent)
        , _stCounter :: Int
        }
 
 makeLenses ''St
 
-data CustomEvent = VtyEvent V.Event
-                 | Counter
-
 drawUI :: St -> [Widget ()]
 drawUI st = [a]
     where
-        a = (str $ "Last Vty event: " <> (show $ st^.stLastVtyEvent))
+        a = (str $ "Last event: " <> (show $ st^.stLastBrickEvent))
             <=>
             (str $ "Counter value is: " <> (show $ st^.stCounter))
 
-appEvent :: St -> CustomEvent -> EventM () (Next St)
+appEvent :: St -> BrickEvent () CustomEvent -> EventM () (Next St)
 appEvent st e =
     case e of
         VtyEvent (V.EvKey V.KEsc []) -> halt st
-        VtyEvent ev -> continue $ st & stLastVtyEvent .~ (Just ev)
-        Counter -> continue $ st & stCounter %~ (+1)
+        VtyEvent _ -> continue $ st & stLastBrickEvent .~ (Just e)
+        AppEvent Counter -> continue $ st & stCounter %~ (+1)
+                                          & stLastBrickEvent .~ (Just e)
+        _ -> continue st
 
 initialState :: St
 initialState =
-    St { _stLastVtyEvent = Nothing
+    St { _stLastBrickEvent = Nothing
        , _stCounter = 0
        }
 
@@ -64,7 +66,6 @@ theApp =
         , appHandleEvent = appEvent
         , appStartEvent = return
         , appAttrMap = def
-        , appLiftVtyEvent = VtyEvent
         }
 
 main :: IO ()

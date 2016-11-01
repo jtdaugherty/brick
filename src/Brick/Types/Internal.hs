@@ -22,10 +22,13 @@ module Brick.Types.Internal
   , EventRO(..)
   , Next(..)
   , Result(..)
+  , Extent(..)
   , CacheInvalidateRequest(..)
+  , BrickEvent(..)
 
   , rsScrollRequestsL
   , viewportMapL
+  , clickableNamesL
   , renderCacheL
   , observedNamesL
   , vpSize
@@ -33,6 +36,7 @@ module Brick.Types.Internal
   , vpTop
   , imageL
   , cursorsL
+  , extentsL
   , visibilityRequestsL
   )
 where
@@ -46,7 +50,7 @@ import Lens.Micro.TH (makeLenses)
 import Lens.Micro.Internal (Field1, Field2)
 import qualified Data.Set as S
 import qualified Data.Map as M
-import Graphics.Vty (Vty, DisplayRegion, Image, emptyImage)
+import Graphics.Vty (Vty, Event, Button, Modifier, DisplayRegion, Image, emptyImage)
 import Data.Default (Default(..))
 
 import Brick.Types.TH
@@ -99,8 +103,14 @@ data EventState n = ES { esScrollRequests :: [(n, ScrollRequest)]
                        , cacheInvalidateRequests :: [CacheInvalidateRequest n]
                        }
 
+-- | An extent of a named area indicating the location of its upper-left
+-- corner and its size (width, height).
+data Extent n = Extent n Location (Int, Int)
+              deriving (Show)
+
 data EventRO n = EventRO { eventViewportMap :: M.Map n Viewport
                          , eventVtyHandle :: Maybe Vty
+                         , latestExtents :: [Extent n]
                          }
 
 -- | The type of actions to take upon completion of an event handler.
@@ -174,19 +184,34 @@ data Result n =
            , visibilityRequests :: [VisibilityRequest]
            -- ^ The list of visibility requests made by widgets rendered
            -- while rendering this one (used by viewports)
+           , extents :: [Extent n]
            }
            deriving Show
 
 suffixLenses ''Result
 
 instance Default (Result n) where
-    def = Result emptyImage [] []
+    def = Result emptyImage [] [] []
+
+-- | The type of events.
+data BrickEvent n e = VtyEvent Event
+                    -- ^ The event was a Vty event.
+                    | AppEvent e
+                    -- ^ The event was an application event.
+                    | MouseDown n Button [Modifier] Location
+                    -- ^ A mouse-down event on the specified region was
+                    -- received.
+                    | MouseUp n (Maybe Button) Location
+                    -- ^ A mouse-down event on the specified region was
+                    -- received.
+                    deriving (Show, Eq)
 
 data RenderState n =
     RS { viewportMap :: M.Map n Viewport
        , rsScrollRequests :: [(n, ScrollRequest)]
        , observedNames :: !(S.Set n)
        , renderCache :: M.Map n (Result n)
+       , clickableNames :: [n]
        }
 
 -- | The rendering context. This tells widgets how to render: how much

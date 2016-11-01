@@ -25,6 +25,7 @@ module Brick.Types
   -- * Event-handling types
   , EventM(..)
   , Next
+  , BrickEvent(..)
   , handleEventLensed
 
   -- * Rendering infrastructure
@@ -43,11 +44,13 @@ module Brick.Types
   -- ** Rendering results
   , Result(..)
   , lookupAttrName
+  , Extent(..)
 
   -- ** Rendering result lenses
   , imageL
   , cursorsL
   , visibilityRequestsL
+  , extentsL
 
   -- ** Visibility requests
   , VisibilityRequest(..)
@@ -74,7 +77,7 @@ import Lens.Micro (_1, _2, to, (^.), (&), (.~), Lens')
 import Lens.Micro.Type (Getting)
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Reader
-import Graphics.Vty (Event, Attr)
+import Graphics.Vty (Attr)
 import Control.Monad.IO.Class
 
 import Brick.Types.TH

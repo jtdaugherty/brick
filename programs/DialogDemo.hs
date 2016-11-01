@@ -7,6 +7,7 @@ import qualified Graphics.Vty as V
 import qualified Brick.Main as M
 import Brick.Types
   ( Widget
+  , BrickEvent(..)
   )
 import Brick.Widgets.Core
   ( padAll
@@ -26,12 +27,13 @@ drawUI d = [ui]
     where
         ui = D.renderDialog d $ C.hCenter $ padAll 1 $ str "This is the dialog body."
 
-appEvent :: D.Dialog Choice -> V.Event -> T.EventM () (T.Next (D.Dialog Choice))
-appEvent d ev =
+appEvent :: D.Dialog Choice -> BrickEvent () e -> T.EventM () (T.Next (D.Dialog Choice))
+appEvent d (VtyEvent ev) =
     case ev of
         V.EvKey V.KEsc [] -> M.halt d
         V.EvKey V.KEnter [] -> M.halt d
         _ -> M.continue =<< D.handleDialogEvent ev d
+appEvent d _ = M.continue d
 
 initialState :: D.Dialog Choice
 initialState = D.dialog (Just "Title") (Just (0, choices)) 50
@@ -48,14 +50,13 @@ theMap = A.attrMap V.defAttr
     , (D.buttonSelectedAttr, bg V.yellow)
     ]
 
-theApp :: M.App (D.Dialog Choice) V.Event ()
+theApp :: M.App (D.Dialog Choice) e ()
 theApp =
     M.App { M.appDraw = drawUI
           , M.appChooseCursor = M.showFirstCursor
           , M.appHandleEvent = appEvent
           , M.appStartEvent = return
           , M.appAttrMap = const theMap
-          , M.appLiftVtyEvent = id
           }
 
 main :: IO ()

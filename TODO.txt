@@ -4,9 +4,6 @@ Misc:
 
 Features:
   * High priority:
-    - Text wrapping (with markup)
     - Load & save attribute map to on-disk configuration
-    - API for obtaining scrolling viewport state in EventM (will
-      staleness be an issue here?)
   * Low priority:
     - Deal with multi-column characters everywhere
