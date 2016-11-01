@@ -2,7 +2,13 @@
 Brick changelog
 ---------------
 
- * Make FocusRing a Functor.
+0.13
+----
+
+API changes:
+ * Mouse mode is no longer enabled by default.
+ * customMain's event channel parameter is now optional
+ * FocusRing now provides a Functor instance (thanks Ian Jeffries)
 
 0.12
 ----
