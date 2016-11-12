@@ -346,7 +346,7 @@ renderApp vty app appState rs = do
                                         rs
         picWithCursor = case theCursor of
             Nothing -> pic { picCursor = NoCursor }
-            Just cloc -> pic { picCursor = Cursor (cloc^.columnL) (cloc^.rowL) }
+            Just cloc -> pic { picCursor = AbsoluteCursor (cloc^.columnL) (cloc^.rowL) }
 
     update vty picWithCursor
 
