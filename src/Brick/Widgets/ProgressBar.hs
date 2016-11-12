@@ -11,6 +11,7 @@ where
 import Lens.Micro ((^.))
 import Data.Maybe (fromMaybe)
 import Data.Monoid
+import Graphics.Vty (safeWcswidth)
 
 import Brick.Types
 import Brick.AttrMap
@@ -38,12 +39,12 @@ progressBar mLabel progress =
         c <- getContext
         let barWidth = c^.availWidthL
             label = fromMaybe "" mLabel
-            labelWidth = length label
+            labelWidth = safeWcswidth label
             spacesWidth = barWidth - labelWidth
             leftPart = replicate (spacesWidth `div` 2) ' '
             rightPart = replicate (barWidth - (labelWidth + length leftPart)) ' '
             fullBar = leftPart <> label <> rightPart
-            completeWidth = round $ progress * toEnum barWidth
+            completeWidth = round $ progress * toEnum (length fullBar)
             completePart = take completeWidth fullBar
             incompletePart = drop completeWidth fullBar
         render $ (withAttr progressCompleteAttr $ str completePart) <+>
