@@ -164,6 +164,19 @@ addCursorOffset off r =
 unrestricted :: Int
 unrestricted = 100000
 
+-- | Take a substring capable of fitting into the number of specified
+-- columns. This function takes character column widths into
+-- consideration.
+takeColumns :: Int -> String -> String
+takeColumns _ "" = ""
+takeColumns numCols (c:cs) =
+    let w = V.safeWcwidth c
+    in if w == numCols
+       then [c]
+       else if w < numCols
+            then c : takeColumns (numCols - w) cs
+            else ""
+
 -- | Build a widget from a 'String'. Breaks newlines up and space-pads
 -- short lines out to the length of the longest line.
 str :: String -> Widget n
@@ -173,14 +186,14 @@ str s =
       let theLines = fixEmpty <$> (dropUnused . lines) s
           fixEmpty [] = " "
           fixEmpty l = l
-          dropUnused l = take (availWidth c) <$> take (availHeight c) l
+          dropUnused l = takeColumns (availWidth c) <$> take (availHeight c) l
       case force theLines of
           [] -> return def
           [one] -> return $ def & imageL .~ (V.string (c^.attrL) one)
           multiple ->
-              let maxLength = maximum $ length <$> multiple
+              let maxLength = maximum $ V.safeWcswidth <$> multiple
                   lineImgs = lineImg <$> multiple
-                  lineImg lStr = V.string (c^.attrL) (lStr ++ replicate (maxLength - length lStr) ' ')
+                  lineImg lStr = V.string (c^.attrL) (lStr ++ replicate (maxLength - V.safeWcswidth lStr) ' ')
               in return $ def & imageL .~ (V.vertCat lineImgs)
 
 -- | Build a widget from a one-line 'T.Text' value. Behaves the same as
