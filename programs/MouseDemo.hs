@@ -3,8 +3,6 @@
 module Main where
 
 import Control.Applicative ((<$>))
-import Control.Concurrent (newChan)
-import Data.Monoid ((<>))
 import Lens.Micro ((^.), (&), (.~))
 import Lens.Micro.TH (makeLenses)
 import Control.Monad (void)
