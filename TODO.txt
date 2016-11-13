@@ -5,5 +5,3 @@ Misc:
 Features:
   * High priority:
     - Load & save attribute map to on-disk configuration
-  * Low priority:
-    - Deal with multi-column characters everywhere
