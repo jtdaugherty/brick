@@ -2,6 +2,13 @@
 Brick changelog
 ---------------
 
+0.14
+----
+
+This release added support for wide characters. In particular, wide
+characters can now be entered into the text editor widget and used in
+'str' and 'txt' widgets.
+
 0.13
 ----
 
