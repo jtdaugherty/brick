@@ -1,12 +1,14 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances #-}
 -- | This module provides the core widget combinators and rendering
 -- routines. Everything this library does is in terms of these basic
 -- primitives.
 module Brick.Widgets.Core
   ( -- * Basic rendering primitives
-    emptyWidget
+    TextWidth(..)
+  , emptyWidget
   , raw
   , txt
   , str
@@ -88,6 +90,7 @@ import Control.Monad ((>=>),when)
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Reader
 import Control.Monad.Trans.Class (lift)
+import qualified Data.Foldable as F
 import qualified Data.Text as T
 import Data.Default
 import qualified Data.Map as M
@@ -103,6 +106,19 @@ import Brick.Widgets.Border.Style
 import Brick.Util (clOffset, clamp)
 import Brick.AttrMap
 import Brick.Widgets.Internal
+
+-- | The class of text types that have widths measured in terminal
+-- columns. NEVER use 'length' etc. to measure the length of a string if
+-- you need to compute how much screen space it will occupy; always use
+-- 'textWidth'.
+class TextWidth a where
+    textWidth :: a -> Int
+
+instance TextWidth T.Text where
+    textWidth = V.wcswidth . T.unpack
+
+instance (F.Foldable f) => TextWidth (f Char) where
+    textWidth = V.wcswidth . F.toList
 
 -- | The class of types that store interface element names.
 class Named a n where

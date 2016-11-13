@@ -35,25 +35,15 @@ where
 
 import Data.Monoid
 import Lens.Micro
-import Graphics.Vty (Event(..), Key(..), Modifier(..), safeWcswidth)
+import Graphics.Vty (Event(..), Key(..), Modifier(..))
 
 import qualified Data.Text as T
 import qualified Data.Text.Zipper as Z hiding ( textZipper )
 import qualified Data.Text.Zipper.Generic as Z
-import qualified Data.Foldable as F
 
 import Brick.Types
 import Brick.Widgets.Core
 import Brick.AttrMap
-
-class TextWidth a where
-    textWidth :: a -> Int
-
-instance TextWidth T.Text where
-    textWidth = safeWcswidth . T.unpack
-
-instance (F.Foldable f) => TextWidth (f Char) where
-    textWidth = safeWcswidth . F.toList
 
 -- | Editor state.  Editors support the following events by default:
 --
