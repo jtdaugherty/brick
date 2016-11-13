@@ -726,6 +726,37 @@ map combinators:
 * ``Brick.Widgets.Core.withDefAttr``
 * ``Brick.Widgets.Core.overrideAttr``
 
+Wide Character Support and the TextWidth class
+==============================================
+
+Brick supports rendering wide characters in all widgets, and the brick
+editor supports entering and editing wide characters. Wide characters
+are those such as many Asian characters and emoji that need more than
+a single terminal column to be displayed. Brick relies on Vty's use of
+the `utf8proc`_ library to determine the column width of each character
+rendered.
+
+As a result of supporting wide characters, it is important to know that
+computing the length of a string to determine its screen width will
+*only* work for single-column characters. So, for example, if you want
+to support wide characters in your application, this will not work:
+
+.. code:: haskell
+
+   let width = Data.Text.length t
+
+because if the string contains any wide characters, their widths
+will not be counted properly. In order to get this right, use the
+``TextWidth`` type class to compute the width:
+
+.. code:: haskell
+
+   let width = Brick.Widgets.Core.textWidth t
+
+The ``TextWidth`` type class uses Vty's character width routine (and
+thus ``utf8proc``) to compute the correct width. If you need to compute
+the width of a single character, use ``Graphics.Text.wcwidth``.
+
 Extents
 =======
 
@@ -1231,3 +1262,4 @@ sub-widget uses for rendering its output.
 .. _Hackage: http://hackage.haskell.org/
 .. _microlens: http://hackage.haskell.org/package/microlens
 .. _bracketed paste mode: https://cirw.in/blog/bracketed-paste
+.. _utf8proc: http://julialang.org/utf8proc/
