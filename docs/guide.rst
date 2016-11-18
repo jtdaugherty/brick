@@ -1170,6 +1170,7 @@ which is a function returning a ``Brick.Types.Result``:
         Result { image              :: Graphics.Vty.Image
                , cursors            :: [Brick.Types.CursorLocation n]
                , visibilityRequests :: [Brick.Types.VisibilityRequest]
+               , extents            :: [Extent n]
                }
 
 The ``RenderM`` monad gives us access to the rendering context (see `How
