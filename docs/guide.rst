@@ -1138,51 +1138,41 @@ use the cache invalidation functions in ``EventM``:
      -- Invalidate the entire cache (useful on a resize):
      Brick.Main.invalidateCache
 
-Implementing Your Own Widgets
-=============================
+Implementing Custom Widgets
+===========================
 
-``brick`` exposes all of the internals you need to implement your own
-widgets. Those internals, together with ``Graphics.Vty``, can be used to
-create widgets from the ground up. We start by writing a constructor
-function:
+``brick`` exposes all of the internals you need to implement your
+own widgets. Those internals, together with ``Graphics.Vty``, can be
+used to create widgets from the ground up. You'll need to implement
+your own widget if you can't write what you need in terms of existing
+combinators. For example, an ordinary widget like
 
 .. code:: haskell
 
-   myWidget :: ... -> Widget n
-   myWidget ... =
+   myWidget :: Widget n
+   myWidget = str "Above" <=> str "Below"
+
+can be expressed with ``<=>`` and ``str`` and needs no custom behavior.
+But suppose we want to write a widget that renders some string followed
+by the number of columns in the space available to the widget. We can't
+do this without writing a custom widget because we need access to the
+rendering context. We can write such a widget as follows:
+
+.. code:: haskell
+
+   customWidget :: String -> Widget n
+   customWidget s =
        Widget Fixed Fixed $ do
-           ... (rendering function) ...
+           ctx <- getContext
+           render $ str (s <> " " <> show (ctx^.availWidthL))
 
-Input arguments to this function will typically be whatever data is
-being maintained as internal state for your Widget, and the output is
-the renderable Widget.  This constructor is called each time brick
-needs to draw output.
-
-We specify the horizontal and vertical growth policies of the widget
-as ``Fixed`` in this example, although they should be specified
-appropriately (see `How Widgets and Rendering Work`_).
-
-If your Widget is made entirely by composing existing Widgets, the
-constructor can be written easily.  For example:
-
-.. code:: haskell
-
-   myWidget :: String -> String -> Widget n
-   myWidget title body =
-       vBox [ withDefAttr myTitleAttr (str title)
-            , str body
-            , str "The end."
-            ]
-
-If however your Widget needs to be drawn using Vty Image operations or
-make use of or generate more specific details, you would specify the
-*rendering function*, a function of type
-
-.. code:: haskell
-
-   render :: RenderM n Result
-
-which is a function returning a ``Brick.Types.Result``:
+The ``Widget`` constructor takes the horizontal and vertical growth
+policies as described in `How Widgets and Rendering Work`_. Here we just
+provide ``Fixed`` for both because the widget will not change behavior
+if we give it more space. We then get the rendering context and append
+the context's available columns to the provided string. Lastly we call
+``render`` to render the widget we made with ``str``. The ``render``
+function returns a ``Brick.Types.Result`` value:
 
 .. code:: haskell
 
@@ -1193,9 +1183,11 @@ which is a function returning a ``Brick.Types.Result``:
                , extents            :: [Extent n]
                }
 
-The ``RenderM`` monad gives us access to the rendering context (see `How
-Widgets and Rendering Work`_) via the ``Brick.Types.getContext``
-function. The context type is:
+The rendering function runs in the ``RenderM`` monad, which gives us
+access to the rendering context (see `How Widgets and Rendering Work`_)
+via the ``Brick.Types.getContext`` function as shown above. The context
+tells us about the dimensions of the rendering area and the current
+attribute state of the renderer, among other things:
 
 .. code:: haskell
 
@@ -1209,16 +1201,16 @@ function. The context type is:
 
 and has lens fields exported as described in `Conventions`_.
 
-The job of the rendering function is to return a rendering result which,
-at a minimum, means producing a ``vty`` ``Image``. In addition, if you
-so choose, you can also return one or more cursor positions in the
-``cursors`` field of the ``Result`` as well as visibility requests (see
-`Viewports`_) in the ``visibilityRequests`` field. Returned visibility
-requests and cursor positions should be relative to the upper-left
-corner of your widget, ``Location (0, 0)``. When your widget is placed
-in others, such as boxes, the ``Result`` data you returned will be
-offset (as described in `Rendering Sub-Widgets`_) to result in correct
-coordinates once the entire interface has been rendered.
+As shown here, the job of the rendering function is to return a
+rendering result which means producing a ``vty`` ``Image``. In addition,
+if you so choose, you can also return one or more cursor positions in
+the ``cursors`` field of the ``Result`` as well as visibility requests
+(see `Viewports`_) in the ``visibilityRequests`` field. Returned
+visibility requests and cursor positions should be relative to the
+upper-left corner of your widget, ``Location (0, 0)``. When your widget
+is placed in others, such as boxes, the ``Result`` data you returned
+will be offset (as described in `Rendering Sub-Widgets`_) to result in
+correct coordinates once the entire interface has been rendered.
 
 Using the Rendering Context
 ---------------------------
@@ -1247,11 +1239,11 @@ write:
 Rendering Sub-Widgets
 ---------------------
 
-If your custom widget wraps another, then in addition to rendering the
-wrapped widget and augmenting its returned ``Result`` *it must also
-translate the resulting cursor locations and visibility requests*.
-This is vital to maintaining the correctness of cursor locations and
-visbility locations as widget layout proceeds. To do so, use the
+If your custom widget wraps another, then in addition to rendering
+the wrapped widget and augmenting its returned ``Result`` *it must
+also translate the resulting cursor locations, visibility requests,
+and extents*. This is vital to maintaining the correctness of
+rendering metadata as widget layout proceeds. To do so, use the
 ``Brick.Widgets.Core.addResultOffset`` function to offset the elements
 of a ``Result`` by a specified amount. The amount depends on the nature
 of the offset introduced by your wrapper widget's logic.
