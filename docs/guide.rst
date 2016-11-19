@@ -1151,12 +1151,32 @@ function:
    myWidget :: ... -> Widget n
    myWidget ... =
        Widget Fixed Fixed $ do
-           ...
+           ... (rendering function) ...
+
+Input arguments to this function will typically be whatever data is
+being maintained as internal state for your Widget, and the output is
+the renderable Widget.  This constructor is called each time brick
+needs to draw output.
 
 We specify the horizontal and vertical growth policies of the widget
 as ``Fixed`` in this example, although they should be specified
-appropriately (see `How Widgets and Rendering Work`_). Lastly we specify
-the *rendering function*, a function of type
+appropriately (see `How Widgets and Rendering Work`_).
+
+If your Widget is made entirely by composing existing Widgets, the
+constructor can be written easily.  For example:
+
+.. code:: haskell
+
+   myWidget :: String -> String -> Widget n
+   myWidget title body =
+       vBox [ withDefAttr myTitleAttr (str title)
+            , str body
+            , str "The end."
+            ]
+
+If however your Widget needs to be drawn using Vty Image operations or
+make use of or generate more specific details, you would specify the
+*rendering function*, a function of type
 
 .. code:: haskell
 
