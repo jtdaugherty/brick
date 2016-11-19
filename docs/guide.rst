@@ -1169,12 +1169,10 @@ constructor can be written easily.  For example:
 
    myWidget :: String -> String -> Widget n
    myWidget title body =
-       Widget Fixed Fixed $
-           withDefAttr myTitleAttr (str title)
-           <=>
-           str body
-           <=>
-           str "The end."
+       vBox [ withDefAttr myTitleAttr (str title)
+            , str body
+            , str "The end."
+            ]
 
 If however your Widget needs to be drawn using Vty Image operations or
 make use of or generate more specific details, you would specify the
