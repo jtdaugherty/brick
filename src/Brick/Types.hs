@@ -154,10 +154,10 @@ attrL :: forall r. Getting r Context Attr
 attrL = to (\c -> attrMapLookup (c^.ctxAttrNameL) (c^.ctxAttrMapL))
 
 instance TerminalLocation (CursorLocation n) where
-    columnL = cursorLocationL._1
-    column = column . cursorLocation
-    rowL = cursorLocationL._2
-    row = row . cursorLocation
+    locationColumnL = cursorLocationL._1
+    locationColumn = locationColumn . cursorLocation
+    locationRowL = cursorLocationL._2
+    locationRow = locationRow . cursorLocation
 
 -- | Given an attribute name, obtain the attribute for the attribute
 -- name by consulting the context's attribute map.

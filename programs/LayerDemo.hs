@@ -9,7 +9,7 @@ import Data.Default
 import qualified Graphics.Vty as V
 
 import qualified Brick.Types as T
-import Brick.Types (rowL, columnL, Widget)
+import Brick.Types (locationRowL, locationColumnL, Widget)
 import qualified Brick.Main as M
 import qualified Brick.Widgets.Border as B
 import qualified Brick.Widgets.Center as C
@@ -44,15 +44,23 @@ bottomLayer st =
     B.border $ str "Bottom layer\n(Ctrl-arrow keys move)"
 
 appEvent :: St -> T.BrickEvent () e -> T.EventM () (T.Next St)
-appEvent st (T.VtyEvent (V.EvKey V.KDown []))  = M.continue $ st & topLayerLocation.rowL %~ (+ 1)
-appEvent st (T.VtyEvent (V.EvKey V.KUp []))    = M.continue $ st & topLayerLocation.rowL %~ (subtract 1)
-appEvent st (T.VtyEvent (V.EvKey V.KRight [])) = M.continue $ st & topLayerLocation.columnL %~ (+ 1)
-appEvent st (T.VtyEvent (V.EvKey V.KLeft []))  = M.continue $ st & topLayerLocation.columnL %~ (subtract 1)
+appEvent st (T.VtyEvent (V.EvKey V.KDown []))  =
+    M.continue $ st & topLayerLocation.locationRowL %~ (+ 1)
+appEvent st (T.VtyEvent (V.EvKey V.KUp []))    =
+    M.continue $ st & topLayerLocation.locationRowL %~ (subtract 1)
+appEvent st (T.VtyEvent (V.EvKey V.KRight [])) =
+    M.continue $ st & topLayerLocation.locationColumnL %~ (+ 1)
+appEvent st (T.VtyEvent (V.EvKey V.KLeft []))  =
+    M.continue $ st & topLayerLocation.locationColumnL %~ (subtract 1)
 
-appEvent st (T.VtyEvent (V.EvKey V.KDown  [V.MCtrl])) = M.continue $ st & bottomLayerLocation.rowL %~ (+ 1)
-appEvent st (T.VtyEvent (V.EvKey V.KUp    [V.MCtrl])) = M.continue $ st & bottomLayerLocation.rowL %~ (subtract 1)
-appEvent st (T.VtyEvent (V.EvKey V.KRight [V.MCtrl])) = M.continue $ st & bottomLayerLocation.columnL %~ (+ 1)
-appEvent st (T.VtyEvent (V.EvKey V.KLeft  [V.MCtrl])) = M.continue $ st & bottomLayerLocation.columnL %~ (subtract 1)
+appEvent st (T.VtyEvent (V.EvKey V.KDown  [V.MCtrl])) =
+    M.continue $ st & bottomLayerLocation.locationRowL %~ (+ 1)
+appEvent st (T.VtyEvent (V.EvKey V.KUp    [V.MCtrl])) =
+    M.continue $ st & bottomLayerLocation.locationRowL %~ (subtract 1)
+appEvent st (T.VtyEvent (V.EvKey V.KRight [V.MCtrl])) =
+    M.continue $ st & bottomLayerLocation.locationColumnL %~ (+ 1)
+appEvent st (T.VtyEvent (V.EvKey V.KLeft  [V.MCtrl])) =
+    M.continue $ st & bottomLayerLocation.locationColumnL %~ (subtract 1)
 
 appEvent st (T.VtyEvent (V.EvKey V.KEsc [])) = M.halt st
 appEvent st _ = M.continue st

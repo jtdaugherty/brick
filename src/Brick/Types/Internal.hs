@@ -143,17 +143,18 @@ instance Field2 Location Location Int Int where
 -- | The class of types that behave like terminal locations.
 class TerminalLocation a where
     -- | Get the column out of the value
-    columnL :: Lens' a Int
-    column :: a -> Int
+    locationColumnL :: Lens' a Int
+    locationColumn :: a -> Int
+
     -- | Get the row out of the value
-    rowL :: Lens' a Int
-    row :: a -> Int
+    locationRowL :: Lens' a Int
+    locationRow :: a -> Int
 
 instance TerminalLocation Location where
-    columnL = _1
-    column (Location t) = fst t
-    rowL = _2
-    row (Location t) = snd t
+    locationColumnL = _1
+    locationColumn (Location t) = fst t
+    locationRowL = _2
+    locationRow (Location t) = snd t
 
 -- | The origin (upper-left corner).
 origin :: Location

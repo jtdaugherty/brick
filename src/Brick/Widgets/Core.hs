@@ -174,7 +174,7 @@ clickable n p =
 addCursorOffset :: Location -> Result n -> Result n
 addCursorOffset off r =
     let onlyVisible = filter isVisible
-        isVisible l = l^.columnL >= 0 && l^.rowL >= 0
+        isVisible l = l^.locationColumnL >= 0 && l^.locationRowL >= 0
     in r & cursorsL %~ (\cs -> onlyVisible $ (`clOffset` off) <$> cs)
 
 unrestricted :: Int
@@ -556,7 +556,7 @@ translateBy off p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
       return $ addResultOffset off
-             $ result & imageL %~ (V.translate (off^.columnL) (off^.rowL))
+             $ result & imageL %~ (V.translate (off^.locationColumnL) (off^.locationRowL))
 
 -- | Crop the specified widget on the left by the specified number of
 -- columns. Defers to the translated width for growth policy.
@@ -820,9 +820,9 @@ scrollToView Vertical rq vp = vp & vpTop .~ newVStart
     where
         curStart = vp^.vpTop
         curEnd = curStart + vp^.vpSize._2
-        reqStart = rq^.vrPositionL.rowL
+        reqStart = rq^.vrPositionL.locationRowL
 
-        reqEnd = rq^.vrPositionL.rowL + rq^.vrSizeL._2
+        reqEnd = rq^.vrPositionL.locationRowL + rq^.vrSizeL._2
         newVStart :: Int
         newVStart = if reqStart < vStartEndVisible
                    then reqStart
@@ -834,9 +834,9 @@ scrollToView Horizontal rq vp = vp & vpLeft .~ newHStart
     where
         curStart = vp^.vpLeft
         curEnd = curStart + vp^.vpSize._1
-        reqStart = rq^.vrPositionL.columnL
+        reqStart = rq^.vrPositionL.locationColumnL
 
-        reqEnd = rq^.vrPositionL.columnL + rq^.vrSizeL._1
+        reqEnd = rq^.vrPositionL.locationColumnL + rq^.vrSizeL._1
         newHStart :: Int
         newHStart = if reqStart < hStartEndVisible
                    then reqStart

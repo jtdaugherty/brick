@@ -153,7 +153,7 @@ centerAbout l p =
       c <- getContext
       let centerW = c^.availWidthL `div` 2
           centerH = c^.availHeightL `div` 2
-          off = Location ( centerW - l^.columnL
-                         , centerH - l^.rowL
+          off = Location ( centerW - l^.locationColumnL
+                         , centerH - l^.locationRowL
                          )
       render $ translateBy off p
