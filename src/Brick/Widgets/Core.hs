@@ -550,7 +550,7 @@ raw :: V.Image -> Widget n
 raw img = Widget Fixed Fixed $ return $ def & imageL .~ img
 
 -- | Translate the specified widget by the specified offset amount.
--- Defers to the translated width for growth policy.
+-- Defers to the translated widget for growth policy.
 translateBy :: Location -> Widget n -> Widget n
 translateBy off p =
     Widget (hSize p) (vSize p) $ do
@@ -559,7 +559,7 @@ translateBy off p =
              $ result & imageL %~ (V.translate (off^.locationColumnL) (off^.locationRowL))
 
 -- | Crop the specified widget on the left by the specified number of
--- columns. Defers to the translated width for growth policy.
+-- columns. Defers to the cropped widget for growth policy.
 cropLeftBy :: Int -> Widget n -> Widget n
 cropLeftBy cols p =
     Widget (hSize p) (vSize p) $ do
@@ -570,7 +570,7 @@ cropLeftBy cols p =
              $ result & imageL %~ cropped
 
 -- | Crop the specified widget on the right by the specified number of
--- columns. Defers to the translated width for growth policy.
+-- columns. Defers to the cropped widget for growth policy.
 cropRightBy :: Int -> Widget n -> Widget n
 cropRightBy cols p =
     Widget (hSize p) (vSize p) $ do
@@ -580,7 +580,7 @@ cropRightBy cols p =
       return $ result & imageL %~ cropped
 
 -- | Crop the specified widget on the top by the specified number of
--- rows. Defers to the translated width for growth policy.
+-- rows. Defers to the cropped widget for growth policy.
 cropTopBy :: Int -> Widget n -> Widget n
 cropTopBy rows p =
     Widget (hSize p) (vSize p) $ do
@@ -591,7 +591,7 @@ cropTopBy rows p =
              $ result & imageL %~ cropped
 
 -- | Crop the specified widget on the bottom by the specified number of
--- rows. Defers to the translated width for growth policy.
+-- rows. Defers to the cropped widget for growth policy.
 cropBottomBy :: Int -> Widget n -> Widget n
 cropBottomBy rows p =
     Widget (hSize p) (vSize p) $ do
