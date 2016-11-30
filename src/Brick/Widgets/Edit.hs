@@ -146,7 +146,9 @@ editFocusedAttr = editAttr <> "focused"
 getEditContents :: Monoid t => Editor t n -> [t]
 getEditContents e = Z.getText $ e^.editContentsL
 
--- | Turn an editor state value into a widget
+-- | Turn an editor state value into a widget. This uses the editor's
+-- name for its scrollable viewport handle and the name is also used to
+-- report mouse events.
 renderEditor :: (Ord n, Show n, Monoid t, TextWidth t, Z.GenericTextZipper t)
              => Bool
              -- ^ Whether the editor has focus. It will report a cursor
@@ -167,6 +169,7 @@ renderEditor foc e =
     in withAttr (if foc then editFocusedAttr else editAttr) $
        limit $
        viewport (e^.editorNameL) Both $
+       clickable (e^.editorNameL) $
        (if foc then showCursor (e^.editorNameL) cursorLoc else id) $
        visibleRegion cursorLoc (atCharWidth, 1) $
        e^.editDrawContentsL $
