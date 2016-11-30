@@ -13,6 +13,7 @@ module Brick.Main
   , lookupExtent
   , findClickedExtents
   , clickedExtent
+  , getEventWidgetLocation
   , getVtyHandle
 
   -- ** Viewport scrolling
@@ -51,6 +52,7 @@ import Control.Concurrent (forkIO, Chan, newChan, readChan, writeChan, killThrea
 import Control.Applicative ((<$>))
 import Data.Monoid (mempty)
 #endif
+import Data.Monoid ((<>))
 import Data.Default
 import Data.Maybe (listToMaybe)
 import qualified Data.Map as M
@@ -71,6 +73,7 @@ import Graphics.Vty
 import Brick.Types (Widget, EventM(..))
 import Brick.Types.Internal
 import Brick.Widgets.Internal
+import Brick.Widgets.Core(Named(..))
 import Brick.AttrMap
 
 -- | The library application abstraction. Your application's operations
@@ -315,6 +318,48 @@ findClickedExtents pos = EventM $ asks (findClickedExtents_ pos . latestExtents)
 
 findClickedExtents_ :: (Int, Int) -> [Extent n] -> [Extent n]
 findClickedExtents_ pos = reverse . filter (clickedExtent pos)
+
+-- | When processing a global EvMouseDown VtyEvent, the coordinates of
+-- the mouse event on the screen must be mapped to a specific location
+-- in a Widget.  The `lookupExtent` function will return the "extent"
+-- of the Widget (i.e. where it was drawn and how big it is) but this
+-- only indicates that the widget was clocked and does not identify
+-- the actual location within the widget where the click occurred.
+--
+-- The `getEventWidgetLocation` function translates the mouse event
+-- coordinates to a specific location within the widget in the
+-- widget's local reference frame, taking into account any scrolling
+-- that has occurred within a viewport that wraps that widget.
+--
+--    drawUI st = reportExtent (getName st) $
+--                viewport (getName st) Vertical $
+--                Widget Fixed Fixed $ ...
+--
+--    handleEvent event st =
+--      case event of
+--        EvMouseDown col row button _mods ->
+--          do wcoords <- getEventWidgetLocation st col row
+--             case wcoords of
+--               Nothing -> return st
+--               Just l -> ...
+--
+getEventWidgetLocation :: (Named a n, Ord n)
+                          => a -> Int -> Int -> EventM n (Maybe Location)
+getEventWidgetLocation widget screenCol screenRow =
+    do mExtent <- lookupExtent (getName widget)
+       case mExtent of
+         Nothing -> return Nothing
+         Just e@(Extent _ upperLeft _) ->
+             if clickedExtent (screenCol, screenRow) e
+             then let widgetRow = screenRow - upperLeft^.locationRowL
+                      widgetCol = screenCol - upperLeft^.locationColumnL
+                      widgetLoc = Location (widgetCol, widgetRow)
+                  in do mView <- lookupViewport (getName widget)
+                        case mView of
+                          Nothing -> return $ Just widgetLoc
+                          Just (VP left top _) ->
+                            return $ Just $ widgetLoc <> Location (left, top)
+             else return Nothing
 
 -- | Get the Vty handle currently in use.
 getVtyHandle :: EventM n (Maybe Vty)
