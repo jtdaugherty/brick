@@ -12,17 +12,21 @@ import qualified Graphics.Vty as V
 import qualified Brick.Types as T
 import Brick.AttrMap
 import Brick.Util
-import Brick.Types (Widget)
+import Brick.Types (Widget, ViewportType(Vertical))
 import qualified Brick.Main as M
 import qualified Brick.Widgets.Center as C
 import qualified Brick.Widgets.Border as B
 import Brick.Widgets.Core
+import qualified Brick.Widgets.Edit as E
 
-data Name = Info | Button1 | Button2 | Button3 deriving (Show, Ord, Eq)
+data Name = Info | Button1 | Button2 | Button3
+          | Edited | EditedView
+          deriving (Show, Ord, Eq)
 
 data St =
     St { _clicked :: [T.Extent Name]
        , _lastReportedClick :: Maybe (Name, T.Location)
+       , _editText :: E.Editor String Name
        }
 
 makeLenses ''St
@@ -30,6 +34,7 @@ makeLenses ''St
 drawUi :: St -> [Widget Name]
 drawUi st =
     [ buttonLayer st
+    , editLayer st
     , infoLayer st
     ]
 
@@ -51,6 +56,18 @@ buttonLayer st =
                padLeftRight (if wasClicked then 2 else 3) $
                str (if wasClicked then "<" <> label <> ">" else label)
 
+editLayer :: St -> Widget Name
+editLayer st =
+  B.border $
+  C.hCenterLayer $
+  vLimit 8 $
+  -- n.b. if clickable and viewport are inverted here, click event
+  -- coordinates will only identify the viewable range, not the actual
+  -- editor widget coordinates.
+  viewport EditedView Vertical $
+  clickable Edited $
+  E.renderEditor False (st^.editText)
+
 infoLayer :: St -> Widget Name
 infoLayer st = T.Widget T.Fixed T.Fixed $ do
     c <- T.getContext
@@ -66,6 +83,8 @@ appEvent :: St -> T.BrickEvent Name e -> T.EventM Name (T.Next St)
 appEvent st (T.MouseDown n _ _ loc) = M.continue $ st & lastReportedClick .~ Just (n, loc)
 appEvent st (T.MouseUp _ _ _) = M.continue $ st & lastReportedClick .~ Nothing
 appEvent st (T.VtyEvent (V.EvMouseUp _ _ _)) = M.continue $ st & lastReportedClick .~ Nothing
+appEvent st (T.VtyEvent (V.EvKey V.KUp [])) = M.vScrollBy (M.viewportScroll EditedView) (-1) >> M.continue st
+appEvent st (T.VtyEvent (V.EvKey V.KDown [])) = M.vScrollBy (M.viewportScroll EditedView) 1 >> M.continue st
 appEvent st (T.VtyEvent (V.EvKey V.KEsc [])) = M.halt st
 appEvent st _ = M.continue st
 
@@ -94,3 +113,23 @@ main = do
           return v
 
     void $ M.customMain buildVty Nothing app $ St [] Nothing
+         $ E.editor Edited (str . unlines) (Just 25)
+           "Press up and down arrow keys to scroll, ESC to quit.\n\
+           \Observe the click coordinates identify the\n\
+           \underlying widget coordinates.\n\
+           \\n\
+           \Lorem ipsum dolor sit amet,\n\
+           \consectetur adipiscing elit,\n\
+           \sed do eiusmod tempor incididunt ut labore\n\
+           \et dolore magna aliqua.\n\
+           \ \n\
+           \Ut enim ad minim veniam\n\
+           \quis nostrud exercitation ullamco laboris\n\
+           \nisi ut aliquip ex ea commodo consequat.\n\
+           \\n\
+           \Duis aute irure dolor in reprehenderit\n\
+           \in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\n\
+           \\n\
+           \Excepteur sint occaecat cupidatat not proident,\n\
+           \sunt in culpa qui officia deserunt mollit\n\
+           \anim id est laborum.\n"
