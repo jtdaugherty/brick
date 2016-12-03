@@ -423,7 +423,7 @@ selection easy in common cases:
   cursor position.
 
 For example, this widget requests a cursor placement on the first
-"``o``" in "``foo``" assocated with the cursor name "``myCursor``":
+"``o``" in "``foo``" associated with the cursor name "``myCursor``":
 
 .. code:: haskell
 
