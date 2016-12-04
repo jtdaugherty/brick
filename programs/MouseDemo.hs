@@ -12,7 +12,7 @@ import qualified Graphics.Vty as V
 import qualified Brick.Types as T
 import Brick.AttrMap
 import Brick.Util
-import Brick.Types (Widget, ViewportType(Both))
+import Brick.Types (Widget, ViewportType(Vertical))
 import qualified Brick.Main as M
 import qualified Brick.Widgets.Edit as E
 import qualified Brick.Widgets.Center as C
