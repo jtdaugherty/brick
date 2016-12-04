@@ -2,6 +2,31 @@
 Brick changelog
 ---------------
 
+0.15
+----
+
+Demo changes:
+* MouseDemo: add an editor and use mouse events to move the cursor
+* MouseDemo: Enhance MouseDemo to show interaction between 'clickable'
+  and viewports (thanks Kevin Quick)
+
+New features:
+* Editors now report mouse click events
+
+API changes:
+* Rename TerminalLocation row/column fields to avoid commonplace name
+  clashes; rename row/column to locationRow/locationColumn (fixes #96)
+
+Bug fixes:
+* Core: make cropToContext also crop extents (fixes #101)
+* viewport: if the sub-widget is not rendered, also cull all extents and
+  cursor locations
+
+Documentation changes:
+* User Guide updates: minor fixes, updates to content on custom widgets,
+  wide character support, and examples (thanks skapazzo@inventati.org,
+  Kevin Quick)
+
 0.14
 ----
 
