@@ -144,13 +144,15 @@ emptyWidget = raw V.emptyImage
 -- something and then translate it or otherwise offset it from its
 -- original origin.
 addResultOffset :: Location -> Result n -> Result n
-addResultOffset off = addCursorOffset off . addVisibilityOffset off . addExtentOffset off
+addResultOffset off = addCursorOffset off .
+                      addVisibilityOffset off .
+                      addExtentOffset off
 
 addVisibilityOffset :: Location -> Result n -> Result n
 addVisibilityOffset off r = r & visibilityRequestsL.each.vrPositionL %~ (off <>)
 
 addExtentOffset :: Location -> Result n -> Result n
-addExtentOffset off r = r & extentsL.each %~ (\(Extent n l sz) -> Extent n (off <> l) sz)
+addExtentOffset off r = r & extentsL.each %~ (\(Extent n l sz o) -> Extent n (off <> l) sz o)
 
 -- | Render the specified widget and record its rendering extent using
 -- the specified name (see also 'lookupExtent').
@@ -158,7 +160,7 @@ reportExtent :: n -> Widget n -> Widget n
 reportExtent n p =
     Widget (hSize p) (vSize p) $ do
         result <- render p
-        let ext = Extent n (Location (0, 0)) sz
+        let ext = Extent n (Location (0, 0)) sz (Location (0, 0))
             sz = ( result^.imageL.to V.imageWidth
                  , result^.imageL.to V.imageHeight
                  )

@@ -238,30 +238,30 @@ runVty vty chan app appState rs = do
         VtyEvent (EvMouseDown c r button mods) -> do
             let matching = findClickedExtents_ (c, r) exts
             case matching of
-                (Extent n (Location (ec, er)) _:_) ->
+                (Extent n (Location (ec, er)) _ (Location (oC, oR)):_) ->
                     -- If the clicked extent was registered as
                     -- clickable, send a click event. Otherwise, just
                     -- send the raw mouse event
                     case n `elem` firstRS^.clickableNamesL of
                         True -> do
                             let localCoords = Location (lc, lr)
-                                lc = c - ec
-                                lr = r - er
+                                lc = c - ec + oC
+                                lr = r - er + oR
                             return (MouseDown n button mods localCoords, firstRS, exts)
                         False -> return (e, firstRS, exts)
                 _ -> return (e, firstRS, exts)
         VtyEvent (EvMouseUp c r button) -> do
             let matching = findClickedExtents_ (c, r) exts
             case matching of
-                (Extent n (Location (ec, er)) _:_) ->
+                (Extent n (Location (ec, er)) _ (Location (oC, oR)):_) ->
                     -- If the clicked extent was registered as
                     -- clickable, send a click event. Otherwise, just
                     -- send the raw mouse event
                     case n `elem` firstRS^.clickableNamesL of
                         True -> do
                             let localCoords = Location (lc, lr)
-                                lc = c - ec
-                                lr = r - er
+                                lc = c - ec + oC
+                                lr = r - er + oR
                             return (MouseUp n button localCoords, firstRS, exts)
                         False -> return (e, firstRS, exts)
                 _ -> return (e, firstRS, exts)
@@ -294,7 +294,7 @@ lookupViewport n = EventM $ asks (M.lookup n . eventViewportMap)
 -- | Did the specified mouse coordinates (column, row) intersect the
 -- specified extent?
 clickedExtent :: (Int, Int) -> Extent n -> Bool
-clickedExtent (c, r) (Extent _ (Location (lc, lr)) (w, h)) =
+clickedExtent (c, r) (Extent _ (Location (lc, lr)) (w, h) _) =
    c >= lc && c < (lc + w) &&
    r >= lr && r < (lr + h)
 
@@ -303,7 +303,7 @@ clickedExtent (c, r) (Extent _ (Location (lc, lr)) (w, h)) =
 lookupExtent :: (Eq n) => n -> EventM n (Maybe (Extent n))
 lookupExtent n = EventM $ asks (listToMaybe . filter f . latestExtents)
     where
-        f (Extent n' _ _) = n == n'
+        f (Extent n' _ _ _) = n == n'
 
 -- | Given a mouse click location, return the extents intersected by the
 -- click. The returned extents are sorted such that the first extent in

@@ -103,9 +103,12 @@ data EventState n = ES { esScrollRequests :: [(n, ScrollRequest)]
                        , cacheInvalidateRequests :: [CacheInvalidateRequest n]
                        }
 
--- | An extent of a named area indicating the location of its upper-left
--- corner and its size (width, height).
-data Extent n = Extent n Location (Int, Int)
+-- | An extent of a named area: its size, location, and origin.
+data Extent n = Extent { extentName      :: n
+                       , extentUpperLeft :: Location
+                       , extentSize      :: (Int, Int)
+                       , extentOffset    :: Location
+                       }
               deriving (Show)
 
 data EventRO n = EventRO { eventViewportMap :: M.Map n Viewport
