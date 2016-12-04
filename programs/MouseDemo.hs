@@ -3,7 +3,7 @@
 module Main where
 
 import Control.Applicative ((<$>))
-import Lens.Micro ((^.), (&), (.~))
+import Lens.Micro ((^.), (&), (.~), (%~))
 import Lens.Micro.TH (makeLenses)
 import Control.Monad (void)
 import Data.Monoid ((<>))
@@ -12,19 +12,23 @@ import qualified Graphics.Vty as V
 import qualified Brick.Types as T
 import Brick.AttrMap
 import Brick.Util
-import Brick.Types (Widget, ViewportType(Vertical))
+import Brick.Types (Widget, ViewportType(Both))
 import qualified Brick.Main as M
+import qualified Brick.Widgets.Edit as E
 import qualified Brick.Widgets.Center as C
 import qualified Brick.Widgets.Border as B
 import Brick.Widgets.Core
+import Data.Text.Zipper (moveCursor)
+import Data.Tuple (swap)
 
-data Name = Info | Button1 | Button2 | Button3 | Prose
+data Name = Info | Button1 | Button2 | Button3 | Prose | TextBox
           deriving (Show, Ord, Eq)
 
 data St =
     St { _clicked :: [T.Extent Name]
        , _lastReportedClick :: Maybe (Name, T.Location)
        , _prose :: String
+       , _edit :: E.Editor String Name
        }
 
 makeLenses ''St
@@ -38,7 +42,11 @@ drawUi st =
 
 buttonLayer :: St -> Widget Name
 buttonLayer st =
-    C.centerLayer $ hBox $ padAll 1 <$> buttons
+    C.vCenterLayer $
+      C.hCenterLayer (padBottom (T.Pad 1) $ str "Click a button:") <=>
+      C.hCenterLayer (hBox $ padLeftRight 1 <$> buttons) <=>
+      C.hCenterLayer (padTopBottom 1 $ str "Or enter text and then click in this editor:") <=>
+      C.hCenterLayer (vLimit 3 $ hLimit 50 $ E.renderEditor True (st^.edit))
     where
         buttons = mkButton <$> buttonData
         buttonData = [ (Button1, "Button 1", "button1")
@@ -78,12 +86,16 @@ infoLayer st = T.Widget T.Fixed T.Fixed $ do
                C.hCenter (str ("Last reported click: " <> msg))
 
 appEvent :: St -> T.BrickEvent Name e -> T.EventM Name (T.Next St)
-appEvent st (T.MouseDown n _ _ loc) = M.continue $ st & lastReportedClick .~ Just (n, loc)
+appEvent st (T.MouseDown n _ _ loc) = do
+    let T.Location pos = loc
+    M.continue $ st & lastReportedClick .~ Just (n, loc)
+                    & edit %~ E.applyEdit (if n == TextBox then moveCursor (swap pos) else id)
 appEvent st (T.MouseUp _ _ _) = M.continue $ st & lastReportedClick .~ Nothing
 appEvent st (T.VtyEvent (V.EvMouseUp _ _ _)) = M.continue $ st & lastReportedClick .~ Nothing
-appEvent st (T.VtyEvent (V.EvKey V.KUp [])) = M.vScrollBy (M.viewportScroll Prose) (-1) >> M.continue st
-appEvent st (T.VtyEvent (V.EvKey V.KDown [])) = M.vScrollBy (M.viewportScroll Prose) 1 >> M.continue st
+appEvent st (T.VtyEvent (V.EvKey V.KUp [V.MCtrl])) = M.vScrollBy (M.viewportScroll Prose) (-1) >> M.continue st
+appEvent st (T.VtyEvent (V.EvKey V.KDown [V.MCtrl])) = M.vScrollBy (M.viewportScroll Prose) 1 >> M.continue st
 appEvent st (T.VtyEvent (V.EvKey V.KEsc [])) = M.halt st
+appEvent st (T.VtyEvent ev) = M.continue =<< T.handleEventLensed st edit E.handleEditorEvent ev
 appEvent st _ = M.continue st
 
 aMap :: AttrMap
@@ -92,6 +104,7 @@ aMap = attrMap V.defAttr
     , ("button1",   V.white `on` V.cyan)
     , ("button2",   V.white `on` V.green)
     , ("button3",   V.white `on` V.blue)
+    , (E.editFocusedAttr, V.black `on` V.yellow)
     ]
 
 app :: M.App St e Name
@@ -100,7 +113,7 @@ app =
           , M.appStartEvent = return
           , M.appHandleEvent = appEvent
           , M.appAttrMap = const aMap
-          , M.appChooseCursor = M.neverShowCursor
+          , M.appChooseCursor = M.showFirstCursor
           }
 
 main :: IO ()
@@ -111,7 +124,7 @@ main = do
           return v
 
     void $ M.customMain buildVty Nothing app $ St [] Nothing
-         $ "Press up and down arrow keys to scroll, ESC to quit.\n\
+           "Press Ctrl-up and Ctrl-down arrow keys to scroll, ESC to quit.\n\
            \Observe the click coordinates identify the\n\
            \underlying widget coordinates.\n\
            \\n\
@@ -130,3 +143,4 @@ main = do
            \Excepteur sint occaecat cupidatat not proident,\n\
            \sunt in culpa qui officia deserunt mollit\n\
            \anim id est laborum.\n"
+           (E.editor TextBox (str . unlines) Nothing "")

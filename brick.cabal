@@ -164,7 +164,8 @@ executable brick-mouse-demo
                        data-default,
                        text,
                        microlens >= 0.3.0.0,
-                       microlens-th
+                       microlens-th,
+                       text-zipper
 
 executable brick-layer-demo
   if !flag(demos)
