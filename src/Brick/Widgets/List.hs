@@ -229,11 +229,12 @@ listRemove pos l | V.null (l^.listElementsL) = l
          & listElementsL .~ es'
 
 -- | Replace the contents of a list with a new set of elements and
--- update the new selected index. If the specified selected index (via
--- 'Just') is not in the list bounds, zero is used instead.
+-- update the new selected index. If the list is empty, empty selection is used
+-- instead. Otherwise, if the specified selected index (via 'Just') is not in
+-- the list bounds, zero is used instead.
 listReplace :: V.Vector e -> Maybe Int -> List n e -> List n e
 listReplace es idx l =
-    let newSel = clamp 0 (V.length es - 1) <$> idx
+    let newSel = if V.null es then Nothing else clamp 0 (V.length es - 1) <$> idx
     in l & listSelectedL .~ newSel
          & listElementsL .~ es
 
