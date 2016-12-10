@@ -2,6 +2,12 @@
 Brick changelog
 ---------------
 
+0.15.1
+------
+
+Bug fixes:
+* List: fixed empty list validation in listReplace (thanks Joshua Chia)
+
 0.15
 ----
 
