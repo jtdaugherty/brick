@@ -321,7 +321,7 @@ define the counter event type:
    data CounterEvent = Counter Int
 
 With this type declaration we can now use counter events in our app by
-using the application type ``App s e CounterEvent``. To handle these
+using the application type ``App s CounterEvent n``. To handle these
 events we'll just need to look for ``AppEvent`` values in the event
 handler:
 
