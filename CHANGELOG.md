@@ -2,6 +2,14 @@
 Brick changelog
 ---------------
 
+0.15.2
+------
+
+Bug fixes:
+* viewport: do not cull cursor locations on empty viewport contents
+  (fixes #105)
+* User guide CounterEvent type fix (thanks @diegospd)
+
 0.15.1
 ------
 
