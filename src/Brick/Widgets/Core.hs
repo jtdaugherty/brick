@@ -775,7 +775,6 @@ viewport vpname typ p =
           (0, 0) -> return $ translated & imageL .~ (V.charFill (c^.attrL) ' ' (c^.availWidthL) (c^.availHeightL))
                                         & visibilityRequestsL .~ mempty
                                         & extentsL .~ mempty
-                                        & cursorsL .~ mempty
           _ -> render $ cropToContext
                       $ padBottom Max
                       $ padRight Max
