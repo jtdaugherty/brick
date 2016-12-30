@@ -81,6 +81,7 @@ library
                        vty >= 5.12,
                        transformers,
                        data-default,
+                       dlist,
                        containers,
                        microlens >= 0.3.0.0,
                        microlens-th,

@@ -93,6 +93,7 @@ import Control.Monad.Trans.Class (lift)
 import qualified Data.Foldable as F
 import qualified Data.Text as T
 import Data.Default
+import qualified Data.DList as DL
 import qualified Data.Map as M
 import qualified Data.Set as S
 import qualified Data.Function as DF
@@ -438,14 +439,14 @@ renderBox br ws =
       let availPrimary = c^.(contextPrimary br)
           availSecondary = c^.(contextSecondary br)
 
-          renderHis _ prev [] = return prev
+          renderHis _ prev [] = return $ DL.toList prev
           renderHis remainingPrimary prev ((i, prim):rest) = do
               result <- render $ limitPrimary br remainingPrimary
                                $ limitSecondary br availSecondary
                                $ cropToContext prim
-              renderHis (remainingPrimary - (result^.imageL.(to $ imagePrimary br))) (prev ++ [(i, result)]) rest
+              renderHis (remainingPrimary - (result^.imageL.(to $ imagePrimary br))) (DL.snoc prev (i, result)) rest
 
-      renderedHis <- renderHis availPrimary [] his
+      renderedHis <- renderHis availPrimary DL.empty his
 
       renderedLows <- case lows of
           [] -> return []
