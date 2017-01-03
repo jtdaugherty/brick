@@ -37,6 +37,7 @@ module Brick.Widgets.List
   , listSelectedElement
   , listClear
   , listReverse
+  , listModify
 
   -- * Attributes
   , listAttr
@@ -281,3 +282,13 @@ listReverse :: List n e -> List n e
 listReverse theList = theList & listElementsL %~ V.reverse & listSelectedL .~ newSel
   where n = V.length (listElements theList)
         newSel = (-) <$> pure (n-1) <*> listSelected theList
+
+
+
+-- | Apply a function to the selected element. If no element is selected the
+-- list is not modified.
+listModify :: (e -> e) ->  List n e -> List n e
+listModify f l = case listSelectedElement l of
+  Nothing -> l 
+  Just (n,e) -> let vs = V.update (l^.listElementsL) (return (n, f e))
+                in listReplace vs (Just n) l
