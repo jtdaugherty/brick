@@ -288,5 +288,5 @@ listReverse theList = theList & listElementsL %~ V.reverse & listSelectedL .~ ne
 listModify :: (e -> e) -> List n e -> List n e
 listModify f l = case listSelectedElement l of
   Nothing -> l
-  Just (n,e) -> let vs = V.update (l^.listElementsL) (return (n, f e))
-                in listReplace vs (Just n) l
+  Just (n,e) -> let es = V.update (l^.listElementsL) (return (n, f e))
+                in listReplace es (Just n) l
