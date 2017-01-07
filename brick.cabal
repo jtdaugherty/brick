@@ -58,6 +58,7 @@ library
   exposed-modules:
     Brick
     Brick.AttrMap
+    Brick.BChan
     Brick.Focus
     Brick.Main
     Brick.Markup
@@ -88,6 +89,7 @@ library
                        microlens-mtl,
                        vector,
                        contravariant,
+                       stm >= 2.4,
                        text,
                        text-zipper >= 0.7.1,
                        template-haskell,

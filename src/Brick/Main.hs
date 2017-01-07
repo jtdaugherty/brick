@@ -42,11 +42,11 @@ where
 
 import Control.Exception (finally)
 import Lens.Micro ((^.), (&), (.~))
-import Control.Monad (forever, void)
+import Control.Monad (forever)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.State
 import Control.Monad.Trans.Reader
-import Control.Concurrent (forkIO, Chan, newChan, readChan, writeChan, killThread)
+import Control.Concurrent (forkIO, killThread)
 #if !MIN_VERSION_base(4,8,0)
 import Control.Applicative ((<$>))
 import Data.Monoid (mempty)
@@ -68,6 +68,7 @@ import Graphics.Vty
   , mkVty
   )
 
+import Brick.BChan (BChan, newBChan, readBChan, readBChan2, writeBChan)
 import Brick.Types (Widget, EventM(..))
 import Brick.Types.Internal
 import Brick.Widgets.Internal
@@ -118,8 +119,7 @@ defaultMain :: (Ord n)
             -- ^ The initial application state.
             -> IO s
 defaultMain app st = do
-    chan <- newChan
-    customMain (mkVty def) (Just chan) app st
+    customMain (mkVty def) Nothing app st
 
 -- | A simple main entry point which takes a widget and renders it. This
 -- event loop terminates when the user presses any key, but terminal
@@ -149,19 +149,26 @@ resizeOrQuit s _ = halt s
 data InternalNext n a = InternalSuspendAndResume (RenderState n) (IO a)
                       | InternalHalt a
 
+readBrickEvent :: BChan e -> BChan (BrickEvent n e) -> IO (BrickEvent n e)
+readBrickEvent q1 q2 = either AppEvent id <$> readBChan2 q1 q2
+
 runWithNewVty :: (Ord n)
               => IO Vty
-              -> Chan (BrickEvent n e)
+              -> Maybe (BChan e)
+              -> BChan (BrickEvent n e)
               -> App s e n
               -> RenderState n
               -> s
               -> IO (InternalNext n s)
-runWithNewVty buildVty chan app initialRS initialSt =
+runWithNewVty buildVty mUserChan brickChan app initialRS initialSt =
     withVty buildVty $ \vty -> do
-        pid <- forkIO $ supplyVtyEvents vty chan
-        let runInner rs st = do
-              (result, newRS) <- runVty vty chan app st (rs & observedNamesL .~ S.empty
-                                                            & clickableNamesL .~ mempty)
+        pid <- forkIO $ supplyVtyEvents vty brickChan
+        let readEvent = case mUserChan of
+              Nothing -> readBChan brickChan
+              Just uc -> readBrickEvent uc brickChan
+            runInner rs st = do
+              (result, newRS) <- runVty vty readEvent app st (rs & observedNamesL .~ S.empty
+                                                                 & clickableNamesL .~ mempty)
               case result of
                   SuspendAndResume act -> do
                       killThread pid
@@ -179,7 +186,7 @@ customMain :: (Ord n)
            -- ^ An IO action to build a Vty handle. This is used to
            -- build a Vty handle whenever the event loop begins or is
            -- resumed after suspension.
-           -> Maybe (Chan e)
+           -> Maybe (BChan e)
            -- ^ An event channel for sending custom events to the event
            -- loop (you write to this channel, the event loop reads from
            -- it). Provide 'Nothing' if you don't plan on sending custom
@@ -190,42 +197,37 @@ customMain :: (Ord n)
            -- ^ The initial application state.
            -> IO s
 customMain buildVty mUserChan app initialAppState = do
-    let run rs st chan = do
-            result <- runWithNewVty buildVty chan app rs st
+    let run rs st brickChan = do
+            result <- runWithNewVty buildVty mUserChan brickChan app rs st
             case result of
                 InternalHalt s -> return s
                 InternalSuspendAndResume newRS action -> do
                     newAppState <- action
-                    run newRS newAppState chan
+                    run newRS newAppState brickChan
 
         emptyES = ES [] []
         eventRO = EventRO M.empty Nothing mempty
     (st, eState) <- runStateT (runReaderT (runEventM (appStartEvent app initialAppState)) eventRO) emptyES
     let initialRS = RS M.empty (esScrollRequests eState) S.empty mempty []
-    chan <- newChan
-    case mUserChan of
-        Just userChan ->
-            void $ forkIO $ forever $ readChan userChan >>= (\userEvent -> writeChan chan $ AppEvent userEvent)
-        Nothing -> return ()
+    brickChan <- newBChan 20
+    run initialRS st brickChan
 
-    run initialRS st chan
-
-supplyVtyEvents :: Vty -> Chan (BrickEvent n e) -> IO ()
+supplyVtyEvents :: Vty -> BChan (BrickEvent n e) -> IO ()
 supplyVtyEvents vty chan =
     forever $ do
         e <- nextEvent vty
-        writeChan chan $ VtyEvent e
+        writeBChan chan $ VtyEvent e
 
 runVty :: (Ord n)
        => Vty
-       -> Chan (BrickEvent n e)
+       -> IO (BrickEvent n e)
        -> App s e n
        -> s
        -> RenderState n
        -> IO (Next s, RenderState n)
-runVty vty chan app appState rs = do
+runVty vty readEvent app appState rs = do
     (firstRS, exts) <- renderApp vty app appState rs
-    e <- readChan chan
+    e <- readEvent
 
     (e', nextRS, nextExts) <- case e of
         -- If the event was a resize, redraw the UI to update the
