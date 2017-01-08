@@ -332,17 +332,17 @@ handler:
 
 The next step is to actually *generate* our custom events and
 inject them into the ``brick`` event stream so they make it to the
-event handler. To do that we need to create a ``Chan`` for our
-custom events, provide that ``Chan`` to ``brick``, and then send
+event handler. To do that we need to create a ``BChan`` for our
+custom events, provide that ``BChan`` to ``brick``, and then send
 our events over that channel. Once we've created the channel with
-``Control.Concurrent.newChan``, we provide it to ``brick`` with
+``Brick.BChan.newBChan``, we provide it to ``brick`` with
 ``customMain`` instead of ``defaultMain``:
 
 .. code:: haskell
 
    main :: IO ()
    main = do
-       eventChan <- Control.Concurrent.newChan
+       eventChan <- Brick.BChan.newBChan 10
        finalState <- customMain (Graphics.Vty.mkVty Data.Default.def) (Just eventChan) app initialState
        -- Use finalState and exit
 
@@ -356,9 +356,25 @@ handler is straightforward:
 
 .. code:: haskell
 
-   counterThread :: Chan CounterEvent -> IO ()
+   counterThread :: Brick.BChan.BChan CounterEvent -> IO ()
    counterThread chan = do
-       Control.Concurrent.writeChan chan $ Counter 1
+       Brick.BChan.writeBChan chan $ Counter 1
+
+A ``BChan`` can hold a limited number of items beyond which addition of
+new items will block. Here, after we first add 10 items but they are not
+yet processed (by the event handler), adding another item would block.
+Imposing a limit on the capacity of a ``BChan`` is for consistency with
+the reality of machines with finite memory. It also automatically
+provides flow control on the production of custom events -- if the
+event handler cannot process them fast enough, the producer of the
+custom events will be throttled. Thus, the capacity chosen should be
+large enough to buffer occasional spikes in event handling latency
+without inadvertently blocking the custom event producer. On the other
+hand, if the capacity is unnecessarily large, memory is wasted when the
+event handler simply cannot keep up with the event producer. If the
+event handler is simply too slow, increasing the capacity will not solve
+the problem.
+
 
 Starting up: appStartEvent
 **************************
