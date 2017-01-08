@@ -149,23 +149,23 @@ resizeOrQuit s _ = halt s
 data InternalNext n a = InternalSuspendAndResume (RenderState n) (IO a)
                       | InternalHalt a
 
-readBrickEvent :: BChan e -> BChan (BrickEvent n e) -> IO (BrickEvent n e)
-readBrickEvent q1 q2 = either AppEvent id <$> readBChan2 q1 q2
+readBrickEvent :: BChan (BrickEvent n e) -> BChan e -> IO (BrickEvent n e)
+readBrickEvent brickChan userChan = either id AppEvent <$> readBChan2 brickChan userChan
 
 runWithNewVty :: (Ord n)
               => IO Vty
-              -> Maybe (BChan e)
               -> BChan (BrickEvent n e)
+              -> Maybe (BChan e)
               -> App s e n
               -> RenderState n
               -> s
               -> IO (InternalNext n s)
-runWithNewVty buildVty mUserChan brickChan app initialRS initialSt =
+runWithNewVty buildVty brickChan mUserChan app initialRS initialSt =
     withVty buildVty $ \vty -> do
         pid <- forkIO $ supplyVtyEvents vty brickChan
         let readEvent = case mUserChan of
               Nothing -> readBChan brickChan
-              Just uc -> readBrickEvent uc brickChan
+              Just uc -> readBrickEvent brickChan uc
             runInner rs st = do
               (result, newRS) <- runVty vty readEvent app st (rs & observedNamesL .~ S.empty
                                                                  & clickableNamesL .~ mempty)
@@ -198,7 +198,7 @@ customMain :: (Ord n)
            -> IO s
 customMain buildVty mUserChan app initialAppState = do
     let run rs st brickChan = do
-            result <- runWithNewVty buildVty mUserChan brickChan app rs st
+            result <- runWithNewVty buildVty brickChan mUserChan app rs st
             case result of
                 InternalHalt s -> return s
                 InternalSuspendAndResume newRS action -> do
