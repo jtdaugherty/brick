@@ -360,21 +360,21 @@ handler is straightforward:
    counterThread chan = do
        Brick.BChan.writeBChan chan $ Counter 1
 
-A ``BChan`` can hold a limited number of items beyond which addition of
-new items will block. Here, after we first add 10 items but they are not
-yet processed (by the event handler), adding another item would block.
-Imposing a limit on the capacity of a ``BChan`` is for consistency with
-the reality of machines with finite memory. It also automatically
-provides flow control on the production of custom events -- if the
-event handler cannot process them fast enough, the producer of the
-custom events will be throttled. Thus, the capacity chosen should be
-large enough to buffer occasional spikes in event handling latency
-without inadvertently blocking the custom event producer. On the other
-hand, if the capacity is unnecessarily large, memory is wasted when the
-event handler simply cannot keep up with the event producer. If the
-event handler is simply too slow, increasing the capacity will not solve
-the problem.
+Bounded Channels
+****************
 
+A ``BChan``, or *bounded channel*, can hold a limited number of
+items before attempts to write new items will block. In the call to
+``newBChan`` above, the created channel has a capacity of 10 items.
+Use of a bounded channel ensures that if the program cannot process
+events quickly enough then there is a limit to how much memory will
+be used to store unprocessed events. Thus the chosen capacity should
+be large enough to buffer occasional spikes in event handling latency
+without inadvertently blocking custom event producers. Each application
+will have its own performance characteristics that determine the best
+bound for the event channel. In general, consider the performance of
+your event handler when choosing the channel capacity and design event
+producers so that they can block if the channel is full.
 
 Starting up: appStartEvent
 **************************
