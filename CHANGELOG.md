@@ -16,7 +16,7 @@ Other API changes:
   element (thanks @diegospd)
 
 Performance improvements:
-* hBox and vBox now use more efficient DList data structure when
+* hBox and vBox now use the more efficient DList data structure when
   rendering to improve performance for boxes with many elements (thanks
   Mitsutoshi Aoe)
 
