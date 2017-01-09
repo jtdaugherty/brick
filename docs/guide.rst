@@ -910,6 +910,19 @@ The most direct way to do this is to check a specific extent:
            then ...
            else ...
 
+If the location that was clicked within the widget is important,
+allowing for any viewport scrolling, the getEventWidgetLocation can be
+used instead:
+
+.. code:: haskell
+
+   handleEvent s (VtyEvent (EvMouseDown col row _ _)) = do
+     wcoords <- getEventWidgetLocation s col row
+     case wcoords of
+       Nothing -> continue s
+       Just l -> let (widgetCol, widgetRow) = loc l
+                 in ...
+
 This approach works well enough if you know which extent you're
 interested in checking, but what if there are many extents and you
 want to know which one was clicked? And what if those extents are in
