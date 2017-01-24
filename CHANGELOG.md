@@ -2,6 +2,26 @@
 Brick changelog
 ---------------
 
+0.16
+----
+
+Package changes:
+* Updated to depend on Vty 5.15.
+* Updated to remove dependency on data-default.
+
+API changes:
+* Removed Data.Default instances for AttrName, AttrMap, Result, and
+  BorderStyle (use Monoid instances instead where possible).
+* Added defaultBorderStyle :: BorderStyle.
+* Added emptyResult :: Result n.
+* List: added listModify function to modify the selected element (thanks
+  @diegospd)
+
+Performance-related changes:
+* Improved the performance of hBox and vBox by using DLists internally
+  (thanks Mitsutoshi Aoe)
+
+
 0.15.2
 ------
 
