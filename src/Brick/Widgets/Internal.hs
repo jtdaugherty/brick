@@ -13,13 +13,13 @@ import Control.Applicative
 import Lens.Micro ((^.), (&), (%~))
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Reader
-import Data.Default
 import Data.Maybe (catMaybes)
 import qualified Graphics.Vty as V
 
 import Brick.Types
 import Brick.Types.Internal
 import Brick.AttrMap
+import Brick.Widgets.Border.Style
 
 renderFinal :: AttrMap
             -> [Widget n]
@@ -32,7 +32,7 @@ renderFinal aMap layerRenders sz chooseCursor rs = (newRS, picWithBg, theCursor,
         (layerResults, !newRS) = flip runState rs $ sequence $
             (\p -> runReaderT p ctx) <$>
             (render <$> cropToContext <$> layerRenders)
-        ctx = Context def (fst sz) (snd sz) def aMap
+        ctx = Context mempty (fst sz) (snd sz) defaultBorderStyle aMap
         pic = V.picForLayers $ uncurry V.resize sz <$> (^.imageL) <$> layerResults
         -- picWithBg is a workaround for runaway attributes.
         -- See https://github.com/coreyoconnor/vty/issues/95

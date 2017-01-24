@@ -17,10 +17,9 @@ module Brick.Widgets.Border.Style
   , unicode
   , unicodeBold
   , unicodeRounded
+  , defaultBorderStyle
   )
 where
-
-import Data.Default
 
 -- | A border style for use in any widget that needs to render borders
 -- in a consistent style.
@@ -50,8 +49,8 @@ data BorderStyle =
                 }
                 deriving (Show, Read, Eq)
 
-instance Default BorderStyle where
-    def = unicode
+defaultBorderStyle :: BorderStyle
+defaultBorderStyle = unicode
 
 -- | Make a border style using the specified character everywhere.
 borderStyleFromChar :: Char -> BorderStyle

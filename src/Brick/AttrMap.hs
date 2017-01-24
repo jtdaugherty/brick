@@ -49,7 +49,6 @@ import qualified Data.Map as M
 import Data.Maybe (catMaybes)
 import Data.List (inits)
 import Data.String (IsString(..))
-import Data.Default (Default(..))
 
 import Graphics.Vty (Attr(..), MaybeDefault(..))
 
@@ -68,9 +67,6 @@ import Graphics.Vty (Attr(..), MaybeDefault(..))
 data AttrName = AttrName [String]
               deriving (Show, Eq, Ord)
 
-instance Default AttrName where
-    def = mempty
-
 instance Monoid AttrName where
     mempty = AttrName []
     mappend (AttrName as) (AttrName bs) = AttrName $ as `mappend` bs
@@ -82,9 +78,6 @@ instance IsString AttrName where
 data AttrMap = AttrMap Attr (M.Map AttrName Attr)
              | ForceAttr Attr
              deriving Show
-
-instance Default AttrMap where
-    def = AttrMap def mempty
 
 -- | Create an attribute name from a string.
 attrName :: String -> AttrName

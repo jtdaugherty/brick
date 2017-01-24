@@ -1,8 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-import Data.Default
-
 import Brick.Main (App(..), neverShowCursor, resizeOrQuit, defaultMain)
 import Brick.Types
   ( Widget
@@ -22,6 +20,8 @@ import Brick.Widgets.Core
   )
 import Brick.Widgets.Border as B
 import Brick.Widgets.Center as C
+import Brick.AttrMap (attrMap)
+import qualified Graphics.Vty as V
 
 ui :: Widget ()
 ui =
@@ -50,7 +50,7 @@ app =
     App { appDraw = const [ui]
         , appHandleEvent = resizeOrQuit
         , appStartEvent = return
-        , appAttrMap = const def
+        , appAttrMap = const $ attrMap V.defAttr []
         , appChooseCursor = neverShowCursor
         }
 

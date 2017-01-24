@@ -38,6 +38,7 @@ module Brick.Types.Internal
   , cursorsL
   , extentsL
   , visibilityRequestsL
+  , emptyResult
   )
 where
 
@@ -51,7 +52,6 @@ import Lens.Micro.Internal (Field1, Field2)
 import qualified Data.Set as S
 import qualified Data.Map as M
 import Graphics.Vty (Vty, Event, Button, Modifier, DisplayRegion, Image, emptyImage)
-import Data.Default (Default(..))
 
 import Brick.Types.TH
 import Brick.AttrMap (AttrName, AttrMap)
@@ -194,8 +194,8 @@ data Result n =
 
 suffixLenses ''Result
 
-instance Default (Result n) where
-    def = Result emptyImage [] [] []
+emptyResult :: Result n
+emptyResult = Result emptyImage [] [] []
 
 -- | The type of events.
 data BrickEvent n e = VtyEvent Event

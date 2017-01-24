@@ -15,7 +15,6 @@ import Lens.Micro ((.~), (&), (^.))
 import Control.Monad (forM)
 import qualified Data.Text as T
 import Data.Text.Markup
-import Data.Default (def)
 
 import Graphics.Vty (Attr, vertCat, horizCat, string)
 
@@ -54,4 +53,4 @@ markup m =
                   return $ string a $ T.unpack t
               return $ horizCat is
       lineImgs <- mapM mkLine markupLines
-      return $ def & imageL .~ vertCat lineImgs
+      return $ emptyResult & imageL .~ vertCat lineImgs

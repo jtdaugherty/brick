@@ -43,6 +43,7 @@ module Brick.Types
 
   -- ** Rendering results
   , Result(..)
+  , emptyResult
   , lookupAttrName
   , Extent(..)
 

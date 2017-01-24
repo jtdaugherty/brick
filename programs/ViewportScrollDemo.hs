@@ -7,7 +7,6 @@ import Control.Applicative
 
 import Control.Monad (void)
 import Data.Monoid ((<>))
-import Data.Default
 import qualified Graphics.Vty as V
 
 import qualified Brick.Types as T
@@ -17,6 +16,9 @@ import qualified Brick.Widgets.Border as B
 import Brick.Types
   ( Widget
   , ViewportType(Horizontal, Vertical, Both)
+  )
+import Brick.AttrMap
+  ( attrMap
   )
 import Brick.Widgets.Core
   ( hLimit
@@ -75,7 +77,7 @@ app =
     M.App { M.appDraw = drawUi
           , M.appStartEvent = return
           , M.appHandleEvent = appEvent
-          , M.appAttrMap = const def
+          , M.appAttrMap = const $ attrMap V.defAttr []
           , M.appChooseCursor = M.neverShowCursor
           }
 

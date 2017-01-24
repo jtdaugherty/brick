@@ -21,7 +21,6 @@ import Control.Applicative ((<$>))
 import Data.Monoid
 #endif
 
-import Data.Default (Default, def)
 import Data.String (IsString(..))
 import qualified Data.Text as T
 
@@ -34,7 +33,7 @@ instance Monoid (Markup a) where
     mappend (Markup t1) (Markup t2) =
         Markup (t1 `mappend` t2)
 
-instance (Default a) => IsString (Markup a) where
+instance (Monoid a) => IsString (Markup a) where
     fromString = fromText . T.pack
 
 -- | Build a piece of markup; assign the specified metadata to every
@@ -43,8 +42,8 @@ instance (Default a) => IsString (Markup a) where
 t @@ val = Markup [(c, val) | c <- T.unpack t]
 
 -- | Build markup from text with the default metadata.
-fromText :: (Default a) => T.Text -> Markup a
-fromText = (@@ def)
+fromText :: (Monoid a) => T.Text -> Markup a
+fromText = (@@ mempty)
 
 -- | Extract the text from markup, discarding the markup metadata.
 toText :: (Eq a) => Markup a -> T.Text

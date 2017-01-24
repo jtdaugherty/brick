@@ -5,7 +5,6 @@ module Main where
 import Lens.Micro ((^.), (&), (%~))
 import Lens.Micro.TH (makeLenses)
 import Control.Monad (void)
-import Data.Default
 import qualified Graphics.Vty as V
 
 import qualified Brick.Types as T
@@ -16,6 +15,9 @@ import qualified Brick.Widgets.Center as C
 import Brick.Widgets.Core
   ( translateBy
   , str
+  )
+import Brick.AttrMap
+  ( attrMap
   )
 
 data St =
@@ -70,7 +72,7 @@ app =
     M.App { M.appDraw = drawUi
           , M.appStartEvent = return
           , M.appHandleEvent = appEvent
-          , M.appAttrMap = const def
+          , M.appAttrMap = const $ attrMap V.defAttr []
           , M.appChooseCursor = M.neverShowCursor
           }
 

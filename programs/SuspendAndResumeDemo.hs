@@ -6,12 +6,14 @@ import Lens.Micro ((.~), (^.), (&))
 import Lens.Micro.TH (makeLenses)
 import Control.Monad (void)
 import Data.Monoid
-import Data.Default
 import qualified Graphics.Vty as V
 
 import Brick.Main
   ( App(..), neverShowCursor, defaultMain
   , suspendAndResume, halt, continue
+  )
+import Brick.AttrMap
+  ( attrMap
   )
 import Brick.Types
   ( Widget
@@ -59,7 +61,7 @@ theApp =
         , appChooseCursor = neverShowCursor
         , appHandleEvent = appEvent
         , appStartEvent = return
-        , appAttrMap = const def
+        , appAttrMap = const $ attrMap V.defAttr []
         }
 
 main :: IO ()

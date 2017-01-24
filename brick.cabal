@@ -78,9 +78,8 @@ library
     Brick.Widgets.Internal
 
   build-depends:       base <= 5,
-                       vty >= 5.12,
+                       vty >= 5.15,
                        transformers,
-                       data-default,
                        dlist,
                        containers,
                        microlens >= 0.3.0.0,
@@ -103,7 +102,7 @@ executable brick-cache-demo
   main-is:             CacheDemo.hs
   build-depends:       base,
                        brick,
-                       vty >= 5.12,
+                       vty >= 5.15,
                        text,
                        microlens >= 0.3.0.0,
                        microlens-th
@@ -117,8 +116,7 @@ executable brick-visibility-demo
   main-is:             VisibilityDemo.hs
   build-depends:       base,
                        brick,
-                       vty >= 5.12,
-                       data-default,
+                       vty >= 5.15,
                        text,
                        microlens >= 0.3.0.0,
                        microlens-th
@@ -133,8 +131,7 @@ executable brick-viewport-scroll-demo
   main-is:             ViewportScrollDemo.hs
   build-depends:       base,
                        brick,
-                       vty >= 5.12,
-                       data-default,
+                       vty >= 5.15,
                        text,
                        microlens
 
@@ -147,8 +144,7 @@ executable brick-dialog-demo
   main-is:             DialogDemo.hs
   build-depends:       base <= 5,
                        brick,
-                       vty >= 5.12,
-                       data-default,
+                       vty >= 5.15,
                        text,
                        microlens
 
@@ -161,8 +157,7 @@ executable brick-mouse-demo
   main-is:             MouseDemo.hs
   build-depends:       base <= 5,
                        brick,
-                       vty >= 5.12,
-                       data-default,
+                       vty >= 5.15,
                        text,
                        microlens >= 0.3.0.0,
                        microlens-th,
@@ -177,8 +172,7 @@ executable brick-layer-demo
   main-is:             LayerDemo.hs
   build-depends:       base <= 5,
                        brick,
-                       vty >= 5.12,
-                       data-default,
+                       vty >= 5.15,
                        text,
                        microlens >= 0.3.0.0,
                        microlens-th
@@ -192,8 +186,7 @@ executable brick-suspend-resume-demo
   main-is:             SuspendAndResumeDemo.hs
   build-depends:       base <= 5,
                        brick,
-                       vty >= 5.12,
-                       data-default,
+                       vty >= 5.15,
                        text,
                        microlens >= 0.3.0.0,
                        microlens-th
@@ -207,8 +200,7 @@ executable brick-padding-demo
   main-is:             PaddingDemo.hs
   build-depends:       base <= 5,
                        brick,
-                       vty >= 5.12,
-                       data-default,
+                       vty >= 5.15,
                        text,
                        microlens
 
@@ -221,8 +213,7 @@ executable brick-attr-demo
   main-is:             AttrDemo.hs
   build-depends:       base <= 5,
                        brick,
-                       vty >= 5.12,
-                       data-default,
+                       vty >= 5.15,
                        text,
                        microlens
 
@@ -235,8 +226,7 @@ executable brick-markup-demo
   main-is:             MarkupDemo.hs
   build-depends:       base <= 5,
                        brick,
-                       vty >= 5.12,
-                       data-default,
+                       vty >= 5.15,
                        text,
                        microlens
 
@@ -249,8 +239,7 @@ executable brick-list-demo
   main-is:             ListDemo.hs
   build-depends:       base <= 5,
                        brick,
-                       vty >= 5.12,
-                       data-default,
+                       vty >= 5.15,
                        text,
                        microlens >= 0.3.0.0,
                        vector
@@ -264,8 +253,7 @@ executable brick-custom-event-demo
   main-is:             CustomEventDemo.hs
   build-depends:       base <= 5,
                        brick,
-                       vty >= 5.12,
-                       data-default,
+                       vty >= 5.15,
                        text,
                        microlens >= 0.3.0.0,
                        microlens-th
@@ -279,8 +267,7 @@ executable brick-hello-world-demo
   main-is:             HelloWorldDemo.hs
   build-depends:       base <= 5,
                        brick,
-                       vty >= 5.12,
-                       data-default,
+                       vty >= 5.15,
                        text,
                        microlens
 
@@ -293,8 +280,7 @@ executable brick-edit-demo
   main-is:             EditDemo.hs
   build-depends:       base <= 5,
                        brick,
-                       vty >= 5.12,
-                       data-default,
+                       vty >= 5.15,
                        text,
                        vector,
                        microlens >= 0.3.0.0,
@@ -310,8 +296,7 @@ executable brick-border-demo
   main-is:             BorderDemo.hs
   build-depends:       base <= 5,
                        brick,
-                       vty >= 5.12,
-                       data-default,
+                       vty >= 5.15,
                        text,
                        microlens
 
@@ -325,7 +310,6 @@ executable brick-progressbar-demo
   main-is:             ProgressBarDemo.hs
   build-depends:       base <= 5,
                        brick,
-                       vty >= 5.12,
-                       data-default,
+                       vty >= 5.15,
                        text,
                        microlens

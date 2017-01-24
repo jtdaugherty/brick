@@ -92,7 +92,6 @@ import Control.Monad.Trans.Reader
 import Control.Monad.Trans.Class (lift)
 import qualified Data.Foldable as F
 import qualified Data.Text as T
-import Data.Default
 import qualified Data.DList as DL
 import qualified Data.Map as M
 import qualified Data.Set as S
@@ -207,13 +206,13 @@ str s =
           fixEmpty l = l
           dropUnused l = takeColumns (availWidth c) <$> take (availHeight c) l
       case force theLines of
-          [] -> return def
-          [one] -> return $ def & imageL .~ (V.string (c^.attrL) one)
+          [] -> return emptyResult
+          [one] -> return $ emptyResult & imageL .~ (V.string (c^.attrL) one)
           multiple ->
               let maxLength = maximum $ V.safeWcswidth <$> multiple
                   lineImgs = lineImg <$> multiple
                   lineImg lStr = V.string (c^.attrL) (lStr ++ replicate (maxLength - V.safeWcswidth lStr) ' ')
-              in return $ def & imageL .~ (V.vertCat lineImgs)
+              in return $ emptyResult & imageL .~ (V.vertCat lineImgs)
 
 -- | Build a widget from a one-line 'T.Text' value. Behaves the same as
 -- 'str'.
@@ -308,7 +307,7 @@ fill :: Char -> Widget n
 fill ch =
     Widget Greedy Greedy $ do
       c <- getContext
-      return $ def & imageL .~ (V.charFill (c^.attrL) ch (c^.availWidthL) (c^.availHeightL))
+      return $ emptyResult & imageL .~ (V.charFill (c^.attrL) ch (c^.availWidthL) (c^.availHeightL))
 
 -- | Vertical box layout: put the specified widgets one above the other
 -- in the specified order (uppermost first). Defers growth policies to
@@ -550,7 +549,7 @@ overrideAttr targetName fromName =
 
 -- | Build a widget directly from a raw Vty image.
 raw :: V.Image -> Widget n
-raw img = Widget Fixed Fixed $ return $ def & imageL .~ img
+raw img = Widget Fixed Fixed $ return $ emptyResult & imageL .~ img
 
 -- | Translate the specified widget by the specified offset amount.
 -- Defers to the translated widget for growth policy.
