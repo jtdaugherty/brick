@@ -2,7 +2,7 @@
 Brick changelog
 ---------------
 
-0.16
+0.17
 ----
 
 Package changes:
@@ -14,13 +14,24 @@ API changes:
   BorderStyle (use Monoid instances instead where possible).
 * Added defaultBorderStyle :: BorderStyle.
 * Added emptyResult :: Result n.
-* List: added listModify function to modify the selected element (thanks
-  @diegospd)
 
-Performance-related changes:
-* Improved the performance of hBox and vBox by using DLists internally
-  (thanks Mitsutoshi Aoe)
+0.16
+----
 
+This release includes a breaking API change:
+* Brick now uses bounded channels (Brick.BChan.BChan) for event
+  communication rather than Control.Concurrent.Chan's unbounded channels
+  to improve memory consumption for programs with runaway event
+  production (thanks Joshua Chia)
+
+Other API changes:
+* Brick.List got a new function, listModify, for modifying the selected
+  element (thanks @diegospd)
+
+Performance improvements:
+* hBox and vBox now use the more efficient DList data structure when
+  rendering to improve performance for boxes with many elements (thanks
+  Mitsutoshi Aoe)
 
 0.15.2
 ------

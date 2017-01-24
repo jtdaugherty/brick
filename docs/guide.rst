@@ -332,19 +332,19 @@ handler:
 
 The next step is to actually *generate* our custom events and
 inject them into the ``brick`` event stream so they make it to the
-event handler. To do that we need to create a ``Chan`` for our
-custom events, provide that ``Chan`` to ``brick``, and then send
+event handler. To do that we need to create a ``BChan`` for our
+custom events, provide that ``BChan`` to ``brick``, and then send
 our events over that channel. Once we've created the channel with
-``Control.Concurrent.newChan``, we provide it to ``brick`` with
+``Brick.BChan.newBChan``, we provide it to ``brick`` with
 ``customMain`` instead of ``defaultMain``:
 
 .. code:: haskell
 
    main :: IO ()
    main = do
-       eventChan <- Control.Concurrent.newChan
+       eventChan <- Brick.BChan.newBChan 10
        finalState <- customMain
-                       (Graphics.Vty.mkVty Graphics.Vty.defaultConfig)
+                       (Graphics.Vty.mkVty Data.Default.defaultConfig)
                        (Just eventChan) app initialState
        -- Use finalState and exit
 
@@ -358,9 +358,25 @@ handler is straightforward:
 
 .. code:: haskell
 
-   counterThread :: Chan CounterEvent -> IO ()
+   counterThread :: Brick.BChan.BChan CounterEvent -> IO ()
    counterThread chan = do
-       Control.Concurrent.writeChan chan $ Counter 1
+       Brick.BChan.writeBChan chan $ Counter 1
+
+Bounded Channels
+****************
+
+A ``BChan``, or *bounded channel*, can hold a limited number of
+items before attempts to write new items will block. In the call to
+``newBChan`` above, the created channel has a capacity of 10 items.
+Use of a bounded channel ensures that if the program cannot process
+events quickly enough then there is a limit to how much memory will
+be used to store unprocessed events. Thus the chosen capacity should
+be large enough to buffer occasional spikes in event handling latency
+without inadvertently blocking custom event producers. Each application
+will have its own performance characteristics that determine the best
+bound for the event channel. In general, consider the performance of
+your event handler when choosing the channel capacity and design event
+producers so that they can block if the channel is full.
 
 Starting up: appStartEvent
 **************************

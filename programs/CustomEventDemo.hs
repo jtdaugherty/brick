@@ -5,10 +5,11 @@ module Main where
 import Lens.Micro ((^.), (&), (.~), (%~))
 import Lens.Micro.TH (makeLenses)
 import Control.Monad (void, forever)
-import Control.Concurrent (newChan, writeChan, threadDelay, forkIO)
+import Control.Concurrent (threadDelay, forkIO)
 import Data.Monoid
 import qualified Graphics.Vty as V
 
+import Brick.BChan
 import Brick.Main
   ( App(..)
   , showFirstCursor
@@ -72,10 +73,10 @@ theApp =
 
 main :: IO ()
 main = do
-    chan <- newChan
+    chan <- newBChan 10
 
     forkIO $ forever $ do
-        writeChan chan Counter
+        writeBChan chan Counter
         threadDelay 1000000
 
     void $ customMain (V.mkVty V.defaultConfig) (Just chan) theApp initialState
