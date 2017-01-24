@@ -8,6 +8,7 @@ Brick changelog
 Package changes:
 * Updated to depend on Vty 5.15.
 * Updated to remove dependency on data-default.
+* Discontinued support for GHC versions prior to 7.10.1.
 
 API changes:
 * Removed Data.Default instances for AttrName, AttrMap, Result, and
