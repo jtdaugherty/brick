@@ -38,7 +38,7 @@ cabal-version:       >=1.10
 Homepage:            https://github.com/jtdaugherty/brick/
 Bug-reports:         https://github.com/jtdaugherty/brick/issues
 
-data-files:          README.md,
+extra-doc-files:     README.md,
                      docs/guide.rst,
                      CHANGELOG.md
 
