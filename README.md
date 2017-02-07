@@ -63,7 +63,7 @@ $ .cabal-sandbox/bin/brick-???-demo
 ```
 
 To get started, see the [first few sections of the brick
-user guide](docs/guide.rst).
+user guide](https://github.com/jtdaugherty/brick/blob/master/docs/guide.rst).
 
 Brick-Users Discussion
 ----------------------
