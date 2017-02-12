@@ -10,7 +10,7 @@ description:
   >
   > import Brick
   >
-  > ui :: Widget n
+  > ui :: Widget ()
   > ui = str "Hello, world!"
   >
   > main :: IO ()
