@@ -202,7 +202,7 @@ listInsert pos e l =
         es = l^.listElementsL
         newSel = case l^.listSelectedL of
           Nothing -> 0
-          Just s -> if safePos < s
+          Just s -> if safePos <= s
                     then s + 1
                     else s
         (front, back) = V.splitAt safePos es
