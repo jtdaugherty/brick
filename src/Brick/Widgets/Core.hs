@@ -433,7 +433,8 @@ renderBox br ws =
       c <- getContext
 
       let pairsIndexed = zip [(0::Int)..] ws
-          (his, lows) = partition (\p -> (primaryWidgetSize br $ snd p) == Fixed) pairsIndexed
+          (his, lows) = partition (\p -> (primaryWidgetSize br $ snd p) == Fixed)
+                        pairsIndexed
 
       let availPrimary = c^.(contextPrimary br)
           availSecondary = c^.(contextSecondary br)
@@ -443,14 +444,16 @@ renderBox br ws =
               result <- render $ limitPrimary br remainingPrimary
                                $ limitSecondary br availSecondary
                                $ cropToContext prim
-              renderHis (remainingPrimary - (result^.imageL.(to $ imagePrimary br))) (DL.snoc prev (i, result)) rest
+              renderHis (remainingPrimary - (result^.imageL.(to $ imagePrimary br)))
+                        (DL.snoc prev (i, result)) rest
 
       renderedHis <- renderHis availPrimary DL.empty his
 
       renderedLows <- case lows of
           [] -> return []
           ls -> do
-              let remainingPrimary = c^.(contextPrimary br) - (sum $ (^._2.imageL.(to $ imagePrimary br)) <$> renderedHis)
+              let remainingPrimary = c^.(contextPrimary br) -
+                                     (sum $ (^._2.imageL.(to $ imagePrimary br)) <$> renderedHis)
                   primaryPerLow = remainingPrimary `div` length ls
                   padFirst = remainingPrimary - (primaryPerLow * length ls)
                   secondaryPerLow = c^.(contextSecondary br)
@@ -477,7 +480,8 @@ renderBox br ws =
           -- attribute. In a horizontal box we want all images to have
           -- the same height for the same reason.
           maxSecondary = maximum $ imageSecondary br <$> allImages
-          padImage img = padImageSecondary br (maxSecondary - imageSecondary br img) img (c^.attrL)
+          padImage img = padImageSecondary br (maxSecondary - imageSecondary br img)
+                         img (c^.attrL)
           paddedImages = padImage <$> allImages
 
       cropResultToContext $ Result (concatenatePrimary br paddedImages)
@@ -613,13 +617,15 @@ showCursor n cloc p =
 hRelease :: Widget n -> Maybe (Widget n)
 hRelease p =
     case hSize p of
-        Fixed -> Just $ Widget Greedy (vSize p) $ withReaderT (& availWidthL .~ unrestricted) (render p)
+        Fixed -> Just $ Widget Greedy (vSize p) $
+                        withReaderT (& availWidthL .~ unrestricted) (render p)
         Greedy -> Nothing
 
 vRelease :: Widget n -> Maybe (Widget n)
 vRelease p =
     case vSize p of
-        Fixed -> Just $ Widget (hSize p) Greedy $ withReaderT (& availHeightL .~ unrestricted) (render p)
+        Fixed -> Just $ Widget (hSize p) Greedy $
+                        withReaderT (& availHeightL .~ unrestricted) (render p)
         Greedy -> Nothing
 
 -- | Render the specified widget. If the widget has an entry in the
