@@ -703,7 +703,7 @@ viewport vpname typ p =
       let release = case typ of
             Vertical -> vRelease
             Horizontal -> hRelease
-            Both ->vRelease >=> hRelease
+            Both -> vRelease >=> hRelease
           released = case release p of
             Just w -> w
             Nothing -> case typ of
