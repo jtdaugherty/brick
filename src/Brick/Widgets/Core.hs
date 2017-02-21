@@ -685,12 +685,13 @@ viewport vpname typ p =
               observed <- use observedNamesL
               case S.member n observed of
                   False -> observedNamesL %= S.insert n
-                  True -> error $ "Error: while rendering the interface, the name " <> show n <>
-                                  " was seen more than once. You should ensure that all of the widgets " <>
-                                  "in each interface have unique name values. This means either " <>
-                                  "using a different name type or adding constructors to your " <>
-                                  "existing one and using those to name your widgets.  For more " <>
-                                  "information, see the \"Resource Names\" section of the Brick User Guide."
+                  True ->
+                      error $ "Error: while rendering the interface, the name " <> show n <>
+                              " was seen more than once. You should ensure that all of the widgets " <>
+                              "in each interface have unique name values. This means either " <>
+                              "using a different name type or adding constructors to your " <>
+                              "existing one and using those to name your widgets.  For more " <>
+                              "information, see the \"Resource Names\" section of the Brick User Guide."
 
       observeName vpname
 
@@ -707,9 +708,13 @@ viewport vpname typ p =
           released = case release p of
             Just w -> w
             Nothing -> case typ of
-                Vertical -> error $ "tried to embed an infinite-height widget in vertical viewport " <> (show vpname)
-                Horizontal -> error $ "tried to embed an infinite-width widget in horizontal viewport " <> (show vpname)
-                Both -> error $ "tried to embed an infinite-width or infinite-height widget in 'Both' type viewport " <> (show vpname)
+                Vertical -> error $ "tried to embed an infinite-height " <>
+                                    "widget in vertical viewport " <> (show vpname)
+                Horizontal -> error $ "tried to embed an infinite-width " <>
+                                      "widget in horizontal viewport " <> (show vpname)
+                Both -> error $ "tried to embed an infinite-width or " <>
+                                "infinite-height widget in 'Both' type " <>
+                                "viewport " <> (show vpname)
 
       initialResult <- render released
 
@@ -772,13 +777,16 @@ viewport vpname typ p =
                            , translated^.imageL.to V.imageHeight
                            )
       case translatedSize of
-          (0, 0) -> return $ translated & imageL .~ (V.charFill (c^.attrL) ' ' (c^.availWidthL) (c^.availHeightL))
-                                        & visibilityRequestsL .~ mempty
-                                        & extentsL .~ mempty
+          (0, 0) -> do
+              let spaceFill = V.charFill (c^.attrL) ' ' (c^.availWidthL) (c^.availHeightL)
+              return $ translated & imageL .~ spaceFill
+                                  & visibilityRequestsL .~ mempty
+                                  & extentsL .~ mempty
           _ -> render $ cropToContext
                       $ padBottom Max
                       $ padRight Max
-                      $ Widget Fixed Fixed $ return $ translated & visibilityRequestsL .~ mempty
+                      $ Widget Fixed Fixed
+                      $ return $ translated & visibilityRequestsL .~ mempty
 
 -- | Given a name, obtain the viewport for that name by consulting the
 -- viewport map in the rendering monad. NOTE! Some care must be taken
