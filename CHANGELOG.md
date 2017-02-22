@@ -2,6 +2,16 @@
 Brick changelog
 ---------------
 
+0.17.1
+------
+
+Package changes:
+ * Use Extra-Doc-Files instead of Data-Files for documentation files
+
+Bug fixes:
+ * List: correctly update selected index in listInsert
+ * Update example program in brick.cabal (thanks @timbod7)
+
 0.17
 ----
 
