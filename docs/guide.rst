@@ -1055,9 +1055,8 @@ Scrolling operations do nothing when they don't make sense for the
 specified viewport; scrolling a ``Vertical`` viewport horizontally is a
 no-op, for example.
 
-Using ``viewportScroll`` and the ``myViewport`` example given above, we
-can write an event handler that scrolls the "Hello, world!" viewport one
-column to the right:
+Using ``viewportScroll`` we can write an event handler that scrolls the
+``Viewport1`` viewport one column to the right:
 
 .. code:: haskell
 
@@ -1086,8 +1085,8 @@ simply wrap it with ``visible``:
    let w = viewport Viewport1 Horizontal $
            (visible $ str "Hello," <+> (str " world!")
 
-This example requests that the "``myViewport``" viewport be scrolled
-so that "Hello," is visible. We could extend this example with a value
+This example requests that the ``Viewport1`` viewport be scrolled so
+that "Hello," is visible. We could extend this example with a value
 in the application state indicating which word in our string should
 be visible and then use that to change which string gets wrapped with
 ``visible``; this is the basis of cursor-based scrolling.
