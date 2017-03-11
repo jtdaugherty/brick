@@ -156,4 +156,13 @@ centerAbout l p =
           off = Location ( centerW - l^.locationColumnL
                          , centerH - l^.locationRowL
                          )
-      render $ translateBy off p
+      result <- render $ translateBy off p
+
+      -- Pad the result so it consumes available space
+      let rightPaddingAmt = max 0 $ c^.availWidthL - imageWidth (result^.imageL)
+          bottomPaddingAmt = max 0 $ c^.availHeightL - imageHeight (result^.imageL)
+          rightPadding = charFill (c^.attrL) ' ' rightPaddingAmt (imageHeight $ result^.imageL)
+          bottomPadding = charFill (c^.attrL) ' ' (imageWidth $ result^.imageL) bottomPaddingAmt
+          paddedImg = horizCat [vertCat [result^.imageL, bottomPadding], rightPadding]
+
+      return $ result & imageL .~ paddedImg
