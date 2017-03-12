@@ -3,23 +3,38 @@ brick
 
 [![Build Status](https://travis-ci.org/jtdaugherty/brick.svg?branch=master)](https://travis-ci.org/jtdaugherty/brick)
 
-`brick` is a terminal user interface programming
-library written in Haskell, in the style of
-[gloss](http://hackage.haskell.org/package/gloss). This means you write
-a function that describes how your user interface should look, but the
-library takes care of a lot of the book-keeping that so commonly goes
-into writing such programs.
+`brick` is a Haskell terminal user interface programming library in the
+style of [gloss](http://hackage.haskell.org/package/gloss). This means
+you write a function that describes how your user interface should look,
+but the library takes care of a lot of the book-keeping that so commonly
+goes into writing such programs.
 
 `brick` exposes a declarative API. Unlike most GUI toolkits which
 require you to write a long and tedious sequence of "create a widget,
-now bind an event handler", `brick` just requires you to describe
-your interface -- even the bits that are stateful -- using a set of
-declarative combinators. Then you provide a function to transform your
-own application state when input (or other kinds of) events arrive.
+now bind an event handler", `brick` just requires you to describe your
+interface using a set of declarative combinators. Then you provide a
+function to transform your application state when input or other kinds
+of events arrive.
 
-Under the hood, this library builds upon [vty](http://hackage.haskell.org/package/vty).
+Under the hood, this library builds upon
+[vty](http://hackage.haskell.org/package/vty), so some knowledge of Vty
+will be helpful in using this library.
 
 This library deprecates [vty-ui](https://github.com/jtdaugherty/vty-ui).
+
+Getting Started
+---------------
+
+TLDR:
+
+```
+$ cabal sandbox init
+$ cabal install -j -f demos
+$ .cabal-sandbox/bin/brick-???-demo
+```
+
+To get started, see the [first few sections of the brick
+user guide](https://github.com/jtdaugherty/brick/blob/master/docs/guide.rst).
 
 Feature Overview
 ----------------
@@ -41,29 +56,8 @@ right away:
 
  * All widgets can be arranged in predictable layouts so you don't have
    to worry about terminal resizes.
- * Most widgets can be made scrollable *for free*.
  * Attribute management is flexible and can be customized at runtime on
    a per-widget basis.
-
-`brick` exports
-[microlens](http://hackage.haskell.org/package/microlens) and non-lens
-interfaces for most things, so you can get the power of lenses if
-desired or use plain Haskell if you don't. If a `brick` library function
-named `thing` has a lens version, the lens version is named `thingL`.
-
-Getting Started
----------------
-
-TLDR:
-
-```
-$ cabal sandbox init
-$ cabal install -j -f demos
-$ .cabal-sandbox/bin/brick-???-demo
-```
-
-To get started, see the [first few sections of the brick
-user guide](https://github.com/jtdaugherty/brick/blob/master/docs/guide.rst).
 
 Brick-Users Discussion
 ----------------------
@@ -88,11 +82,14 @@ Status
 
 `brick` is young and may be missing some essential features. There are
 some places were I have deliberately chosen to worry about performance
-later for the sake of spending more time on the design (and to wait on
-performance issues to arise first). `brick` exports an extension API
-that makes it possible to make your own packages and widgets. If you
-use that, you'll also be helping to test whether the exported interface
-is usable and complete!
+later for the sake of spending more time on the design (and to wait
+on performance issues to arise first). `brick` is also something of
+a research project of mine, and some aspects of the design involve
+trade-offs that are not entirely settled.
+
+`brick` exports an extension API that makes it possible to make your own
+packages and widgets. If you use that, you'll also be helping to test
+whether the exported interface is usable and complete!
 
 Reporting bugs
 --------------
@@ -101,8 +98,7 @@ Please file bug reports as GitHub issues.  For best results:
 
  - Include the versions of relevant software packages: your terminal
    emulator, `brick`, `ghc`, and `vty` will be the most important
-   ones. Even better, the output of `cabal freeze` would probably be
-   helpful in making the problem reproducible.
+   ones.
 
  - Clearly describe the behavior you expected ...
 
