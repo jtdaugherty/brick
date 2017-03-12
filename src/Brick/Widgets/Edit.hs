@@ -11,6 +11,12 @@
 -- The editor's 'HandleEvent' instance handles a set of basic input
 -- events that should suffice for most purposes; see the source for a
 -- complete list.
+--
+-- Bear in mind that the editor provided by this module is intended to
+-- provide basic input support for brick applications but it is not
+-- intended to be a replacement for your favorite editor such as Vim or
+-- Emacs. It is also not suitable for building sophisticated editors. If
+-- you want to build your own editor, I suggest starting from scratch.
 module Brick.Widgets.Edit
   ( Editor(editContents, editorName, editDrawContents)
   -- * Constructing an editor
