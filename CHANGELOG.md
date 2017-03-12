@@ -2,6 +2,17 @@
 Brick changelog
 ---------------
 
+0.17.2
+------
+
+Package changes:
+ * Added programs/ReadmeDemo.hs and featured its output and code in the
+   README to provide an early demonstration
+
+Library changes:
+ * centerAbout now right- and bottom-pads its operand to behave
+   consistently with h/vCenter
+
 0.17.1
 ------
 
