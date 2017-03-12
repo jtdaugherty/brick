@@ -25,8 +25,7 @@ This library deprecates [vty-ui](https://github.com/jtdaugherty/vty-ui).
 Example
 -------
 
-Here's an example interface that resizes automatically when the terminal
-size changes (see `programs/ReadmeDemo.hs`):
+Here's an example interface (see `programs/ReadmeDemo.hs`):
 
 ```
 withBorderStyle unicode $
