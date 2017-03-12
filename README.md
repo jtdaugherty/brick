@@ -82,9 +82,9 @@ Status
 
 `brick` is young and may be missing some essential features. There are
 some places were I have deliberately chosen to worry about performance
-later for the sake of spending more time on the design (and to wait
-on performance issues to arise first). `brick` is also something of
-a research project of mine, and some aspects of the design involve
+later for the sake of spending more time on the design (and to wait on
+performance issues to arise first). `brick` is also something of an
+experimental project of mine and some aspects of the design involve
 trade-offs that are not entirely settled.
 
 `brick` exports an extension API that makes it possible to make your own
