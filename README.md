@@ -22,6 +22,30 @@ will be helpful in using this library.
 
 This library deprecates [vty-ui](https://github.com/jtdaugherty/vty-ui).
 
+Example
+-------
+
+Here's an example interface that resizes automatically when the terminal
+size changes (see `programs/ReadmeDemo.hs`):
+
+```
+withBorderStyle unicode $
+borderWithLabel (str "Hello!") $
+(center (str "Left") <+> vBorder <+> center (str "Right"))
+```
+
+Result:
+
+```
+┌─────────Hello!─────────┐
+│           │            │
+│           │            │
+│   Left    │   Right    │
+│           │            │
+│           │            │
+└────────────────────────┘
+```
+
 Getting Started
 ---------------
 
