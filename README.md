@@ -118,7 +118,7 @@ should consider to make submitting patches easier for all concerned:
  - If you want to take on big things, talk to me first; let's have a
    design/vision discussion before you start coding. Create a GitHub
    issue and we can use that as the place to hash things out.
- - If you make changes, try to make them consistent with the syntactic
-   conventions I've used in the codebase.
- - Please provide Haddock and/or user guide documentation for any
-   changes you make.
+ - Please make changes consistent with the conventions I've used in the
+   codebase.
+ - Please adjust or provide Haddock and/or user guide documentation
+   relevant to any changes you make.
