@@ -44,16 +44,14 @@ import Brick.Widgets.Border
 import Brick.AttrMap
 
 -- | Dialogs present a window with a title (optional), a body, and
--- buttons (optional). They provide a 'HandleEvent' instance that knows
--- about Tab and Shift-Tab as well as ArrowLeft and ArrowRight
--- for changing which button is active. Dialog
--- buttons are labeled with strings and map to values of type 'a', which
--- you choose.
+-- buttons (optional). Dialog buttons are labeled with strings and map
+-- to values of type 'a', which you choose.
 --
--- Dialogs handle the following events by default:
+-- Dialogs handle the following events by default with
+-- handleDialogEvent:
 --
--- * Tab: selecte the next button
--- * Shift-tab: select the previous button
+-- * Tab or Right Arrow: select the next button
+-- * Shift-tab or Left Arrow: select the previous button
 data Dialog a =
     Dialog { dialogTitle :: Maybe String
            -- ^ The dialog title

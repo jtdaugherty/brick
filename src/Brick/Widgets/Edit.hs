@@ -8,9 +8,9 @@
 -- of the editor, just use 'getEditContents'. To modify it, use the
 -- 'Z.TextZipper' interface with 'applyEdit'.
 --
--- The editor's 'HandleEvent' instance handles a set of basic input
--- events that should suffice for most purposes; see the source for a
--- complete list.
+-- The editor's 'handleEditorEvent' function handles a set of basic
+-- input events that should suffice for most purposes; see the source
+-- for a complete list.
 --
 -- Bear in mind that the editor provided by this module is intended to
 -- provide basic input support for brick applications but it is not
