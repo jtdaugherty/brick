@@ -90,7 +90,7 @@ handleListEvent e theList =
         EvKey KUp [] -> return $ listMoveUp theList
         EvKey KDown [] -> return $ listMoveDown theList
         EvKey KHome [] -> return $ listMoveTo 0 theList
-        EvKey KEnd [] -> return $ listMoveTo (V.length $ listElements theList) theList
+        EvKey KEnd [] -> return $ listMoveTo (length theList) theList
         EvKey KPageDown [] -> do
             v <- lookupViewport (theList^.listNameL)
             case v of
@@ -155,7 +155,7 @@ drawListElements foc l drawElem =
             idx = fromMaybe 0 (l^.listSelectedL)
 
             start = max 0 $ idx - numPerHeight + 1
-            num = min (numPerHeight * 2) (V.length (l^.listElementsL) - start)
+            num = min (numPerHeight * 2) (length l - start)
 
             -- The number of items to show is the available height divided by
             -- the item height...
@@ -198,7 +198,7 @@ listInsert :: Int
            -> List n e
            -> List n e
 listInsert pos e l =
-    let safePos = clamp 0 (V.length es) pos
+    let safePos = clamp 0 (length l) pos
         es = l^.listElementsL
         newSel = case l^.listSelectedL of
           Nothing -> 0
@@ -214,8 +214,8 @@ listRemove :: Int
            -- ^ The position at which to remove an element (0 <= i < size)
            -> List n e
            -> List n e
-listRemove pos l | V.null (l^.listElementsL) = l
-                 | pos /= clamp 0 (V.length (l^.listElementsL) - 1) pos = l
+listRemove pos l | null l = l
+                 | pos /= clamp 0 (length l - 1) pos = l
                  | otherwise =
     let newSel = case l^.listSelectedL of
           Nothing -> 0
@@ -226,7 +226,7 @@ listRemove pos l | V.null (l^.listElementsL) = l
         (front, back) = V.splitAt pos es
         es' = front V.++ V.tail back
         es = l^.listElementsL
-    in l & listSelectedL .~ (if V.null es' then Nothing else Just newSel)
+    in l & listSelectedL .~ (if null l then Nothing else Just newSel)
          & listElementsL .~ es'
 
 -- | Replace the contents of a list with a new set of elements and
@@ -253,14 +253,14 @@ listMoveDown = listMoveBy 1
 -- validation.
 listMoveBy :: Int -> List n e -> List n e
 listMoveBy amt l =
-    let newSel = clamp 0 (V.length (l^.listElementsL) - 1) <$> (amt +) <$> (l^.listSelectedL)
+    let newSel = clamp 0 (length l - 1) <$> (amt +) <$> (l^.listSelectedL)
     in l & listSelectedL .~ newSel
 
 -- | Set the selected index for a list to the specified index, subject
 -- to validation.
 listMoveTo :: Int -> List n e -> List n e
 listMoveTo pos l =
-    let len = V.length (l^.listElementsL)
+    let len = length l
         newSel = clamp 0 (len - 1) $ if pos < 0 then len - pos else pos
     in l & listSelectedL .~ if len > 0
                             then Just newSel
@@ -280,7 +280,7 @@ listClear l = l & listElementsL .~ V.empty & listSelectedL .~ Nothing
 -- again be the selected one.
 listReverse :: List n e -> List n e
 listReverse theList = theList & listElementsL %~ V.reverse & listSelectedL .~ newSel
-  where n = V.length (listElements theList)
+  where n = length theList
         newSel = (-) <$> pure (n-1) <*> listSelected theList
 
 -- | Apply a function to the selected element. If no element is selected
