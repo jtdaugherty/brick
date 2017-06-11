@@ -81,6 +81,7 @@ library
   build-depends:       base <= 5,
                        vty >= 5.15,
                        transformers,
+                       data-clist >= 0.1,
                        dlist,
                        containers,
                        microlens >= 0.3.0.0,

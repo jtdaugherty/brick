@@ -1,5 +1,3 @@
-{-# LANGUAGE DeriveFunctor #-}
-
 -- | This module provides a type and functions for handling focus rings
 -- of widgets. Note that this interface is merely provided for managing
 -- the focus state for a sequence of resource names; it does not do
@@ -14,41 +12,36 @@ module Brick.Focus
   , focusGetCurrent
   , focusRingCursor
   , withFocusRing
+  , focusRingModify
   )
 where
 
 import Lens.Micro ((^.))
 import Data.Maybe (listToMaybe)
+import qualified Data.CircularList as C
 
 import Brick.Types
 import Brick.Widgets.Core (Named(..))
 
 -- | A focus ring containing a sequence of resource names to focus and a
 -- currently-focused name.
-data FocusRing n = FocusRingEmpty
-                 | FocusRingNonempty ![n] !Int
-                 deriving Functor
+newtype FocusRing n = FocusRing (C.CList n)
 
 -- | Construct a focus ring from the list of resource names.
 focusRing :: [n] -> FocusRing n
-focusRing [] = FocusRingEmpty
-focusRing names = FocusRingNonempty names 0
+focusRing = FocusRing . C.fromList
 
 -- | Advance focus to the next widget in the ring.
 focusNext :: FocusRing n -> FocusRing n
-focusNext FocusRingEmpty = FocusRingEmpty
-focusNext fr@(FocusRingNonempty [_] _) = fr
-focusNext (FocusRingNonempty ns i) = FocusRingNonempty ns i'
-    where
-        i' = (i + 1) `mod` (length ns)
+focusNext r@(FocusRing l)
+    | C.isEmpty l = r
+    | otherwise = FocusRing $ C.rotR l
 
 -- | Advance focus to the previous widget in the ring.
 focusPrev :: FocusRing n -> FocusRing n
-focusPrev FocusRingEmpty = FocusRingEmpty
-focusPrev fr@(FocusRingNonempty [_] _) = fr
-focusPrev (FocusRingNonempty ns i) = FocusRingNonempty ns i'
-    where
-        i' = (i + (length ns) - 1) `mod` (length ns)
+focusPrev r@(FocusRing l)
+    | C.isEmpty l = r
+    | otherwise = FocusRing $ C.rotL l
 
 -- | This function is a convenience function to look up a widget state
 -- value's resource name in a focus ring and set its focus setting
@@ -74,8 +67,13 @@ withFocusRing ring f a = f (focusGetCurrent ring == Just (getName a)) a
 -- | Get the currently-focused resource name from the ring. If the ring
 -- is emtpy, return 'Nothing'.
 focusGetCurrent :: FocusRing n -> Maybe n
-focusGetCurrent FocusRingEmpty = Nothing
-focusGetCurrent (FocusRingNonempty ns i) = Just $ ns !! i
+focusGetCurrent (FocusRing l) = C.focus l
+
+-- | Modify the internal circular list structure of a focus ring
+-- directly. This function permits modification of the circular list
+-- using the rich Data.CircularList API.
+focusRingModify :: (C.CList n -> C.CList n) -> FocusRing n -> FocusRing n
+focusRingModify f (FocusRing l) = FocusRing $ f l
 
 -- | Cursor selection convenience function for use as an
 -- 'Brick.Main.appChooseCursor' value.
