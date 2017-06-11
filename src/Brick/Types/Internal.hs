@@ -206,7 +206,7 @@ data BrickEvent n e = VtyEvent Event
                     -- ^ A mouse-down event on the specified region was
                     -- received.
                     | MouseUp n (Maybe Button) Location
-                    -- ^ A mouse-down event on the specified region was
+                    -- ^ A mouse-up event on the specified region was
                     -- received.
                     deriving (Show, Eq)
 
