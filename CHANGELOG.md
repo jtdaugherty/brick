@@ -2,6 +2,20 @@
 Brick changelog
 ---------------
 
+0.18
+----
+
+Package changes:
+ * Added a dependency on data-clist.
+
+API changes:
+ * Brick.Focus: removed the Functor instance for FocusRing.
+ * Brick.Focus: re-implemented FocusRing in terms of the circular list
+   data structure from data-clist. In addition, this change introduced
+   "focusRingModify", which permits the user to use the data-clist API
+   to directly manipulate the FocusRing's internals. This way brick
+   doesn't have to re-invent the wheel on the focus ring behavior.
+
 0.17.2
 ------
 
