@@ -1,5 +1,5 @@
 -- | This module provides a type and functions for handling focus rings
--- of widgets. Note that this interface is merely provided for managing
+-- of values. Note that this interface is merely provided for managing
 -- the focus state for a sequence of resource names; it does not do
 -- anything beyond keep track of that.
 --
@@ -31,13 +31,13 @@ newtype FocusRing n = FocusRing (C.CList n)
 focusRing :: [n] -> FocusRing n
 focusRing = FocusRing . C.fromList
 
--- | Advance focus to the next widget in the ring.
+-- | Advance focus to the next value in the ring.
 focusNext :: FocusRing n -> FocusRing n
 focusNext r@(FocusRing l)
     | C.isEmpty l = r
     | otherwise = FocusRing $ C.rotR l
 
--- | Advance focus to the previous widget in the ring.
+-- | Advance focus to the previous value in the ring.
 focusPrev :: FocusRing n -> FocusRing n
 focusPrev r@(FocusRing l)
     | C.isEmpty l = r
