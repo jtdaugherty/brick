@@ -1,7 +1,5 @@
 -- | This module provides a type and functions for handling focus rings
--- of values. Note that this interface is merely provided for managing
--- the focus state for a sequence of resource names; it does not do
--- anything beyond keep track of that.
+-- of values.
 --
 -- This interface is experimental.
 module Brick.Focus
