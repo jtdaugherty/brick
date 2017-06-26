@@ -18,7 +18,7 @@
 -- Emacs. It is also not suitable for building sophisticated editors. If
 -- you want to build your own editor, I suggest starting from scratch.
 module Brick.Widgets.Edit
-  ( Editor(editContents, editorName, editDrawContents)
+  ( Editor(editContents, editorName)
   -- * Constructing an editor
   , editor
   , editorText
@@ -30,7 +30,6 @@ module Brick.Widgets.Edit
   , applyEdit
   -- * Lenses for working with editors
   , editContentsL
-  , editDrawContentsL
   -- * Rendering editors
   , renderEditor
   -- * Attributes
@@ -64,8 +63,6 @@ import Brick.AttrMap
 data Editor t n =
     Editor { editContents :: Z.TextZipper t
            -- ^ The contents of the editor
-           , editDrawContents :: [t] -> Widget n
-           -- ^ The function the editor uses to draw its contents
            , editorName :: n
            -- ^ The name of the editor
            }
@@ -105,8 +102,6 @@ handleEditorEvent e ed =
 -- | Construct an editor over 'Text' values
 editorText :: n
        -- ^ The editor's name (must be unique)
-       -> ([T.Text] -> Widget n)
-       -- ^ The content rendering function
        -> Maybe Int
        -- ^ The limit on the number of lines in the editor ('Nothing'
        -- means no limit)
@@ -119,15 +114,13 @@ editorText = editor
 editor :: Z.GenericTextZipper a
        => n
        -- ^ The editor's name (must be unique)
-       -> ([a] -> Widget n)
-       -- ^ The content rendering function
        -> Maybe Int
        -- ^ The limit on the number of lines in the editor ('Nothing'
        -- means no limit)
        -> a
        -- ^ The initial content
        -> Editor a n
-editor name draw limit s = Editor (Z.textZipper (Z.lines s) limit) draw name
+editor name limit s = Editor (Z.textZipper (Z.lines s) limit) name
 
 -- | Apply an editing operation to the editor's contents. Bear in mind
 -- that you should only apply zipper operations that operate on the
@@ -156,13 +149,15 @@ getEditContents e = Z.getText $ e^.editContentsL
 -- name for its scrollable viewport handle and the name is also used to
 -- report mouse events.
 renderEditor :: (Ord n, Show n, Monoid t, TextWidth t, Z.GenericTextZipper t)
-             => Bool
+             => ([t] -> Widget n)
+             -- ^ The content drawing function
+             -> Bool
              -- ^ Whether the editor has focus. It will report a cursor
              -- position if and only if it has focus.
              -> Editor t n
              -- ^ The editor.
              -> Widget n
-renderEditor foc e =
+renderEditor draw foc e =
     let cp = Z.cursorPosition z
         z = e^.editContentsL
         toLeft = Z.take (cp^._2) (Z.currentLine z)
@@ -178,7 +173,7 @@ renderEditor foc e =
        clickable (e^.editorNameL) $
        (if foc then showCursor (e^.editorNameL) cursorLoc else id) $
        visibleRegion cursorLoc (atCharWidth, 1) $
-       e^.editDrawContentsL $
+       draw $
        getEditContents e
 
 charAtCursor :: (Z.GenericTextZipper t) => Z.TextZipper t -> Maybe t

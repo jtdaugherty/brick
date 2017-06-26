@@ -37,8 +37,8 @@ makeLenses ''St
 drawUI :: St -> [T.Widget Name]
 drawUI st = [ui]
     where
-        e1 = F.withFocusRing (st^.focusRing) E.renderEditor (st^.edit1)
-        e2 = F.withFocusRing (st^.focusRing) E.renderEditor (st^.edit2)
+        e1 = F.withFocusRing (st^.focusRing) (E.renderEditor (str . unlines)) (st^.edit1)
+        e2 = F.withFocusRing (st^.focusRing) (E.renderEditor (str . unlines)) (st^.edit2)
 
         ui = C.center $
             (str "Input 1 (unlimited): " <+> (hLimit 30 $ vLimit 5 e1)) <=>
@@ -63,8 +63,8 @@ appEvent st _ = M.continue st
 initialState :: St
 initialState =
     St (F.focusRing [Edit1, Edit2])
-       (E.editor Edit1 (str . unlines) Nothing "")
-       (E.editor Edit2 (str . unlines) (Just 2) "")
+       (E.editor Edit1 Nothing "")
+       (E.editor Edit2 (Just 2) "")
 
 theMap :: A.AttrMap
 theMap = A.attrMap V.defAttr
