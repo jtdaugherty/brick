@@ -2,6 +2,15 @@
 Brick changelog
 ---------------
 
+0.19
+----
+
+API changes:
+ * The editor content drawing function is now passed to renderEditor,
+   not the constructor, to improve separation of presentation and
+   representation concerns. The corresponding Editor drawing function
+   lens and accessor were removed.
+
 0.18
 ----
 
