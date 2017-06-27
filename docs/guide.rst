@@ -103,7 +103,7 @@ various functions:
    data App s e n =
        App { appDraw         :: s -> [Widget n]
            , appChooseCursor :: s -> [CursorLocation n] -> Maybe (CursorLocation n)
-           , appHandleEvent  :: s -> e -> EventM n (Next s)
+           , appHandleEvent  :: s -> BrickEvent n e -> EventM n (Next s)
            , appStartEvent   :: s -> EventM n s
            , appAttrMap      :: s -> AttrMap
            }
