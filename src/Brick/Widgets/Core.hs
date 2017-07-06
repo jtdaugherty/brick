@@ -214,8 +214,8 @@ str s =
                   lineImg lStr = V.string (c^.attrL) (lStr ++ replicate (maxLength - V.safeWcswidth lStr) ' ')
               in return $ emptyResult & imageL .~ (V.vertCat lineImgs)
 
--- | Build a widget from a one-line 'T.Text' value. Behaves the same as
--- 'str'.
+-- | Build a widget from a 'T.Text' value. Behaves the same as 'str'
+-- when the input contains multiple lines.
 txt :: T.Text -> Widget n
 txt = str . T.unpack
 
