@@ -46,7 +46,7 @@ buttonLayer st =
       C.hCenterLayer (padBottom (T.Pad 1) $ str "Click a button:") <=>
       C.hCenterLayer (hBox $ padLeftRight 1 <$> buttons) <=>
       C.hCenterLayer (padTopBottom 1 $ str "Or enter text and then click in this editor:") <=>
-      C.hCenterLayer (vLimit 3 $ hLimit 50 $ E.renderEditor True (st^.edit))
+      C.hCenterLayer (vLimit 3 $ hLimit 50 $ E.renderEditor (str . unlines) True (st^.edit))
     where
         buttons = mkButton <$> buttonData
         buttonData = [ (Button1, "Button 1", "button1")
@@ -143,4 +143,4 @@ main = do
            \Excepteur sint occaecat cupidatat not proident,\n\
            \sunt in culpa qui officia deserunt mollit\n\
            \anim id est laborum.\n"
-           (E.editor TextBox (str . unlines) Nothing "")
+           (E.editor TextBox Nothing "")
