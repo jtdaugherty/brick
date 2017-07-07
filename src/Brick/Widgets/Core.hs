@@ -11,7 +11,9 @@ module Brick.Widgets.Core
   , emptyWidget
   , raw
   , txt
+  , txtWrap
   , str
+  , strWrap
   , fill
 
   -- * Padding
@@ -96,6 +98,7 @@ import qualified Data.DList as DL
 import qualified Data.Map as M
 import qualified Data.Set as S
 import qualified Data.Function as DF
+import Data.Char (isSpace)
 import Data.List (sortBy, partition)
 import qualified Graphics.Vty as V
 import Control.DeepSeq
@@ -194,6 +197,47 @@ takeColumns numCols (c:cs) =
        else if w < numCols
             then c : takeColumns (numCols - w) cs
             else ""
+
+-- Note: trim, reverseBreak, wordWrap, and wordWrap' are all Copyright
+-- 2011 Bartosz Ćwikłowski from hsenv with some minor modifications.
+trim :: String -> String
+trim = trimAndReverse . trimAndReverse
+  where trimAndReverse = reverse . dropWhile isSpace
+
+reverseBreak :: (a -> Bool) -> [a] -> ([a], [a])
+reverseBreak f xs = (reverse before, reverse after)
+  where (after, before) = break f $ reverse xs
+
+wordWrap :: Int -> String -> [String]
+wordWrap maxLen s = concat $ wordWrap' maxLen <$> lines s
+
+wordWrap' :: Int -> String -> [String]
+wordWrap' maxLen line
+  | length line <= maxLen = [line]
+  | any isSpace beforeMax = trim beforeSpace : wordWrap maxLen (afterSpace ++ afterMax)
+  | otherwise = firstBigWord : wordWrap maxLen rest
+    where (beforeMax, afterMax) = splitAt maxLen line
+          (beforeSpace, afterSpace) = reverseBreak isSpace beforeMax
+          (firstBigWord, rest) = break isSpace line
+
+strWrap :: String -> Widget n
+strWrap s =
+    Widget Fixed Fixed $ do
+      c <- getContext
+      let theLines = fixEmpty <$> wordWrap (c^.availWidthL) s
+          fixEmpty [] = " "
+          fixEmpty l = l
+      case force theLines of
+          [] -> return emptyResult
+          [one] -> return $ emptyResult & imageL .~ (V.string (c^.attrL) one)
+          multiple ->
+              let maxLength = maximum $ V.safeWcswidth <$> multiple
+                  lineImgs = lineImg <$> multiple
+                  lineImg lStr = V.string (c^.attrL) (lStr ++ replicate (maxLength - V.safeWcswidth lStr) ' ')
+              in return $ emptyResult & imageL .~ (V.vertCat lineImgs)
+
+txtWrap :: T.Text -> Widget n
+txtWrap = str . T.unpack
 
 -- | Build a widget from a 'String'. Breaks newlines up and space-pads
 -- short lines out to the length of the longest line.

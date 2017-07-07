@@ -107,6 +107,18 @@ executable brick-readme-demo
                        brick,
                        text
 
+executable brick-text-wrap-demo
+  if !flag(demos)
+    Buildable: False
+  hs-source-dirs:      programs
+  ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
+  default-language:    Haskell2010
+  default-extensions:  CPP
+  main-is:             TextWrapDemo.hs
+  build-depends:       base,
+                       brick,
+                       text
+
 executable brick-cache-demo
   if !flag(demos)
     Buildable: False
