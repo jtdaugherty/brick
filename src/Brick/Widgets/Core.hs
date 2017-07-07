@@ -220,6 +220,8 @@ wordWrap' maxLen line
           (beforeSpace, afterSpace) = reverseBreak isSpace beforeMax
           (firstBigWord, rest) = break isSpace line
 
+-- | Make a widget from a string, but wrap the words in the input's
+-- lines at the available width.
 strWrap :: String -> Widget n
 strWrap s =
     Widget Fixed Fixed $ do
@@ -236,6 +238,8 @@ strWrap s =
                   lineImg lStr = V.string (c^.attrL) (lStr ++ replicate (maxLength - V.safeWcswidth lStr) ' ')
               in return $ emptyResult & imageL .~ (V.vertCat lineImgs)
 
+-- | Make a widget from text, but wrap the words in the input's lines at
+-- the available width.
 txtWrap :: T.Text -> Widget n
 txtWrap = str . T.unpack
 
