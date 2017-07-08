@@ -2,6 +2,21 @@
 Brick changelog
 ---------------
 
+0.20
+----
+
+Package changes:
+ * Added a dependency on "word-wrap" for text-wrapping.
+ * Added a new TextWrapDemo demo program to illustrate text wrapping
+   support
+
+API changes:
+ * Brick.Widgets.Core: added new functions txtWrap and strWrap to do
+   wrapping of long lines of text.
+
+Miscellaneous:
+ * Guide: fixed event type (#126)
+
 0.19
 ----
 
