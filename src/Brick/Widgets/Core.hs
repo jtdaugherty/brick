@@ -234,6 +234,7 @@ str s =
     Widget Fixed Fixed $ do
       c <- getContext
       let theLines = fixEmpty <$> (dropUnused . lines) s
+          fixEmpty :: String -> String
           fixEmpty [] = " "
           fixEmpty l = l
           dropUnused l = takeColumns (availWidth c) <$> take (availHeight c) l
