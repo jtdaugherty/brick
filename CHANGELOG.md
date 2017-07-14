@@ -2,6 +2,12 @@
 Brick changelog
 ---------------
 
+0.20.1
+------
+
+Bug fixes:
+ * str: fixed an IsString constraint confusion on GHC 7.10.1
+
 0.20
 ----
 
