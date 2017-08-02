@@ -286,6 +286,19 @@ executable brick-custom-event-demo
                        microlens >= 0.3.0.0,
                        microlens-th
 
+executable brick-fill-demo
+  if !flag(demos)
+    Buildable: False
+  hs-source-dirs:      programs
+  ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
+  default-language:    Haskell2010
+  main-is:             FillDemo.hs
+  build-depends:       base <= 5,
+                       brick,
+                       vty >= 5.15,
+                       text,
+                       microlens
+
 executable brick-hello-world-demo
   if !flag(demos)
     Buildable: False
