@@ -2,6 +2,16 @@
 Brick changelog
 ---------------
 
+0.21
+----
+
+Package changes:
+ * Upgrade to word-wrap 0.2
+
+Other changes:
+ * Brick.Types.Internal: improve mouse constructor haddock
+ * Add a basic fill demonstration program (FillDemo.hs)
+
 0.20.1
 ------
 
