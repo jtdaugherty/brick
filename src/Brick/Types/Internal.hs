@@ -204,10 +204,12 @@ data BrickEvent n e = VtyEvent Event
                     -- ^ The event was an application event.
                     | MouseDown n Button [Modifier] Location
                     -- ^ A mouse-down event on the specified region was
-                    -- received.
+                    -- received. The 'n' value is the resource name of
+                    -- the clicked widget (see 'clickable').
                     | MouseUp n (Maybe Button) Location
                     -- ^ A mouse-up event on the specified region was
-                    -- received.
+                    -- received. The 'n' value is the resource name of
+                    -- the clicked widget (see 'clickable').
                     deriving (Show, Eq)
 
 data RenderState n =
