@@ -103,7 +103,7 @@ import Data.List (sortBy, partition)
 import qualified Graphics.Vty as V
 import Control.DeepSeq
 
-import Text.Wrap (wrapTextToLines)
+import Text.Wrap (wrapTextToLines, defaultWrapSettings)
 
 import Brick.Types
 import Brick.Types.Internal
@@ -214,7 +214,7 @@ txtWrap :: T.Text -> Widget n
 txtWrap s =
     Widget Fixed Fixed $ do
       c <- getContext
-      let theLines = fixEmpty <$> wrapTextToLines (c^.availWidthL) s
+      let theLines = fixEmpty <$> wrapTextToLines defaultWrapSettings (c^.availWidthL) s
           fixEmpty l | T.null l = " "
                      | otherwise = l
       case force theLines of
