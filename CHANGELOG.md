@@ -2,6 +2,16 @@
 Brick changelog
 ---------------
 
+0.22
+----
+
+API changes:
+ * Core: added txtWrapWith and strWrapWith functions to provide control
+   over wrapping behavior by specifying custom wrapping settings.
+
+Other changes:
+ * Updated TextWrapDemo.hs to demonstrate customizing wrapping settings.
+
 0.21
 ----
 
