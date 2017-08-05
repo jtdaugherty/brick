@@ -220,6 +220,8 @@ safeTextWidth = V.safeWcswidth . T.unpack
 txtWrap :: T.Text -> Widget n
 txtWrap = txtWrapWith defaultWrapSettings
 
+-- | Make a widget from text, but wrap the words in the input's lines at
+-- the available width using the specified wrapping settings.
 txtWrapWith :: WrapSettings -> T.Text -> Widget n
 txtWrapWith settings s =
     Widget Fixed Fixed $ do
