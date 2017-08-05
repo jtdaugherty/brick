@@ -832,11 +832,9 @@ to the Vty library handle in ``EventM``:
 
    do
      vty <- Brick.Main.getVtyHandle
-     case vty of
-       Nothing -> return ()
-       Just v -> let output = outputIface v
-                 in when (supportsMode output BracketedPaste) $
-                      liftIO $ setMode output BracketedPaste True
+     let output = outputIface vty
+     when (supportsMode output BracketedPaste) $
+         liftIO $ setMode output BracketedPaste True
 
 Once enabled, paste mode will generate Vty ``EvPaste`` events. These
 events will give you the entire pasted content as a ``ByteString`` which
@@ -855,11 +853,9 @@ To enable mouse mode, we need to get access to the Vty library handle in
 
    do
      vty <- Brick.Main.getVtyHandle
-     case vty of
-       Nothing -> return ()
-       Just v -> let output = outputIface vt
-                 in when (supportsMode output Mouse) $
-                      liftIO $ setMode output Mouse True
+     let output = outputIface vty
+     when (supportsMode output Mouse) $
+       liftIO $ setMode output Mouse True
 
 Bear in mind that some terminals do not support mouse interaction, so
 use Vty's ``getModeStatus`` to find out whether your terminal will
