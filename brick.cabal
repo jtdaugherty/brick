@@ -118,7 +118,8 @@ executable brick-text-wrap-demo
   main-is:             TextWrapDemo.hs
   build-depends:       base,
                        brick,
-                       text
+                       text,
+                       word-wrap
 
 executable brick-cache-demo
   if !flag(demos)

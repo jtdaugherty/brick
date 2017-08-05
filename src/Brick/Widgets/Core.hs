@@ -13,8 +13,10 @@ module Brick.Widgets.Core
   , raw
   , txt
   , txtWrap
+  , txtWrapWith
   , str
   , strWrap
+  , strWrapWith
   , fill
 
   -- * Padding
@@ -103,7 +105,7 @@ import Data.List (sortBy, partition)
 import qualified Graphics.Vty as V
 import Control.DeepSeq
 
-import Text.Wrap (wrapTextToLines, defaultWrapSettings)
+import Text.Wrap (wrapTextToLines, WrapSettings, defaultWrapSettings)
 
 import Brick.Types
 import Brick.Types.Internal
@@ -201,20 +203,28 @@ takeColumns numCols (c:cs) =
             else ""
 
 -- | Make a widget from a string, but wrap the words in the input's
--- lines at the available width.
+-- lines at the available width using the default wrapping settings.
 strWrap :: String -> Widget n
-strWrap = txtWrap . T.pack
+strWrap = strWrapWith defaultWrapSettings
+
+-- | Make a widget from a string, but wrap the words in the input's
+-- lines at the available width using the specified wrapping settings.
+strWrapWith :: WrapSettings -> String -> Widget n
+strWrapWith settings t = txtWrapWith settings $ T.pack t
 
 safeTextWidth :: T.Text -> Int
 safeTextWidth = V.safeWcswidth . T.unpack
 
 -- | Make a widget from text, but wrap the words in the input's lines at
--- the available width.
+-- the available width using the default wrapping settings.
 txtWrap :: T.Text -> Widget n
-txtWrap s =
+txtWrap = txtWrapWith defaultWrapSettings
+
+txtWrapWith :: WrapSettings -> T.Text -> Widget n
+txtWrapWith settings s =
     Widget Fixed Fixed $ do
       c <- getContext
-      let theLines = fixEmpty <$> wrapTextToLines defaultWrapSettings (c^.availWidthL) s
+      let theLines = fixEmpty <$> wrapTextToLines settings (c^.availWidthL) s
           fixEmpty l | T.null l = " "
                      | otherwise = l
       case force theLines of
