@@ -112,7 +112,7 @@ data Extent n = Extent { extentName      :: n
               deriving (Show)
 
 data EventRO n = EventRO { eventViewportMap :: M.Map n Viewport
-                         , eventVtyHandle :: Maybe Vty
+                         , eventVtyHandle :: Vty
                          , latestExtents :: [Extent n]
                          }
 

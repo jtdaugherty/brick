@@ -1,5 +1,5 @@
 name:                brick
-version:             0.21
+version:             0.23
 synopsis:            A declarative terminal user interface library
 description:
   Write terminal applications painlessly with 'brick'! You write an
@@ -118,7 +118,8 @@ executable brick-text-wrap-demo
   main-is:             TextWrapDemo.hs
   build-depends:       base,
                        brick,
-                       text
+                       text,
+                       word-wrap
 
 executable brick-cache-demo
   if !flag(demos)

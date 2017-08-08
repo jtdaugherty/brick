@@ -154,7 +154,7 @@ readBrickEvent :: BChan (BrickEvent n e) -> BChan e -> IO (BrickEvent n e)
 readBrickEvent brickChan userChan = either id AppEvent <$> readBChan2 brickChan userChan
 
 runWithNewVty :: (Ord n)
-              => IO Vty
+              => Vty
               -> BChan (BrickEvent n e)
               -> Maybe (BChan e)
               -> App s e n
@@ -198,20 +198,22 @@ customMain :: (Ord n)
            -- ^ The initial application state.
            -> IO s
 customMain buildVty mUserChan app initialAppState = do
-    let run rs st brickChan = do
-            result <- runWithNewVty buildVty brickChan mUserChan app rs st
+    initialVty <- buildVty
+    let run vty rs st brickChan = do
+            result <- runWithNewVty vty brickChan mUserChan app rs st
             case result of
                 InternalHalt s -> return s
                 InternalSuspendAndResume newRS action -> do
                     newAppState <- action
-                    run newRS newAppState brickChan
+                    newVty <- buildVty
+                    run newVty newRS newAppState brickChan
 
         emptyES = ES [] []
-        eventRO = EventRO M.empty Nothing mempty
+        eventRO = EventRO M.empty initialVty mempty
     (st, eState) <- runStateT (runReaderT (runEventM (appStartEvent app initialAppState)) eventRO) emptyES
     let initialRS = RS M.empty (esScrollRequests eState) S.empty mempty []
     brickChan <- newBChan 20
-    run initialRS st brickChan
+    run initialVty initialRS st brickChan
 
 supplyVtyEvents :: Vty -> BChan (BrickEvent n e) -> IO ()
 supplyVtyEvents vty chan =
@@ -271,7 +273,7 @@ runVty vty readEvent app appState rs = do
         _ -> return (e, firstRS, exts)
 
     let emptyES = ES [] []
-        eventRO = EventRO (viewportMap nextRS) (Just vty) nextExts
+        eventRO = EventRO (viewportMap nextRS) vty nextExts
 
     (next, eState) <- runStateT (runReaderT (runEventM (appHandleEvent app appState e'))
                                 eventRO) emptyES
@@ -320,7 +322,7 @@ findClickedExtents_ :: (Int, Int) -> [Extent n] -> [Extent n]
 findClickedExtents_ pos = reverse . filter (clickedExtent pos)
 
 -- | Get the Vty handle currently in use.
-getVtyHandle :: EventM n (Maybe Vty)
+getVtyHandle :: EventM n Vty
 getVtyHandle = EventM $ asks eventVtyHandle
 
 -- | Invalidate the rendering cache entry with the specified resource
@@ -334,9 +336,8 @@ invalidateCache :: EventM n ()
 invalidateCache = EventM $ do
     lift $ modify (\s -> s { cacheInvalidateRequests = InvalidateEntire : cacheInvalidateRequests s })
 
-withVty :: IO Vty -> (Vty -> IO a) -> IO a
-withVty buildVty useVty = do
-    vty <- buildVty
+withVty :: Vty -> (Vty -> IO a) -> IO a
+withVty vty useVty = do
     useVty vty `finally` shutdown vty
 
 renderApp :: Vty -> App s e n -> s -> RenderState n -> IO (RenderState n, [Extent n])
