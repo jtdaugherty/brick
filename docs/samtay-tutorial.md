@@ -54,7 +54,7 @@ snake](https://en.wikipedia.org/wiki/Snake_(video_game)) game that you
 might recall from arcades or the first cell phones. The full source code
 is [here](https://github.com/samtay/snake). This is the end product:
 
-![](docs/snake-demo.gif)
+![](snake-demo.gif)
 
 ### Structure of the app
 
