@@ -110,7 +110,7 @@ Your documentation options, in recommended order, are:
 
 * [FAQ](https://github.com/jtdaugherty/brick/blob/master/FAQ.md)
 * [The brick user guide](https://github.com/jtdaugherty/brick/blob/master/docs/guide.rst)
-* [Samuel Tay's brick tutorial](https://github.com/jtdaugherty/brick/blob/master/docs/samtay-tutorial.rst)
+* [Samuel Tay's brick tutorial](https://github.com/jtdaugherty/brick/blob/master/docs/samtay-tutorial.md)
 * Haddock (all modules)
 * [Demo programs](https://github.com/jtdaugherty/brick/blob/master/programs)
 
