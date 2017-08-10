@@ -57,6 +57,7 @@ look at these projects:
  * `mushu`, an `MPD` client: https://github.com/elaye/mushu
  * `matterhorn`, a client for [Mattermost](https://about.mattermost.com/): https://github.com/matterhorn-chat/matterhorn
  * `viewprof`, a GHC profile viewer: https://github.com/maoe/viewprof
+ * `tart`, a mouse-driven ASCII art drawing program: https://github.com/jtdaugherty/tart
 
 Getting Started
 ---------------
