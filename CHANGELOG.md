@@ -2,6 +2,18 @@
 Brick changelog
 ---------------
 
+0.24
+----
+
+API changes:
+ * Added Brick.Widgets.Core.setAvailableSize to control rendering
+   context size in cases where the screen size is too constraining (e.g.
+   for a floating layer that might be bigger than the screen)          .
+
+Documentation changes:
+ * Samuel Tay has contributed his wonderful Brick tutorial to this
+   package in docs/samtay-tutorial.md. Thank you!
+
 0.23
 ----
 
