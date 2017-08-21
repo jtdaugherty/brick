@@ -40,6 +40,8 @@ Bug-reports:         https://github.com/jtdaugherty/brick/issues
 
 extra-doc-files:     README.md,
                      docs/guide.rst,
+                     docs/samtay-tutorial.md,
+                     docs/snake-demo.gif,
                      CHANGELOG.md
 
 Source-Repository head
