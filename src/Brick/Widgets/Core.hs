@@ -37,6 +37,7 @@ module Brick.Widgets.Core
   -- * Limits
   , hLimit
   , vLimit
+  , setAvailableSize
 
   -- * Attribute management
   , withDefAttr
@@ -551,6 +552,15 @@ vLimit :: Int -> Widget n -> Widget n
 vLimit h p =
     Widget (hSize p) Fixed $
       withReaderT (& availHeightL .~ h) $ render $ cropToContext p
+
+-- | Set the rendering context height and width for this widget. This
+-- is useful for relaxing the rendering size constraints on e.g. layer
+-- widgets where cropping to the screen size is undesirable.
+setAvailableSize :: (Int, Int) -> Widget n -> Widget n
+setAvailableSize (w, h) p =
+    Widget Fixed Fixed $
+      withReaderT (\c -> c & availHeightL .~ h & availWidthL .~ w) $
+        render $ cropToContext p
 
 -- | When drawing the specified widget, set the current attribute used
 -- for drawing to the one with the specified name. Note that the widget
