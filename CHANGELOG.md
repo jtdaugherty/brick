@@ -2,13 +2,24 @@
 Brick changelog
 ---------------
 
+0.24.1
+------
+
+Bug fixes:
+ * vBox/hBox: when there is leftover space and all elements are greedy,
+   spread it amongst the elements as evenly as possible instead of
+   assigning it all to the first element (fixes #133)
+
+Package changes:
+ * Include Sam Tay's brick tutorial files in extra-doc-files
+
 0.24
 ----
 
 API changes:
  * Added Brick.Widgets.Core.setAvailableSize to control rendering
    context size in cases where the screen size is too constraining (e.g.
-   for a floating layer that might be bigger than the screen)          .
+   for a floating layer that might be bigger than the screen).
 
 Documentation changes:
  * Samuel Tay has contributed his wonderful Brick tutorial to this
