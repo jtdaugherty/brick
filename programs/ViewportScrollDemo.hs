@@ -39,9 +39,13 @@ drawUi = const [ui]
     where
         ui = C.center $ B.border $ hLimit 60 $ vLimit 21 $
              vBox [ pair, B.hBorder, singleton ]
+                  
+        singleton :: Widget Name         
         singleton = viewport VP3 Both $
                     vBox $ str "Press ctrl-arrow keys to scroll this viewport horizontally and vertically."
                          : (str <$> [ "Line " <> show i | i <- [2..25::Int] ])
+
+        pair :: Widget Name
         pair = hBox [ viewport VP1 Vertical $
                       vBox $ str "Press up and down arrow keys" :
                              str "to scroll this viewport." :
