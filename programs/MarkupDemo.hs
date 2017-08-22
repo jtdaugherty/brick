@@ -22,9 +22,12 @@ import Data.Text.Markup ((@@))
 ui :: Widget ()
 ui = (m1 <=> m2) <+> (padLeft (Pad 1) m3)
     where
-        m1 = markup $ ("Hello" @@ fg V.blue) <> ", " <> ("world!" @@ fg V.red)
-        m2 = markup $ ("Hello" @? "keyword1") <> ", " <> ("world!" @? "keyword2")
-        m3 = markup $ ("Hello," @? "keyword1") <> "\n" <> ("world!" @? "keyword2")
+      m1 :: Widget a
+      m1 = markup $ ("Hello" @@ fg V.blue) <> ", " <> ("world!" @@ fg V.red)
+      m2 :: Widget a
+      m2 = markup $ ("Hello" @? "keyword1") <> ", " <> ("world!" @? "keyword2")
+      m3 :: Widget a
+      m3 = markup $ ("Hello," @? "keyword1") <> "\n" <> ("world!" @? "keyword2")
 
 theMap :: AttrMap
 theMap = attrMap V.defAttr

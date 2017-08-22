@@ -63,6 +63,8 @@ drawUi st = [ui]
                           "- Left/right arrow keys scroll the top-right viewport\n" <>
                           "- Ctrl-arrow keys move the bottom viewport"
                   ]
+
+        singleton :: Widget Name
         singleton = viewport VP3 Both $
                     vBox $ do
                          i <- [1..vp3Size^._1]
@@ -74,7 +76,10 @@ drawUi st = [ui]
                                return $ mkItem $ str $ "Item " <> show (i, j) <> " "
                          return $ hBox row
 
+        pair :: Widget Name
         pair = hBox [ vp1, B.vBorder, vp2 ]
+
+        vp1 :: Widget Name
         vp1 = viewport VP1 Vertical $
                   vBox $ do
                       i <- [1..vp1Size]
@@ -82,6 +87,8 @@ drawUi st = [ui]
                                    then withAttr selectedAttr . visible
                                    else id
                       return $ mkItem $ str $ "Item " <> show i
+
+        vp2 :: Widget Name
         vp2 = viewport VP2 Horizontal $
                   hBox $ do
                       i <- [1..vp2Size]
