@@ -501,9 +501,10 @@ renderBox br ws =
               let remainingPrimary = c^.(contextPrimary br) -
                                      (sum $ (^._2.imageL.(to $ imagePrimary br)) <$> renderedHis)
                   primaryPerLow = remainingPrimary `div` length ls
-                  padFirst = remainingPrimary - (primaryPerLow * length ls)
+                  rest = remainingPrimary - (primaryPerLow * length ls)
                   secondaryPerLow = c^.(contextSecondary br)
-                  primaries = replicate (length ls) primaryPerLow & ix 0 %~ (+ padFirst)
+                  primaries = replicate rest (primaryPerLow + 1) <>
+                              replicate (length ls - rest) primaryPerLow
 
               let renderLow ((i, prim), pri) =
                       (i,) <$> (render $ limitPrimary br pri
