@@ -90,7 +90,7 @@ import Control.Applicative
 import Data.Monoid ((<>), mempty)
 #endif
 
-import Lens.Micro ((^.), (.~), (&), (%~), to, _1, _2, each, to, ix, Lens')
+import Lens.Micro ((^.), (.~), (&), (%~), to, _1, _2, each, to, Lens')
 import Lens.Micro.Mtl (use, (%=))
 import Control.Monad ((>=>),when)
 import Control.Monad.Trans.State.Lazy
