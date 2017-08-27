@@ -1,7 +1,0 @@
-Misc:
-  * Consider updating editor to use smart translation similiar to list
-    to enable editing of big documents
-
-Features:
-  * High priority:
-    - Load & save attribute map to on-disk configuration
