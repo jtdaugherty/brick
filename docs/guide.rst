@@ -655,6 +655,11 @@ When using widgets it is important to understand their horizontal and
 vertical space behavior by knowing their ``Size`` values. Those should
 be made clear in the Haddock documentation.
 
+The rendering context's specification of available space will also
+govern how widgets get cropped, since all widgets are required to render
+to an image no larger than the rendering context specifies. If they do,
+they will be forcibly cropped.
+
 Limiting Rendering Area
 -----------------------
 
