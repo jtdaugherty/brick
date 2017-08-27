@@ -605,7 +605,10 @@ always take up one row and 13 columns, but the string "Hello, world!"
 How widgets use space when rendered is described in two pieces of
 information in each ``Widget``: the widget's horizontal and vertical
 growth policies. These fields have type ``Brick.Types.Size`` and can
-have the values ``Fixed`` and ``Greedy``.
+have the values ``Fixed`` and ``Greedy``. Note that these values are
+merely *descriptive hints* about the behavior of the rendering function,
+so it's important that they accurately describe the widget's use of
+space.
 
 A widget advertising a ``Fixed`` size in a given dimension is a widget
 that will always consume the same number of rows or columns no
