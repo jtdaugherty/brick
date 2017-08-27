@@ -91,6 +91,13 @@ border = border_ Nothing
 
 -- | Put a border around the specified widget with the specified label
 -- widget placed in the middle of the top horizontal border.
+--
+-- Note that a border will wrap its child widget as tightly as possible,
+-- which means that if the child widget is narrower than the label
+-- widget, the label widget will be truncated. If you want to avoid
+-- this behavior, add a 'fill' or other space-filling wrapper to the
+-- bordered widget so that it takes up enough room to make the border
+-- horizontally able to avoid truncating the label.
 borderWithLabel :: Widget n
                 -- ^ The label widget
                 -> Widget n
