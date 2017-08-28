@@ -70,8 +70,18 @@ $ cabal install -j -f demos
 $ .cabal-sandbox/bin/brick-???-demo
 ```
 
-To get started, see the [first few sections of the brick
-user guide](https://github.com/jtdaugherty/brick/blob/master/docs/guide.rst).
+To get started, see the [user guide](https://github.com/jtdaugherty/brick/blob/master/docs/guide.rst).
+
+Documentation
+-------------
+
+Documentation for `brick` comes in a variety of forms:
+
+* [The brick user guide](https://github.com/jtdaugherty/brick/blob/master/docs/guide.rst)
+* [Samuel Tay's brick tutorial](https://github.com/jtdaugherty/brick/blob/master/docs/samtay-tutorial.md)
+* Haddock (all modules)
+* [Demo programs](https://github.com/jtdaugherty/brick/blob/master/programs)
+* [FAQ](https://github.com/jtdaugherty/brick/blob/master/FAQ.md)
 
 Feature Overview
 ----------------
@@ -103,17 +113,6 @@ The `brick-users` Google Group / e-mail list is a place to discuss
 library changes, give feedback, and ask questions. You can subscribe at:
 
 [https://groups.google.com/group/brick-users](https://groups.google.com/group/brick-users)
-
-Documentation
--------------
-
-Your documentation options, in recommended order, are:
-
-* [FAQ](https://github.com/jtdaugherty/brick/blob/master/FAQ.md)
-* [The brick user guide](https://github.com/jtdaugherty/brick/blob/master/docs/guide.rst)
-* [Samuel Tay's brick tutorial](https://github.com/jtdaugherty/brick/blob/master/docs/samtay-tutorial.md)
-* Haddock (all modules)
-* [Demo programs](https://github.com/jtdaugherty/brick/blob/master/programs)
 
 Status
 ------
