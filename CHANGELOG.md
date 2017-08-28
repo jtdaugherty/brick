@@ -2,6 +2,12 @@
 Brick changelog
 ---------------
 
+0.24.2
+------
+
+Miscellaneous:
+ * Minor documentation updates including a clarification for #135
+
 0.24.1
 ------
 
