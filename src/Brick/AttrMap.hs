@@ -53,7 +53,7 @@ import Data.String (IsString(..))
 import Graphics.Vty (Attr(..), MaybeDefault(..))
 
 -- | An attribute name. Attribute names are hierarchical; use 'mappend'
--- ('<>') to assemble them. Hierachy in an attribute name is used to
+-- ('<>') to assemble them. Hierarchy in an attribute name is used to
 -- represent increasing levels of specificity in referring to the
 -- attribute you want to use for a visual element, with names to the
 -- left being general and names to the right being more specific. For
