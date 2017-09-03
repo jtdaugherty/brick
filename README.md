@@ -58,6 +58,7 @@ look at these projects:
  * `matterhorn`, a client for [Mattermost](https://about.mattermost.com/): https://github.com/matterhorn-chat/matterhorn
  * `viewprof`, a GHC profile viewer: https://github.com/maoe/viewprof
  * `tart`, a mouse-driven ASCII art drawing program: https://github.com/jtdaugherty/tart
+ * `silly-joy`, an interpreter for Joy in Haskell: https://github.com/rootmos/silly-joy
 
 Getting Started
 ---------------
