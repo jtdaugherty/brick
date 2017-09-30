@@ -48,8 +48,8 @@ Result:
 Featured Projects
 -----------------
 
-To give you an idea of what some people have done with `brick`, take a
-look at these projects:
+To get an idea of what some people have done with `brick`, take a look
+at these projects:
 
  * `tetris`: https://github.com/SamTay/tetris
  * `gotta-go-fast`, a typing tutor: https://github.com/hot-leaf-juice/gotta-go-fast
