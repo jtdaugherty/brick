@@ -31,6 +31,9 @@ module Brick.Widgets.List
   , listMoveTo
   , listMoveUp
   , listMoveDown
+  , listMoveByPages
+  , listMovePageUp
+  , listMovePageDown
   , listInsert
   , listRemove
   , listReplace
@@ -91,16 +94,8 @@ handleListEvent e theList =
         EvKey KDown [] -> return $ listMoveDown theList
         EvKey KHome [] -> return $ listMoveTo 0 theList
         EvKey KEnd [] -> return $ listMoveTo (V.length $ listElements theList) theList
-        EvKey KPageDown [] -> do
-            v <- lookupViewport (theList^.listNameL)
-            case v of
-                Nothing -> return theList
-                Just vp -> return $ listMoveBy (vp^.vpSize._2 `div` theList^.listItemHeightL) theList
-        EvKey KPageUp [] -> do
-            v <- lookupViewport (theList^.listNameL)
-            case v of
-                Nothing -> return theList
-                Just vp -> return $ listMoveBy (negate $ vp^.vpSize._2 `div` theList^.listItemHeightL) theList
+        EvKey KPageDown [] -> listMovePageDown theList
+        EvKey KPageUp [] -> listMovePageUp theList
         _ -> return theList
 
 -- | The top-level attribute used for the entire list.
@@ -244,10 +239,29 @@ listReplace es idx l =
 listMoveUp :: List n e -> List n e
 listMoveUp = listMoveBy (-1)
 
+-- | Move the list selected index up by one page.
+listMovePageUp :: (Ord n) => List n e -> EventM n (List n e)
+listMovePageUp theList = listMoveByPages (-1) theList
+
 -- | Move the list selected index down by one. (Moves the cursor down,
 -- adds one to the index.)
 listMoveDown :: List n e -> List n e
 listMoveDown = listMoveBy 1
+
+-- | Move the list selected index down by one page.
+listMovePageDown :: (Ord n) => List n e -> EventM n (List n e)
+listMovePageDown theList = listMoveByPages 1 theList
+
+-- | Move the list selected index by some (fractional) number of pages.
+listMoveByPages :: (Ord n, RealFrac m) => m -> List n e -> EventM n (List n e)
+listMoveByPages pages theList = do
+    v <- lookupViewport (theList^.listNameL)
+    case v of
+        Nothing -> return theList
+        Just vp -> let
+            nElems = round $ pages * (fromIntegral $ vp^.vpSize._2) / (fromIntegral $ theList^.listItemHeightL)
+          in
+            return $ listMoveBy nElems theList
 
 -- | Move the list selected index by the specified amount, subject to
 -- validation.
