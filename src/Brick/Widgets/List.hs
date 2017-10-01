@@ -19,6 +19,7 @@ module Brick.Widgets.List
 
   -- * Handling events
   , handleListEvent
+  , handleListEventVi
 
   -- * Lenses
   , listElementsL
@@ -58,7 +59,7 @@ import Data.Traversable (Traversable)
 import Lens.Micro ((^.), (&), (.~), (%~), _2)
 import Data.Maybe (fromMaybe)
 import Data.Monoid ((<>))
-import Graphics.Vty (Event(..), Key(..))
+import Graphics.Vty (Event(..), Key(..), Modifier(..))
 import qualified Data.Vector as V
 
 import Brick.Types
@@ -97,6 +98,30 @@ handleListEvent e theList =
         EvKey KPageDown [] -> listMovePageDown theList
         EvKey KPageUp [] -> listMovePageUp theList
         _ -> return theList
+
+-- | Enable list movement with the vi keys with a fallback if none match.
+-- Movements handled: Up, Down, Page Up, Page Down, Half Page Up, Half Page
+-- Down, Top, Bottom
+-- Use (handleListEventVi handleListEvent) in place of handleListEvent to add
+-- the vi keys bindings to the standard ones.
+handleListEventVi :: (Ord n)
+                  => (Event -> List n e -> EventM n (List n e))
+                  -- ^ Fallback event handler to use if none of the vi keys
+                  -- match.
+                  -> Event
+                  -> List n e
+                  -> EventM n (List n e)
+handleListEventVi fallback e theList =
+    case e of
+        EvKey (KChar 'k') [] -> return $ listMoveUp theList
+        EvKey (KChar 'j') [] -> return $ listMoveDown theList
+        EvKey (KChar 'g') [] -> return $ listMoveTo 0 theList
+        EvKey (KChar 'G') [] -> return $ listMoveTo (V.length $ listElements theList) theList
+        EvKey (KChar 'f') [MCtrl] -> listMovePageDown theList
+        EvKey (KChar 'b') [MCtrl] -> listMovePageUp theList
+        EvKey (KChar 'd') [MCtrl] -> listMoveByPages 0.5 theList
+        EvKey (KChar 'u') [MCtrl] -> listMoveByPages (-0.5) theList
+        _ -> fallback e theList
 
 -- | The top-level attribute used for the entire list.
 listAttr :: AttrName
