@@ -2,6 +2,16 @@
 Brick changelog
 ---------------
 
+0.25
+----
+
+API changes:
+ * List: added page movement functions `listMoveByPages`,
+   `listMovePageUp`, and `listMovePageDown` (thanks Richard Alex Hofer)
+
+Miscellaneous:
+ * Fixed a spelling mistake in the AttrMap haddock (thanks Edward Betts)
+
 0.24.2
 ------
 
