@@ -2,6 +2,17 @@
 Brick changelog
 ---------------
 
+0.26
+----
+
+API changes:
+ * Added Brick.Widgets.List.handleListEventVi to add support for
+   vi-style movements to lists (thanks Richard Alex Hofer)
+
+Other changes:
+ * Added ListViDemo.hs to demonstrate the Vi-style handler for lists
+   (thanks Richard Alex Hofer)
+
 0.25
 ----
 
