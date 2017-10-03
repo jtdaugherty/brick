@@ -99,10 +99,11 @@ handleListEvent e theList =
         EvKey KPageUp [] -> listMovePageUp theList
         _ -> return theList
 
--- | Enable list movement with the vi keys with a fallback if none match.
--- Use (handleListEventVi handleListEvent) in place of handleListEvent to add
--- the vi keys bindings to the standard ones.
--- Movements handled:
+-- | Enable list movement with the vi keys with a fallback if none
+-- match. Use (handleListEventVi handleListEvent) in place of
+-- handleListEvent to add the vi keys bindings to the standard ones.
+-- Movements handled include:
+--
 -- * Up             (k)
 -- * Down           (j)
 -- * Page Up        (Ctrl-b)
