@@ -275,13 +275,13 @@ executable brick-list-demo
                        microlens >= 0.3.0.0,
                        vector
 
-executable brick-list-demo-vi
+executable brick-list-vi-demo
   if !flag(demos)
     Buildable: False
   hs-source-dirs:      programs
   ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
   default-language:    Haskell2010
-  main-is:             ListDemoVi.hs
+  main-is:             ListViDemo.hs
   build-depends:       base <= 5,
                        brick,
                        vty >= 5.15,
