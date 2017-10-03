@@ -1,23 +1,22 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-import           Control.Monad        (void)
-import           Data.Maybe           (fromMaybe)
-import           Data.Monoid
-import qualified Graphics.Vty         as V
-import           Lens.Micro           ((^.))
+import Control.Monad (void)
+import Data.Maybe (fromMaybe)
+import Data.Monoid
+import qualified Graphics.Vty as V
+import Lens.Micro ((^.))
 
-import qualified Brick.AttrMap        as A
-import qualified Brick.Main           as M
-import           Brick.Types          (Widget)
-import qualified Brick.Types          as T
-import           Brick.Util           (fg, on)
+import qualified Brick.AttrMap as A
+import qualified Brick.Main as M
+import Brick.Types (Widget)
+import qualified Brick.Types as T
+import Brick.Util (fg, on)
 import qualified Brick.Widgets.Border as B
 import qualified Brick.Widgets.Center as C
-import           Brick.Widgets.Core   (hLimit, str, vBox, vLimit, withAttr,
-                                       (<+>))
-import qualified Brick.Widgets.List   as L
-import qualified Data.Vector          as Vec
+import Brick.Widgets.Core (hLimit, str, vBox, vLimit, withAttr, (<+>))
+import qualified Brick.Widgets.List as L
+import qualified Data.Vector as Vec
 
 drawUI :: (Show a) => L.List () a -> [Widget ()]
 drawUI l = [ui]
