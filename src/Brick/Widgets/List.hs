@@ -100,10 +100,17 @@ handleListEvent e theList =
         _ -> return theList
 
 -- | Enable list movement with the vi keys with a fallback if none match.
--- Movements handled: Up, Down, Page Up, Page Down, Half Page Up, Half Page
--- Down, Top, Bottom
 -- Use (handleListEventVi handleListEvent) in place of handleListEvent to add
 -- the vi keys bindings to the standard ones.
+-- Movements handled:
+-- * Up             (k)
+-- * Down           (j)
+-- * Page Up        (Ctrl-b)
+-- * Page Down      (Ctrl-f)
+-- * Half Page Up   (Ctrl-u)
+-- * Half Page Down (Ctrl-d)
+-- * Top            (g)
+-- * Bottom         (G)
 handleListEventVi :: (Ord n)
                   => (Event -> List n e -> EventM n (List n e))
                   -- ^ Fallback event handler to use if none of the vi keys
