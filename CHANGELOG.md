@@ -2,6 +2,11 @@
 Brick changelog
 ---------------
 
+0.26.1
+------
+
+ * Fixed haddock for listHandleEventVi.
+
 0.26
 ----
 
