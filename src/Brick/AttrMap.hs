@@ -150,10 +150,11 @@ setDefault _ (ForceAttr a) = ForceAttr a
 setDefault newDefault (AttrMap _ m) = AttrMap newDefault m
 
 combineAttrs :: Attr -> Attr -> Attr
-combineAttrs (Attr s1 f1 b1) (Attr s2 f2 b2) =
+combineAttrs (Attr s1 f1 b1 u1) (Attr s2 f2 b2 u2) =
     Attr (s1 `combineMDs` s2)
          (f1 `combineMDs` f2)
          (b1 `combineMDs` b2)
+         (u1 `combineMDs` u2)
 
 combineMDs :: MaybeDefault a -> MaybeDefault a -> MaybeDefault a
 combineMDs _ (SetTo v) = SetTo v
