@@ -2,6 +2,17 @@
 Brick changelog
 ---------------
 
+0.27
+----
+
+API changes:
+ * Brick.Widgets.Core: added `hyperlink` combinator (thanks Getty Ritter
+   for hyperlinking support)
+
+Other changes:
+ * Updated AttrDemo to show how to use hyperlinking
+ * README: Added `herms` to featured projects
+
 0.26.1
 ------
 
