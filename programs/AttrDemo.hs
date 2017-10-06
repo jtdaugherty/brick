@@ -16,6 +16,7 @@ import Brick.Widgets.Core
   , withAttr
   , vBox
   , str
+  , hyperlink
   )
 import Brick.Util (on, fg)
 import Brick.AttrMap (attrMap, AttrMap)
@@ -41,6 +42,9 @@ ui =
          , str " "
          , withAttr "linked" $
            str "This text is hyperlinked in terminals that support hyperlinking."
+         , str " "
+         , hyperlink "http://www.google.com/" $
+           str "This text is also hyperlinked in terminals that support hyperlinking."
          ]
 
 globalDefault :: Attr

@@ -18,6 +18,7 @@ module Brick.Widgets.Core
   , strWrap
   , strWrapWith
   , fill
+  , hyperlink
 
   -- * Padding
   , padLeft
@@ -264,6 +265,16 @@ str s =
 -- when the input contains multiple lines.
 txt :: T.Text -> Widget n
 txt = str . T.unpack
+
+-- | Hyperlink the given widget to the specified URL. Not all terminal
+-- emulators support this. In those that don't, this should have no
+-- discernible effect.
+hyperlink :: T.Text -> Widget n -> Widget n
+hyperlink url p =
+    Widget (hSize p) (vSize p) $ do
+        c <- getContext
+        let attr = attrMapLookup (c^.ctxAttrNameL) (c^.ctxAttrMapL) `V.withURL` url
+        withReaderT (& ctxAttrMapL %~ setDefault attr) (render p)
 
 -- | Pad the specified widget on the left. If max padding is used, this
 -- grows greedily horizontally; otherwise it defers to the padded
