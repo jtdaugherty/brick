@@ -4,7 +4,7 @@ module Main where
 import Data.Monoid
 import Graphics.Vty
   ( Attr, white, blue, cyan, green, red, yellow
-  , black
+  , black, withURL
   )
 
 import Brick.Main
@@ -38,6 +38,9 @@ ui =
            str "... or only you want to change and inherit the rest."
          , str "Attribute names are assembled with the Monoid append operation to indicate"
          , str "hierarchy levels, e.g. \"window\" <> \"title\"."
+         , str " "
+         , withAttr "linked" $
+           str "This text is hyperlinked in terminals that support hyperlinking."
          ]
 
 globalDefault :: Attr
@@ -49,6 +52,7 @@ theMap = attrMap globalDefault
     , ("foundFgOnly",             fg red)
     , ("general",                 yellow `on` black)
     , ("general" <> "specific",   fg cyan)
+    , ("linked",                  fg yellow `withURL` "http://www.google.com/")
     ]
 
 app :: App () e ()
