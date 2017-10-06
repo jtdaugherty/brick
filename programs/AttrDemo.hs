@@ -35,7 +35,7 @@ ui =
          , withAttr "foundFull" $
            str "You can override everything ..."
          , withAttr "foundFgOnly" $
-           str "... or only you want to change and inherit the rest."
+           str "... or only what you want to change and inherit the rest."
          , str "Attribute names are assembled with the Monoid append operation to indicate"
          , str "hierarchy levels, e.g. \"window\" <> \"title\"."
          , str " "
