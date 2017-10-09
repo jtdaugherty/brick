@@ -32,7 +32,8 @@ module Brick.AttrMap
   -- * Finding attributes from names
   , attrMapLookup
   -- * Manipulating attribute maps
-  , setDefault
+  , setDefaultAttr
+  , getDefaultAttr
   , applyAttrMappings
   , mergeWithDefault
   , mapAttrName
@@ -145,9 +146,14 @@ attrMapLookup (AttrName ns) (AttrMap theDefault m) =
     in foldl combineAttrs theDefault results
 
 -- | Set the default attribute value in an attribute map.
-setDefault :: Attr -> AttrMap -> AttrMap
-setDefault _ (ForceAttr a) = ForceAttr a
-setDefault newDefault (AttrMap _ m) = AttrMap newDefault m
+setDefaultAttr :: Attr -> AttrMap -> AttrMap
+setDefaultAttr _ (ForceAttr a) = ForceAttr a
+setDefaultAttr newDefault (AttrMap _ m) = AttrMap newDefault m
+
+-- | Get the default attribute value in an attribute map.
+getDefaultAttr :: AttrMap -> Attr
+getDefaultAttr (ForceAttr a) = a
+getDefaultAttr (AttrMap d _) = d
 
 combineAttrs :: Attr -> Attr -> Attr
 combineAttrs (Attr s1 f1 b1 u1) (Attr s2 f2 b2 u2) =

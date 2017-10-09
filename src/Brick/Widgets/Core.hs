@@ -42,6 +42,7 @@ module Brick.Widgets.Core
 
   -- * Attribute management
   , withDefAttr
+  , modifyDefAttr
   , withAttr
   , forceAttr
   , overrideAttr
@@ -274,7 +275,7 @@ hyperlink url p =
     Widget (hSize p) (vSize p) $ do
         c <- getContext
         let attr = attrMapLookup (c^.ctxAttrNameL) (c^.ctxAttrMapL) `V.withURL` url
-        withReaderT (& ctxAttrMapL %~ setDefault attr) (render p)
+        withReaderT (& ctxAttrMapL %~ setDefaultAttr attr) (render p)
 
 -- | Pad the specified widget on the left. If max padding is used, this
 -- grows greedily horizontally; otherwise it defers to the padded
@@ -588,12 +589,22 @@ withAttr an p =
 
 -- | Update the attribute map while rendering the specified widget: set
 -- its new default attribute to the one that we get by looking up the
+-- specified attribute name in the map and then modifying it with the
+-- specified function.
+modifyDefAttr :: (V.Attr -> V.Attr) -> Widget n -> Widget n
+modifyDefAttr f p =
+    Widget (hSize p) (vSize p) $ do
+        c <- getContext
+        withReaderT (& ctxAttrMapL %~ (setDefaultAttr (f $ getDefaultAttr (c^.ctxAttrMapL)))) (render p)
+
+-- | Update the attribute map while rendering the specified widget: set
+-- its new default attribute to the one that we get by looking up the
 -- specified attribute name in the map.
 withDefAttr :: AttrName -> Widget n -> Widget n
 withDefAttr an p =
     Widget (hSize p) (vSize p) $ do
         c <- getContext
-        withReaderT (& ctxAttrMapL %~ (setDefault (attrMapLookup an (c^.ctxAttrMapL)))) (render p)
+        withReaderT (& ctxAttrMapL %~ (setDefaultAttr (attrMapLookup an (c^.ctxAttrMapL)))) (render p)
 
 -- | When rendering the specified widget, update the attribute map with
 -- the specified transformation.
