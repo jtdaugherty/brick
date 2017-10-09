@@ -2,6 +2,19 @@
 Brick changelog
 ---------------
 
+0.28
+----
+
+API changes:
+ * Brick.AttrMap.setDefault was renamed to setDefaultAttr.
+ * Added Brick.AttrMap.getDefaultAttr: get the default attribute from an
+   attribute map.
+ * Added Brick.Widgets.Core.modifyDefAttr to modify the default
+   attribute of the rendering context.
+
+Other changes:
+ * Updated AttrDemo to show usage of modifyDefAttr.
+
 0.27
 ----
 
