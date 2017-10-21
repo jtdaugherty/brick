@@ -1,4 +1,6 @@
 -- | Basic types used by this library.
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
@@ -79,11 +81,8 @@ import Data.Monoid (Monoid(..))
 import Lens.Micro (_1, _2, to, (^.), (&), (.~), Lens')
 import Lens.Micro.Type (Getting)
 import Control.Monad.State
-import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.Reader
-import Control.Monad.Trans.State.Lazy
 import Graphics.Vty (Attr)
-import Control.Monad.IO.Class
 
 import Brick.Types.TH
 import Brick.Types.Internal
@@ -116,7 +115,7 @@ handleEventLensed v target handleEvent ev = do
 
 newtype EventM n s a = EventM
     { runEventM :: s -> (s, EventNext n s a)
-    } -- deriving (Monad, MonadIO, MonadState s)
+    }
 
 instance Functor (EventM n s) where
     fmap f (EventM func) = EventM $ \s ->
@@ -157,6 +156,13 @@ instance Monad (EventM n s) where
 instance MonadIO (EventM n s) where
     liftIO act = EventM $ \s -> (s, liftIO act)
 
+instance MonadState s (EventM n s) where
+    get = EventM $ \s -> (s, pure s)
+    put s = EventM $ \_ -> (s, pure ())
+    state func = EventM $ \s ->
+      let (v, s') = func s
+      in (s', pure v)
+
 data EventNext n s a
     = Halt
     | Pure a
@@ -191,7 +197,7 @@ instance Monad (EventNext n s) where
     SuspendAndResume eha >>= ef = SuspendAndResume $ do
       ea <- eha
       pure $ ea >>= (\a -> EventM (\s -> (s, ef a)))
--- 
+--
 instance MonadIO (EventNext n s) where
     liftIO act = Resume $ do
       a <- liftIO act -- EventHandler n s a
