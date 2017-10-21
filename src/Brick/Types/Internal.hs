@@ -126,7 +126,7 @@ data Direction = Up
 data Location = Location { loc :: (Int, Int)
                          -- ^ (Column, Row)
                          }
-                deriving (Show, Eq)
+                deriving (Show, Eq, Ord)
 
 suffixLenses ''Location
 
@@ -203,7 +203,7 @@ data BrickEvent n e = VtyEvent Event
                     -- ^ A mouse-up event on the specified region was
                     -- received. The 'n' value is the resource name of
                     -- the clicked widget (see 'clickable').
-                    deriving (Show, Eq)
+                    deriving (Show, Eq, Ord)
 
 data RenderState n =
     RS { viewportMap :: M.Map n Viewport
