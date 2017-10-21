@@ -20,7 +20,6 @@ module Brick.Types.Internal
   , Context(..)
   , EventState(..)
   , EventRO(..)
-  , Next(..)
   , Result(..)
   , Extent(..)
   , CacheInvalidateRequest(..)
@@ -115,12 +114,6 @@ data EventRO n = EventRO { eventViewportMap :: M.Map n Viewport
                          , eventVtyHandle :: Vty
                          , latestExtents :: [Extent n]
                          }
-
--- | The type of actions to take upon completion of an event handler.
-data Next a = Continue a
-            | SuspendAndResume (IO a)
-            | Halt a
-            deriving Functor
 
 -- | Scrolling direction.
 data Direction = Up

@@ -24,7 +24,9 @@ module Brick.Types
 
   -- * Event-handling types
   , EventM(..)
-  , Next
+  , EventNext(..)
+  , liftRawEventHandler
+  , EventHandler(..)
   , BrickEvent(..)
   , handleEventLensed
 
@@ -76,8 +78,10 @@ import Data.Monoid (Monoid(..))
 
 import Lens.Micro (_1, _2, to, (^.), (&), (.~), Lens')
 import Lens.Micro.Type (Getting)
-import Control.Monad.Trans.State.Lazy
+import Control.Monad.State
+import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.Reader
+import Control.Monad.Trans.State.Lazy
 import Graphics.Vty (Attr)
 import Control.Monad.IO.Class
 
@@ -101,22 +105,110 @@ handleEventLensed :: a
                   -> Lens' a b
                   -- ^ The lens to use to extract and store the target
                   -- of the event.
-                  -> (e -> b -> EventM n b)
+                  -> (e -> b -> EventM n s b)
                   -- ^ The event handler.
                   -> e
                   -- ^ The event to handle.
-                  -> EventM n a
+                  -> EventM n s a
 handleEventLensed v target handleEvent ev = do
     newB <- handleEvent ev (v^.target)
     return $ v & target .~ newB
 
+newtype EventM n s a = EventM
+    { runEventM :: s -> (s, EventNext n s a)
+    } -- deriving (Monad, MonadIO, MonadState s)
+
+instance Functor (EventM n s) where
+    fmap f (EventM func) = EventM $ \s ->
+      let (s', en) = func s
+      in (s', f <$> en)
+
+instance Applicative (EventM n s) where
+    pure a = EventM $ \s -> (s, pure a)
+    (EventM f1) <*> e2@(EventM f2) = EventM $ \s ->
+      let (s', enfa) = f1 s
+      in case enfa of
+        Halt -> (s', Halt)
+        Pure f ->
+          let (s'', ena) = f2 s'
+          in (s'', f <$> ena)
+        Resume eh -> (s', Resume $ do
+          emf <- eh
+          pure $ emf <*> e2)
+        SuspendAndResume iof -> (s', SuspendAndResume $ do
+          ehemf <- iof
+          pure $ ehemf <*> e2)
+
+instance Monad (EventM n s) where
+    (EventM efa) >>= f = EventM $ \s ->
+      let (s', ena) = efa s
+      in case ena of
+        Halt -> (s', Halt)
+        Pure a ->
+          let EventM eb = f a
+          in eb s'
+        Resume eh -> (s', Resume $ do
+          emf <- eh
+          pure $ emf >>= f)
+        SuspendAndResume iof -> (s', SuspendAndResume $ do
+          ehemf <- iof
+          pure $ ehemf >>= f)
+
+instance MonadIO (EventM n s) where
+    liftIO act = EventM $ \s -> (s, liftIO act)
+
+data EventNext n s a
+    = Halt
+    | Pure a
+    | Resume (EventHandler n (EventM n s a))
+    | SuspendAndResume (IO (EventM n s a))
+
+instance Functor (EventNext n s) where
+    fmap _ Halt = Halt
+    fmap f (Pure a) = Pure $ f a
+    fmap f (Resume eh) = Resume $ fmap (f <$>) eh
+    fmap f (SuspendAndResume ioeh) = SuspendAndResume $ fmap (f <$>) ioeh
+
+instance Applicative (EventNext n s) where
+    pure = Pure
+    Halt <*> _ = Halt
+    Pure f <*> e2 = f <$> e2
+    Resume ehf <*> e2 = Resume $ do
+      -- (EventM n s (a -> b))
+      -- (EventNext n s a)
+      ef <- ehf
+      pure $ ef <*> EventM (\s -> (s, e2))
+    SuspendAndResume ehf <*> e2 = SuspendAndResume $ do
+      eh <- ehf
+      pure $ eh <*> EventM (\s -> (s, e2))
+
+instance Monad (EventNext n s) where
+    Halt >>= _ = Halt
+    Pure a >>= f = f a
+    Resume eha >>= ef = Resume $ do
+      ea <- eha
+      pure $ ea >>= (\a -> EventM (\s -> (s, ef a)))
+    SuspendAndResume eha >>= ef = SuspendAndResume $ do
+      ea <- eha
+      pure $ ea >>= (\a -> EventM (\s -> (s, ef a)))
+-- 
+instance MonadIO (EventNext n s) where
+    liftIO act = Resume $ do
+      a <- liftIO act -- EventHandler n s a
+      pure $ pure a
+
+liftRawEventHandler :: ReaderT (EventRO n) (StateT (EventState n) IO) a
+                 -> EventM n s a
+liftRawEventHandler eh = EventM $ \s ->
+    (s, Resume $ EventHandler eh >>= (pure . pure))
+
 -- | The monad in which event handlers run. Although it may be tempting
 -- to dig into the reader value yourself, just use
 -- 'Brick.Main.lookupViewport'.
-newtype EventM n a =
-    EventM { runEventM :: ReaderT (EventRO n) (StateT (EventState n) IO) a
-           }
-           deriving (Functor, Applicative, Monad, MonadIO)
+newtype EventHandler n a = EventHandler
+    { runEventHandler :: ReaderT (EventRO n) (StateT (EventState n) IO) a
+    } deriving (Functor, Applicative, Monad, MonadIO)
+
 
 -- | Widget growth policies. These policies communicate to layout
 -- algorithms how a widget uses space when being rendered. These
