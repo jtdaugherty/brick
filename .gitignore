@@ -1,3 +1,4 @@
+stack.yaml
 .*.swp
 .cabal-sandbox
 dist
