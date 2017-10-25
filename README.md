@@ -60,6 +60,7 @@ at these projects:
  * `tart`, a mouse-driven ASCII art drawing program: https://github.com/jtdaugherty/tart
  * `silly-joy`, an interpreter for Joy in Haskell: https://github.com/rootmos/silly-joy
  * `herms`, a command-line tool for managing kitchen recipes: https://github.com/jackkiefer/herms
+ * `purebred`, a mail user agent: https://github.com/purebred-mua/purebred
 
 Getting Started
 ---------------
