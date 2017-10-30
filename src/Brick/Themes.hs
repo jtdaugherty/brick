@@ -2,6 +2,56 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TemplateHaskell #-}
+-- | Support for representing attribute themes and loading and saving
+-- theme customizations in INI-style files.
+--
+-- The file format is as follows:
+-- * Customization files are INI-style files with two sections, both
+--   optional: "default" and "custom".
+-- * The "default" section specifies three optional fields:
+--   * "default.fg" - a color specification
+--   * "default.bg" - a color specification
+--   * "default.style" - a style specification
+-- * A color specification can be any of the values (no quotes)
+--   * "black"
+--   * "red"
+--   * "green"
+--   * "yellow"
+--   * "blue"
+--   * "magenta"
+--   * "cyan"
+--   * "white"
+--   * "brightBlack"
+--   * "brightRed"
+--   * "brightGreen"
+--   * "brightYellow"
+--   * "brightBlue"
+--   * "brightMagenta"
+--   * "brightCyan"
+--   * "brightWhite"
+-- * A style specification can be either one of the following values
+--   (without quotes) or a comma-delimited list of one or more of the
+--   following values (e.g. "[bold,underline]") indicating that all of
+--   the specified styles be used.
+--   * "standout"
+--   * "underline"
+--   * "reverseVideo"
+--   * "blink"
+--   * "dim"
+--   * "bold"
+-- * The "custom" section specifies for each attribute name in the theme
+--   the same "fg", "bg", and "style" settings as for the default
+--   attribute. Furthermore, if an attribute name has multiple
+--   components, the fields in the INI file should use periods as
+--   delimiters. For example, if a theme has an attribute name ("foo" <>
+--   "bar"), then the file may specify three fields:
+--   * "foo.bar.fg" - a color specification
+--   * "foo.bar.bg" - a color specification
+--   * "foo.bar.style" - a style specification
+--
+-- Any color or style specifications omitted from the file mean that
+-- those attribute or style settings will use the theme's default value
+-- instead.
 module Brick.Themes
   ( CustomAttr(..)
   , customFgL
@@ -192,6 +242,10 @@ themeParser t = do
 
     return (join defCustom, M.fromList $ fromMaybe [] customMap)
 
+-- | Load an INI file containing theme customizations. Use the specified
+-- theme to determine which customizations to load. Return the specified
+-- theme with customizations set. See the module documentation for the
+-- theme file format.
 loadCustomizations :: FilePath -> Theme -> IO (Either String Theme)
 loadCustomizations path t = do
     content <- T.readFile path
@@ -238,6 +292,9 @@ emitSection :: T.Text -> [T.Text] -> [T.Text]
 emitSection _ [] = []
 emitSection secName ls = secName : ls
 
+-- | Save an INI file containing theme customizations. Use the specified
+-- theme to determine which customizations to save. See the module
+-- documentation for the theme file format.
 saveCustomizations :: FilePath -> Theme -> IO ()
 saveCustomizations path t = do
     let defSection = fromMaybe [] $
