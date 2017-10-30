@@ -21,7 +21,7 @@ where
 
 import GHC.Generics (Generic)
 import Graphics.Vty hiding ((<|>))
-import Control.Monad (forM)
+import Control.Monad (forM, join)
 import Control.Applicative ((<|>))
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
@@ -173,15 +173,15 @@ themeParser t = do
                           <*> fieldMbOf (basename <> ".style") parseStyle
           return $ if isNullCustomization c then Nothing else Just c
 
-    defCustom <- section "default" $ do
+    defCustom <- sectionMb "default" $ do
         parseCustomAttr "default"
 
-    customMap <- section "custom" $ do
+    customMap <- sectionMb "custom" $ do
         catMaybes <$> (forM (M.keys $ themeDefaultMapping t) $ \an ->
             (fmap (an,)) <$> parseCustomAttr (T.pack $ intercalate "." $ attrNameComponents an)
             )
 
-    return (defCustom, M.fromList customMap)
+    return (join defCustom, M.fromList $ fromMaybe [] customMap)
 
 loadCustomizations :: FilePath -> Theme -> IO (Either String Theme)
 loadCustomizations path t = do
