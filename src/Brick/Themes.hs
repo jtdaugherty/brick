@@ -13,22 +13,9 @@
 --   * "default.bg" - a color specification
 --   * "default.style" - a style specification
 -- * A color specification can be any of the values (no quotes)
---   * "black"
---   * "red"
---   * "green"
---   * "yellow"
---   * "blue"
---   * "magenta"
---   * "cyan"
---   * "white"
---   * "brightBlack"
---   * "brightRed"
---   * "brightGreen"
---   * "brightYellow"
---   * "brightBlue"
---   * "brightMagenta"
---   * "brightCyan"
---   * "brightWhite"
+--   "black", "red", "green", "yellow", "blue", "magenta", "cyan",
+--   "white", "brightBlack", "brightRed", "brightGreen", "brightYellow",
+--   "brightBlue", "brightMagenta", "brightCyan", or "brightWhite".
 -- * A style specification can be either one of the following values
 --   (without quotes) or a comma-delimited list of one or more of the
 --   following values (e.g. "[bold,underline]") indicating that all of
