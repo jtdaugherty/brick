@@ -248,10 +248,11 @@ serializeCustomAttr cs c =
 
 saveCustomizations :: FilePath -> Theme -> IO ()
 saveCustomizations path t = do
-    let defSection = fromMaybe [] $ serializeCustomAttr ["default"] <$> themeCustomDefaultAttr t
+    let defSection = maybe [] ("[default]":) $
+                     serializeCustomAttr ["default"] <$> themeCustomDefaultAttr t
         mapSection = concat $ flip map (M.keys $ themeDefaultMapping t) $ \an ->
             case M.lookup an $ themeCustomMapping t of
                 Nothing -> []
                 Just custom -> serializeCustomAttr (attrNameComponents an) custom
-        content = T.unlines $ defSection <> mapSection
+        content = T.unlines $ defSection <> ("[custom]" : mapSection)
     T.writeFile path content
