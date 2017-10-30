@@ -1,3 +1,5 @@
+{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TemplateHaskell #-}
 module Brick.Themes
@@ -13,17 +15,26 @@ module Brick.Themes
   , themeCustomDefaultAttrL
 
   , themeToAttrMap
+  , loadCustomizations
   )
 where
 
 import GHC.Generics (Generic)
-import Graphics.Vty
+import Graphics.Vty hiding ((<|>))
+import Control.Monad (forM)
+import Control.Applicative ((<|>))
 import qualified Data.Text as T
+import qualified Data.Text.IO as T
 import qualified Data.Map as M
-import Data.Maybe (fromMaybe)
+import Data.List (intercalate)
+import Data.Bits ((.|.))
+import Data.Maybe (fromMaybe, isNothing, catMaybes)
+import Data.Monoid ((<>))
 import qualified Data.Foldable as F
 
-import Brick.AttrMap (AttrMap, AttrName, attrMap)
+import Data.Ini.Config
+
+import Brick.AttrMap (AttrMap, AttrName, attrMap, attrNameComponents)
 import Brick.Types.TH (suffixLenses)
 
 -- | An attribute customization can specify which aspects of an
@@ -38,6 +49,14 @@ data CustomAttr =
                }
                deriving (Eq, Read, Show, Generic)
 
+instance Monoid CustomAttr where
+    mempty = CustomAttr Nothing Nothing Nothing
+    mappend a b =
+        CustomAttr { customFg    = customFg a    <|> customFg b
+                   , customBg    = customBg a    <|> customBg b
+                   , customStyle = customStyle a <|> customStyle b
+                   }
+
 -- | A theme provides a set of default attribute mappings, a default
 -- attribute, and a set of customizations for the default mapping
 -- and default attribute. The idea here is that the application will
@@ -50,7 +69,7 @@ data CustomAttr =
 data Theme =
     Theme { themeDefaultAttr :: Attr
           -- ^ The default attribute to use.
-          , themeCustomDefaultAttr :: CustomAttr
+          , themeCustomDefaultAttr :: Maybe CustomAttr
           -- ^ Customization for the theme's default attribute.
           , themeDefaultMapping :: M.Map AttrName (Attr, T.Text)
           -- ^ The default attribute mapping to use. This maps attribute
@@ -78,13 +97,12 @@ themeToAttrMap t =
     where
         customMap = F.foldr f [] (M.toList $ themeDefaultMapping t)
         f (aName, (attr, _)) mapping =
-            let a' = case M.lookup aName (themeCustomMapping t) of
-                       Nothing     -> attr
-                       Just custom -> customizeAttr custom attr
+            let a' = customizeAttr (M.lookup aName (themeCustomMapping t)) attr
             in (aName, a'):mapping
 
-customizeAttr :: CustomAttr -> Attr -> Attr
-customizeAttr c a =
+customizeAttr :: Maybe CustomAttr -> Attr -> Attr
+customizeAttr Nothing a = a
+customizeAttr (Just c) a =
     let fg = fromMaybe (attrForeColor a) (customFg c)
         bg = fromMaybe (attrBackColor a) (customBg c)
         sty = maybe (attrStyle a) SetTo (customStyle c)
@@ -92,3 +110,85 @@ customizeAttr c a =
          , attrBackColor = bg
          , attrStyle = sty
          }
+
+isNullCustomization :: CustomAttr -> Bool
+isNullCustomization c =
+    isNothing (customFg c) &&
+    isNothing (customBg c) &&
+    isNothing (customStyle c)
+
+parseColor :: T.Text -> Either String (MaybeDefault Color)
+parseColor s =
+    let values = [ ("default", Default)
+                 , ("black", SetTo black)
+                 , ("red", SetTo red)
+                 , ("green", SetTo green)
+                 , ("yellow", SetTo yellow)
+                 , ("blue", SetTo blue)
+                 , ("magenta", SetTo magenta)
+                 , ("cyan", SetTo cyan)
+                 , ("white", SetTo white)
+                 , ("brightBlack", SetTo brightBlack)
+                 , ("brightRed", SetTo brightRed)
+                 , ("brightGreen", SetTo brightGreen)
+                 , ("brightYellow", SetTo brightYellow)
+                 , ("brightBlue", SetTo brightBlue)
+                 , ("brightMagenta", SetTo brightMagenta)
+                 , ("brightCyan", SetTo brightCyan)
+                 , ("brightWhite", SetTo brightWhite)
+                 ]
+        stripped = T.strip $ T.toLower s
+    in maybe (Left $ "Invalid color: " <> show s) Right $
+             lookup stripped values
+
+parseStyle :: T.Text -> Either String Style
+parseStyle s =
+    let styles = [ ("standout", standout)
+                 , ("underline", underline)
+                 , ("reverseVideo", reverseVideo)
+                 , ("blink", blink)
+                 , ("dim", dim)
+                 , ("bold", bold)
+                 ]
+        lookupStyle n = case lookup n styles of
+            Just sty -> Right sty
+            Nothing  -> Left $ T.unpack $ "Invalid style: " <> n
+        stripped = T.strip $ T.toLower s
+        bracketed = "[" `T.isPrefixOf` stripped &&
+                    "]" `T.isSuffixOf` stripped
+        unbracketed = T.tail $ T.init stripped
+        parseStyleList = do
+            ss <- mapM lookupStyle $ T.strip <$> T.splitOn "," unbracketed
+            return $ foldr (.|.) 0 ss
+
+    in if bracketed
+       then parseStyleList
+       else lookupStyle stripped
+
+themeParser :: Theme -> IniParser (Maybe CustomAttr, M.Map AttrName CustomAttr)
+themeParser t = do
+    let parseCustomAttr basename = do
+          c <- CustomAttr <$> fieldMbOf (basename <> ".fg")    parseColor
+                          <*> fieldMbOf (basename <> ".bg")    parseColor
+                          <*> fieldMbOf (basename <> ".style") parseStyle
+          return $ if isNullCustomization c then Nothing else Just c
+
+    defCustom <- section "default" $ do
+        parseCustomAttr "default"
+
+    customMap <- section "custom" $ do
+        catMaybes <$> (forM (M.keys $ themeDefaultMapping t) $ \an ->
+            (fmap (an,)) <$> parseCustomAttr (T.pack $ intercalate "." $ attrNameComponents an)
+            )
+
+    return (defCustom, M.fromList customMap)
+
+loadCustomizations :: FilePath -> Theme -> IO (Either String Theme)
+loadCustomizations path t = do
+    content <- T.readFile path
+    case parseIniFile content (themeParser t) of
+        Left e -> return $ Left e
+        Right (customDef, customMap) ->
+            return $ Right $ t { themeCustomDefaultAttr = customDef
+                               , themeCustomMapping = customMap
+                               }
