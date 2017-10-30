@@ -121,17 +121,17 @@ data ThemeDocumentation =
 data Theme =
     Theme { themeDefaultAttr :: Attr
           -- ^ The default attribute to use.
-          , themeCustomDefaultAttr :: Maybe CustomAttr
-          -- ^ Customization for the theme's default attribute.
           , themeDefaultMapping :: M.Map AttrName Attr
           -- ^ The default attribute mapping to use.
-          , themeDocumentation :: ThemeDocumentation
-          -- ^ The documentation for the theme's attributes.
+          , themeCustomDefaultAttr :: Maybe CustomAttr
+          -- ^ Customization for the theme's default attribute.
           , themeCustomMapping :: M.Map AttrName CustomAttr
           -- ^ Customizations for individual entries of the default
           -- mapping. Note that this will only affect entries in the
           -- default mapping; any attributes named here that are not
           -- present in the default mapping will not be considered.
+          , themeDocumentation :: ThemeDocumentation
+          -- ^ The documentation for the theme's attributes.
           }
           deriving (Eq, Read, Show, Generic)
 
