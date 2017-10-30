@@ -29,6 +29,8 @@ module Brick.AttrMap
   , attrMap
   , forceAttrMap
   , attrName
+  -- * Inspection
+  , attrNameComponents
   -- * Finding attributes from names
   , attrMapLookup
   -- * Manipulating attribute maps
@@ -83,6 +85,10 @@ data AttrMap = AttrMap Attr (M.Map AttrName Attr)
 -- | Create an attribute name from a string.
 attrName :: String -> AttrName
 attrName = AttrName . (:[])
+
+-- | Get the components of an attribute name.
+attrNameComponents :: AttrName -> [String]
+attrNameComponents (AttrName cs) = cs
 
 -- | Create an attribute map.
 attrMap :: Attr
