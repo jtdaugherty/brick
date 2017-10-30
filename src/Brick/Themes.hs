@@ -7,7 +7,7 @@
 --
 -- The file format is as follows:
 -- * Customization files are INI-style files with two sections, both
---   optional: "default" and "custom".
+--   optional: "default" and "other".
 -- * The "default" section specifies three optional fields:
 --   * "default.fg" - a color specification
 --   * "default.bg" - a color specification
@@ -26,7 +26,7 @@
 --   * "blink"
 --   * "dim"
 --   * "bold"
--- * The "custom" section specifies for each attribute name in the theme
+-- * The "other" section specifies for each attribute name in the theme
 --   the same "fg", "bg", and "style" settings as for the default
 --   attribute. Furthermore, if an attribute name has multiple
 --   components, the fields in the INI file should use periods as
@@ -137,6 +137,12 @@ suffixLenses ''CustomAttr
 suffixLenses ''Theme
 suffixLenses ''ThemeDocumentation
 
+defaultSectionName :: T.Text
+defaultSectionName = "default"
+
+otherSectionName :: T.Text
+otherSectionName = "other"
+
 -- | Create a new theme with the specified default attribute and
 -- attribute mapping. The theme will have no customizations.
 newTheme :: Attr -> [(AttrName, Attr)] -> Theme
@@ -238,10 +244,10 @@ themeParser t = do
                           <*> fieldMbOf (basename <> ".style") parseStyle
           return $ if isNullCustomization c then Nothing else Just c
 
-    defCustom <- sectionMb "default" $ do
+    defCustom <- sectionMb defaultSectionName $ do
         parseCustomAttr "default"
 
-    customMap <- sectionMb "custom" $ do
+    customMap <- sectionMb otherSectionName $ do
         catMaybes <$> (forM (M.keys $ themeDefaultMapping t) $ \an ->
             (fmap (an,)) <$> parseCustomAttr (makeFieldName $ attrNameComponents an)
             )
@@ -296,7 +302,7 @@ serializeCustomAttr cs c =
 
 emitSection :: T.Text -> [T.Text] -> [T.Text]
 emitSection _ [] = []
-emitSection secName ls = secName : ls
+emitSection secName ls = ("[" <> secName <> "]") : ls
 
 -- | Save an INI file containing theme customizations. Use the specified
 -- theme to determine which customizations to save. See the module
@@ -308,6 +314,6 @@ saveCustomizations path t = do
         mapSection = concat $ flip map (M.keys $ themeDefaultMapping t) $ \an ->
             maybe [] (serializeCustomAttr (attrNameComponents an)) $
                      M.lookup an $ themeCustomMapping t
-        content = T.unlines $ (emitSection "[default]" defSection) <>
-                              (emitSection "[custom]" mapSection)
+        content = T.unlines $ (emitSection defaultSectionName defSection) <>
+                              (emitSection otherSectionName mapSection)
     T.writeFile path content
