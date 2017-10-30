@@ -56,6 +56,7 @@ module Brick.Themes
   , themeDescriptionsL
 
   , themeToAttrMap
+  , applyCustomizations
   , loadCustomizations
   , saveCustomizations
   )
@@ -254,6 +255,27 @@ themeParser t = do
 
     return (join defCustom, M.fromList $ fromMaybe [] customMap)
 
+-- | Apply customizations using a custom lookup function. Customizations
+-- are obtained for each attribute name in the theme. Any customizations
+-- already set are lost.
+applyCustomizations :: Maybe CustomAttr
+                    -- ^ An optional customization for the theme's
+                    -- default attribute.
+                    -> (AttrName -> Maybe CustomAttr)
+                    -- ^ A function to obtain a customization for the
+                    -- specified attribute.
+                    -> Theme
+                    -- ^ The theme to customize.
+                    -> Theme
+applyCustomizations customDefAttr lookupAttr t =
+    let customMap = foldr nextAttr mempty (M.keys $ themeDefaultMapping t)
+        nextAttr an m = case lookupAttr an of
+            Nothing     -> m
+            Just custom -> M.insert an custom m
+    in t { themeCustomDefaultAttr = customDefAttr
+         , themeCustomMapping = customMap
+         }
+
 -- | Load an INI file containing theme customizations. Use the specified
 -- theme to determine which customizations to load. Return the specified
 -- theme with customizations set. See the module documentation for the
@@ -264,9 +286,7 @@ loadCustomizations path t = do
     case parseIniFile content (themeParser t) of
         Left e -> return $ Left e
         Right (customDef, customMap) ->
-            return $ Right $ t { themeCustomDefaultAttr = customDef
-                               , themeCustomMapping = customMap
-                               }
+            return $ Right $ applyCustomizations customDef (flip M.lookup customMap) t
 
 vtyColorName :: Color -> T.Text
 vtyColorName (Color240 _) = error "Color240 space not supported yet"
