@@ -64,6 +64,7 @@ library
     Brick.Focus
     Brick.Main
     Brick.Markup
+    Brick.Themes
     Brick.Types
     Brick.Util
     Brick.Widgets.Border
