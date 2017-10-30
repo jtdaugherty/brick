@@ -61,7 +61,9 @@ data Theme =
           -- for user customization of the theme.
           , themeCustomMapping     :: M.Map AttrName CustomAttr
           -- ^ Customizations for individual entries of the default
-          -- mapping.
+          -- mapping. Note that this will only affect entries in the
+          -- default mapping; any attributes named here that are not
+          -- present in the default mapping will not be considered.
           }
           deriving (Eq, Read, Show, Generic)
 
