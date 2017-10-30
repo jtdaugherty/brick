@@ -248,9 +248,7 @@ serializeCustomAttr cs c =
 
 saveCustomizations :: FilePath -> Theme -> IO ()
 saveCustomizations path t = do
-    let defSection = case serializeCustomAttr ["default"] <$> themeCustomDefaultAttr t of
-          Nothing -> []
-          Just ls -> ls
+    let defSection = fromMaybe [] $ serializeCustomAttr ["default"] <$> themeCustomDefaultAttr t
         mapSection = []
         content = T.unlines $ defSection <> mapSection
     T.writeFile path content
