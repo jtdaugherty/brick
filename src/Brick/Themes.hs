@@ -240,10 +240,11 @@ emitSection secName ls = secName : ls
 
 saveCustomizations :: FilePath -> Theme -> IO ()
 saveCustomizations path t = do
-    let defSection = maybe [] (emitSection "[default]") $
+    let defSection = fromMaybe [] $
                      serializeCustomAttr ["default"] <$> themeCustomDefaultAttr t
         mapSection = concat $ flip map (M.keys $ themeDefaultMapping t) $ \an ->
             maybe [] (serializeCustomAttr (attrNameComponents an)) $
                      M.lookup an $ themeCustomMapping t
-        content = T.unlines $ defSection <> (emitSection "[custom]" mapSection)
+        content = T.unlines $ (emitSection "[default]" defSection) <>
+                              (emitSection "[custom]" mapSection)
     T.writeFile path content
