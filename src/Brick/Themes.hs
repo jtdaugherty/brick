@@ -53,7 +53,12 @@ data Theme =
           , themeCustomDefaultAttr :: CustomAttr
           -- ^ Customization for the theme's default attribute.
           , themeDefaultMapping    :: M.Map AttrName (Attr, T.Text)
-          -- ^ The default attribute mapping to use.
+          -- ^ The default attribute mapping to use. This maps attribute
+          -- names to default attributes, but it also requires the
+          -- author to provide human-readable documentation strings for
+          -- each attribute describing what the attribute affects in the
+          -- interface. This is to aid the generation of documentation
+          -- for user customization of the theme.
           , themeCustomMapping     :: M.Map AttrName CustomAttr
           -- ^ Customizations for individual entries of the default
           -- mapping.
