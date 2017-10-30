@@ -66,7 +66,7 @@ import Graphics.Vty (Attr(..), MaybeDefault(..))
 -- "header" <> "clock" <> "seconds"
 -- @
 data AttrName = AttrName [String]
-              deriving (Show, Eq, Ord)
+              deriving (Show, Read, Eq, Ord)
 
 instance Monoid AttrName where
     mempty = AttrName []
