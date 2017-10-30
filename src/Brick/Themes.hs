@@ -50,6 +50,10 @@ module Brick.Themes
   , themeDefaultMappingL
   , themeCustomMappingL
   , themeCustomDefaultAttrL
+  , themeDocumentationL
+
+  , ThemeDocumentation(..)
+  , themeDescriptionsL
 
   , themeToAttrMap
   , loadCustomizations
@@ -96,6 +100,15 @@ instance Monoid CustomAttr where
                    , customStyle = customStyle a <|> customStyle b
                    }
 
+-- | Documentation for a theme's attributes.
+data ThemeDocumentation =
+    ThemeDocumentation { themeDescriptions :: M.Map AttrName T.Text
+                       -- ^ The per-attribute documentation for a theme
+                       -- so e.g. documentation for theme customization
+                       -- can be generated mechanically.
+                       }
+                       deriving (Eq, Read, Show, Generic)
+
 -- | A theme provides a set of default attribute mappings, a default
 -- attribute, and a set of customizations for the default mapping
 -- and default attribute. The idea here is that the application will
@@ -110,13 +123,10 @@ data Theme =
           -- ^ The default attribute to use.
           , themeCustomDefaultAttr :: Maybe CustomAttr
           -- ^ Customization for the theme's default attribute.
-          , themeDefaultMapping :: M.Map AttrName (Attr, T.Text)
-          -- ^ The default attribute mapping to use. This maps attribute
-          -- names to default attributes, but it also requires the
-          -- author to provide human-readable documentation strings for
-          -- each attribute describing what the attribute affects in the
-          -- interface. This is to aid the generation of documentation
-          -- for user customization of the theme.
+          , themeDefaultMapping :: M.Map AttrName Attr
+          -- ^ The default attribute mapping to use.
+          , themeDocumentation :: ThemeDocumentation
+          -- ^ The documentation for the theme's attributes.
           , themeCustomMapping :: M.Map AttrName CustomAttr
           -- ^ Customizations for individual entries of the default
           -- mapping. Note that this will only affect entries in the
@@ -127,6 +137,7 @@ data Theme =
 
 suffixLenses ''CustomAttr
 suffixLenses ''Theme
+suffixLenses ''ThemeDocumentation
 
 -- | Build an 'AttrMap' from a 'Theme'. This applies all customizations
 -- in the returned 'AttrMap'.
@@ -135,7 +146,7 @@ themeToAttrMap t =
     attrMap (customizeAttr (themeCustomDefaultAttr t) (themeDefaultAttr t)) customMap
     where
         customMap = F.foldr f [] (M.toList $ themeDefaultMapping t)
-        f (aName, (attr, _)) mapping =
+        f (aName, attr) mapping =
             let a' = customizeAttr (M.lookup aName (themeCustomMapping t)) attr
             in (aName, a'):mapping
 
