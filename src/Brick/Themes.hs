@@ -48,18 +48,18 @@ data CustomAttr =
 -- from customizations to permit users to serialize themes and their
 -- customizations to, say, disk files.
 data Theme =
-    Theme { themeDefaultAttr       :: Attr
+    Theme { themeDefaultAttr :: Attr
           -- ^ The default attribute to use.
           , themeCustomDefaultAttr :: CustomAttr
           -- ^ Customization for the theme's default attribute.
-          , themeDefaultMapping    :: M.Map AttrName (Attr, T.Text)
+          , themeDefaultMapping :: M.Map AttrName (Attr, T.Text)
           -- ^ The default attribute mapping to use. This maps attribute
           -- names to default attributes, but it also requires the
           -- author to provide human-readable documentation strings for
           -- each attribute describing what the attribute affects in the
           -- interface. This is to aid the generation of documentation
           -- for user customization of the theme.
-          , themeCustomMapping     :: M.Map AttrName CustomAttr
+          , themeCustomMapping :: M.Map AttrName CustomAttr
           -- ^ Customizations for individual entries of the default
           -- mapping. Note that this will only affect entries in the
           -- default mapping; any attributes named here that are not
