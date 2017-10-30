@@ -51,7 +51,6 @@ module Brick.Themes
   , themeDefaultMappingL
   , themeCustomMappingL
   , themeCustomDefaultAttrL
-  , themeDocumentationL
 
   , ThemeDocumentation(..)
   , themeDescriptionsL
@@ -131,8 +130,6 @@ data Theme =
           -- mapping. Note that this will only affect entries in the
           -- default mapping; any attributes named here that are not
           -- present in the default mapping will not be considered.
-          , themeDocumentation :: ThemeDocumentation
-          -- ^ The documentation for the theme's attributes.
           }
           deriving (Eq, Read, Show, Generic)
 
@@ -141,15 +138,13 @@ suffixLenses ''Theme
 suffixLenses ''ThemeDocumentation
 
 -- | Create a new theme with the specified default attribute and
--- attribute mapping. The theme will have no documentation or
--- customizations.
+-- attribute mapping. The theme will have no customizations.
 newTheme :: Attr -> [(AttrName, Attr)] -> Theme
 newTheme def mapping =
     Theme { themeDefaultAttr       = def
           , themeDefaultMapping    = M.fromList mapping
           , themeCustomDefaultAttr = Nothing
           , themeCustomMapping     = mempty
-          , themeDocumentation     = ThemeDocumentation mempty
           }
 
 -- | Build an 'AttrMap' from a 'Theme'. This applies all customizations
