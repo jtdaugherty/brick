@@ -27,6 +27,7 @@ import Control.Applicative ((<|>))
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Data.Map as M
+import Data.Tuple (swap)
 import Data.List (intercalate)
 import Data.Bits ((.|.), (.&.))
 import Data.Maybe (fromMaybe, isNothing, catMaybes)
@@ -120,27 +121,31 @@ isNullCustomization c =
 
 parseColor :: T.Text -> Either String (MaybeDefault Color)
 parseColor s =
-    let values = [ ("default", Default)
-                 , ("black", SetTo black)
-                 , ("red", SetTo red)
-                 , ("green", SetTo green)
-                 , ("yellow", SetTo yellow)
-                 , ("blue", SetTo blue)
-                 , ("magenta", SetTo magenta)
-                 , ("cyan", SetTo cyan)
-                 , ("white", SetTo white)
-                 , ("brightBlack", SetTo brightBlack)
-                 , ("brightRed", SetTo brightRed)
-                 , ("brightGreen", SetTo brightGreen)
-                 , ("brightYellow", SetTo brightYellow)
-                 , ("brightBlue", SetTo brightBlue)
-                 , ("brightMagenta", SetTo brightMagenta)
-                 , ("brightCyan", SetTo brightCyan)
-                 , ("brightWhite", SetTo brightWhite)
-                 ]
-        stripped = T.strip $ T.toLower s
-    in maybe (Left $ "Invalid color: " <> show s) Right $
-             lookup stripped values
+    let stripped = T.strip $ T.toLower s
+    in if stripped == "default"
+       then Right Default
+       else maybe (Left $ "Invalid color: " <> show s) (Right . SetTo) $
+                  lookup stripped (swap <$> allColors)
+
+allColors :: [(Color, T.Text)]
+allColors =
+    [ (black, "black")
+    , (red, "red")
+    , (green, "green")
+    , (yellow, "yellow")
+    , (blue, "blue")
+    , (magenta, "magenta")
+    , (cyan, "cyan")
+    , (white, "white")
+    , (brightBlack, "brightBlack")
+    , (brightRed, "brightRed")
+    , (brightGreen, "brightGreen")
+    , (brightYellow, "brightYellow")
+    , (brightBlue, "brightBlue")
+    , (brightMagenta, "brightMagenta")
+    , (brightCyan, "brightCyan")
+    , (brightWhite, "brightWhite")
+    ]
 
 allStyles :: [(T.Text, Style)]
 allStyles =
@@ -200,25 +205,8 @@ loadCustomizations path t = do
 vtyColorName :: Color -> T.Text
 vtyColorName (Color240 _) = error "Color240 space not supported yet"
 vtyColorName c =
-    let values = [ (black, "black")
-                 , (red, "red")
-                 , (green, "green")
-                 , (yellow, "yellow")
-                 , (blue, "blue")
-                 , (magenta, "magenta")
-                 , (cyan, "cyan")
-                 , (white, "white")
-                 , (brightBlack, "brightBlack")
-                 , (brightRed, "brightRed")
-                 , (brightGreen, "brightGreen")
-                 , (brightYellow, "brightYellow")
-                 , (brightBlue, "brightBlue")
-                 , (brightMagenta, "brightMagenta")
-                 , (brightCyan, "brightCyan")
-                 , (brightWhite, "brightWhite")
-                 ]
-    in fromMaybe (error $ "Invalid color: " <> show c)
-                 (lookup c values)
+    fromMaybe (error $ "Invalid color: " <> show c)
+              (lookup c allColors)
 
 makeFieldName :: [String] -> T.Text
 makeFieldName cs = T.pack $ intercalate "." cs
