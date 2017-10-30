@@ -16,6 +16,7 @@ module Brick.Themes
 
   , themeToAttrMap
   , loadCustomizations
+  , saveCustomizations
   )
 where
 
@@ -27,7 +28,7 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Data.Map as M
 import Data.List (intercalate)
-import Data.Bits ((.|.))
+import Data.Bits ((.|.), (.&.))
 import Data.Maybe (fromMaybe, isNothing, catMaybes)
 import Data.Monoid ((<>))
 import qualified Data.Foldable as F
@@ -141,16 +142,19 @@ parseColor s =
     in maybe (Left $ "Invalid color: " <> show s) Right $
              lookup stripped values
 
+allStyles :: [(T.Text, Style)]
+allStyles =
+    [ ("standout", standout)
+    , ("underline", underline)
+    , ("reverseVideo", reverseVideo)
+    , ("blink", blink)
+    , ("dim", dim)
+    , ("bold", bold)
+    ]
+
 parseStyle :: T.Text -> Either String Style
 parseStyle s =
-    let styles = [ ("standout", standout)
-                 , ("underline", underline)
-                 , ("reverseVideo", reverseVideo)
-                 , ("blink", blink)
-                 , ("dim", dim)
-                 , ("bold", bold)
-                 ]
-        lookupStyle n = case lookup n styles of
+    let lookupStyle n = case lookup n allStyles of
             Just sty -> Right sty
             Nothing  -> Left $ T.unpack $ "Invalid style: " <> n
         stripped = T.strip $ T.toLower s
@@ -178,7 +182,7 @@ themeParser t = do
 
     customMap <- sectionMb "custom" $ do
         catMaybes <$> (forM (M.keys $ themeDefaultMapping t) $ \an ->
-            (fmap (an,)) <$> parseCustomAttr (T.pack $ intercalate "." $ attrNameComponents an)
+            (fmap (an,)) <$> parseCustomAttr (makeFieldName $ attrNameComponents an)
             )
 
     return (join defCustom, M.fromList $ fromMaybe [] customMap)
@@ -192,3 +196,61 @@ loadCustomizations path t = do
             return $ Right $ t { themeCustomDefaultAttr = customDef
                                , themeCustomMapping = customMap
                                }
+
+vtyColorName :: Color -> T.Text
+vtyColorName (Color240 _) = error "Color240 space not supported yet"
+vtyColorName c =
+    let values = [ (black, "black")
+                 , (red, "red")
+                 , (green, "green")
+                 , (yellow, "yellow")
+                 , (blue, "blue")
+                 , (magenta, "magenta")
+                 , (cyan, "cyan")
+                 , (white, "white")
+                 , (brightBlack, "brightBlack")
+                 , (brightRed, "brightRed")
+                 , (brightGreen, "brightGreen")
+                 , (brightYellow, "brightYellow")
+                 , (brightBlue, "brightBlue")
+                 , (brightMagenta, "brightMagenta")
+                 , (brightCyan, "brightCyan")
+                 , (brightWhite, "brightWhite")
+                 ]
+    in fromMaybe (error $ "Invalid color: " <> show c)
+                 (lookup c values)
+
+makeFieldName :: [String] -> T.Text
+makeFieldName cs = T.pack $ intercalate "." cs
+
+serializeCustomColor :: [String] -> MaybeDefault Color -> T.Text
+serializeCustomColor cs cc =
+    let cName = case cc of
+          Default -> "default"
+          SetTo c -> vtyColorName c
+          KeepCurrent -> error "serializeCustomColor does not support KeepCurrent"
+    in makeFieldName cs <> " = " <> cName
+
+serializeCustomStyle :: [String] -> Style -> T.Text
+serializeCustomStyle cs s =
+    let activeStyles = filter (\(_, a) -> a .&. s == a) allStyles
+        styleStr = case activeStyles of
+            [(single, _)] -> single
+            many -> "[" <> (T.intercalate ", " $ fst <$> many) <> "]"
+    in makeFieldName cs <> " = " <> styleStr
+
+serializeCustomAttr :: [String] -> CustomAttr -> [T.Text]
+serializeCustomAttr cs c =
+    catMaybes [ serializeCustomColor (cs <> ["fg"]) <$> customFg c
+              , serializeCustomColor (cs <> ["bg"]) <$> customBg c
+              , serializeCustomStyle (cs <> ["style"]) <$> customStyle c
+              ]
+
+saveCustomizations :: FilePath -> Theme -> IO ()
+saveCustomizations path t = do
+    let defSection = case serializeCustomAttr ["default"] <$> themeCustomDefaultAttr t of
+          Nothing -> []
+          Just ls -> ls
+        mapSection = []
+        content = T.unlines $ defSection <> mapSection
+    T.writeFile path content
