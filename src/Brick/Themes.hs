@@ -246,13 +246,17 @@ serializeCustomAttr cs c =
               , serializeCustomStyle (cs <> ["style"]) <$> customStyle c
               ]
 
+emitSection :: T.Text -> [T.Text] -> [T.Text]
+emitSection _ [] = []
+emitSection secName ls = secName : ls
+
 saveCustomizations :: FilePath -> Theme -> IO ()
 saveCustomizations path t = do
-    let defSection = maybe [] ("[default]":) $
+    let defSection = maybe [] (emitSection "[default]") $
                      serializeCustomAttr ["default"] <$> themeCustomDefaultAttr t
         mapSection = concat $ flip map (M.keys $ themeDefaultMapping t) $ \an ->
             case M.lookup an $ themeCustomMapping t of
                 Nothing -> []
                 Just custom -> serializeCustomAttr (attrNameComponents an) custom
-        content = T.unlines $ defSection <> ("[custom]" : mapSection)
+        content = T.unlines $ defSection <> (emitSection "[custom]" mapSection)
     T.writeFile path content
