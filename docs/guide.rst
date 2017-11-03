@@ -304,7 +304,7 @@ Using Your Own Event Type
 
 Since we often need to communicate application-specific events beyond
 Vty input events to the event handler, brick supports embedding your
-application's custom events in the stream of ``BrickEvent``s that
+application's custom events in the stream of ``BrickEvent``-s that
 your handler will receive. The type of these events is the type ``e``
 mentioned in ``BrickEvent n e`` and ``App s e n``.
 
