@@ -776,17 +776,21 @@ Customizations are written in an INI-style file. Here's an example:
    someAttribute.fg = red
    someAttribute.style = underline
    otherAttribute.style = [underline, bold]
+   otherAttribute.inner.fg = white
 
-In the above example, the theme's *default attribute* -- the one that is
-used when no other attributes are used -- is customized. Its foreground
-and background colors are set. Then, other attributes specified by the
-theme -- ``someAttribute`` and ``otherAttribute`` are also customized.
-This example shows that styles can be customized, too, and that a custom
-style can either be a single style (in this example, ``underline``) or
-a collection of styles to be applied simutaneously (in this example,
-``underline`` and ``bold``). Full documentation for the format of
-theme customization files can be found in the module documentation for
-``Brick.Themes``.
+In the above example, the theme's *default attribute* -- the one
+that is used when no other attributes are used -- is customized. Its
+foreground and background colors are set. Then, other attributes
+specified by the theme -- ``someAttribute`` and ``otherAttribute`` are
+also customized. This example shows that styles can be customized, too,
+and that a custom style can either be a single style (in this example,
+``underline``) or a collection of styles to be applied simutaneously
+(in this example, ``underline`` and ``bold``). Lastly, the hierarchical
+attribute name ``otherAttribute.inner`` refers to an attribute name
+with two components, ``otherAttribute <> inner``, similar to the
+``specificAttr`` attribute described in `How Attributes Work`_. Full
+documentation for the format of theme customization files can be found
+in the module documentation for ``Brick.Themes``.
 
 The above example can be used in a ``brick`` application as follows.
 First, the application provides a default theme:
