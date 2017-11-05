@@ -802,8 +802,11 @@ First, the application provides a default theme:
                 , ("otherAttribute", fg magenta)
                 ]
 
-Then, the application can customize the theme with the user's
-customization file:
+Notice that the attributes in the theme have defaults: ``someAttribute``
+will default to a yellow foreground color if it is not customized. (And
+its background will default to the theme's default background color,
+blue, if it not customized either.) Then, the application can customize
+the theme with the user's customization file:
 
 .. code:: haskell
 
