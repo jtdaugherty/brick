@@ -766,64 +766,60 @@ follows:
 
 Customizations are written in an INI-style file. Here's an example:
 
-```
-[default]
-default.fg = blue
-default.bg = black
+.. code::
+   [default]
+   default.fg = blue
+   default.bg = black
 
-[other]
-someAttribute.fg = red
-someAttribute.style = underline
-otherAttribute.style = [underline, bold]
-```
+   [other]
+   someAttribute.fg = red
+   someAttribute.style = underline
+   otherAttribute.style = [underline, bold]
 
 In the above example, the theme's *default attribute* -- the one that is
 used when no other attributes are used -- is customized. Its foreground
 and background colors are set. Then, other attributes specified by the
-theme -- `someAttribute` and `otherAttribute` are also customized. This
-example shows that styles can be customized, too, and that a custom
-style can either be a single style (in this example, `underline`) or
+theme -- ``someAttribute`` and ``otherAttribute`` are also customized.
+This example shows that styles can be customized, too, and that a custom
+style can either be a single style (in this example, ``underline``) or
 a collection of styles to be applied simutaneously (in this example,
-`underline` and `bold`). Full documentation for the format of theme
-customization files can be found in the module documentation for
-`Brick.Themes`.
+``underline`` and ``bold``). Full documentation for the format of
+theme customization files can be found in the module documentation for
+``Brick.Themes``.
 
-The above example can be used in a `brick` application as follows.
+The above example can be used in a ``brick`` application as follows.
 First, the application provides a default theme:
 
-```
-import Brick.Themes (Theme, newTheme)
+.. code:: haskell
+   import Brick.Themes (Theme, newTheme)
 
-defaultTheme :: Theme
-defaultTheme =
-    newTheme (white `on` blue)
-             [ ("someAttribute",  fg yellow)
-             , ("otherAttribute", fg magenta)
-             ]
-```
+   defaultTheme :: Theme
+   defaultTheme =
+       newTheme (white `on` blue)
+                [ ("someAttribute",  fg yellow)
+                , ("otherAttribute", fg magenta)
+                ]
 
 Then, the application can customize the theme with the user's
 customization file:
 
-```
-import Brick.Themes (loadCustomizations)
+.. code:: haskell
+   import Brick.Themes (loadCustomizations)
 
-main :: IO ()
-main = do
-    customizedTheme <- loadCustomizations "custom.ini" defaultTheme
-```
+   main :: IO ()
+   main = do
+       customizedTheme <- loadCustomizations "custom.ini" defaultTheme
 
 Now we have a customized theme based on `defaultTheme`. The next step is
 to build an `AttrMap` from the theme:
 
-```
-import Brick.Themes (themeToAttrMap)
+.. code:: haskell
+   import Brick.Themes (themeToAttrMap)
 
-main :: IO ()
-main = do
-    customizedTheme <- loadCustomizations "custom.ini" defaultTheme
-    let mapping = themeToAttrMap customizedTheme
-```
+   main :: IO ()
+   main = do
+       customizedTheme <- loadCustomizations "custom.ini" defaultTheme
+       let mapping = themeToAttrMap customizedTheme
 
 The resulting `AttrMap` can then be returned by `appAttrMap` as
 described in (see `How Attributes Work`_ and `appAttrMap: Managing
