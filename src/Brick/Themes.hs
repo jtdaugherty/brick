@@ -59,6 +59,7 @@ module Brick.Themes
   , applyCustomizations
   , loadCustomizations
   , saveCustomizations
+  , saveTheme
   )
 where
 
@@ -337,3 +338,27 @@ saveCustomizations path t = do
         content = T.unlines $ (emitSection defaultSectionName defSection) <>
                               (emitSection otherSectionName mapSection)
     T.writeFile path content
+
+-- | Save an INI file containing all attributes from the specified
+-- theme. Customized attributes are saved, but if an attribute is not
+-- customized, its default is saved instead. The file can later be
+-- re-loaded as a customization file.
+saveTheme :: FilePath -> Theme -> IO ()
+saveTheme path t = do
+    let defSection = serializeCustomAttr ["default"] $
+                     fromMaybe (attrToCustom $ themeDefaultAttr t) (themeCustomDefaultAttr t)
+        mapSection = concat $ flip map (M.toList $ themeDefaultMapping t) $ \(an, def) ->
+            serializeCustomAttr (attrNameComponents an) $
+                fromMaybe (attrToCustom def) (M.lookup an $ themeCustomMapping t)
+        content = T.unlines $ (emitSection defaultSectionName defSection) <>
+                              (emitSection otherSectionName mapSection)
+    T.writeFile path content
+
+attrToCustom :: Attr -> CustomAttr
+attrToCustom a =
+    CustomAttr { customFg    = Just $ attrForeColor a
+               , customBg    = Just $ attrForeColor a
+               , customStyle = case attrStyle a of
+                   SetTo s -> Just s
+                   _       -> Nothing
+               }
