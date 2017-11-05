@@ -816,8 +816,8 @@ the theme with the user's customization file:
    main = do
        customizedTheme <- loadCustomizations "custom.ini" defaultTheme
 
-Now we have a customized theme based on `defaultTheme`. The next step is
-to build an `AttrMap` from the theme:
+Now we have a customized theme based on ``defaultTheme``. The next step
+is to build an ``AttrMap`` from the theme:
 
 .. code:: haskell
 
@@ -828,12 +828,12 @@ to build an `AttrMap` from the theme:
        customizedTheme <- loadCustomizations "custom.ini" defaultTheme
        let mapping = themeToAttrMap customizedTheme
 
-The resulting `AttrMap` can then be returned by `appAttrMap` as
+The resulting ``AttrMap`` can then be returned by ``appAttrMap`` as
 described in (see `How Attributes Work`_ and `appAttrMap: Managing
 Attributes`_).
 
 If the theme is further customized at runtime, any changes can be saved
-with `Brick.Themes.saveCustomizations`.
+with ``Brick.Themes.saveCustomizations``.
 
 Wide Character Support and the TextWidth class
 ==============================================
