@@ -89,6 +89,7 @@ library
                        microlens >= 0.3.0.0,
                        microlens-th,
                        microlens-mtl,
+                       mtl,
                        vector,
                        contravariant,
                        stm >= 2.4,

@@ -88,7 +88,7 @@ suffixLenses ''List
 instance Named (List n e) n where
     getName = listName
 
-handleListEvent :: (Ord n) => Event -> List n e -> EventM n (List n e)
+handleListEvent :: (Ord n) => Event -> List n e -> EventM n s (List n e)
 handleListEvent e theList =
     case e of
         EvKey KUp [] -> return $ listMoveUp theList
@@ -113,12 +113,12 @@ handleListEvent e theList =
 -- * Top            (g)
 -- * Bottom         (G)
 handleListEventVi :: (Ord n)
-                  => (Event -> List n e -> EventM n (List n e))
+                  => (Event -> List n e -> EventM n s (List n e))
                   -- ^ Fallback event handler to use if none of the vi keys
                   -- match.
                   -> Event
                   -> List n e
-                  -> EventM n (List n e)
+                  -> EventM n s (List n e)
 handleListEventVi fallback e theList =
     case e of
         EvKey (KChar 'k') [] -> return $ listMoveUp theList
@@ -273,7 +273,7 @@ listMoveUp :: List n e -> List n e
 listMoveUp = listMoveBy (-1)
 
 -- | Move the list selected index up by one page.
-listMovePageUp :: (Ord n) => List n e -> EventM n (List n e)
+listMovePageUp :: (Ord n) => List n e -> EventM n s (List n e)
 listMovePageUp theList = listMoveByPages (-1) theList
 
 -- | Move the list selected index down by one. (Moves the cursor down,
@@ -282,11 +282,11 @@ listMoveDown :: List n e -> List n e
 listMoveDown = listMoveBy 1
 
 -- | Move the list selected index down by one page.
-listMovePageDown :: (Ord n) => List n e -> EventM n (List n e)
+listMovePageDown :: (Ord n) => List n e -> EventM n s (List n e)
 listMovePageDown theList = listMoveByPages 1 theList
 
 -- | Move the list selected index by some (fractional) number of pages.
-listMoveByPages :: (Ord n, RealFrac m) => m -> List n e -> EventM n (List n e)
+listMoveByPages :: (Ord n, RealFrac m) => m -> List n e -> EventM n s (List n e)
 listMoveByPages pages theList = do
     v <- lookupViewport (theList^.listNameL)
     case v of
