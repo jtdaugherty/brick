@@ -752,6 +752,86 @@ map combinators:
 * ``Brick.Widgets.Core.withDefAttr``
 * ``Brick.Widgets.Core.overrideAttr``
 
+Attribute Themes
+================
+
+Brick provides support for customizable attribute themes. This works as
+follows:
+
+* The application provides a default theme built in to the program.
+* The application customizes the them by loading theme customizations
+  from a user-specified customization file.
+* The application can save new customizations to files for later
+  re-loading.
+
+Customizations are written in an INI-style file. Here's an example:
+
+```
+[default]
+default.fg = blue
+default.bg = black
+
+[other]
+someAttribute.fg = red
+someAttribute.style = underline
+otherAttribute.style = [underline, bold]
+```
+
+In the above example, the theme's *default attribute* -- the one that is
+used when no other attributes are used -- is customized. Its foreground
+and background colors are set. Then, other attributes specified by the
+theme -- `someAttribute` and `otherAttribute` are also customized. This
+example shows that styles can be customized, too, and that a custom
+style can either be a single style (in this example, `underline`) or
+a collection of styles to be applied simutaneously (in this example,
+`underline` and `bold`). Full documentation for the format of theme
+customization files can be found in the module documentation for
+`Brick.Themes`.
+
+The above example can be used in a `brick` application as follows.
+First, the application provides a default theme:
+
+```
+import Brick.Themes (Theme, newTheme)
+
+defaultTheme :: Theme
+defaultTheme =
+    newTheme (white `on` blue)
+             [ ("someAttribute",  fg yellow)
+             , ("otherAttribute", fg magenta)
+             ]
+```
+
+Then, the application can customize the theme with the user's
+customization file:
+
+```
+import Brick.Themes (loadCustomizations)
+
+main :: IO ()
+main = do
+    customizedTheme <- loadCustomizations "custom.ini" defaultTheme
+```
+
+Now we have a customized theme based on `defaultTheme`. The next step is
+to build an `AttrMap` from the theme:
+
+```
+import Brick.Themes (themeToAttrMap)
+
+main :: IO ()
+main = do
+    customizedTheme <- loadCustomizations "custom.ini" defaultTheme
+    let mapping = themeToAttrMap customizedTheme
+```
+
+The resulting `AttrMap` can then be returned by `appAttrMap` as
+described in (see `How Attributes Work`_ and `appAttrMap: Managing
+Attributes`_).
+
+If the theme is further customized at runtime, any changes can be saved
+with `Brick.Themes.saveCustomizations`.
+
 Wide Character Support and the TextWidth class
 ==============================================
 
