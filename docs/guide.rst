@@ -767,6 +767,7 @@ follows:
 Customizations are written in an INI-style file. Here's an example:
 
 .. code::
+
    [default]
    default.fg = blue
    default.bg = black
@@ -791,6 +792,7 @@ The above example can be used in a ``brick`` application as follows.
 First, the application provides a default theme:
 
 .. code:: haskell
+
    import Brick.Themes (Theme, newTheme)
 
    defaultTheme :: Theme
@@ -804,6 +806,7 @@ Then, the application can customize the theme with the user's
 customization file:
 
 .. code:: haskell
+
    import Brick.Themes (loadCustomizations)
 
    main :: IO ()
@@ -814,6 +817,7 @@ Now we have a customized theme based on `defaultTheme`. The next step is
 to build an `AttrMap` from the theme:
 
 .. code:: haskell
+
    import Brick.Themes (themeToAttrMap)
 
    main :: IO ()
