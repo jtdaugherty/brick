@@ -2,6 +2,22 @@
 Brick changelog
 ---------------
 
+0.29
+----
+
+API changes:
+ * Added Ord instances for `Location` and `BrickEvent` (thanks Tom
+   Sydney Kerckhove)
+ * `Brick.AttrMap`: attribute name components are now exposed via the
+   `attrNameComponents` function. Also added a Read instance for
+   AttrName.
+
+New features:
+ * This release adds user-customizable theme support. Please see the
+   "Attribute Themes" section of the User Guide for an introduction; see
+   the Haddock documentation for `Brick.Themes` for full details. Also,
+   see the new `programs/ThemeDemo.hs` for a working demonstration.
+
 0.28
 ----
 
