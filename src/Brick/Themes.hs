@@ -39,6 +39,11 @@
 -- Any color or style specifications omitted from the file mean that
 -- those attribute or style settings will use the theme's default value
 -- instead.
+--
+-- Attribute names with multiple components (e.g. attr1 <> attr2) can
+-- be referenced in customization files by separating the names with
+-- a dot. For example, the attribute name "list" <> "selected" can be
+-- referenced by using the string "list.selected".
 module Brick.Themes
   ( CustomAttr(..)
   , customFgL
