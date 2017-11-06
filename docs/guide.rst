@@ -784,7 +784,7 @@ and background colors are set. Then, other attributes specified by
 the theme -- ``someAttribute`` and ``otherAttribute`` -- are also
 customized. This example shows that styles can be customized, too, and
 that a custom style can either be a single style (in this example,
-``underline``) or a collection of styles to be applied simutaneously
+``underline``) or a collection of styles to be applied simultaneously
 (in this example, ``underline`` and ``bold``). Lastly, the hierarchical
 attribute name ``otherAttribute.inner`` refers to an attribute name
 with two components, ``otherAttribute <> inner``, similar to the
@@ -832,9 +832,9 @@ is to build an ``AttrMap`` from the theme:
        customizedTheme <- loadCustomizations "custom.ini" defaultTheme
        let mapping = themeToAttrMap customizedTheme
 
-The resulting ``AttrMap`` can then be returned by ``appAttrMap`` as
-described in (see `How Attributes Work`_ and `appAttrMap: Managing
-Attributes`_).
+The resulting ``AttrMap`` can then be returned by ``appAttrMap``
+as described in `How Attributes Work`_ and `appAttrMap: Managing
+Attributes`_.
 
 If the theme is further customized at runtime, any changes can be saved
 with ``Brick.Themes.saveCustomizations``.
