@@ -2,6 +2,13 @@
 Brick changelog
 ---------------
 
+0.29.1
+------
+
+Bug fixes:
+ * Mixed-case color names like "brightBlue" can now be parsed in theme
+   customization files.
+
 0.29
 ----
 
