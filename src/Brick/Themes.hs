@@ -191,10 +191,11 @@ isNullCustomization c =
 parseColor :: T.Text -> Either String (MaybeDefault Color)
 parseColor s =
     let stripped = T.strip $ T.toLower s
+        normalize (t, c) = (T.toLower t, c)
     in if stripped == "default"
        then Right Default
-       else maybe (Left $ "Invalid color: " <> show s) (Right . SetTo) $
-                  lookup stripped (swap <$> allColors)
+       else maybe (Left $ "Invalid color: " <> show stripped) (Right . SetTo) $
+                  lookup stripped (normalize <$> swap <$> allColors)
 
 allColors :: [(Color, T.Text)]
 allColors =
