@@ -131,21 +131,19 @@ simpleMain :: (Ord n)
            => Widget n
            -- ^ The widget to draw.
            -> IO ()
-simpleMain w =
-    let app = simpleApp { appDraw = const [w] }
-    in defaultMain app ()
+simpleMain w = defaultMain (simpleApp w) ()
 
 -- | A simple application with reasonable defaults to be overridden as
 -- desired:
 --
--- * Draws nothing
+-- * Draws only the specified widget
 -- * Quits on any event other than resizes
 -- * Has no start event handler
 -- * Provides no attribute map
 -- * Never shows any cursors
-simpleApp :: App s e n
-simpleApp =
-    App { appDraw = const [C.emptyWidget]
+simpleApp :: Widget n -> App s e n
+simpleApp w =
+    App { appDraw = const [w]
         , appHandleEvent = resizeOrQuit
         , appStartEvent = return
         , appAttrMap = const $ attrMap defAttr []
