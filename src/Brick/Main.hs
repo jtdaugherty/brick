@@ -4,6 +4,7 @@ module Brick.Main
   , customMain
   , simpleMain
   , resizeOrQuit
+  , simpleApp
 
   -- * Event handler functions
   , continue
@@ -74,6 +75,7 @@ import Brick.Types (Widget, EventM(..))
 import Brick.Types.Internal
 import Brick.Widgets.Internal
 import Brick.AttrMap
+import qualified Brick.Widgets.Core as C
 
 -- | The library application abstraction. Your application's operations
 -- are represented here and passed to one of the various main functions
@@ -137,6 +139,23 @@ simpleMain w =
                   , appChooseCursor = neverShowCursor
                   }
     in defaultMain app ()
+
+-- | A simple application with reasonable defaults to be overridden as
+-- desired:
+--
+-- * Draws nothing
+-- * Quits on any event other than resizes
+-- * Has no start event handler
+-- * Provides no attribute map
+-- * Never shows any cursors
+simpleApp :: App s e n
+simpleApp =
+    App { appDraw = const [C.emptyWidget]
+        , appHandleEvent = resizeOrQuit
+        , appStartEvent = return
+        , appAttrMap = const $ attrMap defAttr []
+        , appChooseCursor = neverShowCursor
+        }
 
 -- | An event-handling function which continues execution of the event
 -- loop only when resize events occur; all other types of events trigger
