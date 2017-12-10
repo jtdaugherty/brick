@@ -132,12 +132,7 @@ simpleMain :: (Ord n)
            -- ^ The widget to draw.
            -> IO ()
 simpleMain w =
-    let app = App { appDraw = const [w]
-                  , appHandleEvent = resizeOrQuit
-                  , appStartEvent = return
-                  , appAttrMap = const $ attrMap defAttr []
-                  , appChooseCursor = neverShowCursor
-                  }
+    let app = simpleApp { appDraw = const [w] }
     in defaultMain app ()
 
 -- | A simple application with reasonable defaults to be overridden as
