@@ -6,43 +6,45 @@
 -- theme customizations in INI-style files.
 --
 -- The file format is as follows:
--- * Customization files are INI-style files with two sections, both
---   optional: "default" and "other".
--- * The "default" section specifies three optional fields:
---   * "default.fg" - a color specification
---   * "default.bg" - a color specification
---   * "default.style" - a style specification
--- * A color specification can be any of the values (no quotes)
---   "black", "red", "green", "yellow", "blue", "magenta", "cyan",
---   "white", "brightBlack", "brightRed", "brightGreen", "brightYellow",
---   "brightBlue", "brightMagenta", "brightCyan", or "brightWhite".
--- * A style specification can be either one of the following values
---   (without quotes) or a comma-delimited list of one or more of the
---   following values (e.g. "[bold,underline]") indicating that all of
---   the specified styles be used.
---   * "standout"
---   * "underline"
---   * "reverseVideo"
---   * "blink"
---   * "dim"
---   * "bold"
--- * The "other" section specifies for each attribute name in the theme
---   the same "fg", "bg", and "style" settings as for the default
---   attribute. Furthermore, if an attribute name has multiple
---   components, the fields in the INI file should use periods as
---   delimiters. For example, if a theme has an attribute name ("foo" <>
---   "bar"), then the file may specify three fields:
---   * "foo.bar.fg" - a color specification
---   * "foo.bar.bg" - a color specification
---   * "foo.bar.style" - a style specification
+--
+-- Customization files are INI-style files with two sections, both
+-- optional: @"default"@ and @"other"@.
+--
+-- The @"default"@ section specifies three optional fields:
+--
+--  * @"default.fg"@ - a color specification
+--  * @"default.bg"@ - a color specification
+--  * @"default.style"@ - a style specification
+--
+-- A color specification can be any of the strings @black@, @red@,
+-- @green@, @yellow@, @blue@, @magenta@, @cyan@, @white@, @brightBlack@,
+-- @brightRed@, @brightGreen@, @brightYellow@, @brightBlue@,
+-- @brightMagenta@, @brightCyan@, @brightWhite@, or @default@.
+--
+-- A style specification can be either one of the following values
+-- (without quotes) or a comma-delimited list of one or more of the
+-- following values (e.g. @"[bold,underline]"@) indicating that all
+-- of the specified styles be used. Valid styles are @standout@,
+-- @underline@, @reverseVideo@, @blink@, @dim@, and @bold@.
+--
+-- The @other@ section specifies for each attribute name in the theme
+-- the same @fg@, @bg@, and @style@ settings as for the default
+-- attribute. Furthermore, if an attribute name has multiple components,
+-- the fields in the INI file should use periods as delimiters. For
+-- example, if a theme has an attribute name (@"foo" <> "bar"@), then
+-- the file may specify three fields:
+--
+--  * @foo.bar.fg@ - a color specification
+--  * @foo.bar.bg@ - a color specification
+--  * @foo.bar.style@ - a style specification
 --
 -- Any color or style specifications omitted from the file mean that
 -- those attribute or style settings will use the theme's default value
 -- instead.
 --
--- Attribute names with multiple components (e.g. attr1 <> attr2) can
+-- Attribute names with multiple components (e.g. @attr1 <> attr2@) can
 -- be referenced in customization files by separating the names with
--- a dot. For example, the attribute name "list" <> "selected" can be
+-- a dot. For example, the attribute name @"list" <> "selected"@ can be
 -- referenced by using the string "list.selected".
 module Brick.Themes
   ( CustomAttr(..)
@@ -191,10 +193,11 @@ isNullCustomization c =
 parseColor :: T.Text -> Either String (MaybeDefault Color)
 parseColor s =
     let stripped = T.strip $ T.toLower s
+        normalize (t, c) = (T.toLower t, c)
     in if stripped == "default"
        then Right Default
-       else maybe (Left $ "Invalid color: " <> show s) (Right . SetTo) $
-                  lookup stripped (swap <$> allColors)
+       else maybe (Left $ "Invalid color: " <> show stripped) (Right . SetTo) $
+                  lookup stripped (normalize <$> swap <$> allColors)
 
 allColors :: [(Color, T.Text)]
 allColors =

@@ -125,7 +125,7 @@ main = do
 
     void $ M.customMain buildVty Nothing app $ St [] Nothing
            "Press Ctrl-up and Ctrl-down arrow keys to scroll, ESC to quit.\n\
-           \Observe the click coordinates identify the\n\
+           \Observe that the click coordinates identify the\n\
            \underlying widget coordinates.\n\
            \\n\
            \Lorem ipsum dolor sit amet,\n\
