@@ -20,8 +20,6 @@ Under the hood, this library builds upon
 [vty](http://hackage.haskell.org/package/vty), so some knowledge of Vty
 will be helpful in using this library.
 
-This library deprecates [vty-ui](https://github.com/jtdaugherty/vty-ui).
-
 Example
 -------
 
@@ -66,12 +64,12 @@ at these projects:
 Getting Started
 ---------------
 
-TLDR:
+Check out the many demo programs to get a feel for different aspects of
+the library:
 
 ```
-$ cabal sandbox init
-$ cabal install -j -f demos
-$ .cabal-sandbox/bin/brick-???-demo
+$ cabal new-build -f demos
+$ find dist-newstyle -type f -name \*-demo
 ```
 
 To get started, see the [user guide](https://github.com/jtdaugherty/brick/blob/master/docs/guide.rst).
@@ -81,7 +79,7 @@ Documentation
 
 Documentation for `brick` comes in a variety of forms:
 
-* [The brick user guide](https://github.com/jtdaugherty/brick/blob/master/docs/guide.rst)
+* [The official brick user guide](https://github.com/jtdaugherty/brick/blob/master/docs/guide.rst)
 * [Samuel Tay's brick tutorial](https://github.com/jtdaugherty/brick/blob/master/docs/samtay-tutorial.md)
 * Haddock (all modules)
 * [Demo programs](https://github.com/jtdaugherty/brick/blob/master/programs)
@@ -123,10 +121,10 @@ Status
 ------
 
 There are some places were I have deliberately chosen to worry about
-performance later for the sake of spending more time on the design (and
-to wait on performance issues to arise first). `brick` is also something
-of an experimental project of mine and some aspects of the design
-involve trade-offs that may are not entirely settled. In addition you
+performance later for the sake of spending more time on the design
+(and to wait on performance issues to arise first). `brick` is also
+something of an experimental project of mine and some aspects of the
+design involve trade-offs that are not entirely settled. In addition you
 can expect this library to follow a principle of fearless improvement:
 new versions will make (sometimes substantial) API changes if those
 changes really do make the library better. I will place more importance
