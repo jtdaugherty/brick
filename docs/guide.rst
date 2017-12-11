@@ -1383,7 +1383,7 @@ names but needs to render the sub-widget, it can use ``overrideAttr``
 or ``mapAttrNames`` to convert its custom names to the names that the
 sub-widget uses for rendering its output.
 
-.. _vty: https://github.com/coreyoconnor/vty
+.. _vty: https://github.com/jtdaugherty/vty
 .. _Hackage: http://hackage.haskell.org/
 .. _microlens: http://hackage.haskell.org/package/microlens
 .. _bracketed paste mode: https://cirw.in/blog/bracketed-paste
