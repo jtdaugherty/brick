@@ -46,11 +46,11 @@ To install from Hackage::
    $ cabal update
    $ cabal install brick
 
-To clone and build locally (with demonstration programs)::
+To clone and build locally::
 
    $ git clone https://github.com/jtdaugherty/brick.git
    $ cd brick
-   $ cabal new-build -f demos
+   $ cabal new-build
 
 Building the Demonstration Programs
 -----------------------------------
