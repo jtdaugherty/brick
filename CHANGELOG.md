@@ -2,6 +2,14 @@
 Brick changelog
 ---------------
 
+0.30
+----
+
+API changes:
+ * `Brick.Focus`: added `focusSetCurrent` to make it easy to set the
+    focus of a focus ring
+ * `Brick.Main`: added a simple polymorphic `App` value, `simpleApp`
+
 0.29.1
 ------
 
