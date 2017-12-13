@@ -8,6 +8,7 @@ module Brick.Focus
   , focusNext
   , focusPrev
   , focusGetCurrent
+  , focusSetCurrent
   , focusRingCursor
   , withFocusRing
   , focusRingModify
@@ -66,6 +67,14 @@ withFocusRing ring f a = f (focusGetCurrent ring == Just (getName a)) a
 -- is emtpy, return 'Nothing'.
 focusGetCurrent :: FocusRing n -> Maybe n
 focusGetCurrent (FocusRing l) = C.focus l
+
+-- | Set the currently-focused resource name in the ring, provided the
+-- name is in the ring. Otherwise return the ring unmodified.
+focusSetCurrent :: (Eq n) => n -> FocusRing n -> FocusRing n
+focusSetCurrent n r@(FocusRing l) =
+    case C.rotateTo n l of
+        Nothing -> r
+        Just l' -> FocusRing l'
 
 -- | Modify the internal circular list structure of a focus ring
 -- directly. This function permits modification of the circular list
