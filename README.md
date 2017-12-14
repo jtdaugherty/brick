@@ -20,6 +20,13 @@ Under the hood, this library builds upon
 [vty](http://hackage.haskell.org/package/vty), so some knowledge of Vty
 will be helpful in using this library.
 
+Release Announcements / News
+----------------------------
+
+Find out about `brick` releases and other news on Twitter:
+
+https://twitter.com/brick_haskell/
+
 Example
 -------
 
