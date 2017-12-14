@@ -75,7 +75,6 @@ import Brick.Types (Widget, EventM(..))
 import Brick.Types.Internal
 import Brick.Widgets.Internal
 import Brick.AttrMap
-import qualified Brick.Widgets.Core as C
 
 -- | The library application abstraction. Your application's operations
 -- are represented here and passed to one of the various main functions
