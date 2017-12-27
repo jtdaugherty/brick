@@ -106,3 +106,7 @@ main = do
 
     putStrLn "The final form state was:"
     print $ formState f'
+
+    if allFieldsValid f'
+       then putStrLn "The final form inputs were valid."
+       else putStrLn $ "The final form had invalid inputs: " <> show (invalidFields f')

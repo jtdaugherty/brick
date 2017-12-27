@@ -29,6 +29,8 @@ module Brick.Forms
   , handleFormEvent
   , renderForm
   , (@@=)
+  , allFieldsValid
+  , invalidFields
 
   -- * Simple form field constructors
   , editTextField
@@ -48,7 +50,7 @@ where
 
 import Graphics.Vty
 import Data.Monoid
-import Data.Maybe (isJust)
+import Data.Maybe (isJust, isNothing)
 
 import Brick
 import Brick.Focus
@@ -232,6 +234,18 @@ invalidFormInputAttr = formAttr <> "invalidInput"
 
 focusedFormInputAttr :: AttrName
 focusedFormInputAttr = formAttr <> "focusedInput"
+
+allFieldsValid :: Form s e n -> Bool
+allFieldsValid = null . invalidFields
+
+invalidFields :: Form s e n -> [n]
+invalidFields f = concat $ getInvalidFields <$> formFieldStates f
+
+getInvalidFields :: FormFieldState s e n -> [n]
+getInvalidFields (FormFieldState st _ fs _) =
+    let gather (FormField n validate _ _) =
+            if (isNothing $ validate st) then [n] else []
+    in concat $ gather <$> fs
 
 renderForm :: (Eq n) => Form s e n -> Widget n
 renderForm (Form es fr _) =
