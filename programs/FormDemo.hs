@@ -32,16 +32,12 @@ makeLenses ''FormState
 
 mkForm :: FormState -> Form FormState e Name
 mkForm =
-    newForm [ editShowableField field1 Edit1
-              `withHelper` ((hCenter $ str "Edit 1:") <=>)
-            , editShowableField field2 Edit2
-              `withHelper` (str "Edit 2: " <+>)
-            , editPasswordField fieldPassword Password
-              `withHelper` (str "Password: " <+>)
-            , radioField radio [ (True, YesRadio, "Yes")
-                               , (False, NoRadio, "No")
-                               ]
-              `withHelper` (str "Okay? " <+>)
+    newForm [ ((hCenter $ str "Edit 1:") <=>) @@= editShowableField field1 Edit1
+            , (str "Edit 2: " <+>)            @@= editShowableField field2 Edit2
+            , (str "Password: " <+>)          @@= editPasswordField fieldPassword Password
+            , (str "Okay? " <+>)              @@= radioField radio [ (True, YesRadio, "Yes")
+                                                                   , (False, NoRadio, "No")
+                                                                   ]
             ]
 
 theMap :: AttrMap

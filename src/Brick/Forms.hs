@@ -28,6 +28,7 @@ module Brick.Forms
   , handleFormEvent
   , renderForm
   , withHelper
+  , (@@=)
 
   -- * Simple form field constructors
   , editShowableField
@@ -78,6 +79,9 @@ data Form s e n =
 
 withHelper :: (s -> FormFieldState s e n) -> (Widget n -> Widget n) -> s -> FormFieldState s e n
 withHelper mkFs h s = (mkFs s) { formFieldRenderHelper = h }
+
+(@@=) :: (Widget n -> Widget n) -> (s -> FormFieldState s e n) -> s -> FormFieldState s e n
+(@@=) w fs = withHelper fs w
 
 defaultFormRenderer :: (Show n) => Form s e n -> n -> Widget n -> Widget n
 defaultFormRenderer f n w =
