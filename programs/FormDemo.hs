@@ -4,6 +4,7 @@ module Main where
 
 import qualified Data.Text as T
 import Lens.Micro.TH
+import Data.Monoid ((<>))
 
 import Graphics.Vty
 import Brick
@@ -68,7 +69,12 @@ draw :: Form FormState e Name -> [Widget Name]
 draw f = [vCenter $ hCenter form <=> hCenter help]
     where
         form = border $ padAll 1 $ hLimit 50 $ renderForm f
-        help = padTop (Pad 1) $ str "Help"
+        help = padTop (Pad 1) $ borderWithLabel (str "Help") body
+        body = str $ "- Name is free-form text\n" <>
+                     "- Age must be an integer (try entering an\n" <>
+                     "  invalid age!)\n" <>
+                     "- Handedness selects from a list of options\n" <>
+                     "- The last option is a checkbox"
 
 app :: App (Form FormState e Name) e Name
 app =
