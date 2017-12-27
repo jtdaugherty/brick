@@ -156,6 +156,18 @@ data Form s e n =
          -- field's lens over @s@.
          }
 
+-- | Compose a new rendering augmentation function with the one in the
+-- form field collection. For example, we might put a label on the left
+-- side of a form field:
+--
+-- > (str "Please check: " <+>) @@= checkboxField alive AliveField "Alive?"
+--
+-- This can also be used to add multiple augmentations and associates
+-- right:
+--
+-- > (withDefAttr someAttribute) @@=
+-- > (str "Please check: " <+>) @@=
+-- >   checkboxField alive AliveField "Alive?"
 infixr 5 @@=
 (@@=) :: (Widget n -> Widget n) -> (s -> FormFieldState s e n) -> s -> FormFieldState s e n
 (@@=) h mkFs s =
