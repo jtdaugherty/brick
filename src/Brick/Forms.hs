@@ -198,6 +198,9 @@ formFieldNames (FormFieldState _ _ fields _) = formFieldName <$> fields
 
 -- | A form field for manipulating a boolean value. This represents
 -- 'True' as @[X] label@ and 'False' as @[ ] label@.
+--
+-- This field responds to `Space` keypresses to toggle the checkbox and
+-- to mouse clicks.
 checkboxField :: (Ord n, Show n)
               => Lens' s Bool
               -- ^ The state lens for this value.
@@ -233,6 +236,9 @@ renderCheckbox label n foc val =
 
 -- | A form field for selecting a single choice from a set of possible
 -- choices. Each choice has an associated value and text label.
+--
+-- This field responds to `Space` keypresses to select a radio button
+-- option and to mouse clicks.
 radioField :: (Ord n, Show n, Eq a)
            => Lens' s a
            -- ^ The state lens for this value.
@@ -287,6 +293,9 @@ renderRadio val name label foc cur =
 -- | A form field for using an editor to edit the text representation of
 -- a value. The other editing fields in this module are special cases of
 -- this function.
+--
+-- This field responds to all events handled by 'editor', including
+-- mouse events.
 editField :: (Ord n, Show n)
           => Lens' s a
           -- ^ The state lens for this value.
@@ -331,6 +340,9 @@ editField stLens n limit ini val renderText wrapEditor initialState =
 -- uses its 'Read' instance to validate the input. This field is mostly
 -- useful in cases where the user-facing representation of a value
 -- matches the 'Show' representation exactly, such as with 'Int'.
+--
+-- This field responds to all events handled by 'editor', including
+-- mouse events.
 editShowableField :: (Ord n, Show n, Read a, Show a)
                   => Lens' s a
                   -- ^ The state lens for this value.
@@ -348,6 +360,9 @@ editShowableField stLens n =
 
 -- | A form field using an editor to edit a text value. Since the value
 -- is free-form text, it is always valid.
+--
+-- This field responds to all events handled by 'editor', including
+-- mouse events.
 editTextField :: (Ord n, Show n)
               => Lens' s T.Text
               -- ^ The state lens for this value.
@@ -367,6 +382,9 @@ editTextField stLens n limit =
 -- | A form field using a single-line editor to edit a free-form text
 -- value represented as a password. The value is always considered valid
 -- and is always represented with one asterisk per password character.
+--
+-- This field responds to all events handled by 'editor', including
+-- mouse events.
 editPasswordField :: (Ord n, Show n)
                   => Lens' s T.Text
                   -- ^ The state lens for this value.
