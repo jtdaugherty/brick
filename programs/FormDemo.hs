@@ -7,6 +7,7 @@ import Lens.Micro.TH
 import Data.Monoid ((<>))
 
 import Graphics.Vty
+import qualified Graphics.Vty as V
 import Brick
 import Brick.Forms
 import Brick.Focus
@@ -92,14 +93,20 @@ app =
 
 main :: IO ()
 main = do
-    let initialFormState = FormState { _name = ""
+    let buildVty = do
+          v <- V.mkVty =<< V.standardIOConfig
+          V.setMode (V.outputIface v) V.Mouse True
+          return v
+
+        initialFormState = FormState { _name = ""
                                      , _age = 0
                                      , _handed = RightHanded
                                      , _ridesBike = False
                                      , _password = ""
                                      }
         f = mkForm initialFormState
-    f' <- defaultMain app f
+
+    f' <- customMain buildVty Nothing app f
 
     putStrLn "The starting form state was:"
     print initialFormState
