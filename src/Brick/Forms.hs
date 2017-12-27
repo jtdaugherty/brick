@@ -227,8 +227,10 @@ renderCheckbox label n foc val =
 
 radioField :: (Ord n, Show n, Eq a)
            => Lens' s a
+           -- ^ The state lens for this value.
            -> [(a, n, T.Text)]
            -> s
+           -- ^ The initial form state.
            -> FormFieldState s e n
 radioField stLens options initialState =
     let initVal = initialState ^. stLens
@@ -274,13 +276,16 @@ renderRadio val name label foc cur =
 
 editField :: (Ord n, Show n)
           => Lens' s a
+          -- ^ The state lens for this value.
           -> n
+          -- ^ The resource name for the input field.
           -> Maybe Int
           -> (a -> T.Text)
           -> ([T.Text] -> Maybe a)
           -> ([T.Text] -> Widget n)
           -> (Widget n -> Widget n)
           -> s
+          -- ^ The initial form state.
           -> FormFieldState s e n
 editField stLens n limit ini val renderText wrapEditor initialState =
     let initVal = mk $ initialState ^. stLens
@@ -298,10 +303,18 @@ editField stLens n limit ini val renderText wrapEditor initialState =
                       , formFieldRenderHelper = id
                       }
 
+-- | A form field using a single-line editor to edit the 'Show'
+-- representation of a state field value of type @a@. This automatically
+-- uses its 'Read' instance to validate the input. This field is mostly
+-- useful in cases where the user-facing representation of a value
+-- matches the 'Show' representation exactly, such as with 'Int'.
 editShowableField :: (Ord n, Show n, Read a, Show a)
                   => Lens' s a
+                  -- ^ The state lens for this value.
                   -> n
+                  -- ^ The resource name for the input field.
                   -> s
+                  -- ^ The initial form state.
                   -> FormFieldState s e n
 editShowableField stLens n =
     let ini = T.pack . show
@@ -310,11 +323,17 @@ editShowableField stLens n =
         renderText = txt . T.unlines
     in editField stLens n limit ini val renderText id
 
+-- | A form field using an editor to edit a text value. Since the value
+-- is free-form text, it is always valid.
 editTextField :: (Ord n, Show n)
               => Lens' s T.Text
+              -- ^ The state lens for this value.
               -> n
+              -- ^ The resource name for the input field.
               -> Maybe Int
+              -- ^ The optional line limit for the editor (see 'editor').
               -> s
+              -- ^ The initial form state.
               -> FormFieldState s e n
 editTextField stLens n limit =
     let ini = id
@@ -322,10 +341,15 @@ editTextField stLens n limit =
         renderText = txt . T.intercalate "\n"
     in editField stLens n limit ini val renderText id
 
+-- | A form field using a single-line editor to edit a free-form text
+-- value represented as a password. The value is always considered valid
+-- and is always represented with one asterisk per password character.
 editPasswordField :: (Ord n, Show n)
                   => Lens' s T.Text
+                  -- ^ The state lens for this value.
                   -> n
                   -> s
+                  -- ^ The initial form state.
                   -> FormFieldState s e n
 editPasswordField stLens n =
     let ini = id
