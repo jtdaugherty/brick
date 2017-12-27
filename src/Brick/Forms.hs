@@ -1,7 +1,10 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE OverloadedStrings #-}
--- | This module provides an input form API. This API allows you to
+-- | NOTE: This API is experimental and will probably change. Please try
+-- it out! Feedback is very much appreciated!
+--
+-- This module provides an input form API. This API allows you to
 -- construct an input interface based on a data type of your choice.
 -- Each input in the form corresponds to a field in your data type. This
 -- API then automatically dispatches keyboard and mouse input events to
