@@ -39,20 +39,21 @@ makeLenses ''FormState
 
 mkForm :: FormState -> Form FormState e Name
 mkForm =
-    newForm [ ((str "Name: ") <+>) @@=
-                editTextField name NameField (Just 1)
-            , (str "Age: " <+>) @@=
-                editShowableField age AgeField
-            , (str "Password: " <+>) @@=
-                editPasswordField password PasswordField
-            , (str "Dominant hand: " <+>) @@=
-                radioField handed [ (LeftHanded, LeftHandField, "Left")
-                                  , (RightHanded, RightHandField, "Right")
-                                  , (Ambidextrous, AmbiField, "Both")
-                                  ]
-            , (<+> str " Do you ride a bicycle?") @@=
-                checkboxField ridesBike BikeField
-            ]
+    let mkLabel s = vLimit 1 $ hLimit 15 $ str s <+> fill ' '
+    in newForm [ (mkLabel "Name" <+>) @@=
+                   editTextField name NameField (Just 1)
+               , (mkLabel "Age" <+>) @@=
+                   editShowableField age AgeField
+               , (mkLabel "Password" <+>) @@=
+                   editPasswordField password PasswordField
+               , (mkLabel "Dominant hand" <+>) @@=
+                   radioField handed [ (LeftHanded, LeftHandField, "Left")
+                                     , (RightHanded, RightHandField, "Right")
+                                     , (Ambidextrous, AmbiField, "Both")
+                                     ]
+               , (\w -> mkLabel "" <+> w <+> str " Do you ride a bicycle?") @@=
+                   checkboxField ridesBike BikeField
+               ]
 
 theMap :: AttrMap
 theMap = attrMap defAttr
