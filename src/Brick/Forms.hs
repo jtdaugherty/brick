@@ -1,4 +1,4 @@
--- TODO:
+-- | TODO:
 --
 -- * make it so that each "entry" can add more than one thing to the
 --   focus ring, i.e. radio buttons
@@ -10,6 +10,8 @@
 --
 -- * think about how to let user control how to interpret and commit
 --   changes to form state under various validation conditions
+--
+-- * think about form composition / concatenation
 
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE GADTs #-}
