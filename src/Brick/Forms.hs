@@ -28,6 +28,7 @@ module Brick.Forms
   , defaultFormRenderer
   , handleFormEvent
   , renderForm
+  , withHelper
 
   -- * Simple form field constructors
   , editShowableField
@@ -55,45 +56,48 @@ import Text.Read (readMaybe)
 import Lens.Micro
 
 data FormField a b e n =
-    FormField { formFieldValidate    :: b -> Maybe a
+    FormField { formFieldName        :: n
+              , formFieldValidate    :: b -> Maybe a
               , formFieldRender      :: Bool -> b -> Widget n
               , formFieldHandleEvent :: BrickEvent n e -> b -> EventM n b
               }
 
 data FormFieldState s e n where
-    FormFieldState :: (Named b n) =>
-                      { formFieldName  :: n
-                      , formFieldState :: b
-                      , formField      :: FormField a b e n
+    FormFieldState :: { formFieldState :: b
                       , formFieldLens  :: Lens' s a
+                      , formFields     :: [FormField a b e n]
+                      , formFieldRenderHelper :: Widget n -> Widget n
                       } -> FormFieldState s e n
 
 data Form s e n =
-    Form { formFields       :: [FormFieldState s e n]
+    Form { formFieldStates  :: [FormFieldState s e n]
          , formFocus        :: FocusRing n
          , formState        :: s
-         , formRenderHelper :: Form s e n -> n -> Widget n -> Widget n
          }
+
+withHelper :: (s -> FormFieldState s e n) -> (Widget n -> Widget n) -> s -> FormFieldState s e n
+withHelper mkFs h s = (mkFs s) { formFieldRenderHelper = h }
 
 defaultFormRenderer :: (Show n) => Form s e n -> n -> Widget n -> Widget n
 defaultFormRenderer f n w =
-    let allNames = formFieldName <$> formFields f
+    let allNames = concat $ formFieldNames <$> formFieldStates f
         maxLength = 1 + (maximum $ length <$> show <$> allNames)
         p = maxLength - length (show n)
         label = padRight (Pad p) $ str $ show n <> ":"
     in label <+> w
 
-newForm :: (Form s e n -> n -> Widget n -> Widget n)
-        -> [s -> FormFieldState s e n]
+newForm :: [s -> FormFieldState s e n]
         -> s
         -> Form s e n
-newForm helper mkEs s =
+newForm mkEs s =
     let es = mkEs <*> pure s
-    in Form { formFields       = es
-            , formFocus        = focusRing $ formFieldName <$> es
-            , formState        = s
-            , formRenderHelper = helper
+    in Form { formFieldStates = es
+            , formFocus       = focusRing $ concat $ formFieldNames <$> es
+            , formState       = s
             }
+
+formFieldNames :: FormFieldState s e n -> [n]
+formFieldNames (FormFieldState _ _ fields _) = formFieldName <$> fields
 
 editField :: (Ord n, Show n)
           => Lens' s a
@@ -111,12 +115,14 @@ editField stLens n limit ini val renderText wrapEditor initialState =
         handleEvent (VtyEvent e) ed = handleEditorEvent e ed
         handleEvent _ ed = return ed
 
-    in FormFieldState { formFieldName  = getName initVal
-                      , formFieldState = initVal
-                      , formField      = FormField (val . getEditContents)
-                                                   (\b e -> wrapEditor $ renderEditor renderText b e)
-                                                   handleEvent
+    in FormFieldState { formFieldState = initVal
+                      , formFields     = [ FormField n
+                                                     (val . getEditContents)
+                                                     (\b e -> wrapEditor $ renderEditor renderText b e)
+                                                     handleEvent
+                                         ]
                       , formFieldLens  = stLens
+                      , formFieldRenderHelper = id
                       }
 
 editShowableField :: (Ord n, Show n, Read a, Show a)
@@ -153,18 +159,22 @@ invalidFormInputAttr :: AttrName
 invalidFormInputAttr = formAttr <> "invalidInput"
 
 renderForm :: (Eq n) => Form s e n -> Widget n
-renderForm f@(Form es fr _ helper) =
-    vBox $ renderFormField (helper f) fr <$> es
+renderForm (Form es fr _) =
+    vBox $ renderFormFieldState fr <$> es
 
-renderFormField :: (Eq n)
-                => (n -> Widget n -> Widget n)
-                -> FocusRing n
-                -> FormFieldState s e n
-                -> Widget n
-renderFormField helper fr (FormFieldState n st (FormField valid renderFunc _) _) =
-    let maybeInvalid = if isJust $ valid st then id else forceAttr invalidFormInputAttr
-        w = maybeInvalid (withFocusRing fr renderFunc st)
-    in helper n w
+renderFormFieldState :: (Eq n)
+                     => FocusRing n
+                     -> FormFieldState s e n
+                     -> Widget n
+renderFormFieldState fr (FormFieldState st _ fields helper) =
+    let renderFields [] = []
+        renderFields ((FormField n validate renderField _):fs) =
+            let maybeInvalid = if isJust $ validate st
+                               then id
+                               else forceAttr invalidFormInputAttr
+                foc = Just n == focusGetCurrent fr
+            in maybeInvalid (renderField foc st) : renderFields fs
+    in helper $ vBox $ renderFields fields
 
 handleFormEvent :: (Eq n) => BrickEvent n e -> Form s e n -> EventM n (Form s e n)
 handleFormEvent (VtyEvent (EvKey (KChar '\t') [])) f =
@@ -175,20 +185,31 @@ handleFormEvent e f =
         Just n  -> handleFormFieldEvent n e f
 
 handleFormFieldEvent :: (Eq n) => n -> BrickEvent n e -> Form s e n -> EventM n (Form s e n)
-handleFormFieldEvent n ev f = handle [] (formFields f)
+handleFormFieldEvent n ev f = findFieldState [] (formFieldStates f)
     where
-        handle _ [] = return f
-        handle prev (e:es) =
+        findFieldState _ [] = return f
+        findFieldState prev (e:es) =
             case e of
-                FormFieldState n' st field@(FormField val _ handleFunc) stLens | n == n' -> do
-                    nextSt <- handleFunc ev st
-                    let newField = FormFieldState n' nextSt field stLens
-                    -- If the new state validates, go ahead and update
-                    -- the form state with it.
-                    case val nextSt of
-                        Nothing -> return $ f { formFields = prev <> [newField] <> es }
-                        Just valid -> return $ f { formFields = prev <> [newField] <> es
-                                                 , formState = formState f & stLens .~ valid
-                                                 }
+                FormFieldState st stLens fields helper -> do
+                    let findField [] = return Nothing
+                        findField (field:rest) =
+                            case field of
+                                FormField n' validate _ handleFunc | n == n' -> do
+                                    nextSt <- handleFunc ev st
+                                    -- If the new state validates, go ahead and update
+                                    -- the form state with it.
+                                    case validate nextSt of
+                                        Nothing -> return $ Just (nextSt, Nothing)
+                                        Just newSt -> return $ Just (nextSt, Just newSt)
+                                _ -> findField rest
 
-                _ -> handle (prev <> [e]) es
+                    result <- findField fields
+                    case result of
+                        Nothing -> findFieldState (prev <> [e]) es
+                        Just (newSt, maybeSt) ->
+                            let newFieldState = FormFieldState newSt stLens fields helper
+                            in return $ f { formFieldStates = prev <> [newFieldState] <> es
+                                          , formState = case maybeSt of
+                                              Nothing -> formState f
+                                              Just s  -> formState f & stLens .~ s
+                                          }

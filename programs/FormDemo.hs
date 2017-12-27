@@ -2,7 +2,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-import Data.Monoid ((<>))
 import qualified Data.Text as T
 import Lens.Micro.TH
 
@@ -28,22 +27,15 @@ data FormState =
 
 makeLenses ''FormState
 
-formRenderer :: Form FormState e Name -> Name -> Widget Name -> Widget Name
-formRenderer _ n w =
-    let label = case n of
-          Edit1 -> "Editor 1"
-          Edit2 -> "Editor 2"
-          Password -> "Password"
-    in hLimit 50 $
-       (vLimit 1 $ hLimit 14 (str (label <> ":") <+> fill ' ')) <+> w
-
 mkForm :: FormState -> Form FormState e Name
 mkForm =
-    newForm formRenderer
-      [ editShowableField field1 Edit1
-      , editShowableField field2 Edit2
-      , editPasswordField fieldPassword Password
-      ]
+    newForm [ editShowableField field1 Edit1
+              `withHelper` (\w -> str "Edit 1: " <+> w)
+            , editShowableField field2 Edit2
+              `withHelper` (\w -> str "Edit 2: " <+> w)
+            , editPasswordField fieldPassword Password
+              `withHelper` (\w -> str "Password: " <+> w)
+            ]
 
 theMap :: AttrMap
 theMap = attrMap defAttr
