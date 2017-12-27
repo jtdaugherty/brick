@@ -55,9 +55,9 @@ import Text.Read (readMaybe)
 import Lens.Micro
 
 data FormEntry a b e n =
-    FormEntry { _formEntryValidate    :: b -> Maybe a
-              , _formEntryRender      :: Bool -> b -> Widget n
-              , _formEntryHandleEvent :: BrickEvent n e -> b -> EventM n b
+    FormEntry { formEntryValidate    :: b -> Maybe a
+              , formEntryRender      :: Bool -> b -> Widget n
+              , formEntryHandleEvent :: BrickEvent n e -> b -> EventM n b
               }
 
 data FormEntryState s e n where
