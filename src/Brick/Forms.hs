@@ -103,9 +103,10 @@ formFieldNames (FormFieldState _ _ fields _) = formFieldName <$> fields
 checkboxField :: (Ord n, Show n)
               => Lens' s Bool
               -> n
+              -> Widget n
               -> s
               -> FormFieldState s e n
-checkboxField stLens name initialState =
+checkboxField stLens name label initialState =
     let initVal = initialState ^. stLens
 
         handleEvent (VtyEvent (EvKey (KChar ' ') [])) s = return $ not s
@@ -113,17 +114,18 @@ checkboxField stLens name initialState =
 
     in FormFieldState { formFieldState        = initVal
                       , formFields            = [ FormField name Just
-                                                            renderCheckbox
+                                                            (renderCheckbox label)
                                                             handleEvent
                                                 ]
                       , formFieldLens         = stLens
                       , formFieldRenderHelper = id
                       }
 
-renderCheckbox :: Bool -> Bool -> Widget n
-renderCheckbox foc val =
+renderCheckbox :: Widget n -> Bool -> Bool -> Widget n
+renderCheckbox label foc val =
     let addAttr = if foc then withDefAttr focusedFormInputAttr else id
-    in addAttr $ str $ "[" <> (if val then "X" else " ") <> "]"
+    in addAttr $
+       (str $ "[" <> (if val then "X" else " ") <> "]") <+> label
 
 radioField :: (Ord n, Show n, Eq a)
            => Lens' s a
