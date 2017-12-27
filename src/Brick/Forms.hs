@@ -9,8 +9,6 @@
 --   changes to form state under various validation conditions
 --
 -- * think about form composition / concatenation
---
--- * Better name for withHelper and its respective field
 
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE GADTs #-}
@@ -27,7 +25,6 @@ module Brick.Forms
   , defaultFormRenderer
   , handleFormEvent
   , renderForm
-  , withHelper
   , (@@=)
 
   -- * Simple form field constructors
@@ -77,11 +74,8 @@ data Form s e n =
          , formState        :: s
          }
 
-withHelper :: (s -> FormFieldState s e n) -> (Widget n -> Widget n) -> s -> FormFieldState s e n
-withHelper mkFs h s = (mkFs s) { formFieldRenderHelper = h }
-
 (@@=) :: (Widget n -> Widget n) -> (s -> FormFieldState s e n) -> s -> FormFieldState s e n
-(@@=) w fs = withHelper fs w
+(@@=) h mkFs s = (mkFs s) { formFieldRenderHelper = h }
 
 defaultFormRenderer :: (Show n) => Form s e n -> n -> Widget n -> Widget n
 defaultFormRenderer f n w =
