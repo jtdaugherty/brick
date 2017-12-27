@@ -55,7 +55,7 @@ mkForm =
                                      , (Ambidextrous, AmbiField, "Both")
                                      ]
                , label "" @@=
-                   checkboxField ridesBike BikeField (str " Do you ride a bicycle?")
+                   checkboxField ridesBike BikeField "Do you ride a bicycle?"
                ]
 
 theMap :: AttrMap

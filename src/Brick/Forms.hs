@@ -87,7 +87,7 @@ formFieldNames (FormFieldState _ _ fields _) = formFieldName <$> fields
 checkboxField :: (Ord n, Show n)
               => Lens' s Bool
               -> n
-              -> Widget n
+              -> T.Text
               -> s
               -> FormFieldState s e n
 checkboxField stLens name label initialState =
@@ -106,12 +106,12 @@ checkboxField stLens name label initialState =
                       , formFieldRenderHelper = id
                       }
 
-renderCheckbox :: Widget n -> n -> Bool -> Bool -> Widget n
+renderCheckbox :: T.Text -> n -> Bool -> Bool -> Widget n
 renderCheckbox label n foc val =
     let addAttr = if foc then withDefAttr focusedFormInputAttr else id
     in clickable n $
        addAttr $
-       (str $ "[" <> (if val then "X" else " ") <> "]") <+> label
+       (str $ "[" <> (if val then "X" else " ") <> "] ") <+> txt label
 
 radioField :: (Ord n, Show n, Eq a)
            => Lens' s a
