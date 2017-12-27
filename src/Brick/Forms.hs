@@ -137,6 +137,16 @@ radioField :: (Ord n, Show n, Eq a)
 radioField stLens options initialState =
     let initVal = initialState ^. stLens
 
+        lookupOptionValue n =
+            let results = filter (\(_, n', _) -> n' == n) options
+            in case results of
+                [(val, _, _)] -> Just val
+                _ -> Nothing
+
+        handleEvent _ (MouseDown n _ _ _) s =
+            case lookupOptionValue n of
+                Nothing -> return s
+                Just v -> return v
         handleEvent new (VtyEvent (EvKey (KChar ' ') [])) _ = return new
         handleEvent _ _ s = return s
 
@@ -144,7 +154,7 @@ radioField stLens options initialState =
         mkOptionField (val, name, label) =
             FormField name
                       Just
-                      (renderRadio val label)
+                      (renderRadio val name label)
                       (handleEvent val)
 
     in FormFieldState { formFieldState        = initVal
@@ -153,13 +163,14 @@ radioField stLens options initialState =
                       , formFieldRenderHelper = id
                       }
 
-renderRadio :: (Eq a) => a -> T.Text -> Bool -> a -> Widget n
-renderRadio val label foc cur =
+renderRadio :: (Eq a) => a -> n -> T.Text -> Bool -> a -> Widget n
+renderRadio val name label foc cur =
     let addAttr = if foc
                   then withDefAttr focusedFormInputAttr
                   else id
         isSet = val == cur
-    in addAttr $
+    in clickable name $
+       addAttr $
        hBox [ str "["
             , str $ if isSet then "*" else " "
             , txt $ "] " <> label
