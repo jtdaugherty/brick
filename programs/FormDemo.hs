@@ -16,12 +16,15 @@ import Brick.Widgets.Center
 data Name = Edit1
           | Edit2
           | Password
+          | YesRadio
+          | NoRadio
           deriving (Eq, Ord, Show)
 
 data FormState =
     FormState { _field1        :: Int
               , _field2        :: Int
               , _fieldPassword :: T.Text
+              , _radio         :: Bool
               }
               deriving (Show)
 
@@ -35,6 +38,10 @@ mkForm =
               `withHelper` (\w -> str "Edit 2: " <+> w)
             , editPasswordField fieldPassword Password
               `withHelper` (\w -> str "Password: " <+> w)
+            , radioField radio [ (True, YesRadio, "Yes")
+                               , (False, NoRadio, "No")
+                               ]
+              `withHelper` (\w -> str "Okay? " <+> w)
             ]
 
 theMap :: AttrMap
@@ -42,6 +49,7 @@ theMap = attrMap defAttr
   [ (editAttr, white `on` black)
   , (editFocusedAttr, black `on` yellow)
   , (invalidFormInputAttr, white `on` red)
+  , (focusedRadioAttr, black `on` yellow)
   ]
 
 app :: App (Form FormState e Name) e Name
@@ -60,6 +68,6 @@ app =
 
 main :: IO ()
 main = do
-    let f = mkForm $ FormState 10 20 ""
+    let f = mkForm $ FormState 10 20 "" False
     f' <- defaultMain app f
     print $ formState f'
