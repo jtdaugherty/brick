@@ -79,8 +79,11 @@ data Form s e n =
          , formState        :: s
          }
 
+infixr 5 @@=
 (@@=) :: (Widget n -> Widget n) -> (s -> FormFieldState s e n) -> s -> FormFieldState s e n
-(@@=) h mkFs s = (mkFs s) { formFieldRenderHelper = h }
+(@@=) h mkFs s =
+    let v = mkFs s
+    in v { formFieldRenderHelper = h . (formFieldRenderHelper v) }
 
 newForm :: [s -> FormFieldState s e n]
         -> s
