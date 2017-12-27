@@ -9,6 +9,8 @@
 --   changes to form state under various validation conditions
 --
 -- * think about form composition / concatenation
+--
+-- * Better name for withHelper and its respective field
 
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE GADTs #-}
