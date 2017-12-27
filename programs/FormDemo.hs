@@ -23,6 +23,7 @@ data Name = NameField
           | LeftHandField
           | RightHandField
           | AmbiField
+          | AddressField
           deriving (Eq, Ord, Show)
 
 data Handedness = LeftHanded | RightHanded | Ambidextrous
@@ -31,6 +32,7 @@ data Handedness = LeftHanded | RightHanded | Ambidextrous
 data FormState =
     FormState { _name      :: T.Text
               , _age       :: Int
+              , _address   :: T.Text
               , _ridesBike :: Bool
               , _handed    :: Handedness
               , _password  :: T.Text
@@ -45,6 +47,8 @@ mkForm =
                     (vLimit 1 $ hLimit 15 $ str s <+> fill ' ') <+> w
     in newForm [ label "Name" @@=
                    editTextField name NameField (Just 1)
+               , label "Address" @@=
+                   editTextField address AddressField (Just 3)
                , label "Age" @@=
                    editShowableField age AgeField
                , label "Password" @@=
@@ -85,7 +89,9 @@ app =
             case ev of
                 VtyEvent (EvResize {})     -> continue s
                 VtyEvent (EvKey KEsc [])   -> halt s
-                VtyEvent (EvKey KEnter []) -> halt s
+                -- Enter quits only when we aren't in the multi-line editor.
+                VtyEvent (EvKey KEnter [])
+                    | focusGetCurrent (formFocus s) /= Just AddressField -> halt s
                 _                          -> continue =<< handleFormEvent ev s
         , appChooseCursor = focusRingCursor formFocus
         , appStartEvent = return
@@ -100,6 +106,7 @@ main = do
           return v
 
         initialFormState = FormState { _name = ""
+                                     , _address = ""
                                      , _age = 0
                                      , _handed = RightHanded
                                      , _ridesBike = False
