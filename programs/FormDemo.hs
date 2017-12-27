@@ -92,12 +92,17 @@ app =
 
 main :: IO ()
 main = do
-    let initialForm = FormState { _name = ""
-                                , _age = 0
-                                , _handed = RightHanded
-                                , _ridesBike = False
-                                , _password = ""
-                                }
-        f = mkForm initialForm
+    let initialFormState = FormState { _name = ""
+                                     , _age = 0
+                                     , _handed = RightHanded
+                                     , _ridesBike = False
+                                     , _password = ""
+                                     }
+        f = mkForm initialFormState
     f' <- defaultMain app f
+
+    putStrLn "The starting form state was:"
+    print initialFormState
+
+    putStrLn "The final form state was:"
     print $ formState f'
