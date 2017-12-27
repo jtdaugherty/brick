@@ -33,12 +33,14 @@ module Brick.Forms
   -- * Simple form field constructors
   , editShowableField
   , editPasswordField
+  , radioField
 
   -- * Advanced form field constructors
   , editField
 
   -- * Attributes
   , invalidFormInputAttr
+  , focusedRadioAttr
   )
 where
 
@@ -99,6 +101,42 @@ newForm mkEs s =
 formFieldNames :: FormFieldState s e n -> [n]
 formFieldNames (FormFieldState _ _ fields _) = formFieldName <$> fields
 
+radioField :: (Ord n, Show n, Eq a)
+           => Lens' s a
+           -> [(a, n, T.Text)]
+           -> s
+           -> FormFieldState s e n
+radioField stLens options initialState =
+    let initVal = initialState ^. stLens
+
+        handleEvent new (VtyEvent (EvKey (KChar ' ') [])) _ = return new
+        handleEvent _ _ s = return s
+
+        optionFields = mkOptionField <$> options
+        mkOptionField (val, name, label) =
+            FormField name
+                      Just
+                      (renderRadio val label)
+                      (handleEvent val)
+
+    in FormFieldState { formFieldState        = initVal
+                      , formFields            = optionFields
+                      , formFieldLens         = stLens
+                      , formFieldRenderHelper = id
+                      }
+
+renderRadio :: (Eq a) => a -> T.Text -> Bool -> a -> Widget n
+renderRadio val label foc cur =
+    let addAttr = if foc
+                  then withDefAttr focusedRadioAttr
+                  else id
+        isSet = val == cur
+    in addAttr $
+       hBox [ str "["
+            , str $ if isSet then "*" else " "
+            , txt $ "] " <> label
+            ]
+
 editField :: (Ord n, Show n)
           => Lens' s a
           -> n
@@ -157,6 +195,9 @@ formAttr = "brickForm"
 
 invalidFormInputAttr :: AttrName
 invalidFormInputAttr = formAttr <> "invalidInput"
+
+focusedRadioAttr :: AttrName
+focusedRadioAttr = formAttr <> "focusedRadioOption"
 
 renderForm :: (Eq n) => Form s e n -> Widget n
 renderForm (Form es fr _) =
