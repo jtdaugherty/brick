@@ -29,6 +29,7 @@ module Brick.Forms
   , (@@=)
 
   -- * Simple form field constructors
+  , editTextField
   , editShowableField
   , editPasswordField
   , radioField
@@ -195,6 +196,18 @@ editShowableField stLens n =
         val = readMaybe . T.unpack . T.intercalate "\n"
         limit = Just 1
         renderText = txt . T.unlines
+    in editField stLens n limit ini val renderText id
+
+editTextField :: (Ord n, Show n)
+              => Lens' s T.Text
+              -> n
+              -> Maybe Int
+              -> s
+              -> FormFieldState s e n
+editTextField stLens n limit =
+    let ini = id
+        val = Just . T.intercalate "\n"
+        renderText = txt . T.intercalate "\n"
     in editField stLens n limit ini val renderText id
 
 editPasswordField :: (Ord n, Show n)
