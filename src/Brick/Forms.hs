@@ -284,16 +284,29 @@ renderRadio val name label foc cur =
             , txt $ "] " <> label
             ]
 
+-- | A form field for using an editor to edit the text representation of
+-- a value. The other editing fields in this module are special cases of
+-- this function.
 editField :: (Ord n, Show n)
           => Lens' s a
           -- ^ The state lens for this value.
           -> n
           -- ^ The resource name for the input field.
           -> Maybe Int
+          -- ^ The optional line limit for the editor (see 'editor').
           -> (a -> T.Text)
+          -- ^ The initialization function that turns your value into
+          -- the editor's initial contents. The resulting text may
+          -- contain newlines.
           -> ([T.Text] -> Maybe a)
+          -- ^ The validation function that converts the editors
+          -- contents into a valid value of type @a@.
           -> ([T.Text] -> Widget n)
+          -- ^ The rendering function for the editor's contents (see
+          -- 'renderEditor').
           -> (Widget n -> Widget n)
+          -- ^ A rendering augmentation function to adjust the
+          -- representation of the rendered editor.
           -> s
           -- ^ The initial form state.
           -> FormFieldState s e n
