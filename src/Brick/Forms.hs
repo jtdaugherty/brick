@@ -51,6 +51,7 @@ module Brick.Forms
   , editField
 
   -- * Attributes
+  , formAttr
   , invalidFormInputAttr
   , focusedFormInputAttr
   )
@@ -336,12 +337,15 @@ editPasswordField stLens n =
 toPassword :: [T.Text] -> Widget a
 toPassword s = txt $ T.replicate (T.length $ T.concat s) "*"
 
+-- | The namespace for the other form attributes.
 formAttr :: AttrName
 formAttr = "brickForm"
 
+-- | The attribute for form input fields with invalid values.
 invalidFormInputAttr :: AttrName
 invalidFormInputAttr = formAttr <> "invalidInput"
 
+-- | The attribute for form input fields that have the focus.
 focusedFormInputAttr :: AttrName
 focusedFormInputAttr = formAttr <> "focusedInput"
 
