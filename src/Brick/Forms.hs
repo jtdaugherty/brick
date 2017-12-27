@@ -184,7 +184,11 @@ infixr 5 @@=
 -- form state. The fields are initialized from the state using their
 -- state lenses and the first form input is focused initially.
 newForm :: [s -> FormFieldState s e n]
+        -- ^ The form field constructors. This is intended to be
+        -- populated using the various field constructors in this
+        -- module.
         -> s
+        -- ^ The initial form state used to populate the fields.
         -> Form s e n
 newForm mkEs s =
     let es = mkEs <*> pure s
