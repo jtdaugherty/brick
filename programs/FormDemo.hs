@@ -13,20 +13,25 @@ import Brick.Widgets.Edit
 import Brick.Widgets.Border
 import Brick.Widgets.Center
 
-data Name = Edit1
-          | Edit2
-          | Password
-          | YesRadio
-          | NoRadio
-          | OkayCheckbox
+data Name = NameField
+          | AgeField
+          | BikeField
+          | HandedField
+          | PasswordField
+          | LeftHandField
+          | RightHandField
+          | AmbiField
           deriving (Eq, Ord, Show)
 
+data Handedness = LeftHanded | RightHanded | Ambidextrous
+                deriving (Show, Eq)
+
 data FormState =
-    FormState { _field1        :: Int
-              , _field2        :: Int
-              , _fieldPassword :: T.Text
-              , _radio         :: Bool
-              , _reallyOkay    :: Bool
+    FormState { _name        :: T.Text
+              , _age         :: Int
+              , _ridesBike   :: Bool
+              , _handed      :: Handedness
+              , _password    :: T.Text
               }
               deriving (Show)
 
@@ -34,17 +39,18 @@ makeLenses ''FormState
 
 mkForm :: FormState -> Form FormState e Name
 mkForm =
-    newForm [ ((hCenter $ str "Edit 1:") <=>) @@=
-                editShowableField field1 Edit1
-            , (str "Edit 2: " <+>) @@=
-                editShowableField field2 Edit2
+    newForm [ ((str "Name: ") <+>) @@=
+                editTextField name NameField (Just 1)
+            , (str "Age: " <+>) @@=
+                editShowableField age AgeField
             , (str "Password: " <+>) @@=
-                editPasswordField fieldPassword Password
-            , (str "Okay? " <+>) @@=
-                radioField radio [ (True, YesRadio, "Yes")
-                                 , (False, NoRadio, "No")
-                                 ]
-            , checkboxField reallyOkay OkayCheckbox "Really Okay"
+                editPasswordField password PasswordField
+            , (str "Dominant hand: " <+>) @@=
+                radioField handed [ (LeftHanded, LeftHandField, "Left")
+                                  , (RightHanded, RightHandField, "Right")
+                                  , (Ambidextrous, AmbiField, "Both")
+                                  ]
+            , checkboxField ridesBike BikeField "Do you ride a bicycle?"
             ]
 
 theMap :: AttrMap
@@ -58,7 +64,7 @@ theMap = attrMap defAttr
 
 app :: App (Form FormState e Name) e Name
 app =
-    App { appDraw = \s -> [center $ border $ hLimit 50 $ renderForm s]
+    App { appDraw = \s -> [center $ border $ padAll 1 $ hLimit 50 $ renderForm s]
         , appHandleEvent = \s ev ->
             case ev of
                 VtyEvent (EvResize {})     -> continue s
@@ -72,6 +78,12 @@ app =
 
 main :: IO ()
 main = do
-    let f = mkForm $ FormState 10 20 "" False False
+    let initialForm = FormState { _name = ""
+                                , _age = 0
+                                , _handed = RightHanded
+                                , _ridesBike = False
+                                , _password = ""
+                                }
+        f = mkForm initialForm
     f' <- defaultMain app f
     print $ formState f'
