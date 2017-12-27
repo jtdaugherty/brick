@@ -50,7 +50,8 @@ mkForm =
                                   , (RightHanded, RightHandField, "Right")
                                   , (Ambidextrous, AmbiField, "Both")
                                   ]
-            , checkboxField ridesBike BikeField "Do you ride a bicycle?"
+            , (<+> str " Do you ride a bicycle?") @@=
+                checkboxField ridesBike BikeField
             ]
 
 theMap :: AttrMap
