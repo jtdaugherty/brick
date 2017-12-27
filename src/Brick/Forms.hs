@@ -11,6 +11,10 @@
 -- * Add mouse event generation and handling support!
 --
 -- * Unify form attributes so users can just set one focused attribute
+--
+-- * How to signal that event handling in a form is over? (e.g. Enter
+--   is necessary for multi-lind editing, so we need something like a
+--   button event)
 
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE GADTs #-}
