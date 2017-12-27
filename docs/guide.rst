@@ -1207,6 +1207,124 @@ and not scrollable in a useful way.
 
 Violating this restriction will result in a runtime exception.
 
+Input Forms
+===========
+
+While it's possible to construct interfaces with editors and other
+interactive inputs manually, this process is somewhat tedious: all of
+the event dispatching has to be written by hand, a focus ring or other
+construct needs to be managed, and most of the rendering code needs to
+be written. Furthermore, this process makes it difficult to follow some
+common patterns:
+
+* We typically want to validate the user's input, and only collect it
+  once it has been validated.
+* We typically want to notify the user when a particular field's
+  contents are invalid.
+* It is often helpful to be able to create a new data type to represent
+  the fields in an input interface, and use it to initialize the input
+  elements and later collect the (validated) results.
+* A lot of the rendering and event-handling work to be done is
+  repetitive.
+
+The ``Brick.Forms`` module provides a high-level API to automate all of
+the above work in a type-safe manner.
+
+A Form Example
+--------------
+
+Let's look at an example data type that we'd want to use as the
+basis for an input interface. This example comes directly from the
+``FormDemo.hs`` demonstration program.
+
+.. code:: haskell
+
+   data UserInfo =
+       FormState { _name      :: T.Text
+                 , _age       :: Int
+                 , _address   :: T.Text
+                 , _ridesBike :: Bool
+                 , _handed    :: Handedness
+                 , _password  :: T.Text
+                 } deriving (Show)
+
+   data Handedness = LeftHanded
+                   | RightHanded
+                   | Ambidextrous
+                   deriving (Show, Eq)
+
+Suppose we want to build an input form for the above data. We might want
+to use an editor to allow the user to enter a name and an age. We'll
+need to ensure that the user's input for age is a valid integer. For
+``_ridesBike`` we might want a checkbox-style input, and for ``_handed``
+we might want a radio button input. For ``_password``, we'd definitely
+like a password input box that conceals the input.
+
+If we were to build an interface for this data manually, we'd need to
+deal with converting the data above to the right types for inputs. For
+example, for ``_age`` we'd need to convert an initial age value to
+``Text``, put it in an editor with ``Brick.Widgets.Edit.editor``, and
+then at a later time, parse the value and reconstruct an age from the
+editor's contents. We'd also need to tell the user if the age value was
+invalid.
+
+Brick's ``Forms`` API provides input field types for all of the above
+use cases. Here's the form that we can use to allow the user to edit a
+``UserInfo`` value:
+
+.. code:: haskell
+
+   mkForm :: UserInfo -> Form UserInfo e Name
+   mkForm =
+       newForm [ editTextField name NameField (Just 1)
+               , editTextField address AddressField (Just 3)
+               , editShowableField age AgeField
+               , editPasswordField password PasswordField
+               , radioField handed [ (LeftHanded, LeftHandField, "Left")
+                                   , (RightHanded, RightHandField, "Right")
+                                   , (Ambidextrous, AmbiField, "Both")
+                                   ]
+               , checkboxField ridesBike BikeField "Do you ride a bicycle?"
+               ]
+
+First of all, the above code assumes we've derived lenses for
+``UserInfo`` using ``Lens.Micro.TH.makeLenses``. Once we've done
+that, each field that we specify in the form must provide a lens into
+``UserInfo`` so that we can declare the particular field of ``UserInfo``
+that will be edited by the field.
+
+For example, to edit the ``_name`` field we use the ``name`` lens to
+create a text field editor with ``editTextField``. All of the field
+constructors above are provided by ``Brick.Forms``.
+
+Each form field also needs a resource name (see `Resource Names`_). The
+resource names are assigned to the individual form inputs so the form
+can automatically track input focus.
+
+The form carries with it the value of ``UserInfo`` that reflects the
+contents of the form. Whenever an input field in the form handles an
+event, its contents are validated and rewritten to the form state (in
+this case, a ``UserInfo`` record).
+
+The ``mkForm`` function takes a ``UserInfo`` value, which is really
+just an argument to ``newForm``. This ``UserInfo`` value will be used
+to initialize all of the form fields. Each form field will use the lens
+provided to extract the initial value from the ``UserInfo`` record,
+convert it into an appropriate state type for the field in question, and
+later validate that state and convert it back into the approprate type
+for storage in ``UserInfo``.
+
+For example, if the initial ``UserInfo`` value's ``_age`` field has the
+value ``0``, the ``editShowableField`` will call ``show`` on ``0``,
+convert that to ``Text``, and initialize the editor for ``_age`` with
+the text string ``"0"``. Later, if the user enters more text -- changing
+the editor contents to ``"10"``, say -- the ``Read`` instance for
+``Int`` (the type of ``_age``) will be used to parse ``"10"``. The
+successfully-parsed value ``10`` will then be written to the ``_age``
+field of the form's ``UserInfo`` state using the ``age`` lens. The use
+of ``Show`` and ``Read`` here is a feature of the field type we have
+chosen for ``_age``, ``editShowableField``.
+
 The Rendering Cache
 ===================
 
