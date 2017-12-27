@@ -1,7 +1,4 @@
-![](logo/brick-final-clearbg.svg)
-
-brick
------
+![](logo/brick-final-clearbg-with-text.svg)
 
 [![Build Status](https://travis-ci.org/jtdaugherty/brick.svg?branch=master)](https://travis-ci.org/jtdaugherty/brick)
 
