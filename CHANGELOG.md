@@ -2,6 +2,16 @@
 Brick changelog
 ---------------
 
+0.31
+----
+
+Behavior changes:
+ * `viewport` now implicitly causes generation of mouse events for the
+   viewport when mouse mode is enabled. The mouse events are expressed
+   in the coordinate system of the contents of the viewport. The
+   consequence and intention of this change is to enable mouse event
+   reporting for editors when clicks occur outside the known text area.
+
 0.30
 ----
 
