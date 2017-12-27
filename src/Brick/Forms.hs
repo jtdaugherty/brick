@@ -272,6 +272,10 @@ handleFormEvent (VtyEvent (EvKey (KChar '\t') [])) f =
     return $ f { formFocus = focusNext $ formFocus f }
 handleFormEvent (VtyEvent (EvKey KBackTab [])) f =
     return $ f { formFocus = focusPrev $ formFocus f }
+handleFormEvent e@(MouseDown n _ _ _) f =
+    handleFormFieldEvent n e $ f { formFocus = focusSetCurrent n (formFocus f) }
+handleFormEvent e@(MouseUp n _ _) f =
+    handleFormFieldEvent n e $ f { formFocus = focusSetCurrent n (formFocus f) }
 handleFormEvent e f =
     case focusGetCurrent (formFocus f) of
         Nothing -> return f
