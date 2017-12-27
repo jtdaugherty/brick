@@ -18,8 +18,8 @@ module Brick.Forms
   ( Form
   , formFocus
   , formState
-  , FormEntryState
-  , FormEntry
+  , FormEntryState(..)
+  , FormEntry(..)
 
   -- * Working with forms
   , newForm
@@ -27,10 +27,12 @@ module Brick.Forms
   , handleFormEvent
   , renderForm
 
-  -- * Form field constructors
-  , editField
+  -- * Simple form field constructors
   , editShowableField
   , editPasswordField
+
+  -- * Advanced form field constructors
+  , editField
 
   -- * Attributes
   , invalidFormInputAttr
