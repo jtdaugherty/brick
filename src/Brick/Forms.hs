@@ -7,6 +7,10 @@
 --
 -- * think about how to let user control how to interpret and commit
 --   changes to form state under various validation conditions
+--
+-- * Add mouse event generation and handling support!
+--
+-- * Unify form attributes so users can just set one focused attribute
 
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE GADTs #-}
