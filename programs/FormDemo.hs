@@ -53,9 +53,9 @@ formRenderer _ n w =
 mkForm :: FormState -> Form FormState e Name
 mkForm =
     newForm formRenderer
-      [ editShowable field1 Edit1
-      , editShowable field2 Edit2
-      , editPassword fieldPassword Password
+      [ editShowableField field1 Edit1
+      , editShowableField field2 Edit2
+      , editPasswordField fieldPassword Password
       ]
 
 theMap :: AttrMap

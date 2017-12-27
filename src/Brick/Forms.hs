@@ -14,10 +14,10 @@ module Brick.Forms
   , handleFormEvent
   , renderForm
 
-  -- * Form entry constructors
-  , editEntry
-  , editShowable
-  , editPassword
+  -- * Form field constructors
+  , editField
+  , editShowableField
+  , editPasswordField
 
   -- * Attributes
   , invalidFormInputAttr
@@ -78,7 +78,7 @@ newForm helper mkEs s =
             , formRenderHelper = helper
             }
 
-editEntry :: (Ord n, Show n)
+editField :: (Ord n, Show n)
           => Lens' s a
           -> n
           -> Maybe Int
@@ -88,7 +88,7 @@ editEntry :: (Ord n, Show n)
           -> (Widget n -> Widget n)
           -> s
           -> FormEntryState s e n
-editEntry stLens n limit ini val renderText wrapEditor initialState =
+editField stLens n limit ini val renderText wrapEditor initialState =
     let initVal = mk $ initialState ^. stLens
         mk = editor n limit . ini
         handleEvent (VtyEvent e) ed = handleEditorEvent e ed
@@ -102,29 +102,29 @@ editEntry stLens n limit ini val renderText wrapEditor initialState =
                       , formEntryLens  = stLens
                       }
 
-editShowable :: (Ord n, Show n, Read a, Show a)
-             => Lens' s a
-             -> n
-             -> s
-             -> FormEntryState s e n
-editShowable stLens n =
+editShowableField :: (Ord n, Show n, Read a, Show a)
+                  => Lens' s a
+                  -> n
+                  -> s
+                  -> FormEntryState s e n
+editShowableField stLens n =
     let ini = T.pack . show
         val = readMaybe . T.unpack . T.intercalate "\n"
         limit = Just 1
         renderText = txt . T.unlines
-    in editEntry stLens n limit ini val renderText id
+    in editField stLens n limit ini val renderText id
 
-editPassword :: (Ord n, Show n)
-             => Lens' s T.Text
-             -> n
-             -> s
-             -> FormEntryState s e n
-editPassword stLens n =
+editPasswordField :: (Ord n, Show n)
+                  => Lens' s T.Text
+                  -> n
+                  -> s
+                  -> FormEntryState s e n
+editPasswordField stLens n =
     let ini = id
         val = Just . T.concat
         limit = Just 1
         renderText = toPassword
-    in editEntry stLens n limit ini val renderText id
+    in editField stLens n limit ini val renderText id
 
 toPassword :: [T.Text] -> Widget a
 toPassword s = txt $ T.replicate (T.length $ T.concat s) "*"
