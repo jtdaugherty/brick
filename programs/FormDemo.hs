@@ -18,8 +18,8 @@ data Name = Edit1
           deriving (Eq, Ord, Show)
 
 data FormState =
-    FormState { _field1 :: Int
-              , _field2 :: Int
+    FormState { _field1        :: Int
+              , _field2        :: Int
               , _fieldPassword :: T.Text
               }
               deriving (Show)
