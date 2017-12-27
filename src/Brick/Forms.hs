@@ -8,7 +8,7 @@ module Brick.Forms
   , FormEntryState
   , FormEntry
 
-  -- * Working with Forms
+  -- * Working with forms
   , newForm
   , defaultFormRenderer
   , handleFormEvent
