@@ -219,6 +219,8 @@ renderFormFieldState fr (FormFieldState st _ fields helper) =
 handleFormEvent :: (Eq n) => BrickEvent n e -> Form s e n -> EventM n (Form s e n)
 handleFormEvent (VtyEvent (EvKey (KChar '\t') [])) f =
     return $ f { formFocus = focusNext $ formFocus f }
+handleFormEvent (VtyEvent (EvKey KBackTab [])) f =
+    return $ f { formFocus = focusPrev $ formFocus f }
 handleFormEvent e f =
     case focusGetCurrent (formFocus f) of
         Nothing -> return f
