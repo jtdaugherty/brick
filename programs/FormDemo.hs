@@ -29,19 +29,19 @@ data Name = NameField
 data Handedness = LeftHanded | RightHanded | Ambidextrous
                 deriving (Show, Eq)
 
-data FormState =
-    FormState { _name      :: T.Text
-              , _age       :: Int
-              , _address   :: T.Text
-              , _ridesBike :: Bool
-              , _handed    :: Handedness
-              , _password  :: T.Text
-              }
-              deriving (Show)
+data UserInfo =
+    UserInfo { _name      :: T.Text
+             , _age       :: Int
+             , _address   :: T.Text
+             , _ridesBike :: Bool
+             , _handed    :: Handedness
+             , _password  :: T.Text
+             }
+             deriving (Show)
 
-makeLenses ''FormState
+makeLenses ''UserInfo
 
-mkForm :: FormState -> Form FormState e Name
+mkForm :: UserInfo -> Form UserInfo e Name
 mkForm =
     let label s w = padBottom (Pad 1) $
                     (vLimit 1 $ hLimit 15 $ str s <+> fill ' ') <+> w
@@ -70,7 +70,7 @@ theMap = attrMap defAttr
   , (focusedFormInputAttr, black `on` yellow)
   ]
 
-draw :: Form FormState e Name -> [Widget Name]
+draw :: Form UserInfo e Name -> [Widget Name]
 draw f = [vCenter $ hCenter form <=> hCenter help]
     where
         form = border $ padTop (Pad 1) $ hLimit 50 $ renderForm f
@@ -82,7 +82,7 @@ draw f = [vCenter $ hCenter form <=> hCenter help]
                      "- The last option is a checkbox\n" <>
                      "- Enter/Esc quit, mouse interacts with fields"
 
-app :: App (Form FormState e Name) e Name
+app :: App (Form UserInfo e Name) e Name
 app =
     App { appDraw = draw
         , appHandleEvent = \s ev ->
@@ -105,22 +105,22 @@ main = do
           V.setMode (V.outputIface v) V.Mouse True
           return v
 
-        initialFormState = FormState { _name = ""
-                                     , _address = ""
-                                     , _age = 0
-                                     , _handed = RightHanded
-                                     , _ridesBike = False
-                                     , _password = ""
-                                     }
-        f = mkForm initialFormState
+        initialUserInfo = UserInfo { _name = ""
+                                   , _address = ""
+                                   , _age = 0
+                                   , _handed = RightHanded
+                                   , _ridesBike = False
+                                   , _password = ""
+                                   }
+        f = mkForm initialUserInfo
 
     f' <- customMain buildVty Nothing app f
 
     putStrLn "The starting form state was:"
-    print initialFormState
+    print initialUserInfo
 
     putStrLn "The final form state was:"
-    print $ formState f'
+    print $ UserInfo f'
 
     if allFieldsValid f'
        then putStrLn "The final form inputs were valid."
