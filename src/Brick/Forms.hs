@@ -1,6 +1,6 @@
 -- | TODO:
 --
--- * make it so that each "entry" can add more than one thing to the
+-- * make it so that each "field" can add more than one thing to the
 --   focus ring, i.e. radio buttons
 --
 -- * think about how to make API simple but still permit more control
@@ -20,8 +20,8 @@ module Brick.Forms
   ( Form
   , formFocus
   , formState
-  , FormEntryState(..)
-  , FormEntry(..)
+  , FormFieldState(..)
+  , FormField(..)
 
   -- * Working with forms
   , newForm
@@ -54,22 +54,22 @@ import Text.Read (readMaybe)
 
 import Lens.Micro
 
-data FormEntry a b e n =
-    FormEntry { formEntryValidate    :: b -> Maybe a
-              , formEntryRender      :: Bool -> b -> Widget n
-              , formEntryHandleEvent :: BrickEvent n e -> b -> EventM n b
+data FormField a b e n =
+    FormField { formFieldValidate    :: b -> Maybe a
+              , formFieldRender      :: Bool -> b -> Widget n
+              , formFieldHandleEvent :: BrickEvent n e -> b -> EventM n b
               }
 
-data FormEntryState s e n where
-    FormEntryState :: (Named b n) =>
-                      { formEntryName  :: n
-                      , formEntryState :: b
-                      , formEntry      :: FormEntry a b e n
-                      , formEntryLens  :: Lens' s a
-                      } -> FormEntryState s e n
+data FormFieldState s e n where
+    FormFieldState :: (Named b n) =>
+                      { formFieldName  :: n
+                      , formFieldState :: b
+                      , formField      :: FormField a b e n
+                      , formFieldLens  :: Lens' s a
+                      } -> FormFieldState s e n
 
 data Form s e n =
-    Form { formEntries      :: [FormEntryState s e n]
+    Form { formFields       :: [FormFieldState s e n]
          , formFocus        :: FocusRing n
          , formState        :: s
          , formRenderHelper :: Form s e n -> n -> Widget n -> Widget n
@@ -77,20 +77,20 @@ data Form s e n =
 
 defaultFormRenderer :: (Show n) => Form s e n -> n -> Widget n -> Widget n
 defaultFormRenderer f n w =
-    let allNames = formEntryName <$> formEntries f
+    let allNames = formFieldName <$> formFields f
         maxLength = 1 + (maximum $ length <$> show <$> allNames)
         p = maxLength - length (show n)
         label = padRight (Pad p) $ str $ show n <> ":"
     in label <+> w
 
 newForm :: (Form s e n -> n -> Widget n -> Widget n)
-        -> [s -> FormEntryState s e n]
+        -> [s -> FormFieldState s e n]
         -> s
         -> Form s e n
 newForm helper mkEs s =
     let es = mkEs <*> pure s
-    in Form { formEntries      = es
-            , formFocus        = focusRing $ formEntryName <$> es
+    in Form { formFields       = es
+            , formFocus        = focusRing $ formFieldName <$> es
             , formState        = s
             , formRenderHelper = helper
             }
@@ -104,26 +104,26 @@ editField :: (Ord n, Show n)
           -> ([T.Text] -> Widget n)
           -> (Widget n -> Widget n)
           -> s
-          -> FormEntryState s e n
+          -> FormFieldState s e n
 editField stLens n limit ini val renderText wrapEditor initialState =
     let initVal = mk $ initialState ^. stLens
         mk = editor n limit . ini
         handleEvent (VtyEvent e) ed = handleEditorEvent e ed
         handleEvent _ ed = return ed
 
-    in FormEntryState { formEntryName  = getName initVal
-                      , formEntryState = initVal
-                      , formEntry      = FormEntry (val . getEditContents)
+    in FormFieldState { formFieldName  = getName initVal
+                      , formFieldState = initVal
+                      , formField      = FormField (val . getEditContents)
                                                    (\b e -> wrapEditor $ renderEditor renderText b e)
                                                    handleEvent
-                      , formEntryLens  = stLens
+                      , formFieldLens  = stLens
                       }
 
 editShowableField :: (Ord n, Show n, Read a, Show a)
                   => Lens' s a
                   -> n
                   -> s
-                  -> FormEntryState s e n
+                  -> FormFieldState s e n
 editShowableField stLens n =
     let ini = T.pack . show
         val = readMaybe . T.unpack . T.intercalate "\n"
@@ -135,7 +135,7 @@ editPasswordField :: (Ord n, Show n)
                   => Lens' s T.Text
                   -> n
                   -> s
-                  -> FormEntryState s e n
+                  -> FormFieldState s e n
 editPasswordField stLens n =
     let ini = id
         val = Just . T.concat
@@ -154,14 +154,14 @@ invalidFormInputAttr = formAttr <> "invalidInput"
 
 renderForm :: (Eq n) => Form s e n -> Widget n
 renderForm f@(Form es fr _ helper) =
-    vBox $ renderFormEntry (helper f) fr <$> es
+    vBox $ renderFormField (helper f) fr <$> es
 
-renderFormEntry :: (Eq n)
+renderFormField :: (Eq n)
                 => (n -> Widget n -> Widget n)
                 -> FocusRing n
-                -> FormEntryState s e n
+                -> FormFieldState s e n
                 -> Widget n
-renderFormEntry helper fr (FormEntryState n st (FormEntry valid renderFunc _) _) =
+renderFormField helper fr (FormFieldState n st (FormField valid renderFunc _) _) =
     let maybeInvalid = if isJust $ valid st then id else forceAttr invalidFormInputAttr
         w = maybeInvalid (withFocusRing fr renderFunc st)
     in helper n w
@@ -172,22 +172,22 @@ handleFormEvent (VtyEvent (EvKey (KChar '\t') [])) f =
 handleFormEvent e f =
     case focusGetCurrent (formFocus f) of
         Nothing -> return f
-        Just n  -> handleFormEntryEvent n e f
+        Just n  -> handleFormFieldEvent n e f
 
-handleFormEntryEvent :: (Eq n) => n -> BrickEvent n e -> Form s e n -> EventM n (Form s e n)
-handleFormEntryEvent n ev f = handle [] (formEntries f)
+handleFormFieldEvent :: (Eq n) => n -> BrickEvent n e -> Form s e n -> EventM n (Form s e n)
+handleFormFieldEvent n ev f = handle [] (formFields f)
     where
         handle _ [] = return f
         handle prev (e:es) =
             case e of
-                FormEntryState n' st entry@(FormEntry val _ handleFunc) stLens | n == n' -> do
+                FormFieldState n' st field@(FormField val _ handleFunc) stLens | n == n' -> do
                     nextSt <- handleFunc ev st
-                    let newEntry = FormEntryState n' nextSt entry stLens
+                    let newField = FormFieldState n' nextSt field stLens
                     -- If the new state validates, go ahead and update
                     -- the form state with it.
                     case val nextSt of
-                        Nothing -> return $ f { formEntries = prev <> [newEntry] <> es }
-                        Just valid -> return $ f { formEntries = prev <> [newEntry] <> es
+                        Nothing -> return $ f { formFields = prev <> [newField] <> es }
+                        Just valid -> return $ f { formFields = prev <> [newField] <> es
                                                  , formState = formState f & stLens .~ valid
                                                  }
 
