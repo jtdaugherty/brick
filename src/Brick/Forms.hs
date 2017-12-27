@@ -150,9 +150,10 @@ data Form s e n =
          , formState        :: s
          -- ^ The current state of the form. Forms guarantee that only
          -- valid inputs ever get stored in the state, and that after
-         -- each input event, if a field contains a valid state value,
-         -- the valid value is immediately saved to its corresponding
-         -- field in this state value.
+         -- each input event on a form field, if that field contains a
+         -- valid state value then the value is immediately saved to its
+         -- corresponding field in this state value using the form
+         -- field's lens over @s@.
          }
 
 infixr 5 @@=
