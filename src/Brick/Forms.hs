@@ -1,8 +1,5 @@
 -- | TODO:
 --
--- * make it so that each "field" can add more than one thing to the
---   focus ring, i.e. radio buttons
---
 -- * think about how to make API simple but still permit more control
 --   over rendering
 --
