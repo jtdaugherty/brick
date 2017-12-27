@@ -370,6 +370,23 @@ renderFormFieldState fr (FormFieldState st _ fields helper) =
             in maybeInvalid (renderField foc st) : renderFields fs
     in helper $ vBox $ renderFields fields
 
+-- | Dispatch an event to the appropriate form field and return a new
+-- form. This handles the following events in this order:
+--
+-- * On @Tab@ keypresses, this changes the focus to the next field in
+--   the form.
+-- * On @Shift-Tab@ keypresses, this changes the focus to the previous
+--   field in the form.
+-- * On mouse button presses (regardless of button or modifier), the
+--   focus is changed to the clicked form field and the event is
+--   forwarded to the event handler for the clicked form field.
+-- * All other events are forwarded to the currently focused form field.
+--
+-- In all cases where an event is forwarded to a form field, validation
+-- of the field's input state is performed after the event has been
+-- handled. If the form field's input state succeeds validation, its
+-- value is immediately stored in the form state using the form field's
+-- state lens.
 handleFormEvent :: (Eq n) => BrickEvent n e -> Form s e n -> EventM n (Form s e n)
 handleFormEvent (VtyEvent (EvKey (KChar '\t') [])) f =
     return $ f { formFocus = focusNext $ formFocus f }
