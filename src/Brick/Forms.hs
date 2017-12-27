@@ -2,20 +2,23 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Brick.Forms
-  ( FormEntry
-  , FormEntryState
-  , Form
-  -- * Working with Forms
-  , newForm
-  , renderForm
-  , defaultFormRenderer
-  , handleFormEvent
+  ( Form
   , formFocus
   , formState
-  -- * Form entry types
+  , FormEntryState
+  , FormEntry
+
+  -- * Working with Forms
+  , newForm
+  , defaultFormRenderer
+  , handleFormEvent
+  , renderForm
+
+  -- * Form entry constructors
   , editEntry
   , editShowable
   , editPassword
+
   -- * Attributes
   , invalidFormInputAttr
   )
