@@ -102,10 +102,15 @@ data FormField a b e n =
 -- | A form field state accompanied by the fields that manipulate that
 -- state. The idea is that some record field in your form state has
 -- one or more form fields that manipulate that value. This data type
--- maps that field (using a lens into your state) to the form fields
--- responsible for managing that field, along with a current value for
--- that field and an optional function to control how the form elements
--- for this field are rendered.
+-- maps that state field (using a lens into your state) to the form
+-- input fields responsible for managing that state field, along with
+-- a current value for that state field and an optional function to
+-- control how the form inputs are rendered.
+--
+-- Most form fields will just have one input, such as text editors, but
+-- others, such as radio button collections, will have many, which is
+-- why this type supports more than one input corresponding to a state
+-- field.
 --
 -- Type variables are as follows:
 --
@@ -340,9 +345,17 @@ invalidFormInputAttr = formAttr <> "invalidInput"
 focusedFormInputAttr :: AttrName
 focusedFormInputAttr = formAttr <> "focusedInput"
 
+-- | Returns whether all form fields in the form currently have valid
+-- values according to the fields' validation functions. This is useful
+-- when we need to decide whether the form state is up to date with
+-- respect to the form input fields.
 allFieldsValid :: Form s e n -> Bool
 allFieldsValid = null . invalidFields
 
+-- | Returns the resource names associated with all form input fields
+-- that currently have invalid inputs. This is useful when we need to
+-- force the user to repair invalid inputs before moving on from a form
+-- editing session.
 invalidFields :: Form s e n -> [n]
 invalidFields f = concat $ getInvalidFields <$> formFieldStates f
 
@@ -352,6 +365,15 @@ getInvalidFields (FormFieldState st _ fs _) =
             if (isNothing $ validate st) then [n] else []
     in concat $ gather <$> fs
 
+-- | Render a form.
+--
+-- For each form field, each input for the field is rendered using the
+-- implementation provided by its 'FormField'. The inputs are then
+-- vertically concatenated with 'vBox' and then augmented using the form
+-- field's rendering augmentation function (see '@@=').
+--
+-- The augmented field renderings are then placed in a 'vBox' and
+-- returned.
 renderForm :: (Eq n) => Form s e n -> Widget n
 renderForm (Form es fr _) =
     vBox $ renderFormFieldState fr <$> es
