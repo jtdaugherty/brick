@@ -2,19 +2,15 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-import Graphics.Vty
-
-import Brick
-import Brick.Focus
-import Brick.Widgets.Edit
-
 import Data.Monoid ((<>))
-
 import qualified Data.Text as T
-
 import Lens.Micro.TH
 
+import Graphics.Vty
+import Brick
 import Brick.Forms
+import Brick.Focus
+import Brick.Widgets.Edit
 
 data Name = Edit1
           | Edit2
