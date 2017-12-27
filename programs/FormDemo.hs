@@ -2,17 +2,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
--- TODO:
---
--- * make it so that each "entry" can add more than one thing to the
---   focus ring, i.e. radio buttons
---
--- * think about how to make API simple but still permit more control
---   over rendering
---
--- * think about how to let user control how to interpret and commit
---   changes to form state under various validation conditions
-
 import Graphics.Vty
 
 import Brick

@@ -1,3 +1,16 @@
+-- TODO:
+--
+-- * make it so that each "entry" can add more than one thing to the
+--   focus ring, i.e. radio buttons
+--
+-- * think about how to make API simple but still permit more control
+--   over rendering
+--
+-- * how to deal with variation in layout, e.g. button areas?
+--
+-- * think about how to let user control how to interpret and commit
+--   changes to form state under various validation conditions
+
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE OverloadedStrings #-}
