@@ -12,9 +12,9 @@
 -- user when a form field's value is invalid, and stores valid inputs in
 -- your data type when possible.
 --
--- This module provides the API to create forms and populate them with
--- some basic input field types along with an API for creating your own
--- input field types.
+-- This module provides the API to create forms, populate them with some
+-- basic input field types, render forms, handle form events, and create
+-- custom input field types.
 --
 -- For an introduction to this API, see the "Input Forms" section of the
 -- Brick User Guide. Also see the demonstration programs for examples of
