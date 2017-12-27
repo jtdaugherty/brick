@@ -39,19 +39,20 @@ makeLenses ''FormState
 
 mkForm :: FormState -> Form FormState e Name
 mkForm =
-    let mkLabel s = vLimit 1 $ hLimit 15 $ str s <+> fill ' '
-    in newForm [ (mkLabel "Name" <+>) @@=
+    let label s w = padBottom (Pad 1) $
+                    (vLimit 1 $ hLimit 15 $ str s <+> fill ' ') <+> w
+    in newForm [ label "Name" @@=
                    editTextField name NameField (Just 1)
-               , (mkLabel "Age" <+>) @@=
+               , label "Age" @@=
                    editShowableField age AgeField
-               , (mkLabel "Password" <+>) @@=
+               , label "Password" @@=
                    editPasswordField password PasswordField
-               , (mkLabel "Dominant hand" <+>) @@=
+               , label "Dominant hand" @@=
                    radioField handed [ (LeftHanded, LeftHandField, "Left")
                                      , (RightHanded, RightHandField, "Right")
                                      , (Ambidextrous, AmbiField, "Both")
                                      ]
-               , (\w -> mkLabel "" <+> w <+> str " Do you ride a bicycle?") @@=
+               , (\w -> label "" (w <+> str " Do you ride a bicycle?")) @@=
                    checkboxField ridesBike BikeField
                ]
 
@@ -63,9 +64,15 @@ theMap = attrMap defAttr
   , (focusedFormInputAttr, black `on` yellow)
   ]
 
+draw :: Form FormState e Name -> [Widget Name]
+draw f = [vCenter $ hCenter form <=> hCenter help]
+    where
+        form = border $ padAll 1 $ hLimit 50 $ renderForm f
+        help = padTop (Pad 1) $ str "Help"
+
 app :: App (Form FormState e Name) e Name
 app =
-    App { appDraw = \s -> [center $ border $ padAll 1 $ hLimit 50 $ renderForm s]
+    App { appDraw = draw
         , appHandleEvent = \s ev ->
             case ev of
                 VtyEvent (EvResize {})     -> continue s
