@@ -33,7 +33,7 @@ makeLenses ''FormState
 mkForm :: FormState -> Form FormState e Name
 mkForm =
     newForm [ editShowableField field1 Edit1
-              `withHelper` (\w -> str "Edit 1: " <+> w)
+              `withHelper` (\w -> (hCenter $ str "Edit 1:") <=> w)
             , editShowableField field2 Edit2
               `withHelper` (\w -> str "Edit 2: " <+> w)
             , editPasswordField fieldPassword Password
