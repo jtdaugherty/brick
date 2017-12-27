@@ -20,7 +20,6 @@ module Brick.Forms
 
   -- * Working with forms
   , newForm
-  , defaultFormRenderer
   , handleFormEvent
   , renderForm
   , (@@=)
@@ -74,14 +73,6 @@ data Form s e n =
 
 (@@=) :: (Widget n -> Widget n) -> (s -> FormFieldState s e n) -> s -> FormFieldState s e n
 (@@=) h mkFs s = (mkFs s) { formFieldRenderHelper = h }
-
-defaultFormRenderer :: (Show n) => Form s e n -> n -> Widget n -> Widget n
-defaultFormRenderer f n w =
-    let allNames = concat $ formFieldNames <$> formFieldStates f
-        maxLength = 1 + (maximum $ length <$> show <$> allNames)
-        p = maxLength - length (show n)
-        label = padRight (Pad p) $ str $ show n <> ":"
-    in label <+> w
 
 newForm :: [s -> FormFieldState s e n]
         -> s
