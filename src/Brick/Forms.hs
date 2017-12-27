@@ -10,8 +10,6 @@
 --
 -- * Add mouse event generation and handling support!
 --
--- * Unify form attributes so users can just set one focused attribute
---
 -- * How to signal that event handling in a form is over? (e.g. Enter
 --   is necessary for multi-lind editing, so we need something like a
 --   button event)
@@ -44,8 +42,7 @@ module Brick.Forms
 
   -- * Attributes
   , invalidFormInputAttr
-  , focusedRadioAttr
-  , focusedCheckboxAttr
+  , focusedFormInputAttr
   )
 where
 
@@ -150,7 +147,7 @@ radioField stLens options initialState =
 renderRadio :: (Eq a) => a -> T.Text -> Bool -> a -> Widget n
 renderRadio val label foc cur =
     let addAttr = if foc
-                  then withDefAttr focusedRadioAttr
+                  then withDefAttr focusedFormInputAttr
                   else id
         isSet = val == cur
     in addAttr $
@@ -230,11 +227,8 @@ formAttr = "brickForm"
 invalidFormInputAttr :: AttrName
 invalidFormInputAttr = formAttr <> "invalidInput"
 
-focusedRadioAttr :: AttrName
-focusedRadioAttr = formAttr <> "focusedRadioOption"
-
-focusedCheckboxAttr :: AttrName
-focusedCheckboxAttr = formAttr <> "focusedCheckbox"
+focusedFormInputAttr :: AttrName
+focusedFormInputAttr = formAttr <> "focusedInput"
 
 renderForm :: (Eq n) => Form s e n -> Widget n
 renderForm (Form es fr _) =

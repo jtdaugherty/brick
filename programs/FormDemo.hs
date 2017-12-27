@@ -59,8 +59,7 @@ theMap = attrMap defAttr
   [ (editAttr, white `on` black)
   , (editFocusedAttr, black `on` yellow)
   , (invalidFormInputAttr, white `on` red)
-  , (focusedRadioAttr, black `on` yellow)
-  , (focusedCheckboxAttr, black `on` yellow)
+  , (focusedFormInputAttr, black `on` yellow)
   ]
 
 app :: App (Form FormState e Name) e Name
