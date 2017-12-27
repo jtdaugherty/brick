@@ -118,7 +118,7 @@ checkboxField stLens name initialState =
 renderCheckbox :: Bool -> Bool -> Widget n
 renderCheckbox foc val =
     let addAttr = if foc then withDefAttr focusedFormInputAttr else id
-    in addAttr $ str $ "[" <> if val then "X" else " " <> "]"
+    in addAttr $ str $ "[" <> (if val then "X" else " ") <> "]"
 
 radioField :: (Ord n, Show n, Eq a)
            => Lens' s a
