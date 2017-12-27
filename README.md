@@ -1,3 +1,5 @@
+![](logo/brick-final-clearbg.svg)
+
 brick
 -----
 
