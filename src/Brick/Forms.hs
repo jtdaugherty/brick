@@ -28,6 +28,7 @@ module Brick.Forms
   , editShowableField
   , editPasswordField
   , radioField
+  , checkboxField
 
   -- * Advanced form field constructors
   , editField
@@ -35,6 +36,7 @@ module Brick.Forms
   -- * Attributes
   , invalidFormInputAttr
   , focusedRadioAttr
+  , focusedCheckboxAttr
   )
 where
 
@@ -86,6 +88,36 @@ newForm mkEs s =
 
 formFieldNames :: FormFieldState s e n -> [n]
 formFieldNames (FormFieldState _ _ fields _) = formFieldName <$> fields
+
+checkboxField :: (Ord n, Show n)
+              => Lens' s Bool
+              -> n
+              -> T.Text
+              -> s
+              -> FormFieldState s e n
+checkboxField stLens name label initialState =
+    let initVal = initialState ^. stLens
+
+        handleEvent (VtyEvent (EvKey (KChar ' ') [])) s = return $ not s
+        handleEvent _ s = return s
+
+    in FormFieldState { formFieldState        = initVal
+                      , formFields            = [ FormField name Just
+                                                            (renderCheckbox label)
+                                                            handleEvent
+                                                ]
+                      , formFieldLens         = stLens
+                      , formFieldRenderHelper = id
+                      }
+
+renderCheckbox :: T.Text -> Bool -> Bool -> Widget n
+renderCheckbox label foc val =
+    let addAttr = if foc then withDefAttr focusedCheckboxAttr else id
+    in addAttr $
+       hBox [ str "["
+            , if val then str "X" else str " "
+            , txt $ "] " <> label
+            ]
 
 radioField :: (Ord n, Show n, Eq a)
            => Lens' s a
@@ -184,6 +216,9 @@ invalidFormInputAttr = formAttr <> "invalidInput"
 
 focusedRadioAttr :: AttrName
 focusedRadioAttr = formAttr <> "focusedRadioOption"
+
+focusedCheckboxAttr :: AttrName
+focusedCheckboxAttr = formAttr <> "focusedCheckbox"
 
 renderForm :: (Eq n) => Form s e n -> Widget n
 renderForm (Form es fr _) =

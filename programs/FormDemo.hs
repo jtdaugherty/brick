@@ -18,6 +18,7 @@ data Name = Edit1
           | Password
           | YesRadio
           | NoRadio
+          | OkayCheckbox
           deriving (Eq, Ord, Show)
 
 data FormState =
@@ -25,6 +26,7 @@ data FormState =
               , _field2        :: Int
               , _fieldPassword :: T.Text
               , _radio         :: Bool
+              , _reallyOkay    :: Bool
               }
               deriving (Show)
 
@@ -42,6 +44,7 @@ mkForm =
                 radioField radio [ (True, YesRadio, "Yes")
                                  , (False, NoRadio, "No")
                                  ]
+            , checkboxField reallyOkay OkayCheckbox "Really Okay"
             ]
 
 theMap :: AttrMap
@@ -50,6 +53,7 @@ theMap = attrMap defAttr
   , (editFocusedAttr, black `on` yellow)
   , (invalidFormInputAttr, white `on` red)
   , (focusedRadioAttr, black `on` yellow)
+  , (focusedCheckboxAttr, black `on` yellow)
   ]
 
 app :: App (Form FormState e Name) e Name
@@ -68,6 +72,6 @@ app =
 
 main :: IO ()
 main = do
-    let f = mkForm $ FormState 10 20 "" False
+    let f = mkForm $ FormState 10 20 "" False False
     f' <- defaultMain app f
     print $ formState f'
