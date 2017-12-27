@@ -196,11 +196,17 @@ newForm mkEs s =
 formFieldNames :: FormFieldState s e n -> [n]
 formFieldNames (FormFieldState _ _ fields _) = formFieldName <$> fields
 
+-- | A form field for manipulating a boolean value. This represents
+-- 'True' as @[X] label@ and 'False' as @[ ] label@.
 checkboxField :: (Ord n, Show n)
               => Lens' s Bool
+              -- ^ The state lens for this value.
               -> n
+              -- ^ The resource name for the input field.
               -> T.Text
+              -- ^ The label for the check box, to appear at its right.
               -> s
+              -- ^ The initial form state.
               -> FormFieldState s e n
 checkboxField stLens name label initialState =
     let initVal = initialState ^. stLens
@@ -225,10 +231,14 @@ renderCheckbox label n foc val =
        addAttr $
        (str $ "[" <> (if val then "X" else " ") <> "] ") <+> txt label
 
+-- | A form field for selecting a single choice from a set of possible
+-- choices. Each choice has an associated value and text label.
 radioField :: (Ord n, Show n, Eq a)
            => Lens' s a
            -- ^ The state lens for this value.
            -> [(a, n, T.Text)]
+           -- ^ The available choices, in order. Each choice has a value
+           -- of type @a@, a resource name, and a text label.
            -> s
            -- ^ The initial form state.
            -> FormFieldState s e n
@@ -348,6 +358,7 @@ editPasswordField :: (Ord n, Show n)
                   => Lens' s T.Text
                   -- ^ The state lens for this value.
                   -> n
+                  -- ^ The resource name for the input field.
                   -> s
                   -- ^ The initial form state.
                   -> FormFieldState s e n
