@@ -2,7 +2,8 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE OverloadedStrings #-}
 -- | NOTE: This API is experimental and will probably change. Please try
--- it out! Feedback is very much appreciated!
+-- it out! Feedback is very much appreciated, and your patience in the
+-- face of breaking API changes is also appreciated!
 --
 -- This module provides an input form API. This API allows you to
 -- construct an input interface based on a data type of your choice.
@@ -16,18 +17,23 @@
 -- basic input field types, render forms, handle form events, and create
 -- custom input field types.
 --
+-- Bear in mind that for most uses, the 'FormField' and 'FormFieldState'
+-- types will not be used directly. Instead, the constructors for
+-- various field types (such as 'editTextField') will be used instead.
+--
 -- For an introduction to this API, see the "Input Forms" section of the
 -- Brick User Guide. Also see the demonstration programs for examples of
 -- forms in action.
 module Brick.Forms
-  ( Form
-  , formFocus
-  , formState
+  ( -- * Data types
+    Form
   , FormFieldState(..)
   , FormField(..)
 
-  -- * Working with forms
+  -- * Creating and using forms
   , newForm
+  , formFocus
+  , formState
   , handleFormEvent
   , renderForm
   , (@@=)
@@ -64,12 +70,13 @@ import Text.Read (readMaybe)
 import Lens.Micro
 
 -- | A form field. This represents an interactive input field in the
--- form. One or more fields may be used to manipulate a particular state
--- value.
+-- form. Its user input is validated and thus converted into a type of
+-- your choosing.
 --
 -- Type variables are as follows:
 --
---  * @a@ - the type of the field in your form state that this field manipulates
+--  * @a@ - the type of the field in your form state that this field
+--    manipulates
 --  * @b@ - the form field's internal state type
 --  * @e@ - your application's event type
 --  * @n@ - your application's resource name type
@@ -79,7 +86,9 @@ data FormField a b e n =
               , formFieldValidate    :: b -> Maybe a
               -- ^ A validation function converting this field's state
               -- into a value of your choosing. @Nothing@ indicates a
-              -- validation failure.
+              -- validation failure. For example, this might validate
+              -- an 'Editor' state value by parsing its text contents
+              -- as an integer and return 'Maybe' 'Int'.
               , formFieldRender      :: Bool -> b -> Widget n
               -- ^ A function to render this form field. Parameters are
               -- whether the field is currently focused, followed by the
@@ -90,17 +99,60 @@ data FormField a b e n =
               -- state.
               }
 
+-- | A form field state accompanied by the fields that manipulate that
+-- state. The idea is that some record field in your form state has
+-- one or more form fields that manipulate that value. This data type
+-- maps that field (using a lens into your state) to the form fields
+-- responsible for managing that field, along with a current value for
+-- that field and an optional function to control how the form elements
+-- for this field are rendered.
+--
+-- Type variables are as follows:
+--
+--  * @s@ - the data type containing the value manipulated by these form
+--    fields.
+--  * @e@ - your application's event type
+--  * @n@ - your application's resource name type
 data FormFieldState s e n where
     FormFieldState :: { formFieldState :: b
+                      -- ^ The current state value associated with
+                      -- the field collection. Note that this type is
+                      -- existential. All form fields in the collection
+                      -- must validate to this type.
                       , formFieldLens  :: Lens' s a
+                      -- ^ A lens to extract and store a
+                      -- successfully-validated form input back into
+                      -- your form state.
                       , formFields     :: [FormField a b e n]
+                      -- ^ The form fields, in order, that the user will
+                      -- interact with to manipulate this state value.
                       , formFieldRenderHelper :: Widget n -> Widget n
+                      -- ^ A helper function to augment the rendered
+                      -- representation of this collection of form
+                      -- fields. It receives the default representation
+                      -- and can augment it, for example, by adding a
+                      -- label on the left.
                       } -> FormFieldState s e n
 
+-- | A form.
+--
+-- Type variables are as follows:
+--
+--  * @s@ - the data type of your choosing containing the values
+--    manipulated by the fields in this form.
+--  * @e@ - your application's event type
+--  * @n@ - your application's resource name type
 data Form s e n =
     Form { formFieldStates  :: [FormFieldState s e n]
          , formFocus        :: FocusRing n
+         -- ^ The focus ring for the form, indicating which form field
+         -- has input focus.
          , formState        :: s
+         -- ^ The current state of the form. Forms guarantee that only
+         -- valid inputs ever get stored in the state, and that after
+         -- each input event, if a field contains a valid state value,
+         -- the valid value is immediately saved to its corresponding
+         -- field in this state value.
          }
 
 infixr 5 @@=
@@ -109,6 +161,9 @@ infixr 5 @@=
     let v = mkFs s
     in v { formFieldRenderHelper = h . (formFieldRenderHelper v) }
 
+-- | Create a new form with the specified input fields and an initial
+-- form state. The fields are initialized from the state using their
+-- state lenses and the first form input is focused initially.
 newForm :: [s -> FormFieldState s e n]
         -> s
         -> Form s e n
