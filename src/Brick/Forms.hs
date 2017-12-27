@@ -1,6 +1,21 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE OverloadedStrings #-}
+-- | This module provides an input form API. This API allows you to
+-- construct an input interface based on a data type of your choice.
+-- Each input in the form corresponds to a field in your data type. This
+-- API then automatically dispatches keyboard and mouse input events to
+-- each form input field, manages rendering of the form, notifies the
+-- user when a form field's value is invalid, and stores valid inputs in
+-- your data type when possible.
+--
+-- This module provides the API to create forms and populate them with
+-- some basic input field types along with an API for creating your own
+-- input field types.
+--
+-- For an introduction to this API, see the "Input Forms" section of the
+-- Brick User Guide. Also see the demonstration programs for examples of
+-- forms in action.
 module Brick.Forms
   ( Form
   , formFocus
