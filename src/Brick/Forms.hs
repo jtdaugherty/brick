@@ -63,11 +63,31 @@ import Text.Read (readMaybe)
 
 import Lens.Micro
 
+-- | A form field. This represents an interactive input field in the
+-- form. One or more fields may be used to manipulate a particular state
+-- value.
+--
+-- Type variables are as follows:
+--
+--  * @a@ - the type of the field in your form state that this field manipulates
+--  * @b@ - the form field's internal state type
+--  * @e@ - your application's event type
+--  * @n@ - your application's resource name type
 data FormField a b e n =
     FormField { formFieldName        :: n
+              -- ^ The name identifying this form field.
               , formFieldValidate    :: b -> Maybe a
+              -- ^ A validation function converting this field's state
+              -- into a value of your choosing. @Nothing@ indicates a
+              -- validation failure.
               , formFieldRender      :: Bool -> b -> Widget n
+              -- ^ A function to render this form field. Parameters are
+              -- whether the field is currently focused, followed by the
+              -- field state.
               , formFieldHandleEvent :: BrickEvent n e -> b -> EventM n b
+              -- ^ An event handler for this field. This receives the
+              -- event and the field state and returns a new field
+              -- state.
               }
 
 data FormFieldState s e n where
