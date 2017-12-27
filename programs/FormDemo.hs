@@ -11,6 +11,8 @@ import Brick
 import Brick.Forms
 import Brick.Focus
 import Brick.Widgets.Edit
+import Brick.Widgets.Border
+import Brick.Widgets.Center
 
 data Name = Edit1
           | Edit2
@@ -52,7 +54,7 @@ theMap = attrMap defAttr
 
 app :: App (Form FormState e Name) e Name
 app =
-    App { appDraw = \s -> [renderForm s]
+    App { appDraw = \s -> [center $ border $ hLimit 50 $ renderForm s]
         , appHandleEvent = \s ev ->
             case ev of
                 VtyEvent (EvResize {})     -> continue s
