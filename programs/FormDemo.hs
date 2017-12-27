@@ -28,11 +28,11 @@ data Handedness = LeftHanded | RightHanded | Ambidextrous
                 deriving (Show, Eq)
 
 data FormState =
-    FormState { _name        :: T.Text
-              , _age         :: Int
-              , _ridesBike   :: Bool
-              , _handed      :: Handedness
-              , _password    :: T.Text
+    FormState { _name      :: T.Text
+              , _age       :: Int
+              , _ridesBike :: Bool
+              , _handed    :: Handedness
+              , _password  :: T.Text
               }
               deriving (Show)
 
