@@ -42,7 +42,7 @@ module Brick.Main
 where
 
 import Control.Exception (finally)
-import Lens.Micro ((^.), (&), (.~))
+import Lens.Micro ((^.), (&), (.~), (%~), _1, _2)
 import Control.Monad (forever)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.State
@@ -263,7 +263,17 @@ runVty vty readEvent app appState rs = do
                             let localCoords = Location (lc, lr)
                                 lc = c - ec + oC
                                 lr = r - er + oR
-                            return (MouseDown n button mods localCoords, firstRS, exts)
+
+                                -- If the clicked extent was a viewport,
+                                -- adjust the local coordinates by
+                                -- adding the viewport upper-left corner
+                                -- offset.
+                                newCoords = case M.lookup n (viewportMap firstRS) of
+                                  Nothing -> localCoords
+                                  Just vp -> localCoords & _1 %~ (+ (vp^.vpLeft))
+                                                         & _2 %~ (+ (vp^.vpTop))
+
+                            return (MouseDown n button mods newCoords, firstRS, exts)
                         False -> return (e, firstRS, exts)
                 _ -> return (e, firstRS, exts)
         VtyEvent (EvMouseUp c r button) -> do

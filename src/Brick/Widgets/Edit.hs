@@ -170,7 +170,6 @@ renderEditor draw foc e =
     in withAttr (if foc then editFocusedAttr else editAttr) $
        limit $
        viewport (e^.editorNameL) Both $
-       clickable (e^.editorNameL) $
        (if foc then showCursor (e^.editorNameL) cursorLoc else id) $
        visibleRegion cursorLoc (atCharWidth, 1) $
        draw $

@@ -756,7 +756,7 @@ viewport :: (Ord n, Show n)
          -- ^ The widget to be rendered in the scrollable viewport
          -> Widget n
 viewport vpname typ p =
-    Widget Greedy Greedy $ do
+    clickable vpname $ Widget Greedy Greedy $ do
       -- First, update the viewport size.
       c <- getContext
       let newVp = VP 0 0 newSize
