@@ -120,7 +120,7 @@ main = do
     print initialUserInfo
 
     putStrLn "The final form state was:"
-    print $ UserInfo f'
+    print $ formState f'
 
     if allFieldsValid f'
        then putStrLn "The final form inputs were valid."
