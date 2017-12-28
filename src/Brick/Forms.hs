@@ -17,6 +17,15 @@
 -- basic input field types, render forms, handle form events, and create
 -- custom input field types.
 --
+-- A form has both a visual representation and a corresponding data
+-- structure representing the latest valid values for that form
+-- (referred to as the "state" of the form). A 'FormField' is a single
+-- input component in the form and a 'FormFieldState' defines the
+-- linkage between that visual input and the corresponding portion
+-- of the state represented by that visual; there may be multiple
+-- 'FormField's combined for a single 'FormFieldState' (e.g. a radio
+-- button sequence).
+--
 -- Bear in mind that for most uses, the 'FormField' and 'FormFieldState'
 -- types will not be used directly. Instead, the constructors for
 -- various field types (such as 'editTextField') will be used instead.
