@@ -64,6 +64,7 @@ import Data.Maybe (isJust, isNothing)
 import Brick
 import Brick.Focus
 import Brick.Widgets.Edit
+import qualified Data.Text.Zipper as Z
 
 import qualified Data.Text as T
 import Text.Read (readMaybe)
@@ -324,8 +325,14 @@ editField :: (Ord n, Show n)
           -- ^ The initial form state.
           -> FormFieldState s e n
 editField stLens n limit ini val renderText wrapEditor initialState =
-    let initVal = mk $ initialState ^. stLens
-        mk = editor n limit . ini
+    let initVal = applyEdit gotoEnd $
+                  editor n limit initialText
+        gotoEnd = let ls = T.lines initialText
+                      pos = (length ls - 1, T.length (last ls))
+                  in if null ls
+                     then id
+                     else Z.moveCursor pos
+        initialText = ini $ initialState ^. stLens
         handleEvent (VtyEvent e) ed = handleEditorEvent e ed
         handleEvent _ ed = return ed
 
