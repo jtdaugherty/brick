@@ -1362,6 +1362,24 @@ field API doesn't always make sense.
 Handling Form Events
 --------------------
 
+Handling form events is easy: we just call
+``Brick.Forms.handleFormEvent`` with the ``BrickEvent`` and the
+``Form``. This automatically dispatches input events to the
+currently-focused input field, and it also manages focus changes with
+``Tab`` and ``Shift-Tab`` keybindings. It's still up to the application
+to decide when events should go to the form.
+
+Once the application has decided that the user should be done with the
+form editing session, the current state of the form can be obtained
+with ``Brick.Forms.formState``. In the example above, this would
+return a ``UserInfo`` record containing the values for each field in
+the form *as of the last time it was valid input*. This means that
+the user might have provided invalid input to a form field that is
+not reflected in the form state due to failing validation. If this
+matters to your application, you can tell whether the form state
+returned by ``formState`` matches the form by using the functions
+``Brick.Forms.allFieldsValid`` and ``Brick.Forms.invalidFields``.
+
 Writing Custom Form Field Types
 -------------------------------
 
