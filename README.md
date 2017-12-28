@@ -94,7 +94,9 @@ Documentation for `brick` comes in a variety of forms:
 Feature Overview
 ----------------
 
-`brick` comes with a bunch of widget types to get you started:
+`brick` comes with a bunch of batteries included:
+
+Low-level stuff:
 
  * Vertical and horizontal box layout widgets
  * Basic single- and multi-line text editor widgets
@@ -103,18 +105,12 @@ Feature Overview
  * Simple dialog box widget
  * Border-drawing widgets (put borders around or in between things)
  * Generic scrollable viewports
+ * (And many more general-purpose layout control combinators)
+
+Other killer features:
  * Extensible widget-building API
  * User-customizable attribute themes
  * Type-safe, validated input form API (see the `Brick.Forms` module)
- * (And many more general-purpose layout control combinators)
-
-In addition, some of `brick`'s more powerful features may not be obvious
-right away:
-
- * All widgets can be arranged in predictable layouts so you don't have
-   to worry about terminal resizes.
- * Attribute management is flexible and can be customized at runtime on
-   a per-widget basis.
 
 Brick-Users Discussion
 ----------------------
