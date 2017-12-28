@@ -105,6 +105,7 @@ Feature Overview
  * Generic scrollable viewports
  * Extensible widget-building API
  * User-customizable attribute themes
+ * Type-safe, validated input form API (see the `Brick.Forms` module)
  * (And many more general-purpose layout control combinators)
 
 In addition, some of `brick`'s more powerful features may not be obvious
