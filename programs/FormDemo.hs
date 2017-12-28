@@ -10,10 +10,30 @@ import Graphics.Vty
 import qualified Graphics.Vty as V
 import Brick
 import Brick.Forms
+  ( Form
+  , newForm
+  , formState
+  , formFocus
+  , renderForm
+  , handleFormEvent
+  , invalidFields
+  , allFieldsValid
+  , focusedFormInputAttr
+  , invalidFormInputAttr
+  , checkboxField
+  , radioField
+  , editShowableField
+  , editTextField
+  , editPasswordField
+  , (@@=)
+  )
 import Brick.Focus
-import Brick.Widgets.Edit
-import Brick.Widgets.Border
-import Brick.Widgets.Center
+  ( focusGetCurrent
+  , focusRingCursor
+  )
+import qualified Brick.Widgets.Edit as E
+import qualified Brick.Widgets.Border as B
+import qualified Brick.Widgets.Center as C
 
 data Name = NameField
           | AgeField
@@ -64,17 +84,17 @@ mkForm =
 
 theMap :: AttrMap
 theMap = attrMap defAttr
-  [ (editAttr, white `on` black)
-  , (editFocusedAttr, black `on` yellow)
+  [ (E.editAttr, white `on` black)
+  , (E.editFocusedAttr, black `on` yellow)
   , (invalidFormInputAttr, white `on` red)
   , (focusedFormInputAttr, black `on` yellow)
   ]
 
 draw :: Form UserInfo e Name -> [Widget Name]
-draw f = [vCenter $ hCenter form <=> hCenter help]
+draw f = [C.vCenter $ C.hCenter form <=> C.hCenter help]
     where
-        form = border $ padTop (Pad 1) $ hLimit 50 $ renderForm f
-        help = padTop (Pad 1) $ borderWithLabel (str "Help") body
+        form = B.border $ padTop (Pad 1) $ hLimit 50 $ renderForm f
+        help = padTop (Pad 1) $ B.borderWithLabel (str "Help") body
         body = str $ "- Name is free-form text\n" <>
                      "- Age must be an integer (try entering an\n" <>
                      "  invalid age!)\n" <>
