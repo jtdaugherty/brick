@@ -1366,7 +1366,8 @@ Handling form events is easy: we just call
 ``Brick.Forms.handleFormEvent`` with the ``BrickEvent`` and the
 ``Form``. This automatically dispatches input events to the
 currently-focused input field, and it also manages focus changes with
-``Tab`` and ``Shift-Tab`` keybindings. It's still up to the application
+``Tab`` and ``Shift-Tab`` keybindings. (For details, see the Haddock
+documentation for ``handleFormEvent``.) It's still up to the application
 to decide when events should go to the form.
 
 Once the application has decided that the user should be done with the
@@ -1382,6 +1383,12 @@ returned by ``formState`` matches the form by using the functions
 
 Writing Custom Form Field Types
 -------------------------------
+
+If the built-in form field types don't meet your needs, ``Brick.Forms``
+exposes all of the data types needed to implement your own field types.
+For more details on how to do this, see the Haddock documentation for
+the ``FormFieldState`` and ``FormField`` data types along with the
+implementations of the built-in form field types.
 
 The Rendering Cache
 ===================
