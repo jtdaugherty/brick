@@ -5,6 +5,10 @@
 -- it out! Feedback is very much appreciated, and your patience in the
 -- face of breaking API changes is also appreciated!
 --
+-- For a fuller introduction to this API, see the "Input Forms" section
+-- of the Brick User Guide. Also see the demonstration programs for
+-- examples of forms in action.
+--
 -- This module provides an input form API. This API allows you to
 -- construct an input interface based on a data type of your choice.
 -- Each input in the form corresponds to a field in your data type. This
@@ -29,10 +33,6 @@
 -- Bear in mind that for most uses, the 'FormField' and 'FormFieldState'
 -- types will not be used directly. Instead, the constructors for
 -- various field types (such as 'editTextField') will be used instead.
---
--- For an introduction to this API, see the "Input Forms" section of the
--- Brick User Guide. Also see the demonstration programs for examples of
--- forms in action.
 module Brick.Forms
   ( -- * Data types
     Form
