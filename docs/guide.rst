@@ -1395,6 +1395,11 @@ matters to your application, you can tell whether the form state
 returned by ``formState`` matches the form by using the functions
 ``Brick.Forms.allFieldsValid`` and ``Brick.Forms.invalidFields``.
 
+Note that if mouse events are enabled in your application (see `Mouse
+Support`_), all built-in form fields will respond to mouse interaction.
+Radio buttons and check boxes change selection on mouse clicks and
+editors change cursor position on mouse clicks.
+
 Writing Custom Form Field Types
 -------------------------------
 
