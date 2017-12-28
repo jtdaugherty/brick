@@ -1407,10 +1407,15 @@ with ``Brick.Forms.formState``. In the example above, this would
 return a ``UserInfo`` record containing the values for each field in
 the form *as of the last time it was valid input*. This means that
 the user might have provided invalid input to a form field that is
-not reflected in the form state due to failing validation. If this
-matters to your application, you can tell whether the form state
-returned by ``formState`` matches the form by using the functions
-``Brick.Forms.allFieldsValid`` and ``Brick.Forms.invalidFields``.
+not reflected in the form state due to failing validation.
+
+Since the ``formState`` is always a valid set of values, it might
+be surprising to the user if the values used do not match the last
+values they saw on the screen; the ``Brick.Forms.allFieldsValid``
+can be used to determine if the last visual state of the form had
+any invalid entries and doesn't match the value of ``formState``. A
+list of any fields which had invalid values can be retrieved with the
+``Brick.Forms.invalidFields`` function.
 
 Note that if mouse events are enabled in your application (see `Mouse
 Support`_), all built-in form fields will respond to mouse interaction.
