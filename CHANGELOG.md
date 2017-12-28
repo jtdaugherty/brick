@@ -2,6 +2,16 @@
 Brick changelog
 ---------------
 
+0.32
+----
+
+API changes:
+ * This release adds the new `Brick.Forms` module, which provides an API
+   for type-safe input forms with automatic rendering, event handling,
+   and state management! See the Haddock and the "Input Forms" section
+   of the Brick User Guide for information on this killer feature! Many
+   thanks to Kevin Quick for feedback on this new functionality.
+
 0.31
 ----
 
