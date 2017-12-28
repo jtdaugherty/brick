@@ -1393,9 +1393,10 @@ Handling form events is easy: we just call
 ``Brick.Forms.handleFormEvent`` with the ``BrickEvent`` and the
 ``Form``. This automatically dispatches input events to the
 currently-focused input field, and it also manages focus changes with
-``Tab`` and ``Shift-Tab`` keybindings. (For details, see the Haddock
-documentation for ``handleFormEvent``.) It's still up to the application
-to decide when events should go to the form.
+``Tab`` and ``Shift-Tab`` keybindings. (For details on all of its
+behaviors, see the Haddock documentation for ``handleFormEvent``.) It's
+still up to the application to decide when events should go to the form
+in the first place.
 
 Since the form field handlers take ``BrickEvent`` values, that means
 that custom fields could even handle application-specific events (of the

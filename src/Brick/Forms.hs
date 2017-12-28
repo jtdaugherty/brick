@@ -69,6 +69,7 @@ where
 import Graphics.Vty
 import Data.Monoid
 import Data.Maybe (isJust, isNothing)
+import Data.List (elemIndex)
 
 import Brick
 import Brick.Focus
@@ -492,6 +493,12 @@ renderFormFieldState fr (FormFieldState st _ fields helper) =
 -- * On mouse button presses (regardless of button or modifier), the
 --   focus is changed to the clicked form field and the event is
 --   forwarded to the event handler for the clicked form field.
+-- * On @Left@ or @Up@, if the currently-focused field is part of a
+--   collection (e.g. radio buttons), the previous entry in the
+--   collection is focused.
+-- * On @Right@ or @Down@, if the currently-focused field is part of a
+--   collection (e.g. radio buttons), the next entry in the collection
+--   is focused.
 -- * All other events are forwarded to the currently focused form field.
 --
 -- In all cases where an event is forwarded to a form field, validation
@@ -508,7 +515,60 @@ handleFormEvent e@(MouseDown n _ _ _) f =
     handleFormFieldEvent n e $ f { formFocus = focusSetCurrent n (formFocus f) }
 handleFormEvent e@(MouseUp n _ _) f =
     handleFormFieldEvent n e $ f { formFocus = focusSetCurrent n (formFocus f) }
-handleFormEvent e f =
+handleFormEvent e@(VtyEvent (EvKey KUp [])) f =
+    case focusGetCurrent (formFocus f) of
+        Nothing -> return f
+        Just n  ->
+            case getFocusGrouping f n of
+                Nothing -> forwardToCurrent e f
+                Just grp -> return $ f { formFocus = focusSetCurrent (entryBefore grp n) (formFocus f) }
+handleFormEvent e@(VtyEvent (EvKey KDown [])) f =
+    case focusGetCurrent (formFocus f) of
+        Nothing -> return f
+        Just n  ->
+            case getFocusGrouping f n of
+                Nothing -> forwardToCurrent e f
+                Just grp -> return $ f { formFocus = focusSetCurrent (entryAfter grp n) (formFocus f) }
+handleFormEvent e@(VtyEvent (EvKey KLeft [])) f =
+    case focusGetCurrent (formFocus f) of
+        Nothing -> return f
+        Just n  ->
+            case getFocusGrouping f n of
+                Nothing -> forwardToCurrent e f
+                Just grp -> return $ f { formFocus = focusSetCurrent (entryBefore grp n) (formFocus f) }
+handleFormEvent e@(VtyEvent (EvKey KRight [])) f =
+    case focusGetCurrent (formFocus f) of
+        Nothing -> return f
+        Just n  ->
+            case getFocusGrouping f n of
+                Nothing -> forwardToCurrent e f
+                Just grp -> return $ f { formFocus = focusSetCurrent (entryAfter grp n) (formFocus f) }
+handleFormEvent e f = forwardToCurrent e f
+
+getFocusGrouping :: (Eq n) => Form s e n -> n -> Maybe [n]
+getFocusGrouping f n = findGroup (formFieldStates f)
+    where
+        findGroup [] = Nothing
+        findGroup (e:es) =
+            let ns = formFieldNames e
+            in if n `elem` ns && length ns > 1
+               then Just ns
+               else findGroup es
+
+entryAfter :: (Eq a) => [a] -> a -> a
+entryAfter as a =
+    let Just i = elemIndex a as
+        i' = if i == length as - 1 then 0 else i + 1
+    in as !! i'
+
+entryBefore :: (Eq a) => [a] -> a -> a
+entryBefore as a =
+    let Just i = elemIndex a as
+        i' = if i == 0 then length as - 1 else i - 1
+    in as !! i'
+
+forwardToCurrent :: (Eq n) => BrickEvent n e -> Form s e n -> EventM n (Form s e n)
+forwardToCurrent e f =
     case focusGetCurrent (formFocus f) of
         Nothing -> return f
         Just n  -> handleFormFieldEvent n e f
