@@ -60,6 +60,8 @@ data UserInfo =
 
 makeLenses ''UserInfo
 
+-- This form is covered in the Brick User Guide; see the "Input Forms"
+-- section.
 mkForm :: UserInfo -> Form UserInfo e Name
 mkForm =
     let label s w = padBottom (Pad 1) $
