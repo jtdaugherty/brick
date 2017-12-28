@@ -1291,15 +1291,14 @@ First of all, the above code assumes we've derived lenses for
 ``UserInfo`` using ``Lens.Micro.TH.makeLenses``. Once we've done
 that, each field that we specify in the form must provide a lens into
 ``UserInfo`` so that we can declare the particular field of ``UserInfo``
-that will be edited by the field.
-
-For example, to edit the ``_name`` field we use the ``name`` lens to
-create a text field editor with ``editTextField``. All of the field
-constructors above are provided by ``Brick.Forms``.
+that will be edited by the field. For example, to edit the ``_name``
+field we use the ``name`` lens to create a text field editor with
+``editTextField``. All of the field constructors above are provided by
+``Brick.Forms``.
 
 Each form field also needs a resource name (see `Resource Names`_). The
 resource names are assigned to the individual form inputs so the form
-can automatically track input focus.
+can automatically track input focus and handle mouse click events.
 
 The form carries with it the value of ``UserInfo`` that reflects the
 contents of the form. Whenever an input field in the form handles an
@@ -1324,6 +1323,47 @@ successfully-parsed value ``10`` will then be written to the ``_age``
 field of the form's ``UserInfo`` state using the ``age`` lens. The use
 of ``Show`` and ``Read`` here is a feature of the field type we have
 chosen for ``_age``, ``editShowableField``.
+
+For other field types we may have other needs. For instance,
+``Handedness`` is a data type representing all the possible choices
+we want to provide for a user's handedness. We wouldn't want the user
+to have to type in a text string for this option. A more appropriate
+input interface is a list of radio buttons to choose from amongst
+the available options. For that we have ``radioField``. This field
+constructor takes a list of all of the available options, and updates
+the form state with the value of the currently-selected option.
+
+Rendering Forms
+---------------
+
+Rendering forms is done easily using the ``Brick.Forms.renderForm``
+function. However, as written above, the form will not look especially
+nice. We'll see a few text editors followed by some radio buttons and a
+check box. But we'll need to customize the output a bit to make the form
+easier to use. For that, we have the ``Brick.Forms.@@=`` operator. This
+operator lets us provide a function to augment the ``Widget`` generated
+by the field's rendering function so we can do things like add labels,
+control layout, or change attributes:
+
+.. code:: haskell
+
+    (str "Name: " <+>) @@=
+      editTextField name NameField (Just 1)
+
+Now when we invoke ``renderForm`` on a form using the above example,
+we'll see a ``"Name:"`` label to the left of the editor field for
+the ``_name`` field of ``UserInfo``.
+
+Brick provides this interface to controlling per-field rendering because
+many form fields either won't have labels or will have different layout
+requirements, so an alternative API such as building the label into the
+field API doesn't always make sense.
+
+Handling Form Events
+--------------------
+
+Writing Custom Form Field Types
+-------------------------------
 
 The Rendering Cache
 ===================
