@@ -1287,6 +1287,16 @@ use cases. Here's the form that we can use to allow the user to edit a
                , checkboxField ridesBike BikeField "Do you ride a bicycle?"
                ]
 
+A form is represented using a ``Form s e n`` value and is parameterized
+with some types:
+
+* ``s`` - the type of *form state* managed by the form (in this case
+  ``UserInfo``)
+* ``e`` - the event type of the application (must match the event type
+  used with ``App``)
+* ``n`` - the resource name type of the application (must match the
+  resource name type used with ``App``)
+
 First of all, the above code assumes we've derived lenses for
 ``UserInfo`` using ``Lens.Micro.TH.makeLenses``. Once we've done
 that, each field that we specify in the form must provide a lens into
@@ -1369,6 +1379,10 @@ currently-focused input field, and it also manages focus changes with
 ``Tab`` and ``Shift-Tab`` keybindings. (For details, see the Haddock
 documentation for ``handleFormEvent``.) It's still up to the application
 to decide when events should go to the form.
+
+Since the form field handlers take ``BrickEvent`` values, that means
+that custom fields could even handle application-specific events (of the
+type ``e`` above).
 
 Once the application has decided that the user should be done with the
 form editing session, the current state of the form can be obtained
