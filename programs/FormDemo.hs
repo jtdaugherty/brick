@@ -6,7 +6,6 @@ import qualified Data.Text as T
 import Lens.Micro.TH
 import Data.Monoid ((<>))
 
-import Graphics.Vty
 import qualified Graphics.Vty as V
 import Brick
 import Brick.Forms
@@ -83,11 +82,11 @@ mkForm =
                ]
 
 theMap :: AttrMap
-theMap = attrMap defAttr
-  [ (E.editAttr, white `on` black)
-  , (E.editFocusedAttr, black `on` yellow)
-  , (invalidFormInputAttr, white `on` red)
-  , (focusedFormInputAttr, black `on` yellow)
+theMap = attrMap V.defAttr
+  [ (E.editAttr, V.white `on` V.black)
+  , (E.editFocusedAttr, V.black `on` V.yellow)
+  , (invalidFormInputAttr, V.white `on` V.red)
+  , (focusedFormInputAttr, V.black `on` V.yellow)
   ]
 
 draw :: Form UserInfo e Name -> [Widget Name]
@@ -107,10 +106,10 @@ app =
     App { appDraw = draw
         , appHandleEvent = \s ev ->
             case ev of
-                VtyEvent (EvResize {})     -> continue s
-                VtyEvent (EvKey KEsc [])   -> halt s
+                VtyEvent (V.EvResize {})     -> continue s
+                VtyEvent (V.EvKey V.KEsc [])   -> halt s
                 -- Enter quits only when we aren't in the multi-line editor.
-                VtyEvent (EvKey KEnter [])
+                VtyEvent (V.EvKey V.KEnter [])
                     | focusGetCurrent (formFocus s) /= Just AddressField -> halt s
                 _                          -> continue =<< handleFormEvent ev s
         , appChooseCursor = focusRingCursor formFocus
