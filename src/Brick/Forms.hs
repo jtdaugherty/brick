@@ -151,7 +151,8 @@ data FormFieldState s e n where
                       -- label on the left.
                       } -> FormFieldState s e n
 
--- | A form.
+-- | A form: a sequence of input fields that manipulate the fields of an
+-- underlying state that you choose.
 --
 -- Type variables are as follows:
 --
