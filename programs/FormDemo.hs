@@ -67,6 +67,7 @@ mkForm =
     in newForm [ label "Name" @@=
                    editTextField name NameField (Just 1)
                , label "Address" @@=
+                 B.borderWithLabel (str "Mailing") @@=
                    editTextField address AddressField (Just 3)
                , label "Age" @@=
                    editShowableField age AgeField
