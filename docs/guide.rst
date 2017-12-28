@@ -1369,6 +1369,23 @@ many form fields either won't have labels or will have different layout
 requirements, so an alternative API such as building the label into the
 field API doesn't always make sense.
 
+Form Attributes
+---------------
+
+The ``Brick.Forms`` module uses and exports two attribute names (see
+`How Attributes Work`_):
+
+* ``focusedFormInputAttr`` - this attribute is used to render the form
+  field that has the focus.
+* ``invalidFormInputAttr`` - this attribute is used to render any form
+  field that has user input that has valid validation.
+
+Your application should set both of these. Some good mappings in the
+attribute map are:
+
+* ``focusedFormInputAttr`` - ``black `on` yellow``
+* ``invalidFormInputAttr`` - ``white `on` red``
+
 Handling Form Events
 --------------------
 
