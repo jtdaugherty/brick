@@ -2,6 +2,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 -- | This module provides a simple dialog widget. You get to pick the
 -- dialog title, if any, as well as its body and buttons.
+--
+-- Note that this dialog is really for simple use cases where you want
+-- to get the user's answer to a question, such as "Would you like
+-- to save changes before quitting?" If you require something more
+-- sophisticated, you'll need to build it yourself. You might also
+-- consider seeing the 'Brick.Forms' module for help with input
+-- management, and see the implementation of this module to see how to
+-- reproduce a dialog-style UI.
 module Brick.Widgets.Dialog
   ( Dialog
   , dialogTitle
