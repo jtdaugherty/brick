@@ -440,7 +440,7 @@ selection easy in common cases:
   cursor position.
 
 For example, this widget requests a cursor placement on the first
-"``o``" in "``foo``" associated with the cursor name "``myCursor``":
+"``o``" in "``foo``" associated with the cursor name ``CustomName``:
 
 .. code:: haskell
 
@@ -456,7 +456,7 @@ resource name type ``n`` and would be able to pattern-match on
 .. code:: haskell
 
    myApp = App { ...
-               , appChooseCursor = showCursorNamed CustomName
+               , appChooseCursor = \_ -> showCursorNamed CustomName
                }
 
 See the next section for more information on using names.
