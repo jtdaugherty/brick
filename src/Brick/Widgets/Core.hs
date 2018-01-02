@@ -227,7 +227,7 @@ txtWrap = txtWrapWith defaultWrapSettings
 -- the available width using the specified wrapping settings.
 txtWrapWith :: WrapSettings -> T.Text -> Widget n
 txtWrapWith settings s =
-    Widget Fixed Fixed $ do
+    Widget Greedy Fixed $ do
       c <- getContext
       let theLines = fixEmpty <$> wrapTextToLines settings (c^.availWidthL) s
           fixEmpty l | T.null l = " "
