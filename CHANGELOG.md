@@ -2,6 +2,15 @@
 Brick changelog
 ---------------
 
+0.32.1
+------
+
+Bug fixes:
+ * Core: make all text wrap widgets Greedy horizontally
+
+Miscellaneous:
+ * Dialog: clarify purpose in documentation (w.r.t. #149)
+
 0.32
 ----
 
