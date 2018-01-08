@@ -468,7 +468,14 @@ invalidFields f = concat $ getInvalidFields <$> formFieldStates f
 -- useful in situations where validation beyond the form element's
 -- validator needs to be performed and the result of that validation
 -- needs to be fed back into the form state.
-setFieldValid :: (Eq n) => Bool -> n -> Form s e n -> Form s e n
+setFieldValid :: (Eq n)
+              => Bool
+              -- ^ Whether the field is considered valid.
+              -> n
+              -- ^ The name of the form field to set as (in)valid.
+              -> Form s e n
+              -- ^ The form to modify.
+              -> Form s e n
 setFieldValid v n form =
     let go1 [] = []
         go1 (s:ss) =
