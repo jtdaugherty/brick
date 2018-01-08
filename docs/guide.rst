@@ -1418,6 +1418,16 @@ any invalid entries and doesn't match the value of ``formState``. A
 list of any fields which had invalid values can be retrieved with the
 ``Brick.Forms.invalidFields`` function.
 
+While each form field type provides a validator function to validate
+its current user input value, that function is pure. As a result it's
+not suitable for doing validation that requires I/O such as searching
+a database or making network requests. If your application requires
+that kind of validation, you can use the ``Brick.Forms.setFieldValid``
+function to set the validation state of any form field as you see
+fit. The validation state set by that function will be considered by
+``allFieldsValid`` and ``invalidFields``. See ``FormDemo.hs`` for an
+example of this API.
+
 Note that if mouse events are enabled in your application (see `Mouse
 Support`_), all built-in form fields will respond to mouse interaction.
 Radio buttons and check boxes change selection on mouse clicks and

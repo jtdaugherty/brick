@@ -3,6 +3,7 @@
 module Main where
 
 import qualified Data.Text as T
+import Lens.Micro ((^.))
 import Lens.Micro.TH
 import Data.Monoid ((<>))
 
@@ -13,6 +14,7 @@ import Brick.Forms
   , newForm
   , formState
   , formFocus
+  , setFieldValid
   , renderForm
   , handleFormEvent
   , invalidFields
@@ -114,7 +116,15 @@ app =
                 -- Enter quits only when we aren't in the multi-line editor.
                 VtyEvent (V.EvKey V.KEnter [])
                     | focusGetCurrent (formFocus s) /= Just AddressField -> halt s
-                _                          -> continue =<< handleFormEvent ev s
+                _ -> do
+                    s' <- handleFormEvent ev s
+
+                    -- Example of external validation:
+                    -- Require age field to contain a value that is at least 18.
+                    if (formState s')^.age >= 18
+                       then continue $ setFieldValid True AgeField s'
+                       else continue $ setFieldValid False AgeField s'
+
         , appChooseCursor = focusRingCursor formFocus
         , appStartEvent = return
         , appAttrMap = const theMap

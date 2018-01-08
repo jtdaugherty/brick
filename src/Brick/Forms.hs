@@ -48,6 +48,7 @@ module Brick.Forms
   , (@@=)
   , allFieldsValid
   , invalidFields
+  , setFieldValid
 
   -- * Simple form field constructors
   , editTextField
@@ -99,8 +100,18 @@ data FormField a b e n =
               -- ^ A validation function converting this field's state
               -- into a value of your choosing. @Nothing@ indicates a
               -- validation failure. For example, this might validate
-              -- an 'Editor' state value by parsing its text contents
-              -- as an integer and return 'Maybe' 'Int'.
+              -- an 'Editor' state value by parsing its text contents s
+              -- aan integer and return 'Maybe' 'Int'. This is for pure
+              -- avalue validation; if additional validation is required
+              -- a(e.g. via 'IO'), use this field's state value in an
+              -- aexternal validation routine and use 'setFieldValid' to
+              -- afeed the result back into the form.
+              , formFieldExternallyValid :: Bool
+              -- ^ Whether the field is valid according to an external
+              -- validation source. Defaults to always being 'True' and
+              -- can be set with 'setFieldValid'. The value of this
+              -- field also affects the behavior of 'allFieldsValid' and
+              -- 'getInvalidFields'.
               , formFieldRender      :: Bool -> b -> Widget n
               -- ^ A function to render this form field. Parameters are
               -- whether the field is currently focused, followed by the
@@ -235,7 +246,7 @@ checkboxField stLens name label initialState =
         handleEvent _ s = return s
 
     in FormFieldState { formFieldState        = initVal
-                      , formFields            = [ FormField name Just
+                      , formFields            = [ FormField name Just True
                                                             (renderCheckbox label name)
                                                             handleEvent
                                                 ]
@@ -284,6 +295,7 @@ radioField stLens options initialState =
         mkOptionField (val, name, label) =
             FormField name
                       Just
+                      True
                       (renderRadio val name label)
                       (handleEvent val)
 
@@ -350,6 +362,7 @@ editField stLens n limit ini val renderText wrapEditor initialState =
     in FormFieldState { formFieldState = initVal
                       , formFields     = [ FormField n
                                                      (val . getEditContents)
+                                                     True
                                                      (\b e -> wrapEditor $ renderEditor renderText b e)
                                                      handleEvent
                                          ]
@@ -451,10 +464,29 @@ allFieldsValid = null . invalidFields
 invalidFields :: Form s e n -> [n]
 invalidFields f = concat $ getInvalidFields <$> formFieldStates f
 
+-- | Manually indicate that a field has invalid contents. This can be
+-- useful in situations where validation beyond the form element's
+-- validator needs to be performed and the result of that validation
+-- needs to be fed back into the form state.
+setFieldValid :: (Eq n) => Bool -> n -> Form s e n -> Form s e n
+setFieldValid v n form =
+    let go1 [] = []
+        go1 (s:ss) =
+            let s' = case s of
+                       FormFieldState st l fs rh ->
+                           let go2 [] = []
+                               go2 (f@(FormField fn val _ r h):ff)
+                                   | n == fn = FormField fn val v r h : ff
+                                   | otherwise = f : go2 ff
+                           in FormFieldState st l (go2 fs) rh
+            in s' : go1 ss
+
+    in form { formFieldStates = go1 (formFieldStates form) }
+
 getInvalidFields :: FormFieldState s e n -> [n]
 getInvalidFields (FormFieldState st _ fs _) =
-    let gather (FormField n validate _ _) =
-            if (isNothing $ validate st) then [n] else []
+    let gather (FormField n validate extValid _ _) =
+            if (not extValid || (isNothing $ validate st)) then [n] else []
     in concat $ gather <$> fs
 
 -- | Render a form.
@@ -462,7 +494,10 @@ getInvalidFields (FormFieldState st _ fs _) =
 -- For each form field, each input for the field is rendered using the
 -- implementation provided by its 'FormField'. The inputs are then
 -- vertically concatenated with 'vBox' and then augmented using the form
--- field's rendering augmentation function (see '@@=').
+-- field's rendering augmentation function (see '@@='). Fields with
+-- invalid inputs (either due to built-in validator failure or due to
+-- external validation failure via 'setFieldValid') will be displayed
+-- using the 'invalidFormInputAttr' attribute.
 --
 -- The augmented field renderings are then placed in a 'vBox' and
 -- returned.
@@ -476,8 +511,8 @@ renderFormFieldState :: (Eq n)
                      -> Widget n
 renderFormFieldState fr (FormFieldState st _ fields helper) =
     let renderFields [] = []
-        renderFields ((FormField n validate renderField _):fs) =
-            let maybeInvalid = if isJust $ validate st
+        renderFields ((FormField n validate extValid renderField _):fs) =
+            let maybeInvalid = if (isJust $ validate st) && extValid
                                then id
                                else forceAttr invalidFormInputAttr
                 foc = Just n == focusGetCurrent fr
@@ -503,10 +538,13 @@ renderFormFieldState fr (FormFieldState st _ fields helper) =
 -- * All other events are forwarded to the currently focused form field.
 --
 -- In all cases where an event is forwarded to a form field, validation
--- of the field's input state is performed after the event has been
--- handled. If the form field's input state succeeds validation, its
--- value is immediately stored in the form state using the form field's
--- state lens.
+-- of the field's input state is performed immediately after the
+-- event has been handled. If the form field's input state succeeds
+-- validation using the field's validator function, its value is
+-- immediately stored in the form state using the form field's state
+-- lens. The external validation flag is ignored during this step to
+-- ensure that external validators have a chance to get the intermediate
+-- validated value.
 handleFormEvent :: (Eq n) => BrickEvent n e -> Form s e n -> EventM n (Form s e n)
 handleFormEvent (VtyEvent (EvKey (KChar '\t') [])) f =
     return $ f { formFocus = focusNext $ formFocus f }
@@ -584,7 +622,7 @@ handleFormFieldEvent n ev f = findFieldState [] (formFieldStates f)
                     let findField [] = return Nothing
                         findField (field:rest) =
                             case field of
-                                FormField n' validate _ handleFunc | n == n' -> do
+                                FormField n' validate _ _ handleFunc | n == n' -> do
                                     nextSt <- handleFunc ev st
                                     -- If the new state validates, go ahead and update
                                     -- the form state with it.
