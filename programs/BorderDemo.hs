@@ -10,7 +10,7 @@ import qualified Data.Text as T
 import qualified Graphics.Vty as V
 
 import qualified Brick.Main as M
-import Brick.Util (fg, bg, on)
+import Brick.Util (fg, on)
 import qualified Brick.AttrMap as A
 import Brick.Types
   ( Widget
@@ -18,6 +18,7 @@ import Brick.Types
 import Brick.Widgets.Core
   ( (<=>)
   , (<+>)
+  , withAttr
   , vLimit
   , hLimit
   , hBox
@@ -66,22 +67,19 @@ mkBorderDemo (styleName, sty) =
     C.vCenter $
     txt $ "  " <> styleName <> " style  "
 
+titleAttr :: A.AttrName
+titleAttr = "title"
+
 borderMappings :: [(A.AttrName, V.Attr)]
 borderMappings =
     [ (B.borderAttr,         V.yellow `on` V.black)
-    , (B.vBorderAttr,        V.green `on` V.red)
-    , (B.hBorderAttr,        V.white `on` V.green)
-    , (B.hBorderLabelAttr,   fg V.blue)
-    , (B.tlCornerAttr,       bg V.red)
-    , (B.trCornerAttr,       bg V.blue)
-    , (B.blCornerAttr,       bg V.yellow)
-    , (B.brCornerAttr,       bg V.green)
+    , (titleAttr,            fg V.cyan)
     ]
 
 colorDemo :: Widget ()
 colorDemo =
     updateAttrMap (A.applyAttrMappings borderMappings) $
-    B.borderWithLabel (str "title") $
+    B.borderWithLabel (withAttr titleAttr $ str "title") $
     hLimit 20 $
     vLimit 5 $
     C.center $

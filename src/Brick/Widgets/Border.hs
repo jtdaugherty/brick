@@ -18,19 +18,10 @@ module Brick.Widgets.Border
   -- * Drawing single border elements
   , borderElem
 
-  -- * Border attribute names
+  -- * Attribute names
   , borderAttr
-  , vBorderAttr
-  , hBorderAttr
-  , hBorderLabelAttr
-  , tlCornerAttr
-  , trCornerAttr
-  , blCornerAttr
-  , brCornerAttr
   )
 where
-
-import Data.Monoid ((<>))
 
 #if !MIN_VERSION_base(4,8,0)
 import Control.Applicative ((<$>))
@@ -48,34 +39,6 @@ import Brick.Widgets.Border.Style (BorderStyle(..))
 -- | The top-level border attribute name.
 borderAttr :: AttrName
 borderAttr = "border"
-
--- | The vertical border attribute name.
-vBorderAttr :: AttrName
-vBorderAttr = borderAttr <> "vertical"
-
--- | The horizontal border attribute name.
-hBorderAttr :: AttrName
-hBorderAttr = borderAttr <> "horizontal"
-
--- | The attribute used for horizontal border labels.
-hBorderLabelAttr :: AttrName
-hBorderLabelAttr = hBorderAttr <> "label"
-
--- | The attribute used for border box top-left corners.
-tlCornerAttr :: AttrName
-tlCornerAttr = borderAttr <> "corner" <> "tl"
-
--- | The attribute used for border box top-right corners.
-trCornerAttr :: AttrName
-trCornerAttr = borderAttr <> "corner" <> "tr"
-
--- | The attribute used for border box bottom-left corners.
-blCornerAttr :: AttrName
-blCornerAttr = borderAttr <> "corner" <> "bl"
-
--- | The attribute used for border box bottom-right corners.
-brCornerAttr :: AttrName
-brCornerAttr = borderAttr <> "corner" <> "br"
 
 -- | Draw the specified border element using the active border style
 -- using 'borderAttr'.
@@ -108,19 +71,14 @@ borderWithLabel label = border_ (Just label)
 border_ :: Maybe (Widget n) -> Widget n -> Widget n
 border_ label wrapped =
     Widget (hSize wrapped) (vSize wrapped) $ do
-      bs <- ctxBorderStyle <$> getContext
       c <- getContext
 
       middleResult <- render $ hLimit (c^.availWidthL - 2)
                              $ vLimit (c^.availHeightL - 2)
                              $ wrapped
 
-      let top = (withAttr tlCornerAttr $ str [bsCornerTL bs])
-                <+> hBorder_ label <+>
-                (withAttr trCornerAttr $ str [bsCornerTR bs])
-          bottom = (withAttr blCornerAttr $ str [bsCornerBL bs])
-                   <+> hBorder <+>
-                   (withAttr brCornerAttr $ str [bsCornerBR bs])
+      let top = (borderElem bsCornerTL) <+> hBorder_ label <+> (borderElem bsCornerTR)
+          bottom = (borderElem bsCornerBL) <+> hBorder <+> (borderElem bsCornerBR)
           middle = vBorder <+> (Widget Fixed Fixed $ return middleResult) <+> vBorder
           total = top <=> middle <=> bottom
 
@@ -143,12 +101,12 @@ hBorder_ :: Maybe (Widget n) -> Widget n
 hBorder_ label =
     Widget Greedy Fixed $ do
       bs <- ctxBorderStyle <$> getContext
-      let msg = maybe (str [bsHorizontal bs]) (withAttr hBorderLabelAttr) label
-      render $ vLimit 1 $ withAttr hBorderAttr $ hCenterWith (Just $ bsHorizontal bs) msg
+      let msg = maybe (str [bsHorizontal bs]) id label
+      render $ vLimit 1 $ withAttr borderAttr $ hCenterWith (Just $ bsHorizontal bs) msg
 
 -- | A vertical border.  Fills all vertical space.
 vBorder :: Widget n
 vBorder =
     Widget Fixed Greedy $ do
       bs <- ctxBorderStyle <$> getContext
-      render $ hLimit 1 $ withAttr vBorderAttr $ fill (bsVertical bs)
+      render $ hLimit 1 $ withAttr borderAttr $ fill (bsVertical bs)
