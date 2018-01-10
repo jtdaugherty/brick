@@ -121,9 +121,7 @@ app =
 
                     -- Example of external validation:
                     -- Require age field to contain a value that is at least 18.
-                    if (formState s')^.age >= 18
-                       then continue $ setFieldValid True AgeField s'
-                       else continue $ setFieldValid False AgeField s'
+                    continue $ setFieldValid ((formState s')^.age >= 18) AgeField s'
 
         , appChooseCursor = focusRingCursor formFocus
         , appStartEvent = return
@@ -144,7 +142,8 @@ main = do
                                    , _ridesBike = False
                                    , _password = ""
                                    }
-        f = mkForm initialUserInfo
+        f = setFieldValid False AgeField $
+            mkForm initialUserInfo
 
     f' <- customMain buildVty Nothing app f
 
