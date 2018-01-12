@@ -2,6 +2,16 @@
 Brick changelog
 ---------------
 
+0.33
+----
+
+API changes:
+ * Forms: added support for external validation of form fields using
+   `setFieldValid`. See the Haddock, User Guide, and FormDemo.hs for
+   details.
+ * Borders: removed all attribute names except `borderAttr` to simplify
+   border attribute assignment.
+
 0.32.1
 ------
 
