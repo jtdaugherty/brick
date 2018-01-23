@@ -244,6 +244,11 @@ txtWrapWith settings s =
 
 -- | Build a widget from a 'String'. Breaks newlines up and space-pads
 -- short lines out to the length of the longest line.
+--
+-- The input string must not contain tab characters. If it does,
+-- interface corruption will result since the terminal will likely
+-- render it as taking up more than a single column. The caller should
+-- replace tabs with the appropriate number of spaces as desired.
 str :: String -> Widget n
 str s =
     Widget Fixed Fixed $ do
@@ -264,6 +269,11 @@ str s =
 
 -- | Build a widget from a 'T.Text' value. Behaves the same as 'str'
 -- when the input contains multiple lines.
+--
+-- The input string must not contain tab characters. If it does,
+-- interface corruption will result since the terminal will likely
+-- render it as taking up more than a single column. The caller should
+-- replace tabs with the appropriate number of spaces as desired.
 txt :: T.Text -> Widget n
 txt = str . T.unpack
 
