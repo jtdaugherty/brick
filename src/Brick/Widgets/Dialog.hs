@@ -76,10 +76,10 @@ suffixLenses ''Dialog
 handleDialogEvent :: Event -> Dialog a -> EventM n (Dialog a)
 handleDialogEvent ev d =
     return $ case ev of
-        EvKey (KChar '\t') [] -> nextButtonBy 1 d
-        EvKey KBackTab [] -> nextButtonBy (-1) d
-        EvKey KRight [] -> nextButtonBy 1 d
-        EvKey KLeft [] -> nextButtonBy (-1) d
+        EvKey (KChar '\t') [] -> nextButtonBy 1 True d
+        EvKey KBackTab [] -> nextButtonBy (-1) True d
+        EvKey KRight [] -> nextButtonBy 1 False d
+        EvKey KLeft [] -> nextButtonBy (-1) False d
         _ -> d
 
 -- | Create a dialog.
@@ -133,13 +133,18 @@ renderDialog d body =
             , hCenter buttons
             ]
 
-nextButtonBy :: Int -> Dialog a -> Dialog a
-nextButtonBy amt d =
+nextButtonBy :: Int -> Bool -> Dialog a -> Dialog a
+nextButtonBy amt wrapCycle d =
     let numButtons = length $ d^.dialogButtonsL
     in if numButtons == 0 then d
        else case d^.dialogSelectedIndexL of
            Nothing -> d & dialogSelectedIndexL .~ (Just 0)
-           Just i -> d & dialogSelectedIndexL .~ (Just $ (i + amt) `mod` numButtons)
+           Just i -> d & dialogSelectedIndexL .~ (Just newIndex)
+               where
+                   addedIndex = i + amt
+                   newIndex = if wrapCycle
+                              then addedIndex `mod` numButtons
+                              else max 0 $ min addedIndex $ numButtons - 1
 
 -- | Obtain the value associated with the dialog's currently-selected
 -- button, if any. This function is probably what you want when someone
