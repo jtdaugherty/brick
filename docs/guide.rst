@@ -94,7 +94,7 @@ Compiling Brick Applications
 ============================
 
 Brick applications must be compiled with the threaded RTS using the GHC
-`-threaded` option.
+``-threaded`` option.
 
 The App Type
 ============
