@@ -90,6 +90,12 @@ programs.
   produce executable examples, but rather to guide you in writing your
   ``import`` statements.
 
+Compiling Brick Applications
+============================
+
+Brick applications must be compiled with the threaded RTS using the GHC
+`-threaded` option.
+
 The App Type
 ============
 
