@@ -565,7 +565,7 @@ renderBox br ws =
 hLimit :: Int -> Widget n -> Widget n
 hLimit w p =
     Widget Fixed (vSize p) $
-      withReaderT (& availWidthL .~ w) $ render $ cropToContext p
+      withReaderT (& availWidthL %~ (min w)) $ render $ cropToContext p
 
 -- | Limit the space available to the specified widget to the specified
 -- number of rows. This is important for constraining the vertical
@@ -574,7 +574,7 @@ hLimit w p =
 vLimit :: Int -> Widget n -> Widget n
 vLimit h p =
     Widget (hSize p) Fixed $
-      withReaderT (& availHeightL .~ h) $ render $ cropToContext p
+      withReaderT (& availHeightL %~ (min h)) $ render $ cropToContext p
 
 -- | Set the rendering context height and width for this widget. This
 -- is useful for relaxing the rendering size constraints on e.g. layer
