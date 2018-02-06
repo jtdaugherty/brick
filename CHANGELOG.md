@@ -2,6 +2,28 @@
 Brick changelog
 ---------------
 
+0.34
+----
+
+API changes:
+ * Core: vLimit and hLimit now *bound* sizes rather than setting them.
+   This was the original intention of these combinators. The change in
+   behavior means that now `vLimit N` means that *at most* `N` rows will
+   be available; if the context has less, then the smaller constraint in
+   the context is used instead. Programs affected by this behavior will
+   be those that assume that `vLimit` doesn't do this, but that should
+   be very few or zero.
+
+Other changes:
+ * Dialog: now arrow keys no longer wrap around available buttons but
+   stop at rightmost or leftmost button to avoid confusion when
+   attempting to tell which button is selected in two-button dialogs
+   (thanks to Karl Ostmo for this change)
+
+Documentation changes:
+ * Updated Haddocks for str/txt in Core to mention tab character
+   considerations
+
 0.33
 ----
 
