@@ -83,6 +83,7 @@ and our dependencies to `test.cabal`
 executable snake
   hs-source-dirs:      src
   main-is:             Main.hs
+  ghc-options:         -threaded
   exposed-modules:     Snake
                      , UI
   default-language:    Haskell2010
