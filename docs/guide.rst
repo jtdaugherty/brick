@@ -803,12 +803,15 @@ First, the application provides a default theme:
 .. code:: haskell
 
    import Brick.Themes (Theme, newTheme)
+   import Brick (attrName)
+   import Brick.Util (fg, on)
+   import Graphics.Vty (defAttr, white, blue, yellow, magenta)
 
    defaultTheme :: Theme
    defaultTheme =
        newTheme (white `on` blue)
-                [ ("someAttribute",  fg yellow)
-                , ("otherAttribute", fg magenta)
+                [ (attrName "someAttribute",  fg yellow)
+                , (attrName "otherAttribute", fg magenta)
                 ]
 
 Notice that the attributes in the theme have defaults: ``someAttribute``
