@@ -223,7 +223,7 @@ allStyles :: [(T.Text, Style)]
 allStyles =
     [ ("standout", standout)
     , ("underline", underline)
-    , ("reverseVideo", reverseVideo)
+    , ("reversevideo", reverseVideo)
     , ("blink", blink)
     , ("dim", dim)
     , ("bold", bold)
