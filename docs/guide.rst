@@ -929,20 +929,18 @@ the pasted data as ordinary keyboard input. For more information, see
 
 The Vty library used by brick provides support for bracketed pastes, but
 this mode must be enabled. To enable paste mode, we need to get access
-to the Vty library handle in ``EventM`` (in `App::appStartEvent` for example):
+to the Vty library handle in ``EventM`` (in e.g. `appHandleEvent`):
 
 .. code:: haskell
 
    import Control.Monad (when)
-   import Graphics.Vty (Mode(BracketedPaste), outputIface, supportsMode, setMode)
-
-.. code:: haskell
+   import qualified Graphics.Vty as V
 
    do
      vty <- Brick.Main.getVtyHandle
-     let output = outputIface vty
-     when (supportsMode output BracketedPaste) $
-         liftIO $ setMode output BracketedPaste True
+     let output = V.outputIface vty
+     when (V.supportsMode output V.BracketedPaste) $
+         liftIO $ V.setMode output V.BracketedPaste True
 
 Once enabled, paste mode will generate Vty ``EvPaste`` events. These
 events will give you the entire pasted content as a ``ByteString`` which
