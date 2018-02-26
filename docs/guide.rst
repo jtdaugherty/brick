@@ -922,8 +922,8 @@ Paste Support
 Some terminal emulators support "bracketed paste" support. This feature
 enables OS-level paste operations to send the pasted content as a
 single chunk of data and bypass the usual input processing that the
-application does. This enales more secure handling of pasted data since
-the application can detect that a pasted occurred and avoid processing
+application does. This enables more secure handling of pasted data since
+the application can detect that a paste occurred and avoid processing
 the pasted data as ordinary keyboard input. For more information, see
 `bracketed paste mode`_.
 
