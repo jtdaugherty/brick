@@ -929,7 +929,12 @@ the pasted data as ordinary keyboard input. For more information, see
 
 The Vty library used by brick provides support for bracketed pastes, but
 this mode must be enabled. To enable paste mode, we need to get access
-to the Vty library handle in ``EventM``:
+to the Vty library handle in ``EventM`` (in `App::appStartEvent` for example):
+
+.. code:: haskell
+
+   import Control.Monad (when)
+   import Graphics.Vty (Mode(BracketedPaste), outputIface, supportsMode, setMode)
 
 .. code:: haskell
 
