@@ -130,8 +130,10 @@ performance later for the sake of spending more time on the design
 something of an experimental project of mine and some aspects of the
 design involve trade-offs that might not be right for your application.
 Brick is not intended to be all things to all people; rather, I want it
-to provide a good foundation for building complex terminal interfaces in
-a declarative style.
+to provide a good foundation for building complex terminal interfaces
+in a declarative style to take away specific headaches of building,
+modifying, and working with such interfaces, all while seeing how far we
+can get with a pure function to specify the interface.
 
 `brick` exports an extension API that makes it possible to make your own
 packages and widgets. If you use that, you'll also be helping to test
