@@ -2,6 +2,18 @@
 Brick changelog
 ---------------
 
+0.34.1
+------
+
+Bug fixes:
+ * Fixed a bug where the "reverseVideo" style could not be parsed in a
+   theme customization when it was all lowercase (thanks Yuriy Lazarev)
+
+Documentation changes:
+ * Guide: added more complete example of creating a default theme
+   (thanks Mark Wales)
+ * Guide: added offset to Extent pattern matching (thanks Mark Wales)
+
 0.34
 ----
 

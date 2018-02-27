@@ -223,7 +223,7 @@ allStyles :: [(T.Text, Style)]
 allStyles =
     [ ("standout", standout)
     , ("underline", underline)
-    , ("reverseVideo", reverseVideo)
+    , ("reversevideo", reverseVideo)
     , ("blink", blink)
     , ("dim", dim)
     , ("bold", bold)
@@ -231,10 +231,12 @@ allStyles =
 
 parseStyle :: T.Text -> Either String Style
 parseStyle s =
-    let lookupStyle n = case lookup n allStyles of
+    let lookupStyle n = case lookup n normalizedStyles of
             Just sty -> Right sty
             Nothing  -> Left $ T.unpack $ "Invalid style: " <> n
         stripped = T.strip $ T.toLower s
+        normalize (n, a) = (T.toLower n, a)
+        normalizedStyles = normalize <$> allStyles
         bracketed = "[" `T.isPrefixOf` stripped &&
                     "]" `T.isSuffixOf` stripped
         unbracketed = T.tail $ T.init stripped

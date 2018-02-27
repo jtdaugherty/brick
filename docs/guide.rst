@@ -803,12 +803,15 @@ First, the application provides a default theme:
 .. code:: haskell
 
    import Brick.Themes (Theme, newTheme)
+   import Brick (attrName)
+   import Brick.Util (fg, on)
+   import Graphics.Vty (defAttr, white, blue, yellow, magenta)
 
    defaultTheme :: Theme
    defaultTheme =
        newTheme (white `on` blue)
-                [ ("someAttribute",  fg yellow)
-                , ("otherAttribute", fg magenta)
+                [ (attrName "someAttribute",  fg yellow)
+                , (attrName "otherAttribute", fg magenta)
                 ]
 
 Notice that the attributes in the theme have defaults: ``someAttribute``
@@ -911,7 +914,7 @@ in event handlers in ``EventM``:
      mExtent <- Brick.Main.lookupExtent FooBox
      case mExtent of
        Nothing -> ...
-       Just (Extent _ upperLeft (width, height)) -> ...
+       Just (Extent _ upperLeft (width, height) offset) -> ...
 
 Paste Support
 =============
@@ -919,22 +922,25 @@ Paste Support
 Some terminal emulators support "bracketed paste" support. This feature
 enables OS-level paste operations to send the pasted content as a
 single chunk of data and bypass the usual input processing that the
-application does. This enales more secure handling of pasted data since
-the application can detect that a pasted occurred and avoid processing
+application does. This enables more secure handling of pasted data since
+the application can detect that a paste occurred and avoid processing
 the pasted data as ordinary keyboard input. For more information, see
 `bracketed paste mode`_.
 
 The Vty library used by brick provides support for bracketed pastes, but
 this mode must be enabled. To enable paste mode, we need to get access
-to the Vty library handle in ``EventM``:
+to the Vty library handle in ``EventM`` (in e.g. ``appHandleEvent``):
 
 .. code:: haskell
 
+   import Control.Monad (when)
+   import qualified Graphics.Vty as V
+
    do
      vty <- Brick.Main.getVtyHandle
-     let output = outputIface vty
-     when (supportsMode output BracketedPaste) $
-         liftIO $ setMode output BracketedPaste True
+     let output = V.outputIface vty
+     when (V.supportsMode output V.BracketedPaste) $
+         liftIO $ V.setMode output V.BracketedPaste True
 
 Once enabled, paste mode will generate Vty ``EvPaste`` events. These
 events will give you the entire pasted content as a ``ByteString`` which
