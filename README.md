@@ -128,11 +128,10 @@ There are some places were I have deliberately chosen to worry about
 performance later for the sake of spending more time on the design
 (and to wait on performance issues to arise first). `brick` is also
 something of an experimental project of mine and some aspects of the
-design involve trade-offs that are not entirely settled. In addition you
-can expect this library to follow a principle of fearless improvement:
-new versions will make (sometimes substantial) API changes if those
-changes really do make the library better. I will place more importance
-on getting the API right than on maintaining backwards compatibility.
+design involve trade-offs that might not be right for your application.
+Brick is not intended to be all things to all people; rather, I want it
+to provide a good foundation for building complex terminal interfaces in
+a declarative style.
 
 `brick` exports an extension API that makes it possible to make your own
 packages and widgets. If you use that, you'll also be helping to test
