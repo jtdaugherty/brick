@@ -1,6 +1,7 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE CPP #-}
 -- | NOTE: This API is experimental and will probably change. Please try
 -- it out! Feedback is very much appreciated, and your patience in the
 -- face of breaking API changes is also appreciated!
@@ -68,7 +69,9 @@ module Brick.Forms
 where
 
 import Graphics.Vty
+#if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid
+#endif
 import Data.Maybe (isJust, isNothing)
 import Data.List (elemIndex)
 

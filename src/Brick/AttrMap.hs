@@ -48,6 +48,8 @@ import Control.Applicative ((<$>))
 import Data.Monoid
 #endif
 
+import qualified Data.Semigroup as Sem
+
 import qualified Data.Map as M
 import Data.Maybe (catMaybes)
 import Data.List (inits)
@@ -70,9 +72,12 @@ import Graphics.Vty (Attr(..), MaybeDefault(..))
 data AttrName = AttrName [String]
               deriving (Show, Read, Eq, Ord)
 
+instance Sem.Semigroup AttrName where
+    (AttrName as) <> (AttrName bs) = AttrName $ as `mappend` bs
+
 instance Monoid AttrName where
     mempty = AttrName []
-    mappend (AttrName as) (AttrName bs) = AttrName $ as `mappend` bs
+    mappend = (Sem.<>)
 
 instance IsString AttrName where
     fromString = AttrName . (:[])

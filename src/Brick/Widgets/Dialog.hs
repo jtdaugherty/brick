@@ -1,5 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE CPP #-}
 -- | This module provides a simple dialog widget. You get to pick the
 -- dialog title, if any, as well as its body and buttons.
 --
@@ -40,7 +41,9 @@ import Control.Applicative
 #endif
 
 import Lens.Micro
+#if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid
+#endif
 import Data.List (intersperse)
 import Graphics.Vty.Input (Event(..), Key(..))
 

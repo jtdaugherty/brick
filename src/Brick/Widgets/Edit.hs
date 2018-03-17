@@ -2,6 +2,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE CPP #-}
 -- | This module provides a basic text editor widget. You'll need to
 -- embed an 'Editor' in your application state and transform it with
 -- 'handleEditorEvent' when relevant events arrive. To get the contents
@@ -38,7 +39,9 @@ module Brick.Widgets.Edit
   )
 where
 
+#if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid
+#endif
 import Lens.Micro
 import Graphics.Vty (Event(..), Key(..), Modifier(..))
 

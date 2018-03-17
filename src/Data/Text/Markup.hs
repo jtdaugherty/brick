@@ -21,6 +21,7 @@ import Control.Applicative ((<$>))
 import Data.Monoid
 #endif
 
+import qualified Data.Semigroup as Sem
 import Data.String (IsString(..))
 import qualified Data.Text as T
 
@@ -28,10 +29,12 @@ import qualified Data.Text as T
 data Markup a = Markup [(Char, a)]
               deriving Show
 
+instance Sem.Semigroup (Markup a) where
+    (Markup t1) <> (Markup t2) = Markup (t1 `mappend` t2)
+
 instance Monoid (Markup a) where
     mempty = Markup mempty
-    mappend (Markup t1) (Markup t2) =
-        Markup (t1 `mappend` t2)
+    mappend = (Sem.<>)
 
 instance (Monoid a) => IsString (Markup a) where
     fromString = fromText . T.pack

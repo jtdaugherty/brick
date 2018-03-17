@@ -1,9 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE CPP #-}
 module Main where
 
 import Lens.Micro ((^.))
 import Control.Monad (void)
+#if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid
+#endif
 import Data.Maybe (fromMaybe)
 import qualified Graphics.Vty as V
 

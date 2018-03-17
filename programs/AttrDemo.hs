@@ -1,7 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE CPP #-}
 module Main where
 
+#if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid
+#endif
 import Graphics.Vty
   ( Attr, white, blue, cyan, green, red, yellow
   , black, withURL

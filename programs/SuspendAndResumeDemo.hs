@@ -1,11 +1,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE CPP #-}
 module Main where
 
 import Lens.Micro ((.~), (^.), (&))
 import Lens.Micro.TH (makeLenses)
 import Control.Monad (void)
+#if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid
+#endif
 import qualified Graphics.Vty as V
 
 import Brick.Main

@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE CPP #-}
 -- | This module provides a progress bar widget.
 module Brick.Widgets.ProgressBar
   ( progressBar
@@ -10,7 +11,9 @@ where
 
 import Lens.Micro ((^.))
 import Data.Maybe (fromMaybe)
+#if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid
+#endif
 import Graphics.Vty (safeWcswidth)
 
 import Brick.Types

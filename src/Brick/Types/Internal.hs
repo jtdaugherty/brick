@@ -51,6 +51,7 @@ import Lens.Micro.TH (makeLenses)
 import Lens.Micro.Internal (Field1, Field2)
 import qualified Data.Set as S
 import qualified Data.Map as M
+import qualified Data.Semigroup as Sem
 import Graphics.Vty (Vty, Event, Button, Modifier, DisplayRegion, Image, emptyImage)
 
 import Brick.Types.TH
@@ -163,9 +164,12 @@ instance TerminalLocation Location where
 origin :: Location
 origin = Location (0, 0)
 
+instance Sem.Semigroup Location where
+    (Location (w1, h1)) <> (Location (w2, h2)) = Location (w1+w2, h1+h2)
+
 instance Monoid Location where
     mempty = origin
-    mappend (Location (w1, h1)) (Location (w2, h2)) = Location (w1+w2, h1+h2)
+    mappend = (Sem.<>)
 
 -- | A cursor location.  These are returned by the rendering process.
 data CursorLocation n =

@@ -77,6 +77,7 @@ import Control.Applicative ((<|>))
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Data.Map as M
+import qualified Data.Semigroup as Sem
 import Data.Tuple (swap)
 import Data.List (intercalate)
 import Data.Bits ((.|.), (.&.))
@@ -101,13 +102,16 @@ data CustomAttr =
                }
                deriving (Eq, Read, Show, Generic)
 
-instance Monoid CustomAttr where
-    mempty = CustomAttr Nothing Nothing Nothing
-    mappend a b =
+instance Sem.Semigroup CustomAttr where
+    a <> b =
         CustomAttr { customFg    = customFg a    <|> customFg b
                    , customBg    = customBg a    <|> customBg b
                    , customStyle = customStyle a <|> customStyle b
                    }
+
+instance Monoid CustomAttr where
+    mempty = CustomAttr Nothing Nothing Nothing
+    mappend = (Sem.<>)
 
 -- | Documentation for a theme's attributes.
 data ThemeDocumentation =
