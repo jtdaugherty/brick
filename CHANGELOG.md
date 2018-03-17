@@ -2,6 +2,13 @@
 Brick changelog
 ---------------
 
+0.35
+----
+
+ * Added support for GHC 8.4.
+ * Updated travis build to test on all 8.x releases (thanks Peter
+   Simons)
+
 0.34.1
 ------
 
