@@ -3,6 +3,7 @@ module Brick.Widgets.Internal
   ( renderFinal
   , cropToContext
   , cropResultToContext
+  , renderDynBorder
   )
 where
 
@@ -20,6 +21,8 @@ import Brick.Types
 import Brick.Types.Internal
 import Brick.AttrMap
 import Brick.Widgets.Border.Style
+import Data.BorderMap (BorderMap, Edges(..))
+import qualified Data.BorderMap as BM
 
 renderFinal :: AttrMap
             -> [Widget n]
@@ -32,7 +35,7 @@ renderFinal aMap layerRenders sz chooseCursor rs = (newRS, picWithBg, theCursor,
         (layerResults, !newRS) = flip runState rs $ sequence $
             (\p -> runReaderT p ctx) <$>
             (render <$> cropToContext <$> layerRenders)
-        ctx = Context mempty (fst sz) (snd sz) defaultBorderStyle aMap
+        ctx = Context mempty (fst sz) (snd sz) defaultBorderStyle aMap False
         pic = V.picForLayers $ uncurry V.resize sz <$> (^.imageL) <$> layerResults
         -- picWithBg is a workaround for runaway attributes.
         -- See https://github.com/coreyoconnor/vty/issues/95
@@ -53,6 +56,7 @@ cropResultToContext result = do
     return $ result & imageL   %~ cropImage   c
                     & cursorsL %~ cropCursors c
                     & extentsL %~ cropExtents c
+                    & bordersL %~ cropBorders c
 
 cropImage :: Context -> V.Image -> V.Image
 cropImage c = V.crop (max 0 $ c^.availWidthL) (max 0 $ c^.availHeightL)
@@ -105,3 +109,27 @@ cropExtents ctx es = catMaybes $ cropExtent <$> es
             in if w' < 0 || h' < 0
                then Nothing
                else Just e
+
+cropBorders :: Context -> BorderMap DynBorder -> BorderMap DynBorder
+cropBorders ctx = BM.crop Edges
+    { eTop = 0
+    , eBottom = availHeight ctx - 1
+    , eLeft = 0
+    , eRight = availWidth ctx - 1
+    }
+
+renderDynBorder :: DynBorder -> V.Image
+renderDynBorder db = V.char (dbAttr db) . ($dbStyle db) $ case bsDraw <$> dbSegments db of
+    --    top   bot   left  right
+    Edges False False False False -> const ' ' -- dunno lol (but should never happen, so who cares)
+    Edges False False _     _     -> bsHorizontal
+    Edges _     _     False False -> bsVertical
+    Edges False True  False True  -> bsCornerTL
+    Edges False True  True  False -> bsCornerTR
+    Edges True  False False True  -> bsCornerBL
+    Edges True  False True  False -> bsCornerBR
+    Edges False True  True  True  -> bsIntersectT
+    Edges True  False True  True  -> bsIntersectB
+    Edges True  True  False True  -> bsIntersectL
+    Edges True  True  True  False -> bsIntersectR
+    Edges True  True  True  True  -> bsIntersectFull

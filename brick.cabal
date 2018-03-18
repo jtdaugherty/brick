@@ -77,6 +77,8 @@ library
     Brick.Widgets.Edit
     Brick.Widgets.List
     Brick.Widgets.ProgressBar
+    Data.BorderMap
+    Data.IMap
     Data.Text.Markup
   other-modules:
     Brick.Types.TH
@@ -392,6 +394,20 @@ executable brick-border-demo
                        text,
                        microlens
 
+executable brick-dynamic-border-demo
+  if !flag(demos)
+    Buildable: False
+  hs-source-dirs:      programs
+  ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
+  default-extensions:  CPP
+  default-language:    Haskell2010
+  main-is:             DynamicBorderDemo.hs
+  build-depends:       base <= 5,
+                       brick,
+                       vty >= 5.18.1,
+                       text,
+                       microlens
+
 executable brick-progressbar-demo
   if !flag(demos)
     Buildable: False
@@ -405,3 +421,13 @@ executable brick-progressbar-demo
                        vty >= 5.18.1,
                        text,
                        microlens
+
+test-suite brick-tests
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      tests
+  ghc-options:         -Wall -Wno-orphans -O2
+  main-is:             Main.hs
+  build-depends:       base <=5,
+                       brick,
+                       containers,
+                       QuickCheck

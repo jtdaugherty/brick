@@ -33,13 +33,14 @@ module Brick.Types
   , getContext
 
   -- ** The rendering context
-  , Context(ctxAttrName, availWidth, availHeight, ctxBorderStyle, ctxAttrMap)
+  , Context(ctxAttrName, availWidth, availHeight, ctxBorderStyle, ctxAttrMap, ctxDynBorders)
   , attrL
   , availWidthL
   , availHeightL
   , ctxAttrMapL
   , ctxAttrNameL
   , ctxBorderStyleL
+  , ctxDynBordersL
 
   -- ** Rendering results
   , Result(..)
@@ -60,6 +61,15 @@ module Brick.Types
 
   -- * Making lenses
   , suffixLenses
+
+  -- * Dynamic borders
+  , bordersL
+  , DynBorder(..)
+  , dbStyleL, dbAttrL, dbSegmentsL
+  , BorderSegment(..)
+  , bsAcceptL, bsOfferL, bsDrawL
+  , Edges(..)
+  , eTopL, eBottomL, eRightL, eLeftL
 
   -- * Miscellaneous
   , Size(..)

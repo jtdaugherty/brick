@@ -23,6 +23,12 @@ module Brick.Types.Internal
   , Next(..)
   , Result(..)
   , Extent(..)
+  , Edges(..)
+  , eTopL, eBottomL, eRightL, eLeftL
+  , BorderSegment(..)
+  , bsAcceptL, bsOfferL, bsDrawL
+  , DynBorder(..)
+  , dbStyleL, dbAttrL, dbSegmentsL
   , CacheInvalidateRequest(..)
   , BrickEvent(..)
 
@@ -37,6 +43,7 @@ module Brick.Types.Internal
   , imageL
   , cursorsL
   , extentsL
+  , bordersL
   , visibilityRequestsL
   , emptyResult
   )
@@ -46,13 +53,13 @@ where
 import Data.Monoid
 #endif
 
+import Data.BorderMap (BorderMap, Edges(..), Location(..), locL, origin, eTopL, eBottomL, eLeftL, eRightL)
+import qualified Data.BorderMap as BM
 import Lens.Micro (_1, _2, Lens')
 import Lens.Micro.TH (makeLenses)
-import Lens.Micro.Internal (Field1, Field2)
 import qualified Data.Set as S
 import qualified Data.Map as M
-import qualified Data.Semigroup as Sem
-import Graphics.Vty (Vty, Event, Button, Modifier, DisplayRegion, Image, emptyImage)
+import Graphics.Vty (Vty, Event, Button, Modifier, DisplayRegion, Image, Attr, emptyImage)
 
 import Brick.Types.TH
 import Brick.AttrMap (AttrName, AttrMap)
@@ -130,20 +137,6 @@ data Direction = Up
                -- ^ Down/right
                deriving (Show, Eq)
 
--- | A terminal screen location.
-data Location = Location { loc :: (Int, Int)
-                         -- ^ (Column, Row)
-                         }
-                deriving (Show, Eq, Ord)
-
-suffixLenses ''Location
-
-instance Field1 Location Location Int Int where
-    _1 = locL._1
-
-instance Field2 Location Location Int Int where
-    _2 = locL._2
-
 -- | The class of types that behave like terminal locations.
 class TerminalLocation a where
     -- | Get the column out of the value
@@ -160,17 +153,6 @@ instance TerminalLocation Location where
     locationRowL = _2
     locationRow (Location t) = snd t
 
--- | The origin (upper-left corner).
-origin :: Location
-origin = Location (0, 0)
-
-instance Sem.Semigroup Location where
-    (Location (w1, h1)) <> (Location (w2, h2)) = Location (w1+w2, h1+h2)
-
-instance Monoid Location where
-    mempty = origin
-    mappend = (Sem.<>)
-
 -- | A cursor location.  These are returned by the rendering process.
 data CursorLocation n =
     CursorLocation { cursorLocation :: !Location
@@ -179,6 +161,36 @@ data CursorLocation n =
                    -- ^ The name of the widget associated with the location
                    }
                    deriving Show
+
+-- | A border character has four segments, one extending in each direction
+-- (horizontally and vertically) from the center of the character.
+data BorderSegment = BorderSegment
+    { bsAccept :: Bool
+    -- ^ Would this segment be willing to be drawn if a neighbor wanted to
+    -- connect to it?
+    , bsOffer :: Bool
+    -- ^ Does this segment want to connect to its neighbor?
+    , bsDraw :: Bool
+    -- ^ Should this segment be represented visually?
+    } deriving (Eq, Ord, Read, Show)
+
+suffixLenses ''BorderSegment
+
+-- | Information about how to redraw a dynamic border character when it abuts
+-- another dynamic border character.
+data DynBorder = DynBorder
+    { dbStyle :: BorderStyle
+    -- ^ The 'Char's to use when redrawing the border. Also used to filter
+    -- connections: only dynamic borders with equal 'BorderStyle's will connect
+    -- to each other.
+    , dbAttr :: Attr
+    -- ^ What 'Attr' to use to redraw the border character. Also used to filter
+    -- connections: only dynamic borders with equal 'Attr's will connect to
+    -- each other.
+    , dbSegments :: Edges BorderSegment
+    } deriving (Eq, Read, Show)
+
+suffixLenses ''DynBorder
 
 -- | The type of result returned by a widget's rendering function. The
 -- result provides the image, cursor positions, and visibility requests
@@ -193,13 +205,28 @@ data Result n =
            -- ^ The list of visibility requests made by widgets rendered
            -- while rendering this one (used by viewports)
            , extents :: [Extent n]
+           -- Programmer's note: we don't try to maintain the invariant that
+           -- the size of the borders closely matches the size of the 'image'
+           -- field. Most widgets don't need to care about borders, and so they
+           -- use the empty 'BorderMap' that has a degenerate rectangle. Only
+           -- border-drawing widgets and the hbox/vbox stuff try to set this
+           -- carefully. Even then, in the boxes, we only make sure that the
+           -- 'BorderMap' is no larger than the entire concatenation of boxes,
+           -- and it's certainly possible for it to be smaller. (Resizing
+           -- 'BorderMap's is lossy, so we try to do it as little as possible.)
+           -- If you're writing a widget, this should make it easier for you to
+           -- do so; but beware this lack of invariant if you are consuming
+           -- widgets.
+           , borders :: BorderMap DynBorder
+           -- ^ Places where we may rewrite the edge of the image when
+           -- placing this widget next to another one.
            }
            deriving Show
 
 suffixLenses ''Result
 
 emptyResult :: Result n
-emptyResult = Result emptyImage [] [] []
+emptyResult = Result emptyImage [] [] [] BM.empty
 
 -- | The type of events.
 data BrickEvent n e = VtyEvent Event
@@ -234,6 +261,7 @@ data Context =
             , availHeight :: Int
             , ctxBorderStyle :: BorderStyle
             , ctxAttrMap :: AttrMap
+            , ctxDynBorders :: Bool
             }
             deriving Show
 
