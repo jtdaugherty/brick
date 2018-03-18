@@ -93,9 +93,8 @@ prop_addToKeys n m = lower (IMap.addToKeys n m) == IntMap.mapKeysMonotonic (n+) 
 prop_lookup :: Int -> I -> Bool
 prop_lookup k m = IMap.lookup k m == IntMap.lookup k (lower m)
 
-prop_restrict :: Int -> Int -> I -> Bool
-prop_restrict k len m = lower (IMap.restrict k (Run len ()) m) == restrict (lower m) where
-    restrict = fst . IntMap.split (k+len) . snd . IntMap.split (k-1)
+prop_restrict :: Int -> Run () -> I -> Bool
+prop_restrict k r m = lower (IMap.restrict k r m) == IntMap.intersection (lower m) (lowerRun k r)
 
 prop_mapMaybe :: (O -> Maybe O) -> I -> Bool
 prop_mapMaybe f m = lower (IMap.mapMaybe f m) == IntMap.mapMaybe f (lower m)
