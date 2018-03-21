@@ -108,7 +108,6 @@ import qualified Data.DList as DL
 import qualified Data.Map as M
 import qualified Data.Set as S
 import qualified Data.IMap as I
-import qualified Data.BorderMap as BM
 import qualified Data.Function as DF
 import Data.List (sortBy, partition)
 import qualified Graphics.Vty as V
@@ -122,6 +121,7 @@ import Brick.Widgets.Border.Style
 import Brick.Util (clOffset, clamp)
 import Brick.AttrMap
 import Brick.Widgets.Internal
+import qualified Brick.BorderMap as BM
 
 -- | The class of text types that have widths measured in terminal
 -- columns. NEVER use 'length' etc. to measure the length of a string if

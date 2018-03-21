@@ -39,7 +39,7 @@ import Brick.Widgets.Core
 import Brick.Widgets.Border.Style (BorderStyle(..))
 import Brick.Widgets.Internal (renderDynBorder)
 import Data.IMap (Run(..))
-import qualified Data.BorderMap as BM
+import qualified Brick.BorderMap as BM
 
 -- | The top-level border attribute name.
 borderAttr :: AttrName
@@ -107,7 +107,7 @@ hBorder =
       let bs = ctxBorderStyle ctx
           w = availWidth ctx
       db <- dynBorderFromDirections (Edges False False True True)
-      let dynBorders = BM.insertH BM.origin (Run w db)
+      let dynBorders = BM.insertH mempty (Run w db)
                      $ BM.emptyCoordinates (Edges 0 0 0 (w-1))
       setDynBorders dynBorders $ render $ vLimit 1 $ fill (bsHorizontal bs)
 
@@ -129,7 +129,7 @@ vBorder =
       let bs = ctxBorderStyle ctx
           h = availHeight ctx
       db <- dynBorderFromDirections (Edges True True False False)
-      let dynBorders = BM.insertV BM.origin (Run h db)
+      let dynBorders = BM.insertV mempty (Run h db)
                      $ BM.emptyCoordinates (Edges 0 (h-1) 0 0)
       setDynBorders dynBorders $ render $ hLimit 1 $ fill (bsVertical bs)
 
@@ -165,5 +165,5 @@ joinableBorder :: Edges Bool -> Widget n
 joinableBorder dirs = withAttr borderAttr . Widget Fixed Fixed $ do
     db <- dynBorderFromDirections dirs
     setDynBorders
-        (BM.singleton BM.origin db)
+        (BM.singleton mempty db)
         (render (raw (renderDynBorder db)))

@@ -62,6 +62,7 @@ library
     Brick
     Brick.AttrMap
     Brick.BChan
+    Brick.BorderMap
     Brick.Focus
     Brick.Forms
     Brick.Main
@@ -77,10 +78,10 @@ library
     Brick.Widgets.Edit
     Brick.Widgets.List
     Brick.Widgets.ProgressBar
-    Data.BorderMap
     Data.IMap
     Data.Text.Markup
   other-modules:
+    Brick.Types.Common
     Brick.Types.TH
     Brick.Types.Internal
     Brick.Widgets.Internal

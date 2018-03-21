@@ -53,14 +53,15 @@ where
 import Data.Monoid
 #endif
 
-import Data.BorderMap (BorderMap, Edges(..), Location(..), locL, origin, eTopL, eBottomL, eLeftL, eRightL)
-import qualified Data.BorderMap as BM
 import Lens.Micro (_1, _2, Lens')
 import Lens.Micro.TH (makeLenses)
 import qualified Data.Set as S
 import qualified Data.Map as M
 import Graphics.Vty (Vty, Event, Button, Modifier, DisplayRegion, Image, Attr, emptyImage)
 
+import Brick.BorderMap (BorderMap)
+import qualified Brick.BorderMap as BM
+import Brick.Types.Common
 import Brick.Types.TH
 import Brick.AttrMap (AttrName, AttrMap)
 import Brick.Widgets.Border.Style (BorderStyle)
