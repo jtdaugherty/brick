@@ -100,7 +100,8 @@ library
                        text-zipper >= 0.7.1,
                        template-haskell,
                        deepseq >= 1.3 && < 1.5,
-                       word-wrap >= 0.2
+                       word-wrap >= 0.2,
+                       semigroups
 
 executable brick-readme-demo
   if !flag(demos)
