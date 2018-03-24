@@ -771,7 +771,7 @@ follows:
 
 Customizations are written in an INI-style file. Here's an example:
 
-.. code::
+.. code:: ini
 
    [default]
    default.fg = blue
