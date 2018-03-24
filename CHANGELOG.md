@@ -2,6 +2,11 @@
 Brick changelog
 ---------------
 
+0.35.1
+------
+
+ * Conditionally depend on semigroups for GHC before 8
+
 0.35
 ----
 
