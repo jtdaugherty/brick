@@ -67,6 +67,7 @@ at these projects:
  * `purebred`, a mail user agent: https://github.com/purebred-mua/purebred
  * `2048Haskell`, an implementation of the 2048 game: https://github.com/8Gitbrix/2048Haskell
  * `bhoogle`, a [Hoogle](https://www.haskell.org/hoogle/) client: https://github.com/andrevdm/bhoogle
+ * `clifm`, a file manager: https://github.com/pasqu4le/clifm
 
 Getting Started
 ---------------
