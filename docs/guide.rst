@@ -1499,7 +1499,7 @@ from its center, arranged like this:
              |
            bottom
 
-These segments can independently be `drawn`, `accepting`, and `offering`, as
+These segments can independently be *drawn*, *accepting*, and *offering*, as
 captured in the ``Brick.Types.BorderSegment`` type:
 
 .. code:: haskell
@@ -1513,14 +1513,14 @@ captured in the ``Brick.Types.BorderSegment`` type:
 If no information is reported for a position, it assumed that it is not drawn,
 not accepting, and not offering -- and so it will never be rewritten.
 
-Line segments that are `drawn` are used for deciding which part of the
+Line segments that are *drawn* are used for deciding which part of the
 ``BorderStyle`` to use if this position needs to be updated. (See also `The
 Active Border Style`_.) For example, suppose a position needs to be redrawn,
 and has the left and bottom segments drawn; then it will replace the current
 character with the upper-right corner drawing character ``bsCornerTR`` from its
 border style.
 
-The `accepting` and `offering` properties are used to perform a small handshake
+The *accepting* and *offering* properties are used to perform a small handshake
 between neighboring widgets; when the handshake is successful, one segment will
 transition to being drawn. For example, suppose a horizontal and vertical
 border widget are drawn next to each other:
