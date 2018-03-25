@@ -102,6 +102,10 @@ delete k r m
     (lt, ge) = splitLE (k-1) m
     (_ , gt) = splitLE (k+len r-1) ge
 
+-- | Given a range of keys (as specified by a starting key and a length for
+-- consistency with other functions in this module), restrict the map to keys
+-- in that range. @restrict k r m@ is equivalent to @intersectionWith const m
+-- (insert k r empty)@ but potentially more efficient.
 restrict :: Int -> Run ignored -> IMap a -> IMap a
 restrict k r = id
     . snd
@@ -131,6 +135,8 @@ splitLE k m = case IM.lookupLE k (_runs m) of
     where
     (lt, gt) = IM.split k (_runs m)
 
+-- | Increment all keys by the given amount. This is like
+-- 'IM.mapKeysMonotonic', but restricted to partially-applied addition.
 addToKeys :: Int -> IMap a -> IMap a
 addToKeys n m = m { _runs = IM.mapKeysMonotonic (n+) (_runs m) }
 
@@ -169,7 +175,7 @@ unsafeToAscList :: IMap a -> [(Int, Run a)]
 unsafeToAscList = IM.toAscList . _runs
 
 -- | This function is unsafe because it assumes there is no overlap between its
--- arguments: if @lookup k a = Just v@ then @lookup k b = Nothing@ and vice
--- versa.
+-- arguments. That is, in the call @unsafeUnion a b@, the caller must guarantee
+-- that if @lookup k a = Just v@ then @lookup k b = Nothing@ and vice versa.
 unsafeUnion :: IMap a -> IMap a -> IMap a
 unsafeUnion a b = IMap { _runs = _runs a `IM.union` _runs b }

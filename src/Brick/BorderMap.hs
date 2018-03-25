@@ -112,9 +112,12 @@ insertPerp (Location (kPar, kPerp)) r herePerp (loPar, hiPar)
         = IM.insert kPar r { IM.len = 1 }
     | otherwise = id
 
+-- | Insert a single value at the given location.
 insert :: Location -> a -> BorderMap a -> BorderMap a
 insert l = insertV l . Run 1
 
+-- | Look up all values on a given row. The 'IMap' returned maps columns to
+-- values.
 lookupRow :: Int -> BorderMap a -> IMap a
 lookupRow row m
     | row == eTop    (coordinates m) = eTop    (_values m)
@@ -123,6 +126,8 @@ lookupRow row m
         $  [(eLeft   (coordinates m), Run 1 a) | Just a <- [IM.lookup row (eLeft   (_values m))]]
         ++ [(eRight  (coordinates m), Run 1 a) | Just a <- [IM.lookup row (eRight  (_values m))]]
 
+-- | Look up all values on a given column. The 'IMap' returned maps rows to
+-- values.
 lookupCol :: Int -> BorderMap a -> IMap a
 lookupCol col m
     | col == eLeft   (coordinates m) = eLeft   (_values m)
@@ -131,12 +136,19 @@ lookupCol col m
         $  [(eTop    (coordinates m), Run 1 a) | Just a <- [IM.lookup col (eTop    (_values m))]]
         ++ [(eBottom (coordinates m), Run 1 a) | Just a <- [IM.lookup col (eBottom (_values m))]]
 
+-- | Bulk lookup of horizontally-adjacent values. The 'Location' gives the
+-- starting point, and the 'Run' extends in the "larger columns" direction. The
+-- 'IMap' returned maps columns to values.
 lookupH :: Location -> Run ignored -> BorderMap a -> IMap a
 lookupH (Location (col, row)) r = IM.restrict col r . lookupRow row
 
+-- | Bulk lookup of vertically-adjacent values. The 'Location' gives the
+-- starting point, and the 'Run' extends in the "larger rows" direction. The
+-- 'IMap' returned maps rows to values.
 lookupV :: Location -> Run ignored -> BorderMap a -> IMap a
 lookupV (Location (col, row)) r = IM.restrict row r . lookupCol col
 
+-- | Look up a single position.
 lookup :: Location -> BorderMap a -> Maybe a
 lookup (Location (col, row)) = IM.lookup row . lookupCol col
 
