@@ -3,6 +3,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeFamilies #-}
 -- | This module provides the core widget combinators and rendering
 -- routines. Everything this library does is in terms of these basic
 -- primitives.
@@ -50,6 +51,9 @@ module Brick.Widgets.Core
 
   -- * Border style management
   , withBorderStyle
+  , joinBorders
+  , separateBorders
+  , freezeBorders
 
   -- * Cursor placement
   , showCursor
@@ -103,6 +107,7 @@ import qualified Data.Text as T
 import qualified Data.DList as DL
 import qualified Data.Map as M
 import qualified Data.Set as S
+import qualified Data.IMap as I
 import qualified Data.Function as DF
 import Data.List (sortBy, partition)
 import qualified Graphics.Vty as V
@@ -116,6 +121,7 @@ import Brick.Widgets.Border.Style
 import Brick.Util (clOffset, clamp)
 import Brick.AttrMap
 import Brick.Widgets.Internal
+import qualified Brick.BorderMap as BM
 
 -- | The class of text types that have widths measured in terminal
 -- columns. NEVER use 'length' etc. to measure the length of a string if
@@ -140,6 +146,29 @@ class Named a n where
 withBorderStyle :: BorderStyle -> Widget n -> Widget n
 withBorderStyle bs p = Widget (hSize p) (vSize p) $ withReaderT (& ctxBorderStyleL .~ bs) (render p)
 
+-- | When rendering the specified widget, create borders that respond
+-- dynamically to their neighbors to form seamless connections.
+joinBorders :: Widget n -> Widget n
+joinBorders p = Widget (hSize p) (vSize p) $ withReaderT (& ctxDynBordersL .~ True) (render p)
+
+-- | When rendering the specified widget, use static borders. This may be
+-- marginally faster, but will introduce a small gap between neighboring
+-- orthogonal borders.
+--
+-- This is the default for backwards compatibility.
+separateBorders :: Widget n -> Widget n
+separateBorders p = Widget (hSize p) (vSize p) $ withReaderT (&ctxDynBordersL .~ False) (render p)
+
+-- | After the specified widget has been rendered, freeze its borders. A frozen
+-- border will not be affected by neighbors, nor will it affect neighbors.
+-- Compared to 'separateBorders', 'freezeBorders' will not affect whether
+-- borders connect internally to a widget (whereas 'separateBorders' prevents
+-- them from connecting).
+--
+-- Frozen borders cannot be thawed.
+freezeBorders :: Widget n -> Widget n
+freezeBorders p = Widget (hSize p) (vSize p) $ (bordersL .~ BM.empty) <$> render p
+
 -- | The empty widget.
 emptyWidget :: Widget n
 emptyWidget = raw V.emptyImage
@@ -156,13 +185,17 @@ emptyWidget = raw V.emptyImage
 addResultOffset :: Location -> Result n -> Result n
 addResultOffset off = addCursorOffset off .
                       addVisibilityOffset off .
-                      addExtentOffset off
+                      addExtentOffset off .
+                      addDynBorderOffset off
 
 addVisibilityOffset :: Location -> Result n -> Result n
 addVisibilityOffset off r = r & visibilityRequestsL.each.vrPositionL %~ (off <>)
 
 addExtentOffset :: Location -> Result n -> Result n
 addExtentOffset off r = r & extentsL.each %~ (\(Extent n l sz o) -> Extent n (off <> l) sz o)
+
+addDynBorderOffset :: Location -> Result n -> Result n
+addDynBorderOffset off r = r & bordersL %~ BM.translate off
 
 -- | Render the specified widget and record its rendering extent using
 -- the specified name (see also 'lookupExtent').
@@ -412,8 +445,20 @@ data BoxRenderer n =
                 , limitSecondary :: Int -> Widget n -> Widget n
                 , primaryWidgetSize :: Widget n -> Size
                 , concatenatePrimary :: [V.Image] -> V.Image
+                , concatenateSecondary :: [V.Image] -> V.Image
                 , locationFromOffset :: Int -> Location
                 , padImageSecondary :: Int -> V.Image -> V.Attr -> V.Image
+                , loPrimary :: forall a. Lens' (Edges a) a -- lo: towards smaller coordinates in that dimension
+                , hiPrimary :: forall a. Lens' (Edges a) a -- hi: towards larger  coordinates in that dimension
+                , loSecondary :: forall a. Lens' (Edges a) a
+                , hiSecondary :: forall a. Lens' (Edges a) a
+                , locationFromPrimarySecondary :: Int -> Int -> Location
+                , splitLoPrimary :: Int -> V.Image -> V.Image
+                , splitHiPrimary :: Int -> V.Image -> V.Image
+                , splitLoSecondary :: Int -> V.Image -> V.Image
+                , splitHiSecondary :: Int -> V.Image -> V.Image
+                , lookupPrimary :: Int -> BM.BorderMap DynBorder -> I.IMap DynBorder
+                , insertSecondary :: Location -> I.Run DynBorder -> BM.BorderMap DynBorder -> BM.BorderMap DynBorder
                 }
 
 vBoxRenderer :: BoxRenderer n
@@ -426,10 +471,22 @@ vBoxRenderer =
                 , limitSecondary = hLimit
                 , primaryWidgetSize = vSize
                 , concatenatePrimary = V.vertCat
+                , concatenateSecondary = V.horizCat
                 , locationFromOffset = Location . (0 ,)
                 , padImageSecondary = \amt img a ->
                     let p = V.charFill a ' ' amt (V.imageHeight img)
                     in V.horizCat [img, p]
+                , loPrimary = eTopL
+                , hiPrimary = eBottomL
+                , loSecondary = eLeftL
+                , hiSecondary = eRightL
+                , locationFromPrimarySecondary = \r c -> Location (c, r)
+                , splitLoPrimary = V.cropBottom
+                , splitHiPrimary = \n img -> V.cropTop (V.imageHeight img-n) img
+                , splitLoSecondary = V.cropRight
+                , splitHiSecondary = \n img -> V.cropLeft (V.imageWidth img-n) img
+                , lookupPrimary = BM.lookupRow
+                , insertSecondary = BM.insertH
                 }
 
 hBoxRenderer :: BoxRenderer n
@@ -442,10 +499,22 @@ hBoxRenderer =
                 , limitSecondary = vLimit
                 , primaryWidgetSize = hSize
                 , concatenatePrimary = V.horizCat
+                , concatenateSecondary = V.vertCat
                 , locationFromOffset = Location . (, 0)
                 , padImageSecondary = \amt img a ->
                     let p = V.charFill a ' ' (V.imageWidth img) amt
                     in V.vertCat [img, p]
+                , loPrimary = eLeftL
+                , hiPrimary = eRightL
+                , loSecondary = eTopL
+                , hiSecondary = eBottomL
+                , locationFromPrimarySecondary = \c r -> Location (c, r)
+                , splitLoPrimary = V.cropRight
+                , splitHiPrimary = \n img -> V.cropLeft (V.imageWidth img-n) img
+                , splitLoSecondary = V.cropBottom
+                , splitHiSecondary = \n img -> V.cropTop (V.imageHeight img-n) img
+                , lookupPrimary = BM.lookupCol
+                , insertSecondary = BM.insertV
                 }
 
 -- | Render a series of widgets in a box layout in the order given.
@@ -551,12 +620,129 @@ renderBox br ws =
           maxSecondary = maximum $ imageSecondary br <$> allImages
           padImage img = padImageSecondary br (maxSecondary - imageSecondary br img)
                          img (c^.attrL)
-          paddedImages = padImage <$> allImages
+          (imageRewrites, newBorders) = catAllBorders br (borders <$> allTranslatedResults)
+          rewrittenImages = zipWith (rewriteImage br) imageRewrites allImages
+          paddedImages = padImage <$> rewrittenImages
 
       cropResultToContext $ Result (concatenatePrimary br paddedImages)
                             (concat $ cursors <$> allTranslatedResults)
                             (concat $ visibilityRequests <$> allTranslatedResults)
                             (concat $ extents <$> allTranslatedResults)
+                            newBorders
+
+catDynBorder
+    :: Lens' (Edges BorderSegment) BorderSegment
+    -> Lens' (Edges BorderSegment) BorderSegment
+    -> DynBorder
+    -> DynBorder
+    -> Maybe DynBorder
+catDynBorder towardsA towardsB a b
+    -- Currently, we check if the 'BorderStyle's are exactly the same. In the
+    -- future, it might be nice to relax this restriction. For example, if a
+    -- horizontal border is being rewritten to accomodate a neighboring
+    -- vertical border, all we care about is that the two 'bsVertical's line up
+    -- sanely. After all, if the horizontal border's 'bsVertical' is the same
+    -- as the vertical one's, and the horizontal border's 'BorderStyle' is
+    -- self-consistent, then it will look "right" to rewrite according to the
+    -- horizontal border's 'BorderStyle'.
+    |  dbStyle a == dbStyle b
+    && dbAttr  a == dbAttr  b
+    && a ^. dbSegmentsL.towardsB.bsAcceptL
+    && b ^. dbSegmentsL.towardsA.bsOfferL
+    && not (a ^. dbSegmentsL.towardsB.bsDrawL) -- don't bother doing an update if we don't need to
+    = Just (a & dbSegmentsL.towardsB.bsDrawL .~ True)
+    | otherwise = Nothing
+
+catDynBorders
+    :: Lens' (Edges BorderSegment) BorderSegment
+    -> Lens' (Edges BorderSegment) BorderSegment
+    -> I.IMap DynBorder
+    -> I.IMap DynBorder
+    -> I.IMap DynBorder
+catDynBorders towardsA towardsB am bm = I.mapMaybe id
+    $ I.intersectionWith (catDynBorder towardsA towardsB) am bm
+
+-- | Given borders that should be placed next to each other (the first argument
+-- on the right or bottom, and the second argument on the left or top), compute
+-- new borders and the rewrites that should be done along the edges of the two
+-- images to keep the image in synch with the border information.
+--
+-- The input borders are assumed to be disjoint. This property is not checked.
+catBorders
+    :: (border ~ BM.BorderMap DynBorder, rewrite ~ I.IMap V.Image)
+    => BoxRenderer n -> border -> border -> ((rewrite, rewrite), border)
+catBorders br r l = if lCoord + 1 == rCoord
+    then ((lRe, rRe), lr')
+    else ((I.empty, I.empty), lr)
+    where
+    lr     = BM.expand (BM.coordinates r) l `BM.unsafeUnion`
+             BM.expand (BM.coordinates l) r
+    lr'    = id
+           . mergeIMap lCoord lIMap'
+           . mergeIMap rCoord rIMap'
+           $ lr
+    lCoord = BM.coordinates l ^. hiPrimary br
+    rCoord = BM.coordinates r ^. loPrimary br
+    lIMap  = lookupPrimary br lCoord l
+    rIMap  = lookupPrimary br rCoord r
+    lIMap' = catDynBorders (loPrimary br) (hiPrimary br) lIMap rIMap
+    rIMap' = catDynBorders (hiPrimary br) (loPrimary br) rIMap lIMap
+    lRe    = renderDynBorder <$> lIMap'
+    rRe    = renderDynBorder <$> rIMap'
+    mergeIMap p imap bm = F.foldl'
+        (\bm' (s,v) -> insertSecondary br (locationFromPrimarySecondary br p s) v bm')
+        bm
+        (I.unsafeToAscList imap)
+
+-- | Given a direction to concatenate borders in, and the border information
+-- itself (which list is assumed to be already shifted so that borders do not
+-- overlap and are strictly increasing in the primary direction), produce: a
+-- list of rewrites for the lo and hi directions of each border, respectively,
+-- and the borders describing the fully concatenated object.
+catAllBorders ::
+    BoxRenderer n ->
+    [BM.BorderMap DynBorder] ->
+    ([(I.IMap V.Image, I.IMap V.Image)], BM.BorderMap DynBorder)
+catAllBorders _ [] = ([], BM.empty)
+catAllBorders br (bm:bms) = (zip ([I.empty]++los) (his++[I.empty]), bm') where
+    (rewrites, bm') = runState (traverse (state . catBorders br) bms) bm
+    (his, los) = unzip rewrites
+
+rewriteEdge ::
+    (Int -> V.Image -> V.Image) ->
+    (Int -> V.Image -> V.Image) ->
+    ([V.Image] -> V.Image) ->
+    I.IMap V.Image -> V.Image -> V.Image
+rewriteEdge splitLo splitHi combine = (combine .) . go . offsets 0 . I.unsafeToAscList where
+
+    -- convert absolute positions into relative ones
+    offsets _ [] = []
+    offsets n ((n', r):nrs) = (n'-n, r) : offsets (n'+I.len r) nrs
+
+    go [] old = [old]
+    -- TODO: might be nice to construct this image with fill rather than
+    -- replicate+char
+    go ((lo, I.Run len new):nrs) old
+        =  [splitLo lo old]
+        ++ replicate len new
+        ++ go nrs (splitHi (lo+len) old)
+
+rewriteImage :: BoxRenderer n -> (I.IMap V.Image, I.IMap V.Image) -> V.Image -> V.Image
+rewriteImage br (loRewrite, hiRewrite) old = rewriteHi . rewriteLo $ old where
+    size = imagePrimary br old
+    go = rewriteEdge (splitLoSecondary br) (splitHiSecondary br) (concatenateSecondary br)
+    rewriteLo img
+        | I.null loRewrite = img
+        | otherwise = concatenatePrimary br
+            [ go loRewrite (splitLoPrimary br 1 img)
+            , splitHiPrimary br 1 img
+            ]
+    rewriteHi img
+        | I.null hiRewrite = img
+        | otherwise = concatenatePrimary br
+            [ splitLoPrimary br (size-1) img
+            , go hiRewrite (splitHiPrimary br (size-1) img)
+            ]
 
 -- | Limit the space available to the specified widget to the specified
 -- number of columns. This is important for constraining the horizontal
