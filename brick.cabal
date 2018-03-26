@@ -34,7 +34,7 @@ maintainer:          Jonathan Daugherty <cygnus@foobox.com>
 copyright:           (c) Jonathan Daugherty 2015-2018
 category:            Graphics
 build-type:          Simple
-cabal-version:       >=1.18
+cabal-version:       1.18
 Homepage:            https://github.com/jtdaugherty/brick/
 Bug-reports:         https://github.com/jtdaugherty/brick/issues
 tested-with:         GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.1
@@ -426,7 +426,10 @@ executable brick-progressbar-demo
 test-suite brick-tests
   type:                exitcode-stdio-1.0
   hs-source-dirs:      tests
-  ghc-options:         -Wall -Wno-orphans -O2
+  ghc-options:         -Wall -O2
+  if impl(ghc >= 8)
+    ghc-options:       -Wno-orphans
+  default-language:    Haskell2010
   main-is:             Main.hs
   build-depends:       base <=5,
                        brick,
