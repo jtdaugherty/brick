@@ -98,8 +98,6 @@ Feature Overview
 
 `brick` comes with a bunch of batteries included:
 
-Low-level stuff:
-
  * Vertical and horizontal box layout widgets
  * Basic single- and multi-line text editor widgets
  * List widget
@@ -113,6 +111,7 @@ Other killer features:
  * Extensible widget-building API
  * User-customizable attribute themes
  * Type-safe, validated input form API (see the `Brick.Forms` module)
+ * Borders can be configured to automatically connect!
 
 Brick-Users Discussion
 ----------------------
