@@ -133,13 +133,14 @@ vBorder =
                      $ BM.emptyCoordinates (Edges 0 (h-1) 0 0)
       setDynBorders dynBorders $ render $ hLimit 1 $ fill (bsVertical bs)
 
--- | Initialize a 'DynBorder'. It will be 'bsDraw'n and 'bsOffer'ing in the
--- given directions to begin with, and accept join offers from all directions.
--- We consult the context to choose the 'dbStyle' and 'dbAttr'.
+-- | Initialize a 'DynBorder'. It will be 'bsDraw'n and 'bsOffer'ing
+-- in the given directions to begin with, and accept join offers from
+-- all directions. We consult the context to choose the 'dbStyle' and
+-- 'dbAttr'.
 --
 -- This is likely to be useful only for custom widgets that need more
--- complicated dynamic border behavior than 'border', 'vBorder', or 'hBorder'
--- offer.
+-- complicated dynamic border behavior than 'border', 'vBorder', or
+-- 'hBorder' offer.
 dynBorderFromDirections :: Edges Bool -> RenderM n DynBorder
 dynBorderFromDirections dirs = do
     ctx <- getContext
@@ -149,8 +150,8 @@ dynBorderFromDirections dirs = do
         , dbSegments = (\draw -> BorderSegment True draw draw) <$> dirs
         }
 
--- | Replace the 'Result'\'s dynamic borders with the given one, provided the
--- context says to use dynamic borders at all.
+-- | Replace the 'Result'\'s dynamic borders with the given one,
+-- provided the context says to use dynamic borders at all.
 setDynBorders :: BM.BorderMap DynBorder -> RenderM n (Result n) -> RenderM n (Result n)
 setDynBorders newBorders act = do
     dyn <- ctxDynBorders <$> getContext
@@ -159,8 +160,8 @@ setDynBorders newBorders act = do
         then res & bordersL .~ newBorders
         else res
 
--- | A single-character dynamic border that will react to neighboring borders,
--- initially connecting in the given directions.
+-- | A single-character dynamic border that will react to neighboring
+-- borders, initially connecting in the given directions.
 joinableBorder :: Edges Bool -> Widget n
 joinableBorder dirs = withAttr borderAttr . Widget Fixed Fixed $ do
     db <- dynBorderFromDirections dirs
