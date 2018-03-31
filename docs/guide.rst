@@ -714,18 +714,18 @@ of ``unicode``:
    let w = withBorderStyle Brick.Widgets.Border.Style.ascii $
              Brick.Widgets.Border.border $ str "Hello, world!"
 
-By default, widgets are self-contained and do not interact with each other. For
-borders, this can lead to visual oddities when horizontal borders are drawn
-next to vertical borders (and vice versa) by leaving a small gap like this:
+By default, borders in adjacent widgets do not connect to other. This
+can lead to visual oddities, for example, when horizontal borders are
+drawn next to vertical borders by leaving a small gap like this:
 
 .. code:: text
 
     │─
 
-You can request that border widgets redraw themselves when neighboring borders
-are drawn with ``Brick.Widgets.Core.joinBorders``. Two borders drawn with the
+You can request that adjacent borders connect to each other with
+``Brick.Widgets.Core.joinBorders``. Two borders drawn with the
 same attribute and border style, and both under the influence of
-``joinBorders``, will cooperate to produce a border like this instead:
+``joinBorders``, will produce a border like this instead:
 
 .. code:: text
 
