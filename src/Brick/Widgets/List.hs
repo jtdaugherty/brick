@@ -127,8 +127,8 @@ handleListEventVi fallback e theList =
         EvKey (KChar 'G') [] -> return $ listMoveTo (V.length $ listElements theList) theList
         EvKey (KChar 'f') [MCtrl] -> listMovePageDown theList
         EvKey (KChar 'b') [MCtrl] -> listMovePageUp theList
-        EvKey (KChar 'd') [MCtrl] -> listMoveByPages 0.5 theList
-        EvKey (KChar 'u') [MCtrl] -> listMoveByPages (-0.5) theList
+        EvKey (KChar 'd') [MCtrl] -> listMoveByPages (0.5::Double) theList
+        EvKey (KChar 'u') [MCtrl] -> listMoveByPages (-0.5::Double) theList
         _ -> fallback e theList
 
 -- | The top-level attribute used for the entire list.
@@ -274,7 +274,7 @@ listMoveUp = listMoveBy (-1)
 
 -- | Move the list selected index up by one page.
 listMovePageUp :: (Ord n) => List n e -> EventM n (List n e)
-listMovePageUp theList = listMoveByPages (-1) theList
+listMovePageUp theList = listMoveByPages (-1::Double) theList
 
 -- | Move the list selected index down by one. (Moves the cursor down,
 -- adds one to the index.)
@@ -283,7 +283,7 @@ listMoveDown = listMoveBy 1
 
 -- | Move the list selected index down by one page.
 listMovePageDown :: (Ord n) => List n e -> EventM n (List n e)
-listMovePageDown theList = listMoveByPages 1 theList
+listMovePageDown theList = listMoveByPages (1::Double) theList
 
 -- | Move the list selected index by some (fractional) number of pages.
 listMoveByPages :: (Ord n, RealFrac m) => m -> List n e -> EventM n (List n e)
