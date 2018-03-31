@@ -151,19 +151,19 @@ withBorderStyle bs p = Widget (hSize p) (vSize p) $ withReaderT (& ctxBorderStyl
 joinBorders :: Widget n -> Widget n
 joinBorders p = Widget (hSize p) (vSize p) $ withReaderT (& ctxDynBordersL .~ True) (render p)
 
--- | When rendering the specified widget, use static borders. This may be
--- marginally faster, but will introduce a small gap between neighboring
--- orthogonal borders.
+-- | When rendering the specified widget, use static borders. This
+-- may be marginally faster, but will introduce a small gap between
+-- neighboring orthogonal borders.
 --
 -- This is the default for backwards compatibility.
 separateBorders :: Widget n -> Widget n
 separateBorders p = Widget (hSize p) (vSize p) $ withReaderT (&ctxDynBordersL .~ False) (render p)
 
--- | After the specified widget has been rendered, freeze its borders. A frozen
--- border will not be affected by neighbors, nor will it affect neighbors.
--- Compared to 'separateBorders', 'freezeBorders' will not affect whether
--- borders connect internally to a widget (whereas 'separateBorders' prevents
--- them from connecting).
+-- | After the specified widget has been rendered, freeze its borders. A
+-- frozen border will not be affected by neighbors, nor will it affect
+-- neighbors. Compared to 'separateBorders', 'freezeBorders' will not
+-- affect whether borders connect internally to a widget (whereas
+-- 'separateBorders' prevents them from connecting).
 --
 -- Frozen borders cannot be thawed.
 freezeBorders :: Widget n -> Widget n
