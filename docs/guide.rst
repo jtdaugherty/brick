@@ -1476,18 +1476,19 @@ implementations of the built-in form field types.
 Joining Borders
 ===============
 
-Under normal circumstances, ``brick`` widgets are self-contained, in that their
-image contents do not depend on other widgets' image contents. This is
-unfortunate for borders. One often wants to draw a T-shaped character at the
-intersection of a vertical and horizontal border, but because they are
-self-contained there may not be enough information available yet to decide
-where to draw a T (or even if one is needed at all). To facilitate this,
-``brick`` offers some border-specific capabilities for widgets to re-render
-themselves as information about neighboring widgets becomes available.
+Under normal circumstances, ``brick`` widgets are self-contained,
+in that their image contents do not depend on other widgets' image
+contents. This is unfortunate for borders. One often wants to draw a
+T-shaped character at the intersection of a vertical and horizontal
+border, but because they are self-contained there may not be enough
+information available yet to decide where to draw a T (or even if
+one is needed at all). To facilitate this, ``brick`` offers some
+border-specific capabilities for widgets to re-render themselves as
+information about neighboring widgets becomes available.
 
-When a widget is rendered, it can report supplementary information about each
-position on its edges. Each position has four notional line segments extending
-from its center, arranged like this:
+When a widget is rendered, it can report supplementary information
+about each position on its edges. Each position has four notional line
+segments extending from its center, arranged like this:
 
 .. code:: text
 
@@ -1499,8 +1500,8 @@ from its center, arranged like this:
              |
            bottom
 
-These segments can independently be *drawn*, *accepting*, and *offering*, as
-captured in the ``Brick.Types.BorderSegment`` type:
+These segments can independently be *drawn*, *accepting*, and
+*offering*, as captured in the ``Brick.Types.BorderSegment`` type:
 
 .. code:: haskell
 
@@ -1510,20 +1511,21 @@ captured in the ``Brick.Types.BorderSegment`` type:
         , bsDraw :: Bool
         }
 
-If no information is reported for a position, it assumed that it is not drawn,
-not accepting, and not offering -- and so it will never be rewritten.
+If no information is reported for a position, it assumed that it is
+not drawn, not accepting, and not offering -- and so it will never be
+rewritten.
 
 Line segments that are *drawn* are used for deciding which part of the
-``BorderStyle`` to use if this position needs to be updated. (See also `The
-Active Border Style`_.) For example, suppose a position needs to be redrawn,
-and has the left and bottom segments drawn; then it will replace the current
-character with the upper-right corner drawing character ``bsCornerTR`` from its
-border style.
+``BorderStyle`` to use if this position needs to be updated. (See also
+`The Active Border Style`_.) For example, suppose a position needs
+to be redrawn, and has the left and bottom segments drawn; then it
+will replace the current character with the upper-right corner drawing
+character ``bsCornerTR`` from its border style.
 
-The *accepting* and *offering* properties are used to perform a small handshake
-between neighboring widgets; when the handshake is successful, one segment will
-transition to being drawn. For example, suppose a horizontal and vertical
-border widget are drawn next to each other:
+The *accepting* and *offering* properties are used to perform a small
+handshake between neighboring widgets; when the handshake is successful,
+one segment will transition to being drawn. For example, suppose a
+horizontal and vertical border widget are drawn next to each other:
 
 .. code:: text
 
@@ -1538,15 +1540,16 @@ border widget are drawn next to each other:
          (offering)
 
 These borders are accepting in all directions, drawn in the directions
-signified by extra lines (``|||`` for the vertical border and ``=`` for the
-horizontal border), and offering in the directions written. Since the
-horizontal border on the right is offering towards the vertical border, and the
-vertical border is accepting from the direction towards the horizontal border,
-the right segment of the vertical border will transition to being drawn. This
-will trigger an update of the ``Image`` associated with the left widget,
-overwriting whatever character is there currently with a ``bsIntersectL``
-character instead. The state of the segments afterwards will be the same, but
-the fact that there is one more segment drawn will be recorded:
+signified by extra lines (``|||`` for the vertical border and ``=`` for
+the horizontal border), and offering in the directions written. Since
+the horizontal border on the right is offering towards the vertical
+border, and the vertical border is accepting from the direction towards
+the horizontal border, the right segment of the vertical border will
+transition to being drawn. This will trigger an update of the ``Image``
+associated with the left widget, overwriting whatever character is there
+currently with a ``bsIntersectL`` character instead. The state of the
+segments afterwards will be the same, but the fact that there is one
+more segment drawn will be recorded:
 
 .. code:: text
 
@@ -1560,17 +1563,19 @@ the fact that there is one more segment drawn will be recorded:
            bottom                  bottom
          (offering)
 
-It is important that this be recorded: we may later place this combined widget
-to the right of another horizontal border, in which case we would want to
-transition again from a ``bsIntersectL`` character to a ``bsIntersectFull``
-character that represents all four segments being drawn.
+It is important that this be recorded: we may later place this combined
+widget to the right of another horizontal border, in which case we
+would want to transition again from a ``bsIntersectL`` character to a
+``bsIntersectFull`` character that represents all four segments being
+drawn.
 
-Because this involves an interaction between multiple widgets, we may find that
-the two widgets involved were rendered under different rendering contexts. To
-avoid mixing and matching border styles and drawing attributes, each location
-records not just the state of its four segments but also the border style and
-attribute that were active at the time the border was drawn. This information
-is stored in ``Brick.Types.DynBorder``.
+Because this involves an interaction between multiple widgets, we
+may find that the two widgets involved were rendered under different
+rendering contexts. To avoid mixing and matching border styles and
+drawing attributes, each location records not just the state of its
+four segments but also the border style and attribute that were active
+at the time the border was drawn. This information is stored in
+``Brick.Types.DynBorder``.
 
 .. code:: haskell
 
@@ -1580,46 +1585,49 @@ is stored in ``Brick.Types.DynBorder``.
         , dbSegments :: Edges BorderSegment
         }
 
-The ``Brick.Types.Edges`` type has one field for each direction, as described
-above:
+The ``Brick.Types.Edges`` type has one field for each direction, as
+described above:
 
 .. code:: haskell
 
     data Edges a = Edges { eTop, eBottom, eLeft, eRight :: a }
 
-In addition to the offer/accept handshake described above, segments also check
-that their neighbor's ``BorderStyle`` and ``Attr`` match their own before
-transitioning from undrawn to drawn, to avoid visual glitches from trying to
-connect ``unicode`` borders to ``ascii`` ones or green borders to red ones.
+In addition to the offer/accept handshake described above, segments also
+check that their neighbor's ``BorderStyle`` and ``Attr`` match their own
+before transitioning from undrawn to drawn, to avoid visual glitches
+from trying to connect ``unicode`` borders to ``ascii`` ones or green
+borders to red ones.
 
-The above description applies to a single location; any given widget's result
-may report information about any location on its border, using the
-``Brick.BorderMap.BorderMap`` type. A ``BorderMap a`` is close kin to a
-``Data.Map.Map Location a``, except that each ``BorderMap`` has a fixed
-rectangle on which keys are retained. Values inserted at other keys are
-silently discarded.
+The above description applies to a single location; any given widget's
+result may report information about any location on its border, using
+the ``Brick.BorderMap.BorderMap`` type. A ``BorderMap a`` is close kin
+to a ``Data.Map.Map Location a``, except that each ``BorderMap`` has a
+fixed rectangle on which keys are retained. Values inserted at other
+keys are silently discarded.
 
-For backwards compatibility, all the widgets that ship with ``brick`` avoid
-reporting any border information by default, but ``brick`` offers three ways of
-modifying the border-joining behavior of a widget.
+For backwards compatibility, all the widgets that ship with ``brick``
+avoid reporting any border information by default, but ``brick`` offers
+three ways of modifying the border-joining behavior of a widget.
 
-* ``Brick.Widgets.Core.joinBorders`` sets a flag in the rendering context that
-  tells the ``Brick.Widgets.Border`` widgets to report the information
-  described above. Consequently, widgets drawn in this context will join their
-  borders with neighbors.
-* ``Brick.Widgets.Core.separateBorders`` unsets the same flag, preventing
-  border widgets from attempting to connect.
-* ``Brick.Widgets.Core.freezeBorders`` deletes the information described above
-  from a widget. This means that any connections already made will stay as they
-  are, but no new connections will be made. For example, one might use this to
-  create a box with internal but no external connections:
+* ``Brick.Widgets.Core.joinBorders`` sets a flag in the rendering
+  context that tells the ``Brick.Widgets.Border`` widgets to report
+  the information described above. Consequently, widgets drawn in this
+  context will join their borders with neighbors.
+* ``Brick.Widgets.Core.separateBorders`` unsets the same flag,
+  preventing border widgets from attempting to connect.
+* ``Brick.Widgets.Core.freezeBorders`` deletes the information described
+  above from a widget. This means that any connections already made will
+  stay as they are, but no new connections will be made. For example,
+  one might use this to create a box with internal but no external
+  connections:
 
   .. code:: haskell
 
       joinBorders . freezeBorders . border . hBox $
           [str "left", vBorder, str "right"]
 
-  Or to create a box that allows external connections but not internal ones:
+  Or to create a box that allows external connections but not internal
+  ones:
 
   .. code:: haskell
 
@@ -1627,9 +1635,9 @@ modifying the border-joining behavior of a widget.
           [str "left", vBorder, str "right"]
 
 When creating new widgets, if you would like ``joinBorders`` and
-``separateBorders`` to affect the behavior of your widget, you may do so by
-consulting the ``ctxDynBorders`` field of the rendering context before writing
-to your ``Result``'s ``borders`` field.
+``separateBorders`` to affect the behavior of your widget, you may do
+so by consulting the ``ctxDynBorders`` field of the rendering context
+before writing to your ``Result``'s ``borders`` field.
 
 The Rendering Cache
 ===================
