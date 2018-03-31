@@ -62,7 +62,7 @@ at these projects:
  * `matterhorn`, a client for [Mattermost](https://about.mattermost.com/): https://github.com/matterhorn-chat/matterhorn
  * `viewprof`, a GHC profile viewer: https://github.com/maoe/viewprof
  * `tart`, a mouse-driven ASCII art drawing program: https://github.com/jtdaugherty/tart
- * `silly-joy`, an interpreter for Joy in Haskell: https://github.com/rootmos/silly-joy
+ * `silly-joy`, an interpreter for Joy: https://github.com/rootmos/silly-joy
  * `herms`, a command-line tool for managing kitchen recipes: https://github.com/jackkiefer/herms
  * `purebred`, a mail user agent: https://github.com/purebred-mua/purebred
  * `2048Haskell`, an implementation of the 2048 game: https://github.com/8Gitbrix/2048Haskell
