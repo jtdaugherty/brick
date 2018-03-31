@@ -714,9 +714,9 @@ of ``unicode``:
    let w = withBorderStyle Brick.Widgets.Border.Style.ascii $
              Brick.Widgets.Border.border $ str "Hello, world!"
 
-By default, borders in adjacent widgets do not connect to other. This
-can lead to visual oddities, for example, when horizontal borders are
-drawn next to vertical borders by leaving a small gap like this:
+By default, borders in adjacent widgets do not connect to each other.
+This can lead to visual oddities, for example, when horizontal borders
+are drawn next to vertical borders by leaving a small gap like this:
 
 .. code:: text
 
