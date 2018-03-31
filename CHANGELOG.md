@@ -2,6 +2,16 @@
 Brick changelog
 ---------------
 
+0.36
+----
+
+New features:
+ * Dynamic border support: adjacent widgets that use borders can make
+   those borders seamlessly connect to each other! Thanks
+   so much to Daniel Wagner for this feature! Please see
+   `programs/DynamicBorderDemo.hs` for a demonstraton. Also see the
+   "Joinable Borders" section of the User Guide.
+
 0.35.1
 ------
 
