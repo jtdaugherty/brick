@@ -52,6 +52,7 @@ import Control.Concurrent (forkIO, killThread)
 import Control.Applicative ((<$>))
 import Data.Monoid (mempty)
 #endif
+import qualified Data.Foldable as F
 import Data.Maybe (listToMaybe)
 import qualified Data.Map as M
 import qualified Data.Set as S
@@ -219,7 +220,7 @@ customMain buildVty mUserChan app initialAppState = do
                     newVty <- buildVty
                     run newVty newRS newAppState brickChan
 
-        emptyES = ES [] []
+        emptyES = ES [] mempty
         eventRO = EventRO M.empty initialVty mempty
     (st, eState) <- runStateT (runReaderT (runEventM (appStartEvent app initialAppState)) eventRO) emptyES
     let initialRS = RS M.empty (esScrollRequests eState) S.empty mempty []
@@ -293,7 +294,7 @@ runVty vty readEvent app appState rs = do
                 _ -> return (e, firstRS, exts)
         _ -> return (e, firstRS, exts)
 
-    let emptyES = ES [] []
+    let emptyES = ES [] mempty
         eventRO = EventRO (viewportMap nextRS) vty nextExts
 
     (next, eState) <- runStateT (runReaderT (runEventM (appHandleEvent app appState e'))
@@ -303,11 +304,14 @@ runVty vty readEvent app appState rs = do
                                          renderCache nextRS
                          })
 
-applyInvalidations :: (Ord n) => [CacheInvalidateRequest n] -> M.Map n v -> M.Map n v
-applyInvalidations ns cache = foldr (.) id (mkFunc <$> ns) cache
+applyInvalidations :: (Ord n) => S.Set (CacheInvalidateRequest n) -> M.Map n v -> M.Map n v
+applyInvalidations ns cache =
+    if InvalidateEntire `S.member` ns
+    then mempty
+    else foldr (.) id (mkFunc <$> F.toList ns) cache
     where
-    mkFunc InvalidateEntire = const mempty
-    mkFunc (InvalidateSingle n) = M.delete n
+        mkFunc InvalidateEntire = const mempty
+        mkFunc (InvalidateSingle n) = M.delete n
 
 -- | Given a viewport name, get the viewport's size and offset
 -- information from the most recent rendering. Returns 'Nothing' if
@@ -348,14 +352,14 @@ getVtyHandle = EventM $ asks eventVtyHandle
 
 -- | Invalidate the rendering cache entry with the specified resource
 -- name.
-invalidateCacheEntry :: n -> EventM n ()
+invalidateCacheEntry :: (Ord n) => n -> EventM n ()
 invalidateCacheEntry n = EventM $ do
-    lift $ modify (\s -> s { cacheInvalidateRequests = InvalidateSingle n : cacheInvalidateRequests s })
+    lift $ modify (\s -> s { cacheInvalidateRequests = S.insert (InvalidateSingle n) $ cacheInvalidateRequests s })
 
 -- | Invalidate the entire rendering cache.
-invalidateCache :: EventM n ()
+invalidateCache :: (Ord n) => EventM n ()
 invalidateCache = EventM $ do
-    lift $ modify (\s -> s { cacheInvalidateRequests = InvalidateEntire : cacheInvalidateRequests s })
+    lift $ modify (\s -> s { cacheInvalidateRequests = S.insert InvalidateEntire $ cacheInvalidateRequests s })
 
 withVty :: Vty -> (Vty -> IO a) -> IO a
 withVty vty useVty = do

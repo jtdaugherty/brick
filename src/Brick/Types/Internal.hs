@@ -105,11 +105,13 @@ data ViewportType = Vertical
                   -- ^ Viewports of this type are scrollable vertically and horizontally.
                   deriving (Show, Eq)
 
-data CacheInvalidateRequest n = InvalidateSingle n
-                              | InvalidateEntire
+data CacheInvalidateRequest n =
+    InvalidateSingle n
+    | InvalidateEntire
+    deriving (Ord, Eq)
 
 data EventState n = ES { esScrollRequests :: [(n, ScrollRequest)]
-                       , cacheInvalidateRequests :: [CacheInvalidateRequest n]
+                       , cacheInvalidateRequests :: S.Set (CacheInvalidateRequest n)
                        }
 
 -- | An extent of a named area: its size, location, and origin.
