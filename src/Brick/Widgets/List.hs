@@ -84,13 +84,13 @@ import Brick.AttrMap
 --   list
 data List n e =
     List { listElements :: !(V.Vector e)
-         -- ^ Return the list's vector of elements.
+         -- ^ The list's vector of elements.
          , listSelected :: !(Maybe Int)
-         -- ^ Return the list's selected element index, if any.
+         -- ^ The list's selected element index, if any.
          , listName :: n
-         -- ^ Return the list's name.
+         -- ^ The list's name.
          , listItemHeight :: Int
-         -- ^ Return the height of the list items.
+         -- ^ The height of the list items.
          } deriving (Functor, Foldable, Traversable, Show)
 
 suffixLenses ''List
