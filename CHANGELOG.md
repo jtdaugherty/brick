@@ -2,6 +2,17 @@
 Brick changelog
 ---------------
 
+0.36.1
+------
+
+Package changes:
+ * Raiseed upper bound to support GHC 8.4.2 (#171)
+
+Other changes:
+ * Improved List accessor documentation (thanks liam <liam@magicseaweed.com>)
+ * Brick.Main now uses a Set instead a list to track invalidation
+   requests to avoid duplicates.
+
 0.36
 ----
 
