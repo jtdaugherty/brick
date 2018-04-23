@@ -2,6 +2,16 @@
 Brick changelog
 ---------------
 
+0.36.2
+------
+
+API changes:
+ * The Forms API got two new functions, `setFormConcat` and
+   `setFieldConcat`, used for controlling the previously hard-coded
+   concatenation behavior of form fields. These are optional and both
+   concatentation settings default to their former hard-coded values,
+   `vBox` (#172).
+
 0.36.1
 ------
 
