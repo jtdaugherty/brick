@@ -31,6 +31,11 @@
 -- 'FormField's combined for a single 'FormFieldState' (e.g. a radio
 -- button sequence).
 --
+-- Also note that, by default, forms and their field inputs are
+-- concatenated together in a 'vBox'. This can be customized on a
+-- per-field basis and for the entire form by using the functions
+-- 'setFieldConcat' and 'setFormConcat', respectively.
+--
 -- Bear in mind that for most uses, the 'FormField' and 'FormFieldState'
 -- types will not be used directly. Instead, the constructors for
 -- various field types (such as 'editTextField') will be used instead.
@@ -50,6 +55,8 @@ module Brick.Forms
   , allFieldsValid
   , invalidFields
   , setFieldValid
+  , setFormConcat
+  , setFieldConcat
 
   -- * Simple form field constructors
   , editTextField
@@ -163,6 +170,9 @@ data FormFieldState s e n where
                       -- fields. It receives the default representation
                       -- and can augment it, for example, by adding a
                       -- label on the left.
+                      , formFieldConcat :: [Widget n] -> Widget n
+                      -- ^ Concatenation function for this field's input
+                      -- renderings.
                       } -> FormFieldState s e n
 
 -- | A form: a sequence of input fields that manipulate the fields of an
@@ -186,6 +196,8 @@ data Form s e n =
          -- valid state value then the value is immediately saved to its
          -- corresponding field in this state value using the form
          -- field's lens over @s@.
+         , formConcatAll :: [Widget n] -> Widget n
+         -- ^ Concatenation function for this form's field renderings.
          }
 
 -- | Compose a new rendering augmentation function with the one in the
@@ -206,6 +218,14 @@ infixr 5 @@=
     let v = mkFs s
     in v { formFieldRenderHelper = h . (formFieldRenderHelper v) }
 
+-- | Set a form field's concatenation function.
+setFieldConcat :: ([Widget n] -> Widget n) -> FormFieldState s e n -> FormFieldState s e n
+setFieldConcat f s = s { formFieldConcat = f }
+
+-- | Set a form's concatenation function.
+setFormConcat :: ([Widget n] -> Widget n) -> Form s e n -> Form s e n
+setFormConcat func f = f { formConcatAll = func }
+
 -- | Create a new form with the specified input fields and an initial
 -- form state. The fields are initialized from the state using their
 -- state lenses and the first form input is focused initially.
@@ -221,10 +241,11 @@ newForm mkEs s =
     in Form { formFieldStates = es
             , formFocus       = focusRing $ concat $ formFieldNames <$> es
             , formState       = s
+            , formConcatAll   = vBox
             }
 
 formFieldNames :: FormFieldState s e n -> [n]
-formFieldNames (FormFieldState _ _ fields _) = formFieldName <$> fields
+formFieldNames (FormFieldState _ _ fields _ _) = formFieldName <$> fields
 
 -- | A form field for manipulating a boolean value. This represents
 -- 'True' as @[X] label@ and 'False' as @[ ] label@.
@@ -255,6 +276,7 @@ checkboxField stLens name label initialState =
                                                 ]
                       , formFieldLens         = stLens
                       , formFieldRenderHelper = id
+                      , formFieldConcat       = vBox
                       }
 
 renderCheckbox :: T.Text -> n -> Bool -> Bool -> Widget n
@@ -306,6 +328,7 @@ radioField stLens options initialState =
                       , formFields            = optionFields
                       , formFieldLens         = stLens
                       , formFieldRenderHelper = id
+                      , formFieldConcat       = vBox
                       }
 
 renderRadio :: (Eq a) => a -> n -> T.Text -> Bool -> a -> Widget n
@@ -371,6 +394,7 @@ editField stLens n limit ini val renderText wrapEditor initialState =
                                          ]
                       , formFieldLens  = stLens
                       , formFieldRenderHelper = id
+                      , formFieldConcat = vBox
                       }
 
 -- | A form field using a single-line editor to edit the 'Show'
@@ -483,43 +507,44 @@ setFieldValid v n form =
     let go1 [] = []
         go1 (s:ss) =
             let s' = case s of
-                       FormFieldState st l fs rh ->
+                       FormFieldState st l fs rh concatAll ->
                            let go2 [] = []
                                go2 (f@(FormField fn val _ r h):ff)
                                    | n == fn = FormField fn val v r h : ff
                                    | otherwise = f : go2 ff
-                           in FormFieldState st l (go2 fs) rh
+                           in FormFieldState st l (go2 fs) rh concatAll
             in s' : go1 ss
 
     in form { formFieldStates = go1 (formFieldStates form) }
 
 getInvalidFields :: FormFieldState s e n -> [n]
-getInvalidFields (FormFieldState st _ fs _) =
+getInvalidFields (FormFieldState st _ fs _ _) =
     let gather (FormField n validate extValid _ _) =
             if (not extValid || (isNothing $ validate st)) then [n] else []
     in concat $ gather <$> fs
 
 -- | Render a form.
 --
--- For each form field, each input for the field is rendered using the
--- implementation provided by its 'FormField'. The inputs are then
--- vertically concatenated with 'vBox' and then augmented using the form
--- field's rendering augmentation function (see '@@='). Fields with
--- invalid inputs (either due to built-in validator failure or due to
--- external validation failure via 'setFieldValid') will be displayed
--- using the 'invalidFormInputAttr' attribute.
+-- For each form field, each input for the field is rendered using
+-- the implementation provided by its 'FormField'. The inputs are
+-- then concatenated with the field's concatenation function (see
+-- 'setFieldConcat') and are then augmented using the form field's
+-- rendering augmentation function (see '@@='). Fields with invalid
+-- inputs (either due to built-in validator failure or due to external
+-- validation failure via 'setFieldValid') will be displayed using the
+-- 'invalidFormInputAttr' attribute.
 --
--- The augmented field renderings are then placed in a 'vBox' and
--- returned.
+-- Finally, all of the resulting field renderings are concatenated with
+-- the form's concatenation function (see 'setFormConcat').
 renderForm :: (Eq n) => Form s e n -> Widget n
-renderForm (Form es fr _) =
-    vBox $ renderFormFieldState fr <$> es
+renderForm (Form es fr _ concatAll) =
+    concatAll $ renderFormFieldState fr <$> es
 
 renderFormFieldState :: (Eq n)
                      => FocusRing n
                      -> FormFieldState s e n
                      -> Widget n
-renderFormFieldState fr (FormFieldState st _ fields helper) =
+renderFormFieldState fr (FormFieldState st _ fields helper concatFields) =
     let renderFields [] = []
         renderFields ((FormField n validate extValid renderField _):fs) =
             let maybeInvalid = if (isJust $ validate st) && extValid
@@ -527,7 +552,7 @@ renderFormFieldState fr (FormFieldState st _ fields helper) =
                                else forceAttr invalidFormInputAttr
                 foc = Just n == focusGetCurrent fr
             in maybeInvalid (renderField foc st) : renderFields fs
-    in helper $ vBox $ renderFields fields
+    in helper $ concatFields $ renderFields fields
 
 -- | Dispatch an event to the appropriate form field and return a new
 -- form. This handles the following events in this order:
@@ -628,7 +653,7 @@ handleFormFieldEvent n ev f = findFieldState [] (formFieldStates f)
         findFieldState _ [] = return f
         findFieldState prev (e:es) =
             case e of
-                FormFieldState st stLens fields helper -> do
+                FormFieldState st stLens fields helper concatAll -> do
                     let findField [] = return Nothing
                         findField (field:rest) =
                             case field of
@@ -645,7 +670,7 @@ handleFormFieldEvent n ev f = findFieldState [] (formFieldStates f)
                     case result of
                         Nothing -> findFieldState (prev <> [e]) es
                         Just (newSt, maybeSt) ->
-                            let newFieldState = FormFieldState newSt stLens fields helper
+                            let newFieldState = FormFieldState newSt stLens fields helper concatAll
                             in return $ f { formFieldStates = prev <> [newFieldState] <> es
                                           , formState = case maybeSt of
                                               Nothing -> formState f

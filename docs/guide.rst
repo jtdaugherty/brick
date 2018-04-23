@@ -1400,6 +1400,10 @@ many form fields either won't have labels or will have different layout
 requirements, so an alternative API such as building the label into the
 field API doesn't always make sense.
 
+Brick defaults to rendering individual fields' inputs, and the entire
+form, in a vertical box using ``vBox``. Use ``setFormConcat`` and
+``setFieldConcat`` to change this behavior to, e.g., ``hBox``.
+
 Form Attributes
 ---------------
 
