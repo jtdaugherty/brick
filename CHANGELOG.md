@@ -2,6 +2,13 @@
 Brick changelog
 ---------------
 
+0.36.3
+------
+
+Bug fixes:
+ * Fixed a bug where mouse-up events in viewports were not translated
+   into the global coordinate space, unlike mouse-down events (#173)
+
 0.36.2
 ------
 
