@@ -289,7 +289,15 @@ runVty vty readEvent app appState rs = do
                             let localCoords = Location (lc, lr)
                                 lc = c - ec + oC
                                 lr = r - er + oR
-                            return (MouseUp n button localCoords, firstRS, exts)
+                                -- If the clicked extent was a viewport,
+                                -- adjust the local coordinates by
+                                -- adding the viewport upper-left corner
+                                -- offset.
+                                newCoords = case M.lookup n (viewportMap firstRS) of
+                                  Nothing -> localCoords
+                                  Just vp -> localCoords & _1 %~ (+ (vp^.vpLeft))
+                                                         & _2 %~ (+ (vp^.vpTop))
+                            return (MouseUp n button newCoords, firstRS, exts)
                         False -> return (e, firstRS, exts)
                 _ -> return (e, firstRS, exts)
         _ -> return (e, firstRS, exts)
