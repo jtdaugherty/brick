@@ -16,6 +16,7 @@ module Brick.Widgets.List
 
   -- * Rendering a list
   , renderList
+  , renderListWithIndex
 
   -- * Handling events
   , handleListEvent
@@ -180,11 +181,25 @@ renderList :: (Ord n, Show n)
            -- ^ The List to be rendered
            -> Widget n
            -- ^ rendered widget
-renderList drawElem foc l =
+renderList drawElem = renderListWithIndex $ const drawElem
+
+-- | Like 'renderList', except the render function is also provided
+-- with the index of each element.
+renderListWithIndex :: (Ord n, Show n)
+           => (Int -> Bool -> e -> Widget n)
+           -- ^ Rendering function, taking index, and True for the
+           -- selected element
+           -> Bool
+           -- ^ Whether the list has focus
+           -> List n e
+           -- ^ The List to be rendered
+           -> Widget n
+           -- ^ rendered widget
+renderListWithIndex drawElem foc l =
     withDefAttr listAttr $
     drawListElements foc l drawElem
 
-drawListElements :: (Ord n, Show n) => Bool -> List n e -> (Bool -> e -> Widget n) -> Widget n
+drawListElements :: (Ord n, Show n) => Bool -> List n e -> (Int -> Bool -> e -> Widget n) -> Widget n
 drawListElements foc l drawElem =
     Widget Greedy Greedy $ do
         c <- getContext
@@ -214,8 +229,9 @@ drawListElements foc l drawElem =
             off = start * (l^.listItemHeightL)
 
             drawnElements = flip V.imap es $ \i e ->
-                let isSelected = Just (i + start) == l^.listSelectedL
-                    elemWidget = drawElem isSelected e
+                let j = i + start
+                    isSelected = Just j == l^.listSelectedL
+                    elemWidget = drawElem j isSelected e
                     selItemAttr = if foc
                                   then withDefAttr listSelectedFocusedAttr
                                   else withDefAttr listSelectedAttr
