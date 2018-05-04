@@ -310,8 +310,14 @@ listMoveByPages pages theList = do
 -- validation.
 listMoveBy :: Int -> List n e -> List n e
 listMoveBy amt l =
-    let newSel = clamp 0 (V.length (l^.listElementsL) - 1) <$> (amt +) <$> (l^.listSelectedL)
+    let newSel = clamp 0 (V.length (l^.listElementsL) - 1) <$> (amt +) <$> current
     in l & listSelectedL .~ newSel
+  where
+    current = case l^.listSelectedL of
+      Nothing
+        | amt > 0 -> Just 0
+        | otherwise -> Just (V.length (l^.listElementsL) - 1)
+      current -> current
 
 -- | Set the selected index for a list to the specified index, subject
 -- to validation.
