@@ -2,6 +2,19 @@
 Brick changelog
 ---------------
 
+0.37
+----
+
+Behavior changes:
+ * `listMoveBy` now automatically moves to the first or last position
+   in the list if called when the list is non-empty but has no selected
+   element (thanks Philip Kamenarsky)
+
+API changes:
+ * Added `Brick.Widgets.List.renderListWithIndex` that passes
+   the index of each element to the item rendering function (thanks
+   liam@magicseaweed.com)
+
 0.36.3
 ------
 
