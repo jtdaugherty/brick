@@ -306,18 +306,23 @@ listMoveByPages pages theList = do
           in
             return $ listMoveBy nElems theList
 
--- | Move the list selected index by the specified amount, subject to
--- validation.
+-- | Move the list selected index. If the index is `Just x`, adjust by the
+-- specified amount; if it is `Nothing` (i.e. there is no selection) and the
+-- direction is positive, set to `Just 0` (first element), otherwise set to
+-- `Just (length - 1)` (last element). Subject to validation.
 listMoveBy :: Int -> List n e -> List n e
 listMoveBy amt l =
-    let newSel = clamp 0 (V.length (l^.listElementsL) - 1) <$> (amt +) <$> current
+    let current = case l^.listSelectedL of
+          Nothing
+            | amt > 0 -> Just 0
+            | otherwise -> Just (V.length (l^.listElementsL) - 1)
+          current -> current
+        clamp' a b c
+          | a <= b = Just (clamp a b c)
+          | otherwise = Nothing
+        newSel = clamp' 0 (V.length (l^.listElementsL) - 1) =<< (amt +) <$> current
     in l & listSelectedL .~ newSel
-  where
-    current = case l^.listSelectedL of
-      Nothing
-        | amt > 0 -> Just 0
-        | otherwise -> Just (V.length (l^.listElementsL) - 1)
-      current -> current
+
 
 -- | Set the selected index for a list to the specified index, subject
 -- to validation.
