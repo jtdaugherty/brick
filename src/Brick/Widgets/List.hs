@@ -332,7 +332,7 @@ listMoveBy amt l =
           Nothing
             | amt > 0 -> Just 0
             | otherwise -> Just (V.length (l^.listElementsL) - 1)
-          current -> current
+          cur -> cur
         clamp' a b c
           | a <= b = Just (clamp a b c)
           | otherwise = Nothing
