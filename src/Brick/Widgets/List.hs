@@ -323,7 +323,6 @@ listMoveBy amt l =
         newSel = clamp' 0 (V.length (l^.listElementsL) - 1) =<< (amt +) <$> current
     in l & listSelectedL .~ newSel
 
-
 -- | Set the selected index for a list to the specified index, subject
 -- to validation.
 listMoveTo :: Int -> List n e -> List n e
