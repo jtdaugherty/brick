@@ -51,6 +51,7 @@ module Brick.Forms
   , formState
   , handleFormEvent
   , renderForm
+  , renderFormFieldState
   , (@@=)
   , allFieldsValid
   , invalidFields
@@ -540,6 +541,10 @@ renderForm :: (Eq n) => Form s e n -> Widget n
 renderForm (Form es fr _ concatAll) =
     concatAll $ renderFormFieldState fr <$> es
 
+-- | Render a single form field collection. This is called internally by
+-- 'renderForm' but is exposed in cases where a form field state needs
+-- to be rendered outside of a 'Form', so 'renderForm' is probably what
+-- you want.
 renderFormFieldState :: (Eq n)
                      => FocusRing n
                      -> FormFieldState s e n
