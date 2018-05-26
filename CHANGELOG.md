@@ -2,6 +2,12 @@
 Brick changelog
 ---------------
 
+0.37.1
+------
+
+API changes:
+ * Exposed `Brick.Forms.renderFormFieldState`.
+
 0.37
 ----
 
