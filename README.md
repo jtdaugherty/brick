@@ -166,6 +166,7 @@ should consider to make submitting patches easier for all concerned:
    codebase.
  - Please adjust or provide Haddock and/or user guide documentation
    relevant to any changes you make.
+ - New commits should be `-Wall` clean.
  - Please do NOT include package version changes in your patches.
    Package version changes are only done at release time when the full
    scope of a release's changes can be evaluated to determine the
