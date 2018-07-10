@@ -2,6 +2,13 @@
 Brick changelog
 ---------------
 
+0.37.2
+------
+
+Bug fixes:
+ * Theme customization files can now use empty lists for style
+   customization.
+
 0.37.1
 ------
 
