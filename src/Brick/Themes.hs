@@ -235,8 +235,9 @@ allStyles =
 
 parseStyle :: T.Text -> Either String Style
 parseStyle s =
-    let lookupStyle n = case lookup n normalizedStyles of
-            Just sty -> Right sty
+    let lookupStyle "" = Right Nothing
+        lookupStyle n = case lookup n normalizedStyles of
+            Just sty -> Right $ Just sty
             Nothing  -> Left $ T.unpack $ "Invalid style: " <> n
         stripped = T.strip $ T.toLower s
         normalize (n, a) = (T.toLower n, a)
@@ -246,11 +247,15 @@ parseStyle s =
         unbracketed = T.tail $ T.init stripped
         parseStyleList = do
             ss <- mapM lookupStyle $ T.strip <$> T.splitOn "," unbracketed
-            return $ foldr (.|.) 0 ss
+            return $ foldr (.|.) 0 $ catMaybes ss
 
     in if bracketed
        then parseStyleList
-       else lookupStyle stripped
+       else do
+           result <- lookupStyle stripped
+           case result of
+               Nothing -> Left $ "Invalid style: " <> show stripped
+               Just sty -> Right sty
 
 themeParser :: Theme -> IniParser (Maybe CustomAttr, M.Map AttrName CustomAttr)
 themeParser t = do
