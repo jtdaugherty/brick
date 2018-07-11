@@ -325,7 +325,7 @@ loadCustomizations path t = do
             return $ Right $ applyCustomizations customDef (flip M.lookup customMap) t
 
 vtyColorName :: Color -> T.Text
-vtyColorName c@(Color240 _) = let (r,g,b) = color240ToRGB c
+vtyColorName (Color240 n) = let (r,g,b) = color240CodeToRGB (fromIntegral n)
                               in T.pack (printf "#%02x%02x%02x" r g b)
 vtyColorName c =
     fromMaybe (error $ "Invalid color: " <> show c)
