@@ -21,6 +21,10 @@
 -- @brightRed@, @brightGreen@, @brightYellow@, @brightBlue@,
 -- @brightMagenta@, @brightCyan@, @brightWhite@, or @default@.
 --
+-- We also support color specifications in the common hex format @#RRGGBB@, but
+-- note that this specification is lossy: terminals can only display 256 colors,
+-- but hex codes can specify @256^3 = 16777216@ colors.
+--
 -- A style specification can be either one of the following values
 -- (without quotes) or a comma-delimited list of one or more of the
 -- following values (e.g. @"[bold,underline]"@) indicating that all
@@ -75,13 +79,14 @@ import Graphics.Vty hiding ((<|>))
 import Control.Monad (forM, join)
 import Control.Applicative ((<|>))
 import qualified Data.Text as T
+import qualified Data.Text.Read as T
 import qualified Data.Text.IO as T
 import qualified Data.Map as M
 import qualified Data.Semigroup as Sem
 import Data.Tuple (swap)
 import Data.List (intercalate)
 import Data.Bits ((.|.), (.&.))
-import Data.Maybe (fromMaybe, isNothing, catMaybes)
+import Data.Maybe (fromMaybe, isNothing, catMaybes, mapMaybe)
 import Data.Monoid ((<>))
 import qualified Data.Foldable as F
 
@@ -89,6 +94,8 @@ import Data.Ini.Config
 
 import Brick.AttrMap (AttrMap, AttrName, attrMap, attrNameComponents)
 import Brick.Types.TH (suffixLenses)
+
+import Text.Printf
 
 -- | An attribute customization can specify which aspects of an
 -- attribute to customize.
@@ -194,14 +201,27 @@ isNullCustomization c =
     isNothing (customBg c) &&
     isNothing (customStyle c)
 
+-- |  This function is lossy in the sense that we only internally support 240 colors but
+-- the #RRGGBB format supports 16^3 colors.
 parseColor :: T.Text -> Either String (MaybeDefault Color)
 parseColor s =
     let stripped = T.strip $ T.toLower s
         normalize (t, c) = (T.toLower t, c)
     in if stripped == "default"
-       then Right Default
-       else maybe (Left $ "Invalid color: " <> show stripped) (Right . SetTo) $
-                  lookup stripped (normalize <$> swap <$> allColors)
+          then Right Default
+          else case parseRGB stripped of
+              Just c  -> Right (SetTo c)
+              Nothing -> maybe (Left $ "Invalid color: " <> show stripped) (Right . SetTo) $
+                             lookup stripped (normalize <$> swap <$> allColors)
+  where
+    parseRGB t = if T.head t /= '#'
+                    then Nothing
+                    else case mapMaybe readHex (T.chunksOf 2 (T.tail t)) of
+                            [r,g,b] -> Just (rgbColor r g b)
+                            _ -> Nothing
+
+    readHex :: T.Text -> Maybe Int
+    readHex t = either (const Nothing) (Just . fst) (T.hexadecimal t)
 
 allColors :: [(Color, T.Text)]
 allColors =
@@ -309,7 +329,9 @@ loadCustomizations path t = do
             return $ Right $ applyCustomizations customDef (flip M.lookup customMap) t
 
 vtyColorName :: Color -> T.Text
-vtyColorName (Color240 _) = error "Color240 space not supported yet"
+vtyColorName c@(Color240 n) = case color240CodeToRGB (fromIntegral n) of
+    Just (r,g,b) -> T.pack (printf "#%02x%02x%02x" r g b)
+    Nothing -> (error $ "Invalid color: " <> show c)
 vtyColorName c =
     fromMaybe (error $ "Invalid color: " <> show c)
               (lookup c allColors)
