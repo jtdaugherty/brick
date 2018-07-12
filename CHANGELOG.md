@@ -2,6 +2,15 @@
 Brick changelog
 ---------------
 
+0.38
+----
+
+New features:
+ * Added support for parsing `#RRGGBB` color values in theme
+   customization files in addition to the color names already supported
+   (thanks Brent Carmer). These values are mapped to the nearest
+   reasonable entry in the 240-color space.
+
 0.37.2
 ------
 
