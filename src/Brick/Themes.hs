@@ -23,7 +23,7 @@
 --
 -- We also support color specifications in the common hex format @#RRGGBB@, but
 -- note that this specification is lossy: terminals can only display 256 colors,
--- but hex codes can specify @16^3 = 4096@ colors.
+-- but hex codes can specify @256^3 = 4096@ colors.
 --
 -- A style specification can be either one of the following values
 -- (without quotes) or a comma-delimited list of one or more of the
