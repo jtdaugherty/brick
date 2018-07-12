@@ -21,6 +21,10 @@
 -- @brightRed@, @brightGreen@, @brightYellow@, @brightBlue@,
 -- @brightMagenta@, @brightCyan@, @brightWhite@, or @default@.
 --
+-- We also support color specifications in the common hex format @#RRGGBB@, but
+-- note that this specification is lossy: terminals can only display 256 colors,
+-- but hex codes can specify @16^3 = 4096@ colors.
+--
 -- A style specification can be either one of the following values
 -- (without quotes) or a comma-delimited list of one or more of the
 -- following values (e.g. @"[bold,underline]"@) indicating that all
