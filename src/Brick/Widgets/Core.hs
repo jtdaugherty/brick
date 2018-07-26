@@ -239,12 +239,14 @@ takeColumns numCols (c:cs) =
             else ""
 
 -- | Make a widget from a string, but wrap the words in the input's
--- lines at the available width using the default wrapping settings.
+-- lines at the available width using the default wrapping settings. The
+-- input string should not contain escapes.
 strWrap :: String -> Widget n
 strWrap = strWrapWith defaultWrapSettings
 
 -- | Make a widget from a string, but wrap the words in the input's
 -- lines at the available width using the specified wrapping settings.
+-- The input string should not contain escapes.
 strWrapWith :: WrapSettings -> String -> Widget n
 strWrapWith settings t = txtWrapWith settings $ T.pack t
 
@@ -252,12 +254,14 @@ safeTextWidth :: T.Text -> Int
 safeTextWidth = V.safeWcswidth . T.unpack
 
 -- | Make a widget from text, but wrap the words in the input's lines at
--- the available width using the default wrapping settings.
+-- the available width using the default wrapping settings. The input
+-- text should not contain escapes.
 txtWrap :: T.Text -> Widget n
 txtWrap = txtWrapWith defaultWrapSettings
 
 -- | Make a widget from text, but wrap the words in the input's lines at
--- the available width using the specified wrapping settings.
+-- the available width using the specified wrapping settings. The input
+-- text should not contain escapes.
 txtWrapWith :: WrapSettings -> T.Text -> Widget n
 txtWrapWith settings s =
     Widget Greedy Fixed $ do
@@ -281,7 +285,8 @@ txtWrapWith settings s =
 -- The input string must not contain tab characters. If it does,
 -- interface corruption will result since the terminal will likely
 -- render it as taking up more than a single column. The caller should
--- replace tabs with the appropriate number of spaces as desired.
+-- replace tabs with the appropriate number of spaces as desired. The
+-- reinput string should not contain escapes.
 str :: String -> Widget n
 str s =
     Widget Fixed Fixed $ do
@@ -306,7 +311,8 @@ str s =
 -- The input string must not contain tab characters. If it does,
 -- interface corruption will result since the terminal will likely
 -- render it as taking up more than a single column. The caller should
--- replace tabs with the appropriate number of spaces as desired.
+-- replace tabs with the appropriate number of spaces as desired. The
+-- reinput text should not contain escapes.
 txt :: T.Text -> Widget n
 txt = str . T.unpack
 
