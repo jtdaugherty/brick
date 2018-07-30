@@ -2,6 +2,13 @@
 Brick changelog
 ---------------
 
+0.39
+----
+
+New features:
+ * The `italic` keyword is now supported in theme customization file
+   style lists. This requires `vty >= 5.23.1`
+
 0.38
 ----
 
