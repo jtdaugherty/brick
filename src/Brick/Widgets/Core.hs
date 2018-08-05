@@ -38,7 +38,9 @@ module Brick.Widgets.Core
 
   -- * Limits
   , hLimit
+  , hLimitPercent
   , vLimit
+  , vLimitPercent
   , setAvailableSize
 
   -- * Attribute management
@@ -757,7 +759,22 @@ rewriteImage br (loRewrite, hiRewrite) old = rewriteHi . rewriteLo $ old where
 hLimit :: Int -> Widget n -> Widget n
 hLimit w p =
     Widget Fixed (vSize p) $
-      withReaderT (& availWidthL %~ (min w)) $ render $ cropToContext p
+      withReaderT (availWidthL %~ (min w)) $ render $ cropToContext p
+
+-- | Limit the space available to the specified widget to the specified
+-- percentage of available width, as a value between 0 and 100
+-- inclusive. Values outside the valid range will be clamped to the
+-- range endpoints. This is important for constraining the horizontal
+-- growth of otherwise-greedy widgets. This is non-greedy horizontally
+-- and defers to the limited widget vertically.
+hLimitPercent :: Int -> Widget n -> Widget n
+hLimitPercent w' p =
+    Widget Fixed (vSize p) $ do
+      let w = clamp 0 100 w'
+      ctx <- getContext
+      let usableWidth = ctx^.availWidthL
+          widgetWidth = round (toRational usableWidth * (toRational w / 100))
+      withReaderT (availWidthL %~ (min widgetWidth)) $ render $ cropToContext p
 
 -- | Limit the space available to the specified widget to the specified
 -- number of rows. This is important for constraining the vertical
@@ -766,7 +783,22 @@ hLimit w p =
 vLimit :: Int -> Widget n -> Widget n
 vLimit h p =
     Widget (hSize p) Fixed $
-      withReaderT (& availHeightL %~ (min h)) $ render $ cropToContext p
+      withReaderT (availHeightL %~ (min h)) $ render $ cropToContext p
+
+-- | Limit the space available to the specified widget to the specified
+-- percentage of available height, as a value between 0 and 100
+-- inclusive. Values outside the valid range will be clamped to the
+-- range endpoints. This is important for constraining the vertical
+-- growth of otherwise-greedy widgets. This is non-greedy vertically and
+-- defers to the limited widget horizontally.
+vLimitPercent :: Int -> Widget n -> Widget n
+vLimitPercent h' p =
+    Widget (vSize p) Fixed $ do
+      let h = clamp 0 100 h'
+      ctx <- getContext
+      let usableHeight = ctx^.availHeightL
+          widgetHeight = round (toRational usableHeight * (toRational h / 100))
+      withReaderT (availHeightL %~ (min widgetHeight)) $ render $ cropToContext p
 
 -- | Set the rendering context height and width for this widget. This
 -- is useful for relaxing the rendering size constraints on e.g. layer
