@@ -2,6 +2,15 @@
 Brick changelog
 ---------------
 
+0.40
+----
+
+New features:
+ * Brick.Widgets.Core: added new functions `hLimitPercent` and
+   `vLimitPercent`. These behave similarly to `hLimit` and `vLimit`
+   except that instead of taking absolute numbers of columns or rows,
+   they take percentages. (Thanks Roman Joost)
+
 0.39
 ----
 
