@@ -19,7 +19,7 @@ import Lens.Micro.Internal (Field1, Field2)
 data Location = Location { loc :: (Int, Int)
                          -- ^ (Column, Row)
                          }
-                deriving (Show, Eq, Ord)
+                deriving (Show, Eq, Ord, Read)
 
 suffixLenses ''Location
 

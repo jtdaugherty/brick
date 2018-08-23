@@ -76,12 +76,13 @@ data ScrollRequest = HScrollBy Int
                    | VScrollToEnd
                    | SetTop Int
                    | SetLeft Int
+                   deriving (Read, Show)
 
 data VisibilityRequest =
     VR { vrPosition :: Location
        , vrSize :: DisplayRegion
        }
-       deriving (Show, Eq)
+       deriving (Show, Eq, Read)
 
 -- | Describes the state of a viewport as it appears as its most recent
 -- rendering.
@@ -93,7 +94,7 @@ data Viewport =
        , _vpSize :: DisplayRegion
        -- ^ The size of the viewport.
        }
-       deriving Show
+       deriving (Show, Read)
 
 -- | The type of viewports that indicates the direction(s) in which a
 -- viewport is scrollable.
@@ -120,12 +121,7 @@ data Extent n = Extent { extentName      :: n
                        , extentSize      :: (Int, Int)
                        , extentOffset    :: Location
                        }
-              deriving (Show)
-
-data EventRO n = EventRO { eventViewportMap :: M.Map n Viewport
-                         , eventVtyHandle :: Vty
-                         , latestExtents :: [Extent n]
-                         }
+              deriving (Show, Read)
 
 -- | The type of actions to take upon completion of an event handler.
 data Next a = Continue a
@@ -138,7 +134,7 @@ data Direction = Up
                -- ^ Up/left
                | Down
                -- ^ Down/right
-               deriving (Show, Eq)
+               deriving (Show, Eq, Read)
 
 -- | The class of types that behave like terminal locations.
 class TerminalLocation a where
@@ -163,7 +159,7 @@ data CursorLocation n =
                    , cursorLocationName :: !(Maybe n)
                    -- ^ The name of the widget associated with the location
                    }
-                   deriving Show
+                   deriving (Read, Show)
 
 -- | A border character has four segments, one extending in each direction
 -- (horizontally and vertically) from the center of the character.
@@ -224,7 +220,7 @@ data Result n =
            -- ^ Places where we may rewrite the edge of the image when
            -- placing this widget next to another one.
            }
-           deriving Show
+           deriving (Show, Read)
 
 suffixLenses ''Result
 
@@ -252,7 +248,13 @@ data RenderState n =
        , observedNames :: !(S.Set n)
        , renderCache :: M.Map n (Result n)
        , clickableNames :: [n]
-       }
+       } deriving (Read, Show)
+
+data EventRO n = EventRO { eventViewportMap :: M.Map n Viewport
+                         , eventVtyHandle :: Vty
+                         , latestExtents :: [Extent n]
+                         , oldState :: RenderState n
+                         }
 
 -- | The rendering context. This tells widgets how to render: how much
 -- space they have in which to render, which attribute they should use
