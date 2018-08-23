@@ -6,6 +6,7 @@
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE DeriveGeneric #-}
 -- | This module provides a scrollable list type and functions for
 -- manipulating and rendering it.
 module Brick.Widgets.List
@@ -68,6 +69,7 @@ import Data.Maybe (fromMaybe)
 import Data.Monoid ((<>))
 import Graphics.Vty (Event(..), Key(..), Modifier(..))
 import qualified Data.Vector as V
+import GHC.Generics (Generic)
 
 import Brick.Types
 import Brick.Main (lookupViewport)
@@ -92,7 +94,7 @@ data List n e =
          -- ^ The list's name.
          , listItemHeight :: Int
          -- ^ The height of the list items.
-         } deriving (Functor, Foldable, Traversable, Show)
+         } deriving (Functor, Foldable, Traversable, Show, Generic)
 
 suffixLenses ''List
 

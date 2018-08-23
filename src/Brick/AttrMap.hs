@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric #-}
 -- | This module provides types and functions for managing an attribute
 -- map which maps attribute names ('AttrName') to attributes ('Attr').
 -- This module is designed to be used with the 'OverloadedStrings'
@@ -54,6 +55,7 @@ import qualified Data.Map as M
 import Data.Maybe (catMaybes)
 import Data.List (inits)
 import Data.String (IsString(..))
+import GHC.Generics (Generic)
 
 import Graphics.Vty (Attr(..), MaybeDefault(..))
 
@@ -70,7 +72,7 @@ import Graphics.Vty (Attr(..), MaybeDefault(..))
 -- "header" <> "clock" <> "seconds"
 -- @
 data AttrName = AttrName [String]
-              deriving (Show, Read, Eq, Ord)
+              deriving (Show, Read, Eq, Ord, Generic)
 
 instance Sem.Semigroup AttrName where
     (AttrName as) <> (AttrName bs) = AttrName $ as `mappend` bs
@@ -85,7 +87,7 @@ instance IsString AttrName where
 -- | An attribute map which maps 'AttrName' values to 'Attr' values.
 data AttrMap = AttrMap Attr (M.Map AttrName Attr)
              | ForceAttr Attr
-             deriving Show
+             deriving (Show, Generic)
 
 -- | Create an attribute name from a string.
 attrName :: String -> AttrName
