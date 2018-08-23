@@ -254,6 +254,7 @@ data EventRO n = EventRO { eventViewportMap :: M.Map n Viewport
                          , eventVtyHandle :: Vty
                          , latestExtents :: [Extent n]
                          , oldState :: RenderState n
+                         , displaySize :: DisplayRegion
                          }
 
 -- | The rendering context. This tells widgets how to render: how much
