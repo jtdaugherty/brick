@@ -38,6 +38,11 @@ module Brick.Main
   -- * Rendering cache management
   , invalidateCacheEntry
   , invalidateCache
+
+  -- * Renderer internals (for benchmarking)
+  , renderFinal
+  , getRenderState
+  , resetRenderState
   )
 where
 
@@ -180,8 +185,7 @@ runWithNewVty buildVty brickChan mUserChan app initialRS initialSt =
               Nothing -> readBChan brickChan
               Just uc -> readBrickEvent brickChan uc
             runInner rs st = do
-              (result, newRS) <- runVty vty readEvent app st (rs & observedNamesL .~ S.empty
-                                                                 & clickableNamesL .~ mempty)
+              (result, newRS) <- runVty vty readEvent app st (resetRenderState rs)
               case result of
                   SuspendAndResume act -> do
                       killThread pid
@@ -221,7 +225,8 @@ customMain buildVty mUserChan app initialAppState = do
                     run newVty newRS newAppState brickChan
 
         emptyES = ES [] mempty
-        eventRO = EventRO M.empty initialVty mempty
+        emptyRS = RS M.empty mempty S.empty mempty mempty
+        eventRO = EventRO M.empty initialVty mempty emptyRS
     (st, eState) <- runStateT (runReaderT (runEventM (appStartEvent app initialAppState)) eventRO) emptyES
     let initialRS = RS M.empty (esScrollRequests eState) S.empty mempty []
     brickChan <- newBChan 20
@@ -303,7 +308,7 @@ runVty vty readEvent app appState rs = do
         _ -> return (e, firstRS, exts)
 
     let emptyES = ES [] mempty
-        eventRO = EventRO (viewportMap nextRS) vty nextExts
+        eventRO = EventRO (viewportMap nextRS) vty nextExts nextRS
 
     (next, eState) <- runStateT (runReaderT (runEventM (appHandleEvent app appState e'))
                                 eventRO) emptyES
@@ -372,6 +377,14 @@ invalidateCache = EventM $ do
 withVty :: Vty -> (Vty -> IO a) -> IO a
 withVty vty useVty = do
     useVty vty `finally` shutdown vty
+
+getRenderState :: EventM n (RenderState n)
+getRenderState = EventM $ asks oldState
+
+resetRenderState :: RenderState n -> RenderState n
+resetRenderState s =
+    s & observedNamesL .~ S.empty
+      & clickableNamesL .~ mempty
 
 renderApp :: Vty -> App s e n -> s -> RenderState n -> IO (RenderState n, [Extent n])
 renderApp vty app appState rs = do

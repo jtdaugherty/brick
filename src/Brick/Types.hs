@@ -76,6 +76,8 @@ module Brick.Types
   , Padding(..)
   , Direction(..)
 
+  -- * Renderer internals (for benchmarking)
+  , RenderState
   )
 where
 
