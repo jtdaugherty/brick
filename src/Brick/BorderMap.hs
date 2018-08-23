@@ -43,7 +43,7 @@ neighbors (Edges vt vb vl vr) = Edges horiz horiz vert vert where
 data BorderMap a = BorderMap
     { _coordinates :: Edges Int
     , _values :: Edges (IMap a)
-    } deriving (Eq, Ord, Show, Functor)
+    } deriving (Eq, Ord, Show, Functor, Read)
 
 -- | Given a rectangle (specified as the coordinates of the top, left, bottom,
 -- and right sides), initialize an empty 'BorderMap'.
