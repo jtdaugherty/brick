@@ -1,4 +1,6 @@
 {-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveAnyClass #-}
 module Data.IMap
     ( IMap
     , Run(..)
@@ -22,13 +24,15 @@ module Data.IMap
 import Data.List (foldl')
 import Data.Monoid
 import Data.IntMap.Strict (IntMap)
+import GHC.Generics
+import Control.DeepSeq
 import Prelude hiding (lookup)
 import qualified Data.IntMap.Strict as IM
 
 -- | Semantically, 'IMap' and 'IntMap' are identical; but 'IMap' is more
 -- efficient when large sequences of contiguous keys are mapped to the same
 -- value.
-newtype IMap a = IMap { _runs :: IntMap (Run a) } deriving (Show, Functor, Read)
+newtype IMap a = IMap { _runs :: IntMap (Run a) } deriving (Show, Functor, Read, Generic, NFData)
 
 {-# INLINE unsafeRuns #-}
 -- | This function is unsafe because 'IMap's that compare equal may split their
@@ -72,7 +76,7 @@ instance Applicative IMap where
 data Run a = Run
     { len :: !Int
     , val :: !a
-    } deriving (Eq, Ord, Read, Show, Functor)
+    } deriving (Eq, Ord, Read, Show, Functor, Generic, NFData)
 
 instance Foldable    Run where foldMap f r = f (val r)
 instance Traversable Run where sequenceA (Run n v) = Run n <$> v

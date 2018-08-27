@@ -1,6 +1,8 @@
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveAnyClass #-}
 module Brick.BorderMap
     ( BorderMap
     , Edges(..)
@@ -18,6 +20,8 @@ module Brick.BorderMap
 import Brick.Types.Common (Edges(..), Location(..), eTopL, eBottomL, eRightL, eLeftL, origin)
 import Control.Applicative (liftA2)
 import Data.IMap (IMap, Run(Run))
+import GHC.Generics
+import Control.DeepSeq
 import Prelude hiding (lookup)
 import qualified Data.IMap as IM
 
@@ -43,7 +47,7 @@ neighbors (Edges vt vb vl vr) = Edges horiz horiz vert vert where
 data BorderMap a = BorderMap
     { _coordinates :: Edges Int
     , _values :: Edges (IMap a)
-    } deriving (Eq, Ord, Show, Functor, Read)
+    } deriving (Eq, Ord, Show, Functor, Read, Generic, NFData)
 
 -- | Given a rectangle (specified as the coordinates of the top, left, bottom,
 -- and right sides), initialize an empty 'BorderMap'.

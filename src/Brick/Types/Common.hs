@@ -1,7 +1,8 @@
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TemplateHaskell #-}
-
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveAnyClass #-}
 module Brick.Types.Common
   ( Location(..)
   , locL
@@ -12,6 +13,8 @@ module Brick.Types.Common
 
 import Brick.Types.TH (suffixLenses)
 import qualified Data.Semigroup as Sem
+import GHC.Generics
+import Control.DeepSeq
 import Lens.Micro (_1, _2)
 import Lens.Micro.Internal (Field1, Field2)
 
@@ -19,7 +22,7 @@ import Lens.Micro.Internal (Field1, Field2)
 data Location = Location { loc :: (Int, Int)
                          -- ^ (Column, Row)
                          }
-                deriving (Show, Eq, Ord, Read)
+                deriving (Show, Eq, Ord, Read, Generic, NFData)
 
 suffixLenses ''Location
 
@@ -41,7 +44,7 @@ instance Monoid Location where
     mappend = (Sem.<>)
 
 data Edges a = Edges { eTop, eBottom, eLeft, eRight :: a }
-    deriving (Eq, Ord, Read, Show, Functor)
+    deriving (Eq, Ord, Read, Show, Functor, Generic, NFData)
 
 suffixLenses ''Edges
 

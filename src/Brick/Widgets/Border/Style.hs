@@ -1,4 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveAnyClass #-}
 -- | This module provides styles for borders as used in terminal
 -- applications. Your mileage may vary on some of the fancier styles
 -- due to varying support for some border characters in the fonts your
@@ -20,6 +22,9 @@ module Brick.Widgets.Border.Style
   , defaultBorderStyle
   )
 where
+
+import GHC.Generics
+import Control.DeepSeq
 
 -- | A border style for use in any widget that needs to render borders
 -- in a consistent style.
@@ -47,7 +52,7 @@ data BorderStyle =
                 , bsVertical :: Char
                 -- ^ Vertical border character
                 }
-                deriving (Show, Read, Eq)
+                deriving (Show, Read, Eq, Generic, NFData)
 
 defaultBorderStyle :: BorderStyle
 defaultBorderStyle = unicode

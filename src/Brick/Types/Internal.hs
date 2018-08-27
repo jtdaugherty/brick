@@ -1,6 +1,8 @@
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveAnyClass #-}
 module Brick.Types.Internal
   ( ScrollRequest(..)
   , VisibilityRequest(..)
@@ -58,6 +60,8 @@ import Lens.Micro.TH (makeLenses)
 import qualified Data.Set as S
 import qualified Data.Map as M
 import Graphics.Vty (Vty, Event, Button, Modifier, DisplayRegion, Image, Attr, emptyImage)
+import GHC.Generics
+import Control.DeepSeq (NFData)
 
 import Brick.BorderMap (BorderMap)
 import qualified Brick.BorderMap as BM
@@ -76,13 +80,13 @@ data ScrollRequest = HScrollBy Int
                    | VScrollToEnd
                    | SetTop Int
                    | SetLeft Int
-                   deriving (Read, Show)
+                   deriving (Read, Show, Generic, NFData)
 
 data VisibilityRequest =
     VR { vrPosition :: Location
        , vrSize :: DisplayRegion
        }
-       deriving (Show, Eq, Read)
+       deriving (Show, Eq, Read, Generic, NFData)
 
 -- | Describes the state of a viewport as it appears as its most recent
 -- rendering.
@@ -94,7 +98,7 @@ data Viewport =
        , _vpSize :: DisplayRegion
        -- ^ The size of the viewport.
        }
-       deriving (Show, Read)
+       deriving (Show, Read, Generic, NFData)
 
 -- | The type of viewports that indicates the direction(s) in which a
 -- viewport is scrollable.
@@ -121,7 +125,7 @@ data Extent n = Extent { extentName      :: n
                        , extentSize      :: (Int, Int)
                        , extentOffset    :: Location
                        }
-              deriving (Show, Read)
+                       deriving (Show, Read, Generic, NFData)
 
 -- | The type of actions to take upon completion of an event handler.
 data Next a = Continue a
@@ -134,7 +138,7 @@ data Direction = Up
                -- ^ Up/left
                | Down
                -- ^ Down/right
-               deriving (Show, Eq, Read)
+               deriving (Show, Eq, Read, Generic, NFData)
 
 -- | The class of types that behave like terminal locations.
 class TerminalLocation a where
@@ -159,7 +163,7 @@ data CursorLocation n =
                    , cursorLocationName :: !(Maybe n)
                    -- ^ The name of the widget associated with the location
                    }
-                   deriving (Read, Show)
+                   deriving (Read, Show, Generic, NFData)
 
 -- | A border character has four segments, one extending in each direction
 -- (horizontally and vertically) from the center of the character.
@@ -171,7 +175,7 @@ data BorderSegment = BorderSegment
     -- ^ Does this segment want to connect to its neighbor?
     , bsDraw :: Bool
     -- ^ Should this segment be represented visually?
-    } deriving (Eq, Ord, Read, Show)
+    } deriving (Eq, Ord, Read, Show, Generic, NFData)
 
 suffixLenses ''BorderSegment
 
@@ -187,7 +191,7 @@ data DynBorder = DynBorder
     -- connections: only dynamic borders with equal 'Attr's will connect to
     -- each other.
     , dbSegments :: Edges BorderSegment
-    } deriving (Eq, Read, Show)
+    } deriving (Eq, Read, Show, Generic, NFData)
 
 suffixLenses ''DynBorder
 
@@ -220,7 +224,7 @@ data Result n =
            -- ^ Places where we may rewrite the edge of the image when
            -- placing this widget next to another one.
            }
-           deriving (Show, Read)
+           deriving (Show, Read, Generic, NFData)
 
 suffixLenses ''Result
 
@@ -248,7 +252,7 @@ data RenderState n =
        , observedNames :: !(S.Set n)
        , renderCache :: M.Map n (Result n)
        , clickableNames :: [n]
-       } deriving (Read, Show)
+       } deriving (Read, Show, Generic, NFData)
 
 data EventRO n = EventRO { eventViewportMap :: M.Map n Viewport
                          , eventVtyHandle :: Vty
