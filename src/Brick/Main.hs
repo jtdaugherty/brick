@@ -42,7 +42,6 @@ module Brick.Main
   -- * Renderer internals (for benchmarking)
   , renderFinal
   , getRenderState
-  , getDisplaySize
   , resetRenderState
   )
 where
@@ -67,7 +66,6 @@ import Graphics.Vty
   , Picture(..)
   , Cursor(..)
   , Event(..)
-  , DisplayRegion
   , update
   , outputIface
   , displayBounds
@@ -217,7 +215,6 @@ customMain :: (Ord n)
            -> IO s
 customMain buildVty mUserChan app initialAppState = do
     initialVty <- buildVty
-    initSZ <- displayBounds $ outputIface initialVty
     let run vty rs st brickChan = do
             result <- runWithNewVty vty brickChan mUserChan app rs st
             case result of
@@ -229,7 +226,7 @@ customMain buildVty mUserChan app initialAppState = do
 
         emptyES = ES [] mempty
         emptyRS = RS M.empty mempty S.empty mempty mempty
-        eventRO = EventRO M.empty initialVty mempty emptyRS initSZ
+        eventRO = EventRO M.empty initialVty mempty emptyRS
     (st, eState) <- runStateT (runReaderT (runEventM (appStartEvent app initialAppState)) eventRO) emptyES
     let initialRS = RS M.empty (esScrollRequests eState) S.empty mempty []
     brickChan <- newBChan 20
@@ -249,17 +246,17 @@ runVty :: (Ord n)
        -> RenderState n
        -> IO (Next s, RenderState n)
 runVty vty readEvent app appState rs = do
-    (firstRS, exts, firstSZ) <- renderApp vty app appState rs
+    (firstRS, exts) <- renderApp vty app appState rs
     e <- readEvent
 
-    (e', nextRS, nextExts, sz) <- case e of
+    (e', nextRS, nextExts) <- case e of
         -- If the event was a resize, redraw the UI to update the
         -- viewport states before we invoke the event handler since we
         -- want the event handler to have access to accurate viewport
         -- information.
         VtyEvent (EvResize _ _) -> do
-            (rs', exts', newSZ) <- renderApp vty app appState $ firstRS & observedNamesL .~ S.empty
-            return (e, rs', exts', newSZ)
+            (rs', exts') <- renderApp vty app appState $ firstRS & observedNamesL .~ S.empty
+            return (e, rs', exts')
         VtyEvent (EvMouseDown c r button mods) -> do
             let matching = findClickedExtents_ (c, r) exts
             case matching of
@@ -282,9 +279,9 @@ runVty vty readEvent app appState rs = do
                                   Just vp -> localCoords & _1 %~ (+ (vp^.vpLeft))
                                                          & _2 %~ (+ (vp^.vpTop))
 
-                            return (MouseDown n button mods newCoords, firstRS, exts, firstSZ)
-                        False -> return (e, firstRS, exts, firstSZ)
-                _ -> return (e, firstRS, exts, firstSZ)
+                            return (MouseDown n button mods newCoords, firstRS, exts)
+                        False -> return (e, firstRS, exts)
+                _ -> return (e, firstRS, exts)
         VtyEvent (EvMouseUp c r button) -> do
             let matching = findClickedExtents_ (c, r) exts
             case matching of
@@ -305,13 +302,13 @@ runVty vty readEvent app appState rs = do
                                   Nothing -> localCoords
                                   Just vp -> localCoords & _1 %~ (+ (vp^.vpLeft))
                                                          & _2 %~ (+ (vp^.vpTop))
-                            return (MouseUp n button newCoords, firstRS, exts, firstSZ)
-                        False -> return (e, firstRS, exts, firstSZ)
-                _ -> return (e, firstRS, exts, firstSZ)
-        _ -> return (e, firstRS, exts, firstSZ)
+                            return (MouseUp n button newCoords, firstRS, exts)
+                        False -> return (e, firstRS, exts)
+                _ -> return (e, firstRS, exts)
+        _ -> return (e, firstRS, exts)
 
     let emptyES = ES [] mempty
-        eventRO = EventRO (viewportMap nextRS) vty nextExts nextRS sz
+        eventRO = EventRO (viewportMap nextRS) vty nextExts nextRS
 
     (next, eState) <- runStateT (runReaderT (runEventM (appHandleEvent app appState e'))
                                 eventRO) emptyES
@@ -384,15 +381,12 @@ withVty vty useVty = do
 getRenderState :: EventM n (RenderState n)
 getRenderState = EventM $ asks oldState
 
-getDisplaySize :: EventM n DisplayRegion
-getDisplaySize = EventM $ asks displaySize
-
 resetRenderState :: RenderState n -> RenderState n
 resetRenderState s =
     s & observedNamesL .~ S.empty
       & clickableNamesL .~ mempty
 
-renderApp :: Vty -> App s e n -> s -> RenderState n -> IO (RenderState n, [Extent n], DisplayRegion)
+renderApp :: Vty -> App s e n -> s -> RenderState n -> IO (RenderState n, [Extent n])
 renderApp vty app appState rs = do
     sz <- displayBounds $ outputIface vty
     let (newRS, pic, theCursor, exts) = renderFinal (appAttrMap app appState)
@@ -408,7 +402,7 @@ renderApp vty app appState rs = do
 
     update vty picWithCursor
 
-    return (newRS, exts, sz)
+    return (newRS, exts)
 
 -- | Ignore all requested cursor positions returned by the rendering
 -- process. This is a convenience function useful as an
