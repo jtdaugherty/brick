@@ -1041,33 +1041,42 @@ viewport vpname typ p =
       reqs <- lift $ gets $ (^.rsScrollRequestsL)
       let relevantRequests = snd <$> filter (\(n, _) -> n == vpname) reqs
       when (not $ null relevantRequests) $ do
-          Just vp <- lift $ gets $ (^.viewportMapL.to (M.lookup vpname))
-          let updatedVp = applyRequests relevantRequests vp
-              applyRequests [] v = v
-              applyRequests (rq:rqs) v =
-                  case typ of
-                      Horizontal -> scrollTo typ rq (initialResult^.imageL) $ applyRequests rqs v
-                      Vertical -> scrollTo typ rq (initialResult^.imageL) $ applyRequests rqs v
-                      Both -> scrollTo Horizontal rq (initialResult^.imageL) $
-                              scrollTo Vertical rq (initialResult^.imageL) $
-                              applyRequests rqs v
-          lift $ modify (& viewportMapL %~ (M.insert vpname updatedVp))
-          return ()
+          mVp <- lift $ gets $ (^.viewportMapL.to (M.lookup vpname))
+          case mVp of
+              Nothing -> error $ "BUG: viewport: viewport name " <> show vpname <> " absent from viewport map"
+              Just vp -> do
+                  let updatedVp = applyRequests relevantRequests vp
+                      applyRequests [] v = v
+                      applyRequests (rq:rqs) v =
+                          case typ of
+                              Horizontal -> scrollTo typ rq (initialResult^.imageL) $ applyRequests rqs v
+                              Vertical -> scrollTo typ rq (initialResult^.imageL) $ applyRequests rqs v
+                              Both -> scrollTo Horizontal rq (initialResult^.imageL) $
+                                      scrollTo Vertical rq (initialResult^.imageL) $
+                                      applyRequests rqs v
+                  lift $ modify (& viewportMapL %~ (M.insert vpname updatedVp))
 
       -- If the sub-rendering requested visibility, update the scroll
       -- state accordingly
       when (not $ null $ initialResult^.visibilityRequestsL) $ do
-          Just vp <- lift $ gets $ (^.viewportMapL.to (M.lookup vpname))
-          let rqs = initialResult^.visibilityRequestsL
-              updateVp vp' rq = case typ of
-                  Both -> scrollToView Horizontal rq $ scrollToView Vertical rq vp'
-                  Horizontal -> scrollToView typ rq vp'
-                  Vertical -> scrollToView typ rq vp'
-          lift $ modify (& viewportMapL %~ (M.insert vpname $ foldl updateVp vp rqs))
+          mVp <- lift $ gets $ (^.viewportMapL.to (M.lookup vpname))
+          case mVp of
+              Nothing -> error $ "BUG: viewport: viewport name " <> show vpname <> " absent from viewport map"
+              Just vp -> do
+                  let rqs = initialResult^.visibilityRequestsL
+                      updateVp vp' rq = case typ of
+                          Both -> scrollToView Horizontal rq $ scrollToView Vertical rq vp'
+                          Horizontal -> scrollToView typ rq vp'
+                          Vertical -> scrollToView typ rq vp'
+                  lift $ modify (& viewportMapL %~ (M.insert vpname $ foldl updateVp vp rqs))
 
       -- If the size of the rendering changes enough to make the
       -- viewport offsets invalid, reset them
-      Just vp <- lift $ gets $ (^.viewportMapL.to (M.lookup vpname))
+      mVp <- lift $ gets $ (^.viewportMapL.to (M.lookup vpname))
+      vp <- case mVp of
+          Nothing -> error $ "BUG: viewport: viewport name " <> show vpname <> " absent from viewport map"
+          Just v -> return v
+
       let img = initialResult^.imageL
           fixTop v = if V.imageHeight img < v^.vpSize._2
                    then v & vpTop .~ 0
@@ -1082,7 +1091,10 @@ viewport vpname typ p =
       lift $ modify (& viewportMapL %~ (M.insert vpname (updateVp vp)))
 
       -- Get the viewport state now that it has been updated.
-      Just vpFinal <- lift $ gets (M.lookup vpname . (^.viewportMapL))
+      mVpFinal <- lift $ gets (M.lookup vpname . (^.viewportMapL))
+      vpFinal <- case mVpFinal of
+          Nothing -> error $ "BUG: viewport: viewport name " <> show vpname <> " absent from viewport map"
+          Just v -> return v
 
       -- Then perform a translation of the sub-rendering to fit into the
       -- viewport
