@@ -39,6 +39,7 @@ module Brick.Widgets.List
   -- * Manipulating a list
   , listMoveBy
   , listMoveTo
+  , listMoveToElement
   , listMoveUp
   , listMoveDown
   , listMoveByPages
@@ -63,6 +64,7 @@ import Control.Applicative ((<$>),(<*>),pure)
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 #endif
+import Control.Applicative ((<|>))
 
 import Lens.Micro ((^.), (&), (.~), (%~), _2)
 import Data.Maybe (fromMaybe)
@@ -350,6 +352,13 @@ listMoveTo pos l =
     in l & listSelectedL .~ if len > 0
                             then Just newSel
                             else Nothing
+
+-- | Set the selected index for a list to the index of the specified
+-- element if it is in the list, or leave the list unmodified otherwise.
+listMoveToElement :: (Eq e) => e -> List n e -> List n e
+listMoveToElement e l =
+    let i = V.elemIndex e (l^.listElementsL)
+    in l & listSelectedL %~ (i <|>)
 
 -- | Return a list's selected element, if any.
 listSelectedElement :: List n e -> Maybe (Int, e)
