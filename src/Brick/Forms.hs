@@ -2,6 +2,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 -- | NOTE: This API is experimental and will probably change. Please try
 -- it out! Feedback is very much appreciated, and your patience in the
 -- face of breaking API changes is also appreciated!
@@ -65,6 +66,7 @@ module Brick.Forms
   , editPasswordField
   , radioField
   , checkboxField
+  , listField
 
   -- * Advanced form field constructors
   , editField
@@ -82,10 +84,12 @@ import Data.Monoid
 #endif
 import Data.Maybe (isJust, isNothing)
 import Data.List (elemIndex)
+import Data.Vector (Vector)
 
 import Brick
 import Brick.Focus
 import Brick.Widgets.Edit
+import Brick.Widgets.List
 import qualified Data.Text.Zipper as Z
 
 import qualified Data.Text as T
@@ -287,6 +291,50 @@ renderCheckbox label n foc val =
        addAttr $
        (str $ "[" <> (if val then "X" else " ") <> "] ") <+> txt label
 
+-- | A form field for selecting a single choice from a set of possible
+-- choices in a scrollable list. This uses a 'List' internally.
+--
+-- This field responds to the same input events that a 'List' does.
+listField :: forall s e n a . (Ord n, Show n, Eq a)
+          => (s -> Vector a)
+          -- ^ Possible choices.
+          -> Lens' s (Maybe a)
+          -- ^ The state lens for the initially/finally selected
+          -- element.
+          -> (Bool -> a -> Widget n)
+          -- ^ List item rendering function.
+          -> Int
+          -- ^ List item height in rows.
+          -> n
+          -- ^ The resource name for the input field.
+          -> s
+          -- ^ The initial form state.
+          -> FormFieldState s e n
+listField options stLens renderItem itemHeight name initialState =
+    let optionsVector = options initialState
+        initVal = initialState ^. customStLens
+
+        customStLens :: Lens' s (List n a)
+        customStLens = lens getList setList
+            where
+               getList s = let l = list name optionsVector itemHeight
+                           in case s ^. stLens of
+                               Nothing -> l
+                               Just e -> listMoveToElement e l
+               setList s l = s & stLens .~ (snd <$> listSelectedElement l)
+
+        handleEvent (VtyEvent e) s = handleListEvent e s
+        handleEvent _ s = return s
+
+    in FormFieldState { formFieldState        = initVal
+                      , formFields            = [ FormField name Just True
+                                                            (renderList renderItem)
+                                                            handleEvent
+                                                ]
+                      , formFieldLens         = customStLens
+                      , formFieldRenderHelper = id
+                      , formFieldConcat       = vBox
+                      }
 -- | A form field for selecting a single choice from a set of possible
 -- choices. Each choice has an associated value and text label.
 --
