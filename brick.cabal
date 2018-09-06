@@ -87,7 +87,7 @@ library
     Brick.Widgets.Internal
 
   build-depends:       base <= 4.11.1.0,
-                       vty >= 5.23.1,
+                       vty >= 5.24,
                        transformers,
                        data-clist >= 0.1,
                        dlist,
