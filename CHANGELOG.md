@@ -2,6 +2,23 @@
 Brick changelog
 ---------------
 
+0.41
+----
+
+New features:
+ * `Brick.Forms` got a new field constructor, `listField`, that provides
+   a form field using a `List`.
+ * `List`: added the `listMoveToElement` function for changing the list
+   selection to the specified element, if it exists.
+
+Package changes:
+ * Now depends on vty >= 5.24.
+
+Other changes:
+ * `viewport`: fixed failable patterns for forward compatibility with
+   GHC 8.6 (#183)
+ * Add `Generic`, `NFData`, and `Read` instances for some types
+
 0.40
 ----
 
