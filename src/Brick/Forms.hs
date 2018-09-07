@@ -290,6 +290,7 @@ renderCheckbox label n foc val =
     let addAttr = if foc then withDefAttr focusedFormInputAttr else id
     in clickable n $
        addAttr $
+       showCursor n (Location (1,0)) $
        (str $ "[" <> (if val then "X" else " ") <> "] ") <+> txt label
 
 -- | A form field for selecting a single choice from a set of possible
