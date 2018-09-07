@@ -290,7 +290,7 @@ renderCheckbox label n foc val =
     let addAttr = if foc then withDefAttr focusedFormInputAttr else id
     in clickable n $
        addAttr $
-       showCursor n (Location (1,0)) $
+       if foc then showCursor n (Location (1,0)) else id $
        (str $ "[" <> (if val then "X" else " ") <> "] ") <+> txt label
 
 -- | A form field for selecting a single choice from a set of possible
@@ -390,7 +390,7 @@ renderRadio val name label foc cur =
         isSet = val == cur
     in clickable name $
        addAttr $
-       showCursor name (Location (1,0)) $
+       if foc then showCursor name (Location (1,0)) else id $
        hBox [ str "["
             , str $ if isSet then "*" else " "
             , txt $ "] " <> label
