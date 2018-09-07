@@ -288,9 +288,9 @@ checkboxField stLens name label initialState =
 renderCheckbox :: T.Text -> n -> Bool -> Bool -> Widget n
 renderCheckbox label n foc val =
     let addAttr = if foc then withDefAttr focusedFormInputAttr else id
+        csr = if foc then showCursor n (Location (1,0)) else id
     in clickable n $
-       addAttr $
-       if foc then showCursor n (Location (1,0)) else id $
+       addAttr $ csr $
        (str $ "[" <> (if val then "X" else " ") <> "] ") <+> txt label
 
 -- | A form field for selecting a single choice from a set of possible
@@ -388,9 +388,9 @@ renderRadio val name label foc cur =
                   then withDefAttr focusedFormInputAttr
                   else id
         isSet = val == cur
+        csr = if foc then showCursor name (Location (1,0)) else id
     in clickable name $
-       addAttr $
-       if foc then showCursor name (Location (1,0)) else id $
+       addAttr $ csr $
        hBox [ str "["
             , str $ if isSet then "*" else " "
             , txt $ "] " <> label
