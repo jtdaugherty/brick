@@ -78,7 +78,7 @@ module Brick.Forms
   )
 where
 
-import Graphics.Vty
+import Graphics.Vty hiding (showCursor)
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid
 #endif
@@ -88,6 +88,7 @@ import Data.Vector (Vector)
 
 import Brick
 import Brick.Focus
+import Brick.Widgets.Core (showCursor)
 import Brick.Widgets.Edit
 import Brick.Widgets.List
 import qualified Data.Text.Zipper as Z
@@ -388,6 +389,7 @@ renderRadio val name label foc cur =
         isSet = val == cur
     in clickable name $
        addAttr $
+       showCursor name (Location (1,0)) $
        hBox [ str "["
             , str $ if isSet then "*" else " "
             , txt $ "] " <> label
