@@ -78,7 +78,7 @@ module Brick.Forms
   )
 where
 
-import Graphics.Vty
+import Graphics.Vty hiding (showCursor)
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid
 #endif
@@ -88,6 +88,7 @@ import Data.Vector (Vector)
 
 import Brick
 import Brick.Focus
+import Brick.Widgets.Core (showCursor)
 import Brick.Widgets.Edit
 import Brick.Widgets.List
 import qualified Data.Text.Zipper as Z
@@ -289,6 +290,7 @@ renderCheckbox label n foc val =
     let addAttr = if foc then withDefAttr focusedFormInputAttr else id
     in clickable n $
        addAttr $
+       if foc then showCursor n (Location (1,0)) else id $
        (str $ "[" <> (if val then "X" else " ") <> "] ") <+> txt label
 
 -- | A form field for selecting a single choice from a set of possible
@@ -388,6 +390,7 @@ renderRadio val name label foc cur =
         isSet = val == cur
     in clickable name $
        addAttr $
+       if foc then showCursor name (Location (1,0)) else id $
        hBox [ str "["
             , str $ if isSet then "*" else " "
             , txt $ "] " <> label
