@@ -2,6 +2,14 @@
 Brick changelog
 ---------------
 
+0.41.1
+------
+
+New features:
+ * `Forms`: added `checkboxCustomField` and `radioCustomField` to permit
+   customization of characters used to draw selection state for such
+   fields.
+
 0.41
 ----
 
