@@ -70,6 +70,8 @@ module Brick.Forms
 
   -- * Advanced form field constructors
   , editField
+  , radioCustomField
+  , checkboxCustomField
 
   -- * Attributes
   , formAttr
@@ -268,7 +270,31 @@ checkboxField :: (Ord n, Show n)
               -> s
               -- ^ The initial form state.
               -> FormFieldState s e n
-checkboxField stLens name label initialState =
+checkboxField = checkboxCustomField '[' 'X' ']'
+
+-- | A form field for manipulating a boolean value. This represents
+-- 'True' as @[X] label@ and 'False' as @[ ] label@. This function
+-- permits the customization of the @[X]@ notation characters.
+--
+-- This field responds to `Space` keypresses to toggle the checkbox and
+-- to mouse clicks.
+checkboxCustomField :: (Ord n, Show n)
+                    => Char
+                    -- ^ Left bracket character.
+                    -> Char
+                    -- ^ Checkmark character.
+                    -> Char
+                    -- ^ Right bracket character.
+                    -> Lens' s Bool
+                    -- ^ The state lens for this value.
+                    -> n
+                    -- ^ The resource name for the input field.
+                    -> T.Text
+                    -- ^ The label for the check box, to appear at its right.
+                    -> s
+                    -- ^ The initial form state.
+                    -> FormFieldState s e n
+checkboxCustomField lb check rb stLens name label initialState =
     let initVal = initialState ^. stLens
 
         handleEvent (MouseDown n _ _ _) s | n == name = return $ not s
@@ -277,7 +303,7 @@ checkboxField stLens name label initialState =
 
     in FormFieldState { formFieldState        = initVal
                       , formFields            = [ FormField name Just True
-                                                            (renderCheckbox label name)
+                                                            (renderCheckbox lb check rb label name)
                                                             handleEvent
                                                 ]
                       , formFieldLens         = stLens
@@ -285,13 +311,14 @@ checkboxField stLens name label initialState =
                       , formFieldConcat       = vBox
                       }
 
-renderCheckbox :: T.Text -> n -> Bool -> Bool -> Widget n
-renderCheckbox label n foc val =
+renderCheckbox :: Char -> Char -> Char -> T.Text -> n -> Bool -> Bool -> Widget n
+renderCheckbox lb check rb label n foc val =
     let addAttr = if foc then withDefAttr focusedFormInputAttr else id
         csr = if foc then showCursor n (Location (1,0)) else id
     in clickable n $
        addAttr $ csr $
-       (str $ "[" <> (if val then "X" else " ") <> "] ") <+> txt label
+       (txt $ T.singleton lb <> (if val then T.singleton check else " ") <>
+              T.singleton rb <> " ") <+> txt label
 
 -- | A form field for selecting a single choice from a set of possible
 -- choices in a scrollable list. This uses a 'List' internally.
@@ -351,7 +378,27 @@ radioField :: (Ord n, Show n, Eq a)
            -> s
            -- ^ The initial form state.
            -> FormFieldState s e n
-radioField stLens options initialState =
+radioField = radioCustomField '[' '*' ']'
+
+-- | A form field for selecting a single choice from a set of possible
+-- choices. Each choice has an associated value and text label. This
+-- function permits the customization of the @[*]@ notation characters.
+--
+-- This field responds to `Space` keypresses to select a radio button
+-- option and to mouse clicks.
+radioCustomField :: (Ord n, Show n, Eq a)
+                 => Char
+                 -> Char
+                 -> Char
+                 -> Lens' s a
+                 -- ^ The state lens for this value.
+                 -> [(a, n, T.Text)]
+                 -- ^ The available choices, in order. Each choice has a value
+                 -- of type @a@, a resource name, and a text label.
+                 -> s
+                 -- ^ The initial form state.
+                 -> FormFieldState s e n
+radioCustomField lb check rb stLens options initialState =
     let initVal = initialState ^. stLens
 
         lookupOptionValue n =
@@ -372,7 +419,7 @@ radioField stLens options initialState =
             FormField name
                       Just
                       True
-                      (renderRadio val name label)
+                      (renderRadio lb check rb val name label)
                       (handleEvent val)
 
     in FormFieldState { formFieldState        = initVal
@@ -382,8 +429,8 @@ radioField stLens options initialState =
                       , formFieldConcat       = vBox
                       }
 
-renderRadio :: (Eq a) => a -> n -> T.Text -> Bool -> a -> Widget n
-renderRadio val name label foc cur =
+renderRadio :: (Eq a) => Char -> Char -> Char -> a -> n -> T.Text -> Bool -> a -> Widget n
+renderRadio lb check rb val name label foc cur =
     let addAttr = if foc
                   then withDefAttr focusedFormInputAttr
                   else id
@@ -391,9 +438,9 @@ renderRadio val name label foc cur =
         csr = if foc then showCursor name (Location (1,0)) else id
     in clickable name $
        addAttr $ csr $
-       hBox [ str "["
-            , str $ if isSet then "*" else " "
-            , txt $ "] " <> label
+       hBox [ txt $ T.singleton lb
+            , txt $ if isSet then T.singleton check else " "
+            , txt $ T.singleton rb <> " " <> label
             ]
 
 -- | A form field for using an editor to edit the text representation of
