@@ -2,6 +2,13 @@
 Brick changelog
 ---------------
 
+0.41.2
+------
+
+Bug fixes:
+ * Support STM 2.5 by allowing for `Natural` argument to `newTBQueue`
+   (thanks @osa1)
+
 0.41.1
 ------
 
