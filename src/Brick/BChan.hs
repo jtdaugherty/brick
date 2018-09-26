@@ -20,7 +20,7 @@ data BChan a = BChan (TBQueue a)
 -- |Builds and returns a new instance of @BChan@.
 newBChan :: Int   -- ^ maximum number of elements the channel can hold
           -> IO (BChan a)
-newBChan size = atomically $ BChan <$> newTBQueue size
+newBChan size = atomically $ BChan <$> newTBQueue (fromIntegral size)
 
 -- |Writes a value to a @BChan@; blocks if the channel is full.
 writeBChan :: BChan a -> a -> IO ()
