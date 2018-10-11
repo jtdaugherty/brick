@@ -68,6 +68,7 @@ at these projects:
  * `2048Haskell`, an implementation of the 2048 game: https://github.com/8Gitbrix/2048Haskell
  * `bhoogle`, a [Hoogle](https://www.haskell.org/hoogle/) client: https://github.com/andrevdm/bhoogle
  * `clifm`, a file manager: https://github.com/pasqu4le/clifm
+ * `towerHanoi`, animated solutions to The Tower of Hanoi: https://github.com/shajenM/projects/tree/master/towerHanoi
 
 Getting Started
 ---------------
