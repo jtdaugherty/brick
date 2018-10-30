@@ -1,7 +1,5 @@
 ![](logo/brick-final-clearbg-with-text.svg)
 
-[![Build Status](https://travis-ci.org/jtdaugherty/brick.svg?branch=master)](https://travis-ci.org/jtdaugherty/brick)
-
 `brick` is a Haskell terminal user interface programming library in the
 style of [gloss](http://hackage.haskell.org/package/gloss). This means
 you write a function that describes how your user interface should look,
