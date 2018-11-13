@@ -208,7 +208,10 @@ drawListElements foc l drawElem =
     Widget Greedy Greedy $ do
         c <- getContext
 
-        let es = V.slice start num (l^.listElementsL)
+        let es = if num <= 0
+                 then V.empty
+                 else V.slice start num (l^.listElementsL)
+
             idx = fromMaybe 0 (l^.listSelectedL)
 
             start = max 0 $ idx - numPerHeight + 1
