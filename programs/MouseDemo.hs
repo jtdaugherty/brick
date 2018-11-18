@@ -124,7 +124,7 @@ main = do
           return v
 
     void $ M.customMain buildVty Nothing app $ St [] Nothing
-           "Press Ctrl-up and Ctrl-down arrow keys to scroll, ESC to quit.\n\
+           "Try clicking on various UI elements.\n\
            \Observe that the click coordinates identify the\n\
            \underlying widget coordinates.\n\
            \\n\
