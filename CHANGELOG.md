@@ -2,6 +2,18 @@
 Brick changelog
 ---------------
 
+0.41.3
+------
+
+Bug fixes:
+ * Lists now draw correctly without crashing due to a vector slice
+   bounds check failure if their rendering area is too small (#195;
+   thanks @andrevdm)
+
+Other changes:
+ * Relaxed base bounds to support GHC 8.6 (thanks @maoe)
+ * Added towerHanoi to the featured projects list
+
 0.41.2
 ------
 
