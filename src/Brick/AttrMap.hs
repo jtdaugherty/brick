@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
 -- | This module provides types and functions for managing an attribute
 -- map which maps attribute names ('AttrName') to attributes ('Attr').
@@ -51,6 +52,7 @@ import Data.Monoid
 
 import qualified Data.Semigroup as Sem
 
+import Control.DeepSeq
 import qualified Data.Map as M
 import Data.Maybe (catMaybes)
 import Data.List (inits)
@@ -72,7 +74,7 @@ import Graphics.Vty (Attr(..), MaybeDefault(..))
 -- "header" <> "clock" <> "seconds"
 -- @
 data AttrName = AttrName [String]
-              deriving (Show, Read, Eq, Ord, Generic)
+              deriving (Show, Read, Eq, Ord, Generic, NFData)
 
 instance Sem.Semigroup AttrName where
     (AttrName as) <> (AttrName bs) = AttrName $ as `mappend` bs
@@ -87,7 +89,7 @@ instance IsString AttrName where
 -- | An attribute map which maps 'AttrName' values to 'Attr' values.
 data AttrMap = AttrMap Attr (M.Map AttrName Attr)
              | ForceAttr Attr
-             deriving (Show, Generic)
+             deriving (Show, Generic, NFData)
 
 -- | Create an attribute name from a string.
 attrName :: String -> AttrName

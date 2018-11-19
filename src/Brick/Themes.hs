@@ -1,5 +1,6 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TemplateHaskell #-}
 -- | Support for representing attribute themes and loading and saving
@@ -76,6 +77,7 @@ where
 
 import GHC.Generics (Generic)
 import Graphics.Vty hiding ((<|>))
+import Control.DeepSeq
 import Control.Monad (forM, join)
 import Control.Applicative ((<|>))
 import qualified Data.Text as T
@@ -107,7 +109,7 @@ data CustomAttr =
                , customStyle :: Maybe Style
                -- ^ The customized style, if any.
                }
-               deriving (Eq, Read, Show, Generic)
+               deriving (Eq, Read, Show, Generic, NFData)
 
 instance Sem.Semigroup CustomAttr where
     a <> b =
@@ -127,7 +129,7 @@ data ThemeDocumentation =
                        -- so e.g. documentation for theme customization
                        -- can be generated mechanically.
                        }
-                       deriving (Eq, Read, Show, Generic)
+                       deriving (Eq, Read, Show, Generic, NFData)
 
 -- | A theme provides a set of default attribute mappings, a default
 -- attribute, and a set of customizations for the default mapping
@@ -151,7 +153,7 @@ data Theme =
           -- default mapping; any attributes named here that are not
           -- present in the default mapping will not be considered.
           }
-          deriving (Eq, Read, Show, Generic)
+          deriving (Eq, Read, Show, Generic, NFData)
 
 suffixLenses ''CustomAttr
 suffixLenses ''Theme
