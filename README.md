@@ -67,6 +67,7 @@ at these projects:
  * `bhoogle`, a [Hoogle](https://www.haskell.org/hoogle/) client: https://github.com/andrevdm/bhoogle
  * `clifm`, a file manager: https://github.com/pasqu4le/clifm
  * `towerHanoi`, animated solutions to The Tower of Hanoi: https://github.com/shajenM/projects/tree/master/towerHanoi
+ * [`VOIDSPACE`](https://github.com/ChrisPenner/void-space), fight off scary category theory terms in this space-themed typing-tutor game: https://github.com/ChrisPenner/void-space
 
 Getting Started
 ---------------
