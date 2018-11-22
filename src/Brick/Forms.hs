@@ -59,6 +59,7 @@ module Brick.Forms
   , setFieldValid
   , setFormConcat
   , setFieldConcat
+  , setFormFocus
 
   -- * Simple form field constructors
   , editTextField
@@ -225,6 +226,10 @@ infixr 5 @@=
 (@@=) h mkFs s =
     let v = mkFs s
     in v { formFieldRenderHelper = h . (formFieldRenderHelper v) }
+
+-- | Set the focused field of a form.
+setFormFocus :: (Eq n) => n -> Form s e n -> Form s e n
+setFormFocus n f = f { formFocus = focusSetCurrent n $ formFocus f }
 
 -- | Set a form field's concatenation function.
 setFieldConcat :: ([Widget n] -> Widget n) -> FormFieldState s e n -> FormFieldState s e n
