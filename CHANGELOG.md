@@ -2,6 +2,14 @@
 Brick changelog
 ---------------
 
+0.41.4
+------
+
+API changes:
+ * Forms: added `setFormFocus` function to set focus for a form
+ * Added `NFData` instances for `AttrMap` and `Theme` types (thanks
+   Fraser Tweedale)
+
 0.41.3
 ------
 
