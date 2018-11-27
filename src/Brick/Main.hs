@@ -222,7 +222,7 @@ customMain buildVty mUserChan app initialAppState = do
                 InternalSuspendAndResume newRS action -> do
                     newAppState <- action
                     newVty <- buildVty
-                    run newVty newRS newAppState brickChan
+                    run newVty (newRS { renderCache = mempty }) newAppState brickChan
 
         emptyES = ES [] mempty
         emptyRS = RS M.empty mempty S.empty mempty mempty
@@ -492,7 +492,7 @@ halt = return . Halt
 
 -- | Suspend the event loop, save the terminal state, and run the
 -- specified action. When it returns an application state value, restore
--- the terminal state, redraw the application from the new state, and
--- resume the event loop.
+-- the terminal state, empty the rendering cache, redraw the application
+-- from the new state, and resume the event loop.
 suspendAndResume :: IO s -> EventM n (Next s)
 suspendAndResume = return . SuspendAndResume
