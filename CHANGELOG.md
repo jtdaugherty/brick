@@ -2,6 +2,15 @@
 Brick changelog
 ---------------
 
+0.41.5
+------
+
+Miscellaneous:
+ * `suspendAndResume` now empties the rendering cache when returning to
+   the rendering event loop. This ensures that the state returned by the
+   `IO` action is rendered completely rather than relying on potentially
+   stale cache entries.
+
 0.41.4
 ------
 
