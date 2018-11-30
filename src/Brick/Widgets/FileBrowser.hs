@@ -22,6 +22,7 @@ module Brick.Widgets.FileBrowser
 
   -- * Attributes
   , fileBrowserAttr
+  , fileBrowserCurrentDirectoryAttr
   , fileBrowserDirectoryAttr
   , fileBrowserBlockDeviceAttr
   , fileBrowserRegularFileAttr
@@ -176,7 +177,9 @@ renderFileBrowser :: (Show n, Ord n) => Bool -> FileBrowser n -> Widget n
 renderFileBrowser foc b =
     let maxFilenameLength = maximum $ (length . fileInfoFilename) <$> (b^.fileBrowserEntriesL)
     in withDefAttr fileBrowserAttr $
-       (str $ sanitizeFilename $ fileBrowserWorkingDirectory b) <=>
+       (withDefAttr fileBrowserCurrentDirectoryAttr $
+        padRight Max $
+        str $ sanitizeFilename $ fileBrowserWorkingDirectory b) <=>
        renderList (renderFileInfo maxFilenameLength) foc (b^.fileBrowserEntriesL)
 
 renderFileInfo :: Int -> Bool -> FileInfo -> Widget n
@@ -205,6 +208,9 @@ attrForFileType Socket = fileBrowserSocketAttr
 
 fileBrowserAttr :: AttrName
 fileBrowserAttr = "fileBrowser"
+
+fileBrowserCurrentDirectoryAttr :: AttrName
+fileBrowserCurrentDirectoryAttr = fileBrowserAttr <> "currentDirectory"
 
 fileBrowserDirectoryAttr :: AttrName
 fileBrowserDirectoryAttr = fileBrowserAttr <> "directory"
