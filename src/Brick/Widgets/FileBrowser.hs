@@ -33,7 +33,7 @@ where
 
 import Control.Monad (forM)
 import Control.Monad.IO.Class (liftIO)
-import Data.Char (toLower)
+import Data.Char (toLower, isPrint)
 import Data.Maybe (fromMaybe)
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid
@@ -172,7 +172,7 @@ renderFileBrowser :: (Show n, Ord n) => Bool -> FileBrowser n -> Widget n
 renderFileBrowser foc b =
     let maxFilenameLength = maximum $ (length . fileInfoFilename) <$> (b^.fileBrowserEntriesL)
     in withDefAttr fileBrowserAttr $
-       (str $ fileBrowserWorkingDirectory b) <=>
+       (str $ sanitize $ fileBrowserWorkingDirectory b) <=>
        renderList (renderFileInfo maxFilenameLength) foc (b^.fileBrowserEntriesL)
 
 renderFileInfo :: Int -> Bool -> FileInfo -> Widget n
@@ -180,7 +180,13 @@ renderFileInfo maxLen _ info =
     padRight Max body
     where
         addAttr = maybe id (withDefAttr . attrForFileType) (fileInfoFileType info)
-        body = addAttr (hLimit (maxLen + 1) $ padRight Max $ str $ fileInfoFilename info)
+        body = addAttr (hLimit (maxLen + 1) $ padRight Max $ str $ sanitize $ fileInfoFilename info)
+
+sanitize :: String -> String
+sanitize = fmap toPrint
+    where
+        toPrint c | isPrint c = c
+                  | otherwise = '?'
 
 attrForFileType :: FileType -> AttrName
 attrForFileType RegularFile = fileBrowserRegularFileAttr
