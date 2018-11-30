@@ -58,6 +58,7 @@ theMap :: A.AttrMap
 theMap = A.attrMap V.defAttr
     [ (L.listSelectedFocusedAttr, V.black `on` V.yellow)
     , (FB.fileBrowserCurrentDirectoryAttr, V.white `on` V.blue)
+    , (FB.fileBrowserSelectionInfoAttr, V.white `on` V.blue)
     , (FB.fileBrowserDirectoryAttr, fg V.blue)
     , (FB.fileBrowserBlockDeviceAttr, fg V.magenta)
     , (FB.fileBrowserCharacterDeviceAttr, fg V.green)

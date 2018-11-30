@@ -16,6 +16,7 @@ module Brick.Widgets.FileBrowser
   , fileBrowserSelectionL
   , fileBrowserEntryFilterL
   , fileInfoFilenameL
+  , fileInfoFileSizeL
   , fileInfoSanitizedFilenameL
   , fileInfoFilePathL
   , fileInfoFileTypeL
@@ -23,6 +24,7 @@ module Brick.Widgets.FileBrowser
   -- * Attributes
   , fileBrowserAttr
   , fileBrowserCurrentDirectoryAttr
+  , fileBrowserSelectionInfoAttr
   , fileBrowserDirectoryAttr
   , fileBrowserBlockDeviceAttr
   , fileBrowserRegularFileAttr
@@ -40,15 +42,18 @@ import Control.Monad (forM)
 import Control.Monad.IO.Class (liftIO)
 import Data.Char (toLower, isPrint)
 import Data.Maybe (fromMaybe)
+import qualified Data.Text as T
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid
 #endif
+import Data.Int (Int64)
 import Data.List (sortBy)
 import qualified Data.Vector as V
 import Lens.Micro
 import qualified Graphics.Vty as Vty
 import qualified System.Directory as D
 import qualified System.Posix.Files as U
+import qualified System.Posix.Types as U
 import qualified System.FilePath as FP
 
 import Brick.Types
@@ -69,6 +74,7 @@ data FileInfo =
              , fileInfoSanitizedFilename :: String
              , fileInfoFilePath :: FilePath
              , fileInfoFileType :: Maybe FileType
+             , fileInfoFileSize :: Int64
              }
              deriving (Show, Eq, Read)
 
@@ -115,13 +121,21 @@ entriesForDirectory rawPath = do
     -- Get all entries except "." and "..", then sort them
     dirContents <- D.listDirectory path
 
-    infos <- forM dirContents $ \f -> do
-        filePath <- D.makeAbsolute $ path FP.</> f
+    let addParent = if path == "/"
+                    then id
+                    else (parentDir :)
+        parentDir = ".."
+        allFiles = addParent dirContents
+
+    infos <- forM allFiles $ \f -> do
+        filePath <- D.canonicalizePath $ path FP.</> f
         status <- U.getFileStatus filePath
+        let U.COff sz = U.fileSize status
         return FileInfo { fileInfoFilename = f
                         , fileInfoFilePath = filePath
                         , fileInfoSanitizedFilename = sanitizeFilename f
                         , fileInfoFileType = fileTypeFromStatus status
+                        , fileInfoFileSize = sz
                         }
 
     let dirsFirst a b = if fileInfoFileType a == Just Directory &&
@@ -137,17 +151,9 @@ entriesForDirectory rawPath = do
                                   else compare (toLower <$> fileInfoFilename a)
                                                (toLower <$> fileInfoFilename b)
 
-        allFiles = addParent $ sortBy dirsFirst infos
-        parentDir = FileInfo { fileInfoFilename = ".."
-                             , fileInfoSanitizedFilename = ".."
-                             , fileInfoFilePath = FP.takeDirectory path
-                             , fileInfoFileType = Just Directory
-                             }
-        addParent = if path == "/"
-                    then id
-                    else (parentDir :)
+        allEntries = sortBy dirsFirst infos
 
-    return allFiles
+    return allEntries
 
 fileTypeFromStatus :: U.FileStatus -> Maybe FileType
 fileTypeFromStatus s =
@@ -179,14 +185,35 @@ handleFileBrowserEvent e b =
 renderFileBrowser :: (Show n, Ord n) => Bool -> FileBrowser n -> Widget n
 renderFileBrowser foc b =
     let maxFilenameLength = maximum $ (length . fileInfoFilename) <$> (b^.fileBrowserEntriesL)
+        cwdHeader = padRight Max $
+                    str $ sanitizeFilename $ fileBrowserWorkingDirectory b
+        selInfo = case listSelectedElement (b^.fileBrowserEntriesL) of
+            Nothing -> vLimit 1 $ fill ' '
+            Just (_, i) -> padRight Max $ selInfoFor i
+        fileTypeLabel Nothing = "unknown"
+        fileTypeLabel (Just t) =
+            case t of
+                RegularFile -> "file"
+                BlockDevice -> "block device"
+                CharacterDevice -> "character device"
+                NamedPipe -> "pipe"
+                Directory -> "directory"
+                SymbolicLink -> "symbolic link"
+                Socket -> "socket"
+        selInfoFor i =
+            let maybeSize = if fileInfoFileType i == Just RegularFile
+                            then T.pack $ ", size: " <> show (fileInfoFileSize i)
+                            else ""
+            in txt $ "type: " <> fileTypeLabel (fileInfoFileType i) <> maybeSize
     in withDefAttr fileBrowserAttr $
-       (withDefAttr fileBrowserCurrentDirectoryAttr $
-        padRight Max $
-        str $ sanitizeFilename $ fileBrowserWorkingDirectory b) <=>
-       renderList (renderFileInfo maxFilenameLength) foc (b^.fileBrowserEntriesL)
+       vBox [ withDefAttr fileBrowserCurrentDirectoryAttr cwdHeader
+            , renderList (renderFileInfo maxFilenameLength) foc (b^.fileBrowserEntriesL)
+            , withDefAttr fileBrowserSelectionInfoAttr selInfo
+            ]
 
 renderFileInfo :: Int -> Bool -> FileInfo -> Widget n
-renderFileInfo maxLen _ info =
+renderFileInfo maxLen sel info =
+    (if sel then forceAttr listSelectedFocusedAttr else id) $
     padRight Max body
     where
         addAttr = maybe id (withDefAttr . attrForFileType) (fileInfoFileType info)
@@ -214,6 +241,9 @@ fileBrowserAttr = "fileBrowser"
 
 fileBrowserCurrentDirectoryAttr :: AttrName
 fileBrowserCurrentDirectoryAttr = fileBrowserAttr <> "currentDirectory"
+
+fileBrowserSelectionInfoAttr :: AttrName
+fileBrowserSelectionInfoAttr = fileBrowserAttr <> "selectionInfo"
 
 fileBrowserDirectoryAttr :: AttrName
 fileBrowserDirectoryAttr = fileBrowserAttr <> "directory"
