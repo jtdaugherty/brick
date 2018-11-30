@@ -2,7 +2,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Brick.Widgets.FileBrowser
-  ( FileBrowser(fileBrowserSelection, fileBrowserWorkingDirectory)
+  ( FileBrowser(fileBrowserSelection, fileBrowserWorkingDirectory, fileBrowserEntryFilter)
   , FileInfo(..)
   , FileType(..)
   , newFileBrowser
@@ -14,6 +14,7 @@ module Brick.Widgets.FileBrowser
   -- * Lenses
   , fileBrowserWorkingDirectoryL
   , fileBrowserSelectionL
+  , fileBrowserEntryFilterL
   , fileInfoFilenameL
   , fileInfoFilePathL
   , fileInfoFileTypeL
@@ -33,6 +34,7 @@ where
 import Control.Monad (forM)
 import Control.Monad.IO.Class (liftIO)
 import Data.Char (toLower)
+import Data.Maybe (fromMaybe)
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid
 #endif
@@ -54,6 +56,7 @@ data FileBrowser n =
                 , fileBrowserEntries :: List n FileInfo
                 , fileBrowserName :: n
                 , fileBrowserSelection :: Maybe FileInfo
+                , fileBrowserEntryFilter :: Maybe (FileInfo -> Bool)
                 }
 
 data FileInfo =
@@ -86,19 +89,20 @@ newFileBrowser name mCwd = do
                         , fileBrowserEntries = list name mempty 1
                         , fileBrowserName = name
                         , fileBrowserSelection = Nothing
+                        , fileBrowserEntryFilter = Nothing
                         }
 
     setCurrentDirectory initialCwd b
 
 setCurrentDirectory :: FilePath -> FileBrowser n -> IO (FileBrowser n)
 setCurrentDirectory path b = do
-    entries <- entriesForDirectory path
+    entries <- entriesForDirectory (b^.fileBrowserEntryFilterL) path
     return b { fileBrowserWorkingDirectory = path
              , fileBrowserEntries = list (b^.fileBrowserNameL) (V.fromList entries) 1
              }
 
-entriesForDirectory :: FilePath -> IO [FileInfo]
-entriesForDirectory rawPath = do
+entriesForDirectory :: Maybe (FileInfo -> Bool) -> FilePath -> IO [FileInfo]
+entriesForDirectory mFilter rawPath = do
     path <- D.makeAbsolute rawPath
 
     -- Get all entries except "." and "..", then sort them
@@ -134,7 +138,8 @@ entriesForDirectory rawPath = do
                     then id
                     else (parentDir :)
 
-    return allFiles
+    let match = fromMaybe (const True) mFilter
+    return $ filter match allFiles
 
 fileTypeFromStatus :: U.FileStatus -> Maybe FileType
 fileTypeFromStatus s =
