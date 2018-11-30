@@ -15,14 +15,14 @@ import Brick.Types
   )
 import Brick.Widgets.Center
   ( center
+  , hCenter
   )
 import Brick.Widgets.Border
   ( borderWithLabel
   )
 import Brick.Widgets.Core
-  ( hLimit
-  , vLimit
-  , txt
+  ( vBox, (<=>), padTop
+  , hLimit, vLimit, txt
   )
 import Brick.Widgets.FileBrowser as FB
 import qualified Brick.AttrMap as A
@@ -33,13 +33,19 @@ data Name = FileBrowser1
           deriving (Eq, Show, Ord)
 
 drawUI :: FileBrowser Name -> [Widget Name]
-drawUI b = [ui]
+drawUI b = [center $ ui <=> help]
     where
-        ui = center $
+        ui = hCenter $
              vLimit 15 $
              hLimit 50 $
              borderWithLabel (txt "Choose a file") $
              FB.renderFileBrowser True b
+        help = padTop (T.Pad 1) $
+               vBox [ hCenter $ txt "up/down: select"
+                    , hCenter $ txt "/: search, Ctrl-C: cancel search"
+                    , hCenter $ txt "enter: change directory or select file"
+                    , hCenter $ txt "esc: quit"
+                    ]
 
 appEvent :: FB.FileBrowser Name -> BrickEvent Name e -> T.EventM Name (T.Next (FB.FileBrowser Name))
 appEvent b (VtyEvent ev) =
