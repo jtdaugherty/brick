@@ -41,16 +41,17 @@ drawUI b = [center $ ui <=> help]
              borderWithLabel (txt "Choose a file") $
              FB.renderFileBrowser True b
         help = padTop (T.Pad 1) $
-               vBox [ hCenter $ txt "up/down: select"
-                    , hCenter $ txt "/: search, Ctrl-C: cancel search"
-                    , hCenter $ txt "enter: change directory or select file"
-                    , hCenter $ txt "esc: quit"
+               vBox [ hCenter $ txt "Up/Down: select"
+                    , hCenter $ txt "/: search, Ctrl-C or Esc: cancel search"
+                    , hCenter $ txt "Enter: change directory or select file"
+                    , hCenter $ txt "Esc: quit"
                     ]
 
 appEvent :: FB.FileBrowser Name -> BrickEvent Name e -> T.EventM Name (T.Next (FB.FileBrowser Name))
 appEvent b (VtyEvent ev) =
     case ev of
-        V.EvKey V.KEsc [] -> M.halt b
+        V.EvKey V.KEsc [] | not (fileBrowserIsSearching b) ->
+            M.halt b
         _ -> do
             b' <- FB.handleFileBrowserEvent ev b
             -- If the browser has a selected file after handling the

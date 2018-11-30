@@ -11,6 +11,7 @@ module Brick.Widgets.FileBrowser
   , fileBrowserCursor
   , handleFileBrowserEvent
   , updateFileBrowserSearch
+  , fileBrowserIsSearching
 
   -- * Lenses
   , fileBrowserWorkingDirectoryL
@@ -123,6 +124,9 @@ setEntries :: [FileInfo] -> FileBrowser n -> FileBrowser n
 setEntries es b =
     applySearch $ b & fileBrowserLatestResultsL .~ es
 
+fileBrowserIsSearching :: FileBrowser n -> Bool
+fileBrowserIsSearching b = isJust $ b^.fileBrowserSearchStringL
+
 updateFileBrowserSearch :: (Maybe T.Text -> Maybe T.Text) -> FileBrowser n -> FileBrowser n
 updateFileBrowserSearch f b =
     let old = b^.fileBrowserSearchStringL
@@ -214,7 +218,7 @@ fileBrowserCursor b = snd <$> listSelectedElement (b^.fileBrowserEntriesL)
 
 handleFileBrowserEvent :: (Ord n) => Vty.Event -> FileBrowser n -> EventM n (FileBrowser n)
 handleFileBrowserEvent e b =
-    if isJust $ b^.fileBrowserSearchStringL
+    if fileBrowserIsSearching b
     then handleFileBrowserEventSearching e b
     else handleFileBrowserEventNormal e b
 
