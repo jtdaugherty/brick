@@ -10,6 +10,7 @@ module Brick.Widgets.FileBrowser
   , renderFileBrowser
   , fileBrowserCursor
   , handleFileBrowserEvent
+  , updateFileBrowserSearch
 
   -- * Lenses
   , fileBrowserWorkingDirectoryL
@@ -41,7 +42,7 @@ where
 import Control.Monad (forM)
 import Control.Monad.IO.Class (liftIO)
 import Data.Char (toLower, isPrint)
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, isJust)
 import qualified Data.Text as T
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid
@@ -68,6 +69,7 @@ data FileBrowser n =
                 , fileBrowserName :: n
                 , fileBrowserSelection :: Maybe FileInfo
                 , fileBrowserEntryFilter :: Maybe (FileInfo -> Bool)
+                , fileBrowserSearchString :: Maybe T.Text
                 }
 
 data FileInfo =
@@ -103,13 +105,18 @@ newFileBrowser name mCwd = do
                         , fileBrowserName = name
                         , fileBrowserSelection = Nothing
                         , fileBrowserEntryFilter = Nothing
+                        , fileBrowserSearchString = Nothing
                         }
 
     setCurrentDirectory initialCwd b
 
 setCurrentDirectory :: FilePath -> FileBrowser n -> IO (FileBrowser n)
 setCurrentDirectory path b = do
-    let match = fromMaybe (const True) (b^.fileBrowserEntryFilterL)
+    let userMatch = fromMaybe (const True) (b^.fileBrowserEntryFilterL)
+        nameMatch = maybe (const True)
+                          (\search i -> (T.toLower search `T.isInfixOf` (T.pack $ toLower <$> fileInfoSanitizedFilename i)))
+                          (b^.fileBrowserSearchStringL)
+        match i = nameMatch i && userMatch i
     entries <- filter match <$> entriesForDirectory path
     return b { fileBrowserWorkingDirectory = path
              , fileBrowserEntries = list (b^.fileBrowserNameL) (V.fromList entries) 1
@@ -184,16 +191,54 @@ fileBrowserCursor b = snd <$> listSelectedElement (b^.fileBrowserEntriesL)
 
 handleFileBrowserEvent :: (Ord n) => Vty.Event -> FileBrowser n -> EventM n (FileBrowser n)
 handleFileBrowserEvent e b =
+    if isJust $ b^.fileBrowserSearchStringL
+    then handleFileBrowserEventSearching e b
+    else handleFileBrowserEventNormal e b
+
+updateFileBrowserSearch :: (Maybe T.Text -> Maybe T.Text) -> FileBrowser n -> EventM n (FileBrowser n)
+updateFileBrowserSearch f b = do
+    let b' = b & fileBrowserSearchStringL %~ f
+    liftIO $ setCurrentDirectory (b'^.fileBrowserWorkingDirectoryL) b'
+
+safeInit :: T.Text -> T.Text
+safeInit t | T.length t == 0 = t
+           | otherwise = T.init t
+
+handleFileBrowserEventSearching :: (Ord n) => Vty.Event -> FileBrowser n -> EventM n (FileBrowser n)
+handleFileBrowserEventSearching e b =
     case e of
+        Vty.EvKey (Vty.KChar 'c') [Vty.MCtrl] ->
+            updateFileBrowserSearch (const Nothing) b
+        Vty.EvKey Vty.KBS [] ->
+            updateFileBrowserSearch (fmap safeInit) b
         Vty.EvKey Vty.KEnter [] ->
-            case fileBrowserCursor b of
-                Nothing -> return b
-                Just entry ->
-                    case fileInfoFileType entry of
-                        Just Directory -> liftIO $ setCurrentDirectory (fileInfoFilePath entry) b
-                        _ -> return $ b & fileBrowserSelectionL .~ Just entry
+            maybeSelectCurrentEntry b
+        Vty.EvKey (Vty.KChar c) [] ->
+            updateFileBrowserSearch (fmap (flip T.snoc c)) b
         _ ->
             handleEventLensed b fileBrowserEntriesL handleListEvent e
+
+handleFileBrowserEventNormal :: (Ord n) => Vty.Event -> FileBrowser n -> EventM n (FileBrowser n)
+handleFileBrowserEventNormal e b =
+    case e of
+        Vty.EvKey (Vty.KChar '/') [] ->
+            -- Begin file search
+            updateFileBrowserSearch (const $ Just "") b
+        Vty.EvKey Vty.KEnter [] ->
+            -- Select file or enter directory
+            maybeSelectCurrentEntry b
+        _ ->
+            -- Otherwise, delegate event to entry list
+            handleEventLensed b fileBrowserEntriesL handleListEvent e
+
+maybeSelectCurrentEntry :: FileBrowser n -> EventM n (FileBrowser n)
+maybeSelectCurrentEntry b =
+    case fileBrowserCursor b of
+        Nothing -> return b
+        Just entry ->
+            case fileInfoFileType entry of
+                Just Directory -> liftIO $ setCurrentDirectory (fileInfoFilePath entry) b
+                _ -> return $ b & fileBrowserSelectionL .~ Just entry
 
 renderFileBrowser :: (Show n, Ord n) => Bool -> FileBrowser n -> Widget n
 renderFileBrowser foc b =
@@ -219,9 +264,16 @@ renderFileBrowser foc b =
                             else ""
             in txt $ (T.pack $ fileInfoSanitizedFilename i) <> ": " <>
                      fileTypeLabel (fileInfoFileType i) <> maybeSize
+        maybeSearchInfo = case b^.fileBrowserSearchStringL of
+            Nothing -> emptyWidget
+            Just s -> padRight Max $
+                      txt "Search: " <+>
+                      showCursor (b^.fileBrowserNameL) (Location (T.length s, 0)) (txt s)
+
     in withDefAttr fileBrowserAttr $
        vBox [ withDefAttr fileBrowserCurrentDirectoryAttr cwdHeader
             , renderList (renderFileInfo foc maxFilenameLength) foc (b^.fileBrowserEntriesL)
+            , maybeSearchInfo
             , withDefAttr fileBrowserSelectionInfoAttr selInfo
             ]
 
