@@ -25,7 +25,7 @@ import Brick.Widgets.Core
   )
 import Brick.Widgets.FileBrowser as FB
 import qualified Brick.AttrMap as A
-import Brick.Util (on, bg)
+import Brick.Util (on, fg)
 import qualified Brick.Types as T
 
 data Name = FileBrowser1
@@ -44,12 +44,24 @@ appEvent :: FB.FileBrowser Name -> BrickEvent Name e -> T.EventM Name (T.Next (F
 appEvent b (VtyEvent ev) =
     case ev of
         V.EvKey V.KEsc [] -> M.halt b
-        _ -> M.continue =<< FB.handleFileBrowserEvent ev b
+        _ -> do
+            b' <- FB.handleFileBrowserEvent ev b
+            -- If the browser has a selected file after handling the
+            -- event (because the user pressed Enter), shut down.
+            case fileBrowserSelection b' of
+                Nothing -> M.continue b'
+                Just _ -> M.halt b'
 appEvent b _ = M.continue b
 
 theMap :: A.AttrMap
 theMap = A.attrMap V.defAttr
     [ (L.listSelectedFocusedAttr, V.black `on` V.yellow)
+    , (FB.fileBrowserDirectoryAttr, fg V.blue)
+    , (FB.fileBrowserBlockDeviceAttr, fg V.magenta)
+    , (FB.fileBrowserCharacterDeviceAttr, fg V.green)
+    , (FB.fileBrowserNamedPipeAttr, fg V.yellow)
+    , (FB.fileBrowserSymbolicLinkAttr, fg V.cyan)
+    , (FB.fileBrowserSocketAttr, fg V.red)
     ]
 
 theApp :: M.App (FileBrowser Name) e Name

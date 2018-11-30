@@ -1,30 +1,42 @@
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE OverloadedStrings #-}
 module Brick.Widgets.FileBrowser
-  ( FileBrowser
+  ( FileBrowser(fileBrowserSelection, fileBrowserWorkingDirectory)
   , FileInfo(..)
   , FileType(..)
   , newFileBrowser
   , setCurrentDirectory
   , renderFileBrowser
-  , fileBrowserSelection
+  , fileBrowserCursor
   , handleFileBrowserEvent
 
   -- * Lenses
   , fileBrowserWorkingDirectoryL
+  , fileBrowserSelectionL
   , fileInfoFilenameL
   , fileInfoFilePathL
   , fileInfoFileTypeL
+
+  -- * Attributes
+  , fileBrowserAttr
+  , fileBrowserDirectoryAttr
+  , fileBrowserBlockDeviceAttr
+  , fileBrowserRegularFileAttr
+  , fileBrowserCharacterDeviceAttr
+  , fileBrowserNamedPipeAttr
+  , fileBrowserSymbolicLinkAttr
+  , fileBrowserSocketAttr
   )
 where
 
 import Control.Monad (forM)
+import Control.Monad.IO.Class (liftIO)
 import Data.Char (toLower)
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid
 #endif
 import Data.List (sortBy)
-import Data.Ord (comparing)
 import qualified Data.Vector as V
 import Lens.Micro
 import qualified Graphics.Vty as Vty
@@ -33,6 +45,7 @@ import qualified System.Posix.Files as U
 import qualified System.FilePath as FP
 
 import Brick.Types
+import Brick.AttrMap (AttrName)
 import Brick.Widgets.Core
 import Brick.Widgets.List
 
@@ -40,6 +53,7 @@ data FileBrowser n =
     FileBrowser { fileBrowserWorkingDirectory :: FilePath
                 , fileBrowserEntries :: List n FileInfo
                 , fileBrowserName :: n
+                , fileBrowserSelection :: Maybe FileInfo
                 }
 
 data FileInfo =
@@ -71,6 +85,7 @@ newFileBrowser name mCwd = do
     let b = FileBrowser { fileBrowserWorkingDirectory = initialCwd
                         , fileBrowserEntries = list name mempty 1
                         , fileBrowserName = name
+                        , fileBrowserSelection = Nothing
                         }
 
     setCurrentDirectory initialCwd b
@@ -87,20 +102,39 @@ entriesForDirectory rawPath = do
     path <- D.makeAbsolute rawPath
 
     -- Get all entries except "." and "..", then sort them
-    sortedFiles <- sortBy (comparing (fmap toLower)) <$> D.listDirectory path
+    dirContents <- D.listDirectory path
 
-    let allFiles = "." : addParent sortedFiles
-        addParent = if path == "/"
-                    then id
-                    else (".." :)
-
-    forM allFiles $ \f -> do
+    infos <- forM dirContents $ \f -> do
         filePath <- D.makeAbsolute $ path FP.</> f
         status <- U.getFileStatus filePath
         return FileInfo { fileInfoFilename = f
                         , fileInfoFilePath = filePath
                         , fileInfoFileType = fileTypeFromStatus status
                         }
+
+    let dirsFirst a b = if fileInfoFileType a == Just Directory &&
+                           fileInfoFileType b == Just Directory
+                        then compare (toLower <$> fileInfoFilename a)
+                                     (toLower <$> fileInfoFilename b)
+                        else if fileInfoFileType a == Just Directory &&
+                                fileInfoFileType b /= Just Directory
+                             then LT
+                             else if fileInfoFileType b == Just Directory &&
+                                     fileInfoFileType a /= Just Directory
+                                  then GT
+                                  else compare (toLower <$> fileInfoFilename a)
+                                               (toLower <$> fileInfoFilename b)
+
+        allFiles = addParent $ sortBy dirsFirst infos
+        parentDir = FileInfo { fileInfoFilename = ".."
+                             , fileInfoFilePath = FP.takeDirectory path
+                             , fileInfoFileType = Just Directory
+                             }
+        addParent = if path == "/"
+                    then id
+                    else (parentDir :)
+
+    return allFiles
 
 fileTypeFromStatus :: U.FileStatus -> Maybe FileType
 fileTypeFromStatus s =
@@ -113,20 +147,65 @@ fileTypeFromStatus s =
        | U.isSymbolicLink s    -> Just SymbolicLink
        | otherwise             -> Nothing
 
-fileBrowserSelection :: FileBrowser n -> Maybe FileInfo
-fileBrowserSelection b = snd <$> listSelectedElement (b^.fileBrowserEntriesL)
+fileBrowserCursor :: FileBrowser n -> Maybe FileInfo
+fileBrowserCursor b = snd <$> listSelectedElement (b^.fileBrowserEntriesL)
 
 handleFileBrowserEvent :: (Ord n) => Vty.Event -> FileBrowser n -> EventM n (FileBrowser n)
 handleFileBrowserEvent e b =
-    handleEventLensed b fileBrowserEntriesL handleListEvent e
+    case e of
+        Vty.EvKey Vty.KEnter [] ->
+            case fileBrowserCursor b of
+                Nothing -> return b
+                Just entry ->
+                    case fileInfoFileType entry of
+                        Just Directory -> liftIO $ setCurrentDirectory (fileInfoFilePath entry) b
+                        _ -> return $ b & fileBrowserSelectionL .~ Just entry
+        _ ->
+            handleEventLensed b fileBrowserEntriesL handleListEvent e
 
 renderFileBrowser :: (Show n, Ord n) => Bool -> FileBrowser n -> Widget n
 renderFileBrowser foc b =
-    (str $ fileBrowserWorkingDirectory b) <=>
-    renderList renderFileInfo foc (b^.fileBrowserEntriesL)
+    let maxFilenameLength = maximum $ (length . fileInfoFilename) <$> (b^.fileBrowserEntriesL)
+    in withDefAttr fileBrowserAttr $
+       (str $ fileBrowserWorkingDirectory b) <=>
+       renderList (renderFileInfo maxFilenameLength) foc (b^.fileBrowserEntriesL)
 
-renderFileInfo :: Bool -> FileInfo -> Widget n
-renderFileInfo _ info =
+renderFileInfo :: Int -> Bool -> FileInfo -> Widget n
+renderFileInfo maxLen _ info =
     padRight Max body
     where
-        body = str $ fileInfoFilename info <> " (" <> (show $ fileInfoFileType info) <> ")"
+        addAttr = maybe id (withDefAttr . attrForFileType) (fileInfoFileType info)
+        body = addAttr (hLimit (maxLen + 1) $ padRight Max $ str $ fileInfoFilename info)
+
+attrForFileType :: FileType -> AttrName
+attrForFileType RegularFile = fileBrowserRegularFileAttr
+attrForFileType BlockDevice = fileBrowserBlockDeviceAttr
+attrForFileType CharacterDevice = fileBrowserCharacterDeviceAttr
+attrForFileType NamedPipe = fileBrowserNamedPipeAttr
+attrForFileType Directory = fileBrowserDirectoryAttr
+attrForFileType SymbolicLink = fileBrowserSymbolicLinkAttr
+attrForFileType Socket = fileBrowserSocketAttr
+
+fileBrowserAttr :: AttrName
+fileBrowserAttr = "fileBrowser"
+
+fileBrowserDirectoryAttr :: AttrName
+fileBrowserDirectoryAttr = fileBrowserAttr <> "directory"
+
+fileBrowserBlockDeviceAttr :: AttrName
+fileBrowserBlockDeviceAttr = fileBrowserAttr <> "block"
+
+fileBrowserRegularFileAttr :: AttrName
+fileBrowserRegularFileAttr = fileBrowserAttr <> "regular"
+
+fileBrowserCharacterDeviceAttr :: AttrName
+fileBrowserCharacterDeviceAttr = fileBrowserAttr <> "char"
+
+fileBrowserNamedPipeAttr :: AttrName
+fileBrowserNamedPipeAttr = fileBrowserAttr <> "pipe"
+
+fileBrowserSymbolicLinkAttr :: AttrName
+fileBrowserSymbolicLinkAttr = fileBrowserAttr <> "symlink"
+
+fileBrowserSocketAttr :: AttrName
+fileBrowserSocketAttr = fileBrowserAttr <> "socket"
