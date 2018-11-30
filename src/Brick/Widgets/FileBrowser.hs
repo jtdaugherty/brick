@@ -16,6 +16,7 @@ module Brick.Widgets.FileBrowser
   , fileBrowserSelectionL
   , fileBrowserEntryFilterL
   , fileInfoFilenameL
+  , fileInfoSanitizedFilenameL
   , fileInfoFilePathL
   , fileInfoFileTypeL
 
@@ -61,6 +62,7 @@ data FileBrowser n =
 
 data FileInfo =
     FileInfo { fileInfoFilename :: String
+             , fileInfoSanitizedFilename :: String
              , fileInfoFilePath :: FilePath
              , fileInfoFileType :: Maybe FileType
              }
@@ -113,6 +115,7 @@ entriesForDirectory mFilter rawPath = do
         status <- U.getFileStatus filePath
         return FileInfo { fileInfoFilename = f
                         , fileInfoFilePath = filePath
+                        , fileInfoSanitizedFilename = sanitizeFilename f
                         , fileInfoFileType = fileTypeFromStatus status
                         }
 
@@ -131,6 +134,7 @@ entriesForDirectory mFilter rawPath = do
 
         allFiles = addParent $ sortBy dirsFirst infos
         parentDir = FileInfo { fileInfoFilename = ".."
+                             , fileInfoSanitizedFilename = ".."
                              , fileInfoFilePath = FP.takeDirectory path
                              , fileInfoFileType = Just Directory
                              }
@@ -172,7 +176,7 @@ renderFileBrowser :: (Show n, Ord n) => Bool -> FileBrowser n -> Widget n
 renderFileBrowser foc b =
     let maxFilenameLength = maximum $ (length . fileInfoFilename) <$> (b^.fileBrowserEntriesL)
     in withDefAttr fileBrowserAttr $
-       (str $ sanitize $ fileBrowserWorkingDirectory b) <=>
+       (str $ sanitizeFilename $ fileBrowserWorkingDirectory b) <=>
        renderList (renderFileInfo maxFilenameLength) foc (b^.fileBrowserEntriesL)
 
 renderFileInfo :: Int -> Bool -> FileInfo -> Widget n
@@ -180,10 +184,12 @@ renderFileInfo maxLen _ info =
     padRight Max body
     where
         addAttr = maybe id (withDefAttr . attrForFileType) (fileInfoFileType info)
-        body = addAttr (hLimit (maxLen + 1) $ padRight Max $ str $ sanitize $ fileInfoFilename info)
+        body = addAttr (hLimit (maxLen + 1) $ padRight Max $ str $ fileInfoSanitizedFilename info)
 
-sanitize :: String -> String
-sanitize = fmap toPrint
+-- | Sanitize a filename for terminal display, replacing non-printable
+-- characters with '?'.
+sanitizeFilename :: String -> String
+sanitizeFilename = fmap toPrint
     where
         toPrint c | isPrint c = c
                   | otherwise = '?'
