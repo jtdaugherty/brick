@@ -55,6 +55,7 @@ import qualified System.Directory as D
 import qualified System.Posix.Files as U
 import qualified System.Posix.Types as U
 import qualified System.FilePath as FP
+import Text.Printf (printf)
 
 import Brick.Types
 import Brick.AttrMap (AttrName)
@@ -113,6 +114,18 @@ setCurrentDirectory path b = do
     return b { fileBrowserWorkingDirectory = path
              , fileBrowserEntries = list (b^.fileBrowserNameL) (V.fromList entries) 1
              }
+
+prettyFileSize :: Int64 -> T.Text
+prettyFileSize i
+    | i >= 2 ^ (40::Int64) = T.pack $ format (i `divBy` (2 ** 40)) <> "T"
+    | i >= 2 ^ (30::Int64) = T.pack $ format (i `divBy` (2 ** 30)) <> "G"
+    | i >= 2 ^ (20::Int64) = T.pack $ format (i `divBy` (2 ** 20)) <> "M"
+    | i >= 2 ^ (10::Int64) = T.pack $ format (i `divBy` (2 ** 10)) <> "K"
+    | otherwise    = T.pack $ show i <> " bytes"
+    where
+        format = printf "%0.1f"
+        divBy :: Int64 -> Double -> Double
+        divBy a b = ((fromIntegral a) :: Double) / b
 
 entriesForDirectory :: FilePath -> IO [FileInfo]
 entriesForDirectory rawPath = do
@@ -202,9 +215,10 @@ renderFileBrowser foc b =
                 Socket -> "socket"
         selInfoFor i =
             let maybeSize = if fileInfoFileType i == Just RegularFile
-                            then T.pack $ ", size: " <> show (fileInfoFileSize i)
+                            then ", " <> prettyFileSize (fileInfoFileSize i)
                             else ""
-            in txt $ "type: " <> fileTypeLabel (fileInfoFileType i) <> maybeSize
+            in txt $ (T.pack $ fileInfoSanitizedFilename i) <> ": " <>
+                     fileTypeLabel (fileInfoFileType i) <> maybeSize
     in withDefAttr fileBrowserAttr $
        vBox [ withDefAttr fileBrowserCurrentDirectoryAttr cwdHeader
             , renderList (renderFileInfo maxFilenameLength) foc (b^.fileBrowserEntriesL)
@@ -217,7 +231,10 @@ renderFileInfo maxLen sel info =
     padRight Max body
     where
         addAttr = maybe id (withDefAttr . attrForFileType) (fileInfoFileType info)
-        body = addAttr (hLimit (maxLen + 1) $ padRight Max $ str $ fileInfoSanitizedFilename info)
+        body = addAttr (hLimit (maxLen + 1) $ padRight Max $ str $ fileInfoSanitizedFilename info <> suffix)
+        suffix = if fileInfoFileType info == Just Directory
+                 then "/"
+                 else ""
 
 -- | Sanitize a filename for terminal display, replacing non-printable
 -- characters with '?'.
