@@ -66,6 +66,7 @@ import Brick.Widgets.List
 data FileBrowser n =
     FileBrowser { fileBrowserWorkingDirectory :: FilePath
                 , fileBrowserEntries :: List n FileInfo
+                , fileBrowserLatestResults :: [FileInfo]
                 , fileBrowserName :: n
                 , fileBrowserSelection :: Maybe FileInfo
                 , fileBrowserEntryFilter :: Maybe (FileInfo -> Bool)
@@ -102,6 +103,7 @@ newFileBrowser name mCwd = do
 
     let b = FileBrowser { fileBrowserWorkingDirectory = initialCwd
                         , fileBrowserEntries = list name mempty 1
+                        , fileBrowserLatestResults = mempty
                         , fileBrowserName = name
                         , fileBrowserSelection = Nothing
                         , fileBrowserEntryFilter = Nothing
@@ -112,15 +114,36 @@ newFileBrowser name mCwd = do
 
 setCurrentDirectory :: FilePath -> FileBrowser n -> IO (FileBrowser n)
 setCurrentDirectory path b = do
-    let userMatch = fromMaybe (const True) (b^.fileBrowserEntryFilterL)
-        nameMatch = maybe (const True)
-                          (\search i -> (T.toLower search `T.isInfixOf` (T.pack $ toLower <$> fileInfoSanitizedFilename i)))
-                          (b^.fileBrowserSearchStringL)
-        match i = nameMatch i && userMatch i
+    let match = fromMaybe (const True) (b^.fileBrowserEntryFilterL)
     entries <- filter match <$> entriesForDirectory path
-    return b { fileBrowserWorkingDirectory = path
-             , fileBrowserEntries = list (b^.fileBrowserNameL) (V.fromList entries) 1
-             }
+    let b' = setEntries entries b
+    return b' { fileBrowserWorkingDirectory = path }
+
+setEntries :: [FileInfo] -> FileBrowser n -> FileBrowser n
+setEntries es b =
+    applySearch $ b & fileBrowserLatestResultsL .~ es
+
+updateFileBrowserSearch :: (Maybe T.Text -> Maybe T.Text) -> FileBrowser n -> FileBrowser n
+updateFileBrowserSearch f b =
+    let old = b^.fileBrowserSearchStringL
+        new = f $ b^.fileBrowserSearchStringL
+        oldLen = maybe 0 T.length old
+        newLen = maybe 0 T.length new
+    in if old == new
+       then b
+       else if oldLen == newLen
+            -- This case avoids a list rebuild and cursor position reset
+            -- when the search state isn't *really* changing.
+            then b & fileBrowserSearchStringL .~ new
+            else applySearch $ b & fileBrowserSearchStringL .~ new
+
+applySearch :: FileBrowser n -> FileBrowser n
+applySearch b =
+    let searchMatch = maybe (const True)
+                            (\search i -> (T.toLower search `T.isInfixOf` (T.pack $ toLower <$> fileInfoSanitizedFilename i)))
+                            (b^.fileBrowserSearchStringL)
+        matching = filter searchMatch $ b^.fileBrowserLatestResultsL
+    in b { fileBrowserEntries = list (b^.fileBrowserNameL) (V.fromList matching) 1 }
 
 prettyFileSize :: Int64 -> T.Text
 prettyFileSize i
@@ -195,11 +218,6 @@ handleFileBrowserEvent e b =
     then handleFileBrowserEventSearching e b
     else handleFileBrowserEventNormal e b
 
-updateFileBrowserSearch :: (Maybe T.Text -> Maybe T.Text) -> FileBrowser n -> EventM n (FileBrowser n)
-updateFileBrowserSearch f b = do
-    let b' = b & fileBrowserSearchStringL %~ f
-    liftIO $ setCurrentDirectory (b'^.fileBrowserWorkingDirectoryL) b'
-
 safeInit :: T.Text -> T.Text
 safeInit t | T.length t == 0 = t
            | otherwise = T.init t
@@ -208,13 +226,15 @@ handleFileBrowserEventSearching :: (Ord n) => Vty.Event -> FileBrowser n -> Even
 handleFileBrowserEventSearching e b =
     case e of
         Vty.EvKey (Vty.KChar 'c') [Vty.MCtrl] ->
-            updateFileBrowserSearch (const Nothing) b
+            return $ updateFileBrowserSearch (const Nothing) b
+        Vty.EvKey Vty.KEsc [] ->
+            return $ updateFileBrowserSearch (const Nothing) b
         Vty.EvKey Vty.KBS [] ->
-            updateFileBrowserSearch (fmap safeInit) b
+            return $ updateFileBrowserSearch (fmap safeInit) b
         Vty.EvKey Vty.KEnter [] ->
             maybeSelectCurrentEntry b
         Vty.EvKey (Vty.KChar c) [] ->
-            updateFileBrowserSearch (fmap (flip T.snoc c)) b
+            return $ updateFileBrowserSearch (fmap (flip T.snoc c)) b
         _ ->
             handleEventLensed b fileBrowserEntriesL handleListEvent e
 
@@ -223,7 +243,7 @@ handleFileBrowserEventNormal e b =
     case e of
         Vty.EvKey (Vty.KChar '/') [] ->
             -- Begin file search
-            updateFileBrowserSearch (const $ Just "") b
+            return $ updateFileBrowserSearch (const $ Just "") b
         Vty.EvKey Vty.KEnter [] ->
             -- Select file or enter directory
             maybeSelectCurrentEntry b
