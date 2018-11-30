@@ -17,11 +17,12 @@ import Brick.Widgets.Center
   ( center
   )
 import Brick.Widgets.Border
-  ( border
+  ( borderWithLabel
   )
 import Brick.Widgets.Core
   ( hLimit
   , vLimit
+  , txt
   )
 import Brick.Widgets.FileBrowser as FB
 import qualified Brick.AttrMap as A
@@ -37,7 +38,7 @@ drawUI b = [ui]
         ui = center $
              vLimit 15 $
              hLimit 50 $
-             border $
+             borderWithLabel (txt "Choose a file") $
              FB.renderFileBrowser True b
 
 appEvent :: FB.FileBrowser Name -> BrickEvent Name e -> T.EventM Name (T.Next (FB.FileBrowser Name))
