@@ -76,6 +76,7 @@ library
     Brick.Widgets.Core
     Brick.Widgets.Dialog
     Brick.Widgets.Edit
+    Brick.Widgets.FileBrowser
     Brick.Widgets.List
     Brick.Widgets.ProgressBar
     Data.IMap
@@ -90,7 +91,9 @@ library
                        vty >= 5.24,
                        transformers,
                        data-clist >= 0.1,
+                       directory,
                        dlist,
+                       filepath,
                        containers,
                        microlens >= 0.3.0.0,
                        microlens-th,
@@ -103,6 +106,7 @@ library
                        text-zipper >= 0.7.1,
                        template-haskell,
                        deepseq >= 1.3 && < 1.5,
+                       unix,
                        word-wrap >= 0.2
   if impl(ghc < 8.0)
     build-depends:     semigroups
@@ -116,6 +120,19 @@ executable brick-readme-demo
   default-extensions:  CPP
   main-is:             ReadmeDemo.hs
   build-depends:       base,
+                       brick,
+                       text
+
+executable brick-file-browser-demo
+  if !flag(demos)
+    Buildable: False
+  hs-source-dirs:      programs
+  ghc-options:         -threaded -Wall -fno-warn-unused-do-bind -O3
+  default-language:    Haskell2010
+  default-extensions:  CPP
+  main-is:             FileBrowserDemo.hs
+  build-depends:       base,
+                       vty,
                        brick,
                        text
 
