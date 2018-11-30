@@ -30,6 +30,9 @@ module Brick.Widgets.FileBrowser
   , fileBrowserNamedPipeAttr
   , fileBrowserSymbolicLinkAttr
   , fileBrowserSocketAttr
+
+  -- * Filters
+  , fileTypeMatch
   )
 where
 
@@ -99,13 +102,14 @@ newFileBrowser name mCwd = do
 
 setCurrentDirectory :: FilePath -> FileBrowser n -> IO (FileBrowser n)
 setCurrentDirectory path b = do
-    entries <- entriesForDirectory (b^.fileBrowserEntryFilterL) path
+    let match = fromMaybe (const True) (b^.fileBrowserEntryFilterL)
+    entries <- filter match <$> entriesForDirectory path
     return b { fileBrowserWorkingDirectory = path
              , fileBrowserEntries = list (b^.fileBrowserNameL) (V.fromList entries) 1
              }
 
-entriesForDirectory :: Maybe (FileInfo -> Bool) -> FilePath -> IO [FileInfo]
-entriesForDirectory mFilter rawPath = do
+entriesForDirectory :: FilePath -> IO [FileInfo]
+entriesForDirectory rawPath = do
     path <- D.makeAbsolute rawPath
 
     -- Get all entries except "." and "..", then sort them
@@ -143,8 +147,7 @@ entriesForDirectory mFilter rawPath = do
                     then id
                     else (parentDir :)
 
-    let match = fromMaybe (const True) mFilter
-    return $ filter match allFiles
+    return allFiles
 
 fileTypeFromStatus :: U.FileStatus -> Maybe FileType
 fileTypeFromStatus s =
@@ -232,3 +235,6 @@ fileBrowserSymbolicLinkAttr = fileBrowserAttr <> "symlink"
 
 fileBrowserSocketAttr :: AttrName
 fileBrowserSocketAttr = fileBrowserAttr <> "socket"
+
+fileTypeMatch :: [FileType] -> FileInfo -> Bool
+fileTypeMatch tys i = maybe False (`elem` tys) $ fileInfoFileType i
