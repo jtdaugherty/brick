@@ -221,13 +221,15 @@ renderFileBrowser foc b =
                      fileTypeLabel (fileInfoFileType i) <> maybeSize
     in withDefAttr fileBrowserAttr $
        vBox [ withDefAttr fileBrowserCurrentDirectoryAttr cwdHeader
-            , renderList (renderFileInfo maxFilenameLength) foc (b^.fileBrowserEntriesL)
+            , renderList (renderFileInfo foc maxFilenameLength) foc (b^.fileBrowserEntriesL)
             , withDefAttr fileBrowserSelectionInfoAttr selInfo
             ]
 
-renderFileInfo :: Int -> Bool -> FileInfo -> Widget n
-renderFileInfo maxLen sel info =
-    (if sel then forceAttr listSelectedFocusedAttr else id) $
+renderFileInfo :: Bool -> Int -> Bool -> FileInfo -> Widget n
+renderFileInfo foc maxLen sel info =
+    (if foc
+     then (if sel then forceAttr listSelectedFocusedAttr else id)
+     else (if sel then forceAttr listSelectedAttr else id)) $
     padRight Max body
     where
         addAttr = maybe id (withDefAttr . attrForFileType) (fileInfoFileType info)
