@@ -1,27 +1,50 @@
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
+-- | A file browser widget that allows users to navigate directory
+-- trees, search for files and directories, and select a file of
+-- interest.
+--
+-- To use, embed a 'FileBrowser' in your application state. Dispatch
+-- events to it in your event handler with 'handleFileBrowserEvent'.
+-- Get the entry under the browser's cursor with 'fileBrowserCursor'
+-- and get the entry selected by the user with 'Enter' using
+-- 'fileBrowserSelection'. See the documentation below for handled
+-- events.
+--
+-- File browsers have a built-in user-configurable function to limit the
+-- entries displayed. For example, an application might want to limit
+-- the browser to just directories and XML files. That is accomplished
+-- by setting the filter with 'setFileBrowserEntryFilter'.
+--
+-- File browsers are styled using the provided collection of attribute
+-- names, so add those to your attribute map to get the appearance you
+-- want. File browsers also make use of a 'List' internally, so the
+-- 'List' attributes will affect how the list appears.
 module Brick.Widgets.FileBrowser
-  ( FileBrowser(fileBrowserSelection, fileBrowserWorkingDirectory, fileBrowserEntryFilter)
+  ( -- * The FileBrowser and related types
+    FileBrowser
   , FileInfo(..)
   , FileType(..)
+  -- * Making a new file browser
   , newFileBrowser
-  , setCurrentDirectory
-  , renderFileBrowser
-  , fileBrowserCursor
-  , handleFileBrowserEvent
-  , updateFileBrowserSearch
-  , fileBrowserIsSearching
 
-  -- * Lenses
-  , fileBrowserWorkingDirectoryL
-  , fileBrowserSelectionL
-  , fileBrowserEntryFilterL
-  , fileInfoFilenameL
-  , fileInfoFileSizeL
-  , fileInfoSanitizedFilenameL
-  , fileInfoFilePathL
-  , fileInfoFileTypeL
+  -- * Manipulating a file browser's state
+  , setWorkingDirectory
+  , getWorkingDirectory
+  , updateFileBrowserSearch
+  , setFileBrowserEntryFilter
+
+  -- * Handling events
+  , handleFileBrowserEvent
+
+  -- * Rendering
+  , renderFileBrowser
+
+  -- * Getting information
+  , fileBrowserCursor
+  , fileBrowserIsSearching
+  , fileBrowserSelection
 
   -- * Attributes
   , fileBrowserAttr
@@ -35,8 +58,21 @@ module Brick.Widgets.FileBrowser
   , fileBrowserSymbolicLinkAttr
   , fileBrowserSocketAttr
 
-  -- * Filters
+  -- * File type filters
   , fileTypeMatch
+  , fileExtensionMatch
+
+  -- * Miscellaneous
+  , prettyFileSize
+
+  -- * Lenses
+  , fileBrowserEntryFilterL
+  , fileInfoFilenameL
+  , fileInfoFileSizeL
+  , fileInfoSanitizedFilenameL
+  , fileInfoFilePathL
+  , fileInfoFileTypeL
+
   )
 where
 
@@ -49,7 +85,7 @@ import qualified Data.Text as T
 import Data.Monoid
 #endif
 import Data.Int (Int64)
-import Data.List (sortBy)
+import Data.List (sortBy, isSuffixOf)
 import qualified Data.Vector as V
 import Lens.Micro
 import qualified Graphics.Vty as Vty
@@ -64,39 +100,70 @@ import Brick.AttrMap (AttrName)
 import Brick.Widgets.Core
 import Brick.Widgets.List
 
+-- | A file browser's state. Embed this in your application state and
+-- transform it with 'handleFileBrowserEvent' and the functions included
+-- in this module.
 data FileBrowser n =
     FileBrowser { fileBrowserWorkingDirectory :: FilePath
                 , fileBrowserEntries :: List n FileInfo
                 , fileBrowserLatestResults :: [FileInfo]
                 , fileBrowserName :: n
-                , fileBrowserSelection :: Maybe FileInfo
+                , fileBrowserSelectionState :: Maybe FileInfo
                 , fileBrowserEntryFilter :: Maybe (FileInfo -> Bool)
                 , fileBrowserSearchString :: Maybe T.Text
                 }
 
+-- | Information about a file entry in the browser.
 data FileInfo =
     FileInfo { fileInfoFilename :: String
+             -- ^ The filename of this entry, without its path.
+             -- This is not for display purposes; for that, use
+             -- 'fileInfoSanitizedFilename'.
              , fileInfoSanitizedFilename :: String
+             -- ^ The filename of this entry with out its path,
+             -- sanitized of non-printable characters (replaced with
+             -- '?'). This is for display purposes only.
              , fileInfoFilePath :: FilePath
+             -- ^ The full path to this entry's file.
              , fileInfoFileType :: Maybe FileType
+             -- ^ The type of this entry's file, if it could be
+             -- determined.
              , fileInfoFileSize :: Int64
+             -- ^ The size, in bytes, of this entry's file.
              }
              deriving (Show, Eq, Read)
 
+-- | The type of file entries in the browser.
 data FileType =
     RegularFile
+    -- ^ A regular disk file.
     | BlockDevice
+    -- ^ A block device.
     | CharacterDevice
+    -- ^ A character device.
     | NamedPipe
+    -- ^ A named pipe.
     | Directory
+    -- ^ A directory.
     | SymbolicLink
+    -- ^ A symbolic link.
     | Socket
+    -- ^ A Unix socket.
     deriving (Read, Show, Eq)
 
 suffixLenses ''FileBrowser
 suffixLenses ''FileInfo
 
-newFileBrowser :: n -> Maybe FilePath -> IO (FileBrowser n)
+-- | Make a new file browser state. The provided resource name will be
+-- used to render the 'List' viewport of the browser.
+newFileBrowser :: n
+               -- ^ The resource name associated with the browser's
+               -- entry listing.
+               -> Maybe FilePath
+               -- ^ The initial working directory that the browser
+               -- displays. If not provided, this defaults to the
+               -- executable's current working directory.
+               -> IO (FileBrowser n)
 newFileBrowser name mCwd = do
     initialCwd <- case mCwd of
         Just path -> return path
@@ -106,28 +173,63 @@ newFileBrowser name mCwd = do
                         , fileBrowserEntries = list name mempty 1
                         , fileBrowserLatestResults = mempty
                         , fileBrowserName = name
-                        , fileBrowserSelection = Nothing
+                        , fileBrowserSelectionState = Nothing
                         , fileBrowserEntryFilter = Nothing
                         , fileBrowserSearchString = Nothing
                         }
 
-    setCurrentDirectory initialCwd b
+    setWorkingDirectory initialCwd b
 
-setCurrentDirectory :: FilePath -> FileBrowser n -> IO (FileBrowser n)
-setCurrentDirectory path b = do
-    let match = fromMaybe (const True) (b^.fileBrowserEntryFilterL)
-    entries <- filter match <$> entriesForDirectory path
+-- | Set the filtering function used to determine which entries in the
+-- browser's current directory appear in the browser.
+setFileBrowserEntryFilter :: Maybe (FileInfo -> Bool) -> FileBrowser n -> FileBrowser n
+setFileBrowserEntryFilter f b =
+    applyFilterAndSearch $ b & fileBrowserEntryFilterL .~ f
+
+-- | Set the working directory of the file browser. This scans the new
+-- directory and repopulates the browser while maintaining any active
+-- search string and/or entry filtering.
+setWorkingDirectory :: FilePath -> FileBrowser n -> IO (FileBrowser n)
+setWorkingDirectory path b = do
+    entries <- entriesForDirectory path
     let b' = setEntries entries b
-    return b' { fileBrowserWorkingDirectory = path }
+    return $ b' & fileBrowserWorkingDirectoryL .~ path
+
+-- | Get the working directory of the file browser.
+getWorkingDirectory :: FileBrowser n -> FilePath
+getWorkingDirectory = fileBrowserWorkingDirectory
 
 setEntries :: [FileInfo] -> FileBrowser n -> FileBrowser n
 setEntries es b =
-    applySearch $ b & fileBrowserLatestResultsL .~ es
+    applyFilterAndSearch $ b & fileBrowserLatestResultsL .~ es
 
+-- | Returns whether the file browser is in search mode, i.e., the mode
+-- in which user input affects the browser's active search string and
+-- displayed entries. This is used to aid in event dispatching in the
+-- calling program.
 fileBrowserIsSearching :: FileBrowser n -> Bool
 fileBrowserIsSearching b = isJust $ b^.fileBrowserSearchStringL
 
-updateFileBrowserSearch :: (Maybe T.Text -> Maybe T.Text) -> FileBrowser n -> FileBrowser n
+-- | Get the entry chosen by the user, if any. The entry is chosen
+-- by an 'Enter' keypress; if you want the entry under the cursor, use
+-- 'fileBrowserCursor'.
+fileBrowserSelection :: FileBrowser n -> Maybe FileInfo
+fileBrowserSelection = fileBrowserSelectionState
+
+-- | Modify the file browser's active search string. This causes the
+-- browser's displayed entries to change to those in its current
+-- directory that match the search string, if any. If a search string
+-- is provided, it is matched case-insensitively anywhere in file or
+-- directory names.
+updateFileBrowserSearch :: (Maybe T.Text -> Maybe T.Text)
+                        -- ^ The search transformation. 'Nothing'
+                        -- indicates that search mode should be off;
+                        -- 'Just' indicates that it should be on and
+                        -- that the provided search string should be
+                        -- used.
+                        -> FileBrowser n
+                        -- ^ The browser to modify.
+                        -> FileBrowser n
 updateFileBrowserSearch f b =
     let old = b^.fileBrowserSearchStringL
         new = f $ b^.fileBrowserSearchStringL
@@ -139,17 +241,23 @@ updateFileBrowserSearch f b =
             -- This case avoids a list rebuild and cursor position reset
             -- when the search state isn't *really* changing.
             then b & fileBrowserSearchStringL .~ new
-            else applySearch $ b & fileBrowserSearchStringL .~ new
+            else applyFilterAndSearch $ b & fileBrowserSearchStringL .~ new
 
-applySearch :: FileBrowser n -> FileBrowser n
-applySearch b =
-    let searchMatch = maybe (const True)
+applyFilterAndSearch :: FileBrowser n -> FileBrowser n
+applyFilterAndSearch b =
+    let filterMatch = fromMaybe (const True) (b^.fileBrowserEntryFilterL)
+        searchMatch = maybe (const True)
                             (\search i -> (T.toLower search `T.isInfixOf` (T.pack $ toLower <$> fileInfoSanitizedFilename i)))
                             (b^.fileBrowserSearchStringL)
-        matching = filter searchMatch $ b^.fileBrowserLatestResultsL
+        match i = filterMatch i && searchMatch i
+        matching = filter match $ b^.fileBrowserLatestResultsL
     in b { fileBrowserEntries = list (b^.fileBrowserNameL) (V.fromList matching) 1 }
 
-prettyFileSize :: Int64 -> T.Text
+-- | Generate a textual abbreviation of a file size, e.g. "10.2M" or "12
+-- bytes".
+prettyFileSize :: Int64
+               -- ^ A file size in bytes.
+               -> T.Text
 prettyFileSize i
     | i >= 2 ^ (40::Int64) = T.pack $ format (i `divBy` (2 ** 40)) <> "T"
     | i >= 2 ^ (30::Int64) = T.pack $ format (i `divBy` (2 ** 30)) <> "G"
@@ -213,9 +321,24 @@ fileTypeFromStatus s =
        | U.isSymbolicLink s    -> Just SymbolicLink
        | otherwise             -> Nothing
 
+-- | Get the file information for the file under the cursor, if any.
 fileBrowserCursor :: FileBrowser n -> Maybe FileInfo
 fileBrowserCursor b = snd <$> listSelectedElement (b^.fileBrowserEntriesL)
 
+-- | Handle a Vty input event.
+--
+-- Events handled in normal mode:
+--
+-- * @Enter@: set the file browser's selected entry
+--   ('fileBrowserSelection') for use by the calling application
+-- * @/@: enter search mode
+--
+-- Events handled in search mode:
+--
+-- * @Esc@, @Ctrl-C@: cancel search mode
+-- * @Enter@: set the file browser's selected entry
+--   ('fileBrowserSelection') for use by the calling application
+-- * Other input: update search string
 handleFileBrowserEvent :: (Ord n) => Vty.Event -> FileBrowser n -> EventM n (FileBrowser n)
 handleFileBrowserEvent e b =
     if fileBrowserIsSearching b
@@ -261,10 +384,18 @@ maybeSelectCurrentEntry b =
         Nothing -> return b
         Just entry ->
             case fileInfoFileType entry of
-                Just Directory -> liftIO $ setCurrentDirectory (fileInfoFilePath entry) b
-                _ -> return $ b & fileBrowserSelectionL .~ Just entry
+                Just Directory -> liftIO $ setWorkingDirectory (fileInfoFilePath entry) b
+                _ -> return $ b & fileBrowserSelectionStateL .~ Just entry
 
-renderFileBrowser :: (Show n, Ord n) => Bool -> FileBrowser n -> Widget n
+-- | Render a file browser.
+--
+-- The file browser is greedy in both dimensions.
+renderFileBrowser :: (Show n, Ord n)
+                  => Bool
+                  -- ^ Whether the file browser has input focus.
+                  -> FileBrowser n
+                  -- ^ The browser to render.
+                  -> Widget n
 renderFileBrowser foc b =
     let maxFilenameLength = maximum $ (length . fileInfoFilename) <$> (b^.fileBrowserEntriesL)
         cwdHeader = padRight Max $
@@ -361,5 +492,15 @@ fileBrowserSymbolicLinkAttr = fileBrowserAttr <> "symlink"
 fileBrowserSocketAttr :: AttrName
 fileBrowserSocketAttr = fileBrowserAttr <> "socket"
 
+-- | A file type filter for use with 'setFileBrowserEntryFilter'. This
+-- filter permits entries whose file types are in the specified list.
 fileTypeMatch :: [FileType] -> FileInfo -> Bool
 fileTypeMatch tys i = maybe False (`elem` tys) $ fileInfoFileType i
+
+-- | A filter that matches any directory regardless of name, or any
+-- regular file with the specified extension. For example, an extension
+-- argument of @"xml"@ would match regular files @test.xml@ and
+-- @TEST.XML@ and it will match directories regardless of name.
+fileExtensionMatch :: String -> FileInfo -> Bool
+fileExtensionMatch ext i =
+    ('.' : (toLower <$> ext)) `isSuffixOf` (toLower <$> fileInfoFilename i)
