@@ -1,23 +1,25 @@
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
--- | A file browser widget that allows users to navigate directory
--- trees, search for files and directories, and select a file of
--- interest.
+-- | This module provids a file browser widget that allows users to
+-- navigate directory trees, search for files and directories, and
+-- select a file of interest.
 --
--- To use, embed a 'FileBrowser' in your application state. Dispatch
--- events to it in your event handler with 'handleFileBrowserEvent'.
--- Get the entry under the browser's cursor with 'fileBrowserCursor'
--- and get the entry selected by the user with 'Enter' using
--- 'fileBrowserSelection'. See the documentation below for handled
--- events.
+-- To use this module:
+--
+-- * Embed a 'FileBrowser' in your application state.
+-- * Dispatch events to it in your event handler with
+--   'handleFileBrowserEvent'.
+-- * Get the entry under the browser's cursor with 'fileBrowserCursor'
+--   and get the entry selected by the user with 'Enter' using
+--   'fileBrowserSelection'.
 --
 -- File browsers have a built-in user-configurable function to limit the
--- entries displayed. For example, an application might want to limit
--- the browser to just directories and XML files. That is accomplished
--- by setting the filter with 'setFileBrowserEntryFilter' and
--- some examples are provided in this module: 'fileTypeMatch' and
--- 'fileExtensionMatch'.
+-- entries displayed that defaults to showing all files. For example,
+-- an application might want to limit the browser to just directories
+-- and XML files. That is accomplished by setting the filter with
+-- 'setFileBrowserEntryFilter' and some examples are provided in this
+-- module: 'fileTypeMatch' and 'fileExtensionMatch'.
 --
 -- File browsers are styled using the provided collection of attribute
 -- names, so add those to your attribute map to get the appearance you
@@ -158,6 +160,10 @@ suffixLenses ''FileInfo
 
 -- | Make a new file browser state. The provided resource name will be
 -- used to render the 'List' viewport of the browser.
+--
+-- By default, the browser will show all files and directories
+-- in its working directory. To change that behavior, see
+-- 'setFileBrowserEntryFilter'.
 newFileBrowser :: n
                -- ^ The resource name associated with the browser's
                -- entry listing.
@@ -182,8 +188,11 @@ newFileBrowser name mCwd = do
 
     setWorkingDirectory initialCwd b
 
--- | Set the filtering function used to determine which entries in the
--- browser's current directory appear in the browser.
+-- | Set the filtering function used to determine which entries in
+-- the browser's current directory appear in the browser. 'Nothing'
+-- indicates no filtering, meaning all entries will be shown. 'Just'
+-- indicates a function that should return 'True' for entries that
+-- should be permitted to appear.
 setFileBrowserEntryFilter :: Maybe (FileInfo -> Bool) -> FileBrowser n -> FileBrowser n
 setFileBrowserEntryFilter f b =
     applyFilterAndSearch $ b & fileBrowserEntryFilterL .~ f
