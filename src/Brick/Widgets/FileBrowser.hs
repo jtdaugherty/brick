@@ -462,33 +462,45 @@ attrForFileType Directory = fileBrowserDirectoryAttr
 attrForFileType SymbolicLink = fileBrowserSymbolicLinkAttr
 attrForFileType Socket = fileBrowserSocketAttr
 
+-- | The base attribute for all file browser attributes.
 fileBrowserAttr :: AttrName
 fileBrowserAttr = "fileBrowser"
 
+-- | The attribute used for the current directory displayed at the top
+-- of the browser.
 fileBrowserCurrentDirectoryAttr :: AttrName
 fileBrowserCurrentDirectoryAttr = fileBrowserAttr <> "currentDirectory"
 
+-- | The attribute used for the entry information displayed at the
+-- bottom of the browser.
 fileBrowserSelectionInfoAttr :: AttrName
 fileBrowserSelectionInfoAttr = fileBrowserAttr <> "selectionInfo"
 
+-- | The attribute used to render directory entries.
 fileBrowserDirectoryAttr :: AttrName
 fileBrowserDirectoryAttr = fileBrowserAttr <> "directory"
 
+-- | The attribute used to render block device entries.
 fileBrowserBlockDeviceAttr :: AttrName
 fileBrowserBlockDeviceAttr = fileBrowserAttr <> "block"
 
+-- | The attribute used to render regular file entries.
 fileBrowserRegularFileAttr :: AttrName
 fileBrowserRegularFileAttr = fileBrowserAttr <> "regular"
 
+-- | The attribute used to render character device entries.
 fileBrowserCharacterDeviceAttr :: AttrName
 fileBrowserCharacterDeviceAttr = fileBrowserAttr <> "char"
 
+-- | The attribute used to render named pipe entries.
 fileBrowserNamedPipeAttr :: AttrName
 fileBrowserNamedPipeAttr = fileBrowserAttr <> "pipe"
 
+-- | The attribute used to render symbolic link entries.
 fileBrowserSymbolicLinkAttr :: AttrName
 fileBrowserSymbolicLinkAttr = fileBrowserAttr <> "symlink"
 
+-- | The attribute used to render Unix socket entries.
 fileBrowserSocketAttr :: AttrName
 fileBrowserSocketAttr = fileBrowserAttr <> "socket"
 
