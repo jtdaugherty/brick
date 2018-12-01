@@ -62,7 +62,7 @@ module Brick.Widgets.FileBrowser
   , fileBrowserSymbolicLinkAttr
   , fileBrowserUnixSocketAttr
 
-  -- * File type filters
+  -- * Example browser entry filters
   , fileTypeMatch
   , fileExtensionMatch
 
