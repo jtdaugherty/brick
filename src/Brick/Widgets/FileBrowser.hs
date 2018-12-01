@@ -66,9 +66,6 @@ module Brick.Widgets.FileBrowser
   , fileTypeMatch
   , fileExtensionMatch
 
-  -- * Miscellaneous
-  , prettyFileSize
-
   -- * Lenses
   , fileBrowserEntryFilterL
   , fileInfoFilenameL
@@ -76,6 +73,9 @@ module Brick.Widgets.FileBrowser
   , fileInfoSanitizedFilenameL
   , fileInfoFilePathL
   , fileInfoFileTypeL
+
+  -- * Miscellaneous
+  , prettyFileSize
 
   )
 where
