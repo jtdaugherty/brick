@@ -56,7 +56,7 @@ module Brick.Widgets.FileBrowser
   , fileBrowserCharacterDeviceAttr
   , fileBrowserNamedPipeAttr
   , fileBrowserSymbolicLinkAttr
-  , fileBrowserSocketAttr
+  , fileBrowserUnixSocketAttr
 
   -- * File type filters
   , fileTypeMatch
@@ -147,7 +147,7 @@ data FileType =
     -- ^ A directory.
     | SymbolicLink
     -- ^ A symbolic link.
-    | Socket
+    | UnixSocket
     -- ^ A Unix socket.
     deriving (Read, Show, Eq)
 
@@ -317,7 +317,7 @@ fileTypeFromStatus s =
        | U.isNamedPipe s       -> Just NamedPipe
        | U.isRegularFile s     -> Just RegularFile
        | U.isDirectory s       -> Just Directory
-       | U.isSocket s          -> Just Socket
+       | U.isSocket s          -> Just UnixSocket
        | U.isSymbolicLink s    -> Just SymbolicLink
        | otherwise             -> Nothing
 
@@ -425,7 +425,7 @@ renderFileBrowser foc b =
                 NamedPipe -> "pipe"
                 Directory -> "directory"
                 SymbolicLink -> "symbolic link"
-                Socket -> "socket"
+                UnixSocket -> "socket"
         selInfoFor i =
             let maybeSize = if fileInfoFileType i == Just RegularFile
                             then ", " <> prettyFileSize (fileInfoFileSize i)
@@ -473,7 +473,7 @@ attrForFileType CharacterDevice = fileBrowserCharacterDeviceAttr
 attrForFileType NamedPipe = fileBrowserNamedPipeAttr
 attrForFileType Directory = fileBrowserDirectoryAttr
 attrForFileType SymbolicLink = fileBrowserSymbolicLinkAttr
-attrForFileType Socket = fileBrowserSocketAttr
+attrForFileType UnixSocket = fileBrowserUnixSocketAttr
 
 -- | The base attribute for all file browser attributes.
 fileBrowserAttr :: AttrName
@@ -514,8 +514,8 @@ fileBrowserSymbolicLinkAttr :: AttrName
 fileBrowserSymbolicLinkAttr = fileBrowserAttr <> "symlink"
 
 -- | The attribute used to render Unix socket entries.
-fileBrowserSocketAttr :: AttrName
-fileBrowserSocketAttr = fileBrowserAttr <> "socket"
+fileBrowserUnixSocketAttr :: AttrName
+fileBrowserUnixSocketAttr = fileBrowserAttr <> "unixSocket"
 
 -- | A file type filter for use with 'setFileBrowserEntryFilter'. This
 -- filter permits entries whose file types are in the specified list.

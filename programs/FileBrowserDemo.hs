@@ -71,7 +71,7 @@ theMap = A.attrMap V.defAttr
     , (FB.fileBrowserCharacterDeviceAttr, fg V.green)
     , (FB.fileBrowserNamedPipeAttr, fg V.yellow)
     , (FB.fileBrowserSymbolicLinkAttr, fg V.cyan)
-    , (FB.fileBrowserSocketAttr, fg V.red)
+    , (FB.fileBrowserUnixSocketAttr, fg V.red)
     ]
 
 theApp :: M.App (FileBrowser Name) e Name
