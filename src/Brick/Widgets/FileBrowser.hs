@@ -15,14 +15,16 @@
 -- File browsers have a built-in user-configurable function to limit the
 -- entries displayed. For example, an application might want to limit
 -- the browser to just directories and XML files. That is accomplished
--- by setting the filter with 'setFileBrowserEntryFilter'.
+-- by setting the filter with 'setFileBrowserEntryFilter' and
+-- some examples are provided in this module: 'fileTypeMatch' and
+-- 'fileExtensionMatch'.
 --
 -- File browsers are styled using the provided collection of attribute
 -- names, so add those to your attribute map to get the appearance you
 -- want. File browsers also make use of a 'List' internally, so the
 -- 'List' attributes will affect how the list appears.
 module Brick.Widgets.FileBrowser
-  ( -- * The FileBrowser and related types
+  ( -- * Types
     FileBrowser
   , FileInfo(..)
   , FileType(..)
