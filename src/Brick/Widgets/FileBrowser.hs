@@ -327,18 +327,22 @@ fileBrowserCursor b = snd <$> listSelectedElement (b^.fileBrowserEntriesL)
 
 -- | Handle a Vty input event.
 --
--- Events handled in normal mode:
+-- Events handled regardless of mode:
 --
 -- * @Enter@: set the file browser's selected entry
 --   ('fileBrowserSelection') for use by the calling application
+-- * @Ctrl-n@: select the next entry
+-- * @Ctrl-p@: select the previous entry
+-- * 'List' navigation keys
+--
+-- Events handled only in normal mode:
+--
 -- * @/@: enter search mode
 --
--- Events handled in search mode:
+-- Events handled only in search mode:
 --
 -- * @Esc@, @Ctrl-C@: cancel search mode
--- * @Enter@: set the file browser's selected entry
---   ('fileBrowserSelection') for use by the calling application
--- * Other input: update search string
+-- * Text input: update search string
 handleFileBrowserEvent :: (Ord n) => Vty.Event -> FileBrowser n -> EventM n (FileBrowser n)
 handleFileBrowserEvent e b =
     if fileBrowserIsSearching b
@@ -363,7 +367,7 @@ handleFileBrowserEventSearching e b =
         Vty.EvKey (Vty.KChar c) [] ->
             return $ updateFileBrowserSearch (fmap (flip T.snoc c)) b
         _ ->
-            handleEventLensed b fileBrowserEntriesL handleListEvent e
+            handleFileBrowserEventCommon e b
 
 handleFileBrowserEventNormal :: (Ord n) => Vty.Event -> FileBrowser n -> EventM n (FileBrowser n)
 handleFileBrowserEventNormal e b =
@@ -375,7 +379,16 @@ handleFileBrowserEventNormal e b =
             -- Select file or enter directory
             maybeSelectCurrentEntry b
         _ ->
-            -- Otherwise, delegate event to entry list
+            handleFileBrowserEventCommon e b
+
+handleFileBrowserEventCommon :: (Ord n) => Vty.Event -> FileBrowser n -> EventM n (FileBrowser n)
+handleFileBrowserEventCommon e b =
+    case e of
+        Vty.EvKey (Vty.KChar 'n') [Vty.MCtrl] ->
+            return $ b & fileBrowserEntriesL %~ listMoveBy 1
+        Vty.EvKey (Vty.KChar 'p') [Vty.MCtrl] ->
+            return $ b & fileBrowserEntriesL %~ listMoveBy (-1)
+        _ ->
             handleEventLensed b fileBrowserEntriesL handleListEvent e
 
 maybeSelectCurrentEntry :: FileBrowser n -> EventM n (FileBrowser n)
