@@ -157,6 +157,9 @@ data FileBrowser n =
                 -- @Enter@ keypress selects that entry rather than doing
                 -- anything else; directory changes can only occur if
                 -- this returns 'False' for directories.
+                --
+                -- Note that this is a record field so it can be used to
+                -- change the selection function.
                 }
 
 -- | Information about a file entry in the browser.
@@ -210,7 +213,9 @@ newFileBrowser :: (FileInfo -> Bool)
                -- ^ The function used to determine what kinds of entries
                -- can be selected with @Enter@ (see
                -- 'handleFileBrowserEvent'). A good default is
-               -- 'selectNonDirectories'.
+               -- 'selectNonDirectories'. This can be changed at
+               -- 'any time with 'fileBrowserSelectable' or its
+               -- 'corresponding lens.
                -> n
                -- ^ The resource name associated with the browser's
                -- entry listing.
