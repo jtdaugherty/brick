@@ -1,13 +1,18 @@
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 
 module List
   (
     main
   ) where
 
+import Prelude hiding (splitAt)
+
 import Data.Function (on)
 import Data.Maybe (isNothing)
 import Data.Monoid (Endo(..))
+import Data.Semigroup (Semigroup((<>)))
 
 import qualified Data.Vector as V
 import Lens.Micro
@@ -245,6 +250,27 @@ prop_moveByWhenNoSelection l amt =
     expected = if amt > 0 then 0 else len - 1
   in
     len > 0 ==> listMoveBy amt l' ^. listSelectedL == Just expected
+
+
+splitAtLength :: (Foldable t, Splittable t) => t a -> Int -> Bool
+splitAtLength l i =
+  let
+    len = length l
+    (h, t) = splitAt i l
+  in
+    length h + length t == len
+    && length h == clamp 0 len i
+
+splitAtAppend
+  :: (Splittable t, Semigroup (t a), Eq (t a))
+  => t a -> Int -> Bool
+splitAtAppend l i = uncurry (<>) (splitAt i l) == l
+
+prop_splitAtLength_Vector :: [a] -> Int -> Bool
+prop_splitAtLength_Vector = splitAtLength . V.fromList
+
+prop_splitAtAppend_Vector :: (Eq a) => [a] -> Int -> Bool
+prop_splitAtAppend_Vector = splitAtAppend . V.fromList
 
 
 return []
