@@ -105,12 +105,11 @@ Feature Overview
  * Simple dialog box widget
  * Border-drawing widgets (put borders around or in between things)
  * Generic scrollable viewports
- * (And many more general-purpose layout control combinators)
-
-Other killer features:
+ * General-purpose layout control combinators
  * Extensible widget-building API
  * User-customizable attribute themes
  * Type-safe, validated input form API (see the `Brick.Forms` module)
+ * A filesystem browser for file selection
  * Borders can be configured to automatically connect!
 
 Brick-Users Discussion
