@@ -4,7 +4,8 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 -- | This module provids a file browser widget that allows users to
 -- navigate directory trees, search for files and directories, and
--- select a file of interest.
+-- select a file of interest. For a complete working demonstration of
+-- this module, see @programs/FileBrowserDemo.hs@.
 --
 -- To use this module:
 --
