@@ -14,6 +14,10 @@
 -- * Get the entry under the browser's cursor with 'fileBrowserCursor'
 --   and get the entry selected by the user with 'Enter' using
 --   'fileBrowserSelection'.
+-- * Inspect 'fileBrowserException' to determine whether the
+--   file browser encountered an error when reading a directory in
+--   'setWorkingDirectory' or when changing directories in the event
+--   handler.
 --
 -- File browsers have a built-in user-configurable function to limit the
 -- entries displayed that defaults to showing all files. For example,
@@ -136,6 +140,12 @@ data FileBrowser n =
                 , fileBrowserEntryFilter :: Maybe (FileInfo -> Bool)
                 , fileBrowserSearchString :: Maybe T.Text
                 , fileBrowserException :: Maybe E.IOException
+                -- ^ The exception status of the latest directory
+                -- change. If 'Nothing', the latest directory change
+                -- was successful and all entries were read. Otherwise,
+                -- this contains the exception raised by the latest
+                -- directory change in case the calling application
+                -- needs to inspect or present the error to the user.
                 }
 
 -- | Information about a file entry in the browser.
@@ -392,7 +402,11 @@ fileTypeFromStatus s =
 fileBrowserCursor :: FileBrowser n -> Maybe FileInfo
 fileBrowserCursor b = snd <$> listSelectedElement (b^.fileBrowserEntriesL)
 
--- | Handle a Vty input event.
+-- | Handle a Vty input event. Note that event handling can
+-- cause a directory change so the caller should be aware that
+-- 'fileBrowserException' may need to be checked after handling an
+-- event in case an exception was triggered while scanning the working
+-- directory.
 --
 -- Events handled regardless of mode:
 --
