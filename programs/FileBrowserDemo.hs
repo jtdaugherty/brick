@@ -97,5 +97,5 @@ theApp =
 
 main :: IO ()
 main = do
-    b <- M.defaultMain theApp =<< FB.newFileBrowser FileBrowser1 Nothing
+    b <- M.defaultMain theApp =<< FB.newFileBrowser FB.selectNonDirectories FileBrowser1 Nothing
     putStrLn $ "Selected entry: " <> show (FB.fileBrowserSelection b)

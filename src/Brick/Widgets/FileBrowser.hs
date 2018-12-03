@@ -52,6 +52,8 @@ module Brick.Widgets.FileBrowser
   , FileType(..)
   -- * Making a new file browser
   , newFileBrowser
+  , selectNonDirectories
+  , selectDirectories
 
   -- * Manipulating a file browser's state
   , setWorkingDirectory
@@ -70,6 +72,7 @@ module Brick.Widgets.FileBrowser
   , fileBrowserIsSearching
   , fileBrowserSelection
   , fileBrowserException
+  , fileBrowserSelectable
 
   -- * Attributes
   , fileBrowserAttr
@@ -89,6 +92,7 @@ module Brick.Widgets.FileBrowser
 
   -- * Lenses
   , fileBrowserEntryFilterL
+  , fileBrowserSelectableL
   , fileInfoFilenameL
   , fileInfoFileSizeL
   , fileInfoSanitizedFilenameL
@@ -146,6 +150,13 @@ data FileBrowser n =
                 -- this contains the exception raised by the latest
                 -- directory change in case the calling application
                 -- needs to inspect or present the error to the user.
+                , fileBrowserSelectable :: FileInfo -> Bool
+                -- ^ The function that determines what kinds of entries
+                -- are selectable with @Enter@ in the event handler.
+                -- Note that if this returns 'True' for an entry, an
+                -- @Enter@ keypress selects that entry rather than doing
+                -- anything else; directory changes can only occur if
+                -- this returns 'False' for directories.
                 }
 
 -- | Information about a file entry in the browser.
@@ -195,7 +206,12 @@ suffixLenses ''FileInfo
 -- By default, the browser will show all files and directories
 -- in its working directory. To change that behavior, see
 -- 'setFileBrowserEntryFilter'.
-newFileBrowser :: n
+newFileBrowser :: (FileInfo -> Bool)
+               -- ^ The function used to determine what kinds of entries
+               -- can be selected with @Enter@ (see
+               -- 'handleFileBrowserEvent'). A good default is
+               -- 'selectNonDirectories'.
+               -> n
                -- ^ The resource name associated with the browser's
                -- entry listing.
                -> Maybe FilePath
@@ -203,7 +219,7 @@ newFileBrowser :: n
                -- displays. If not provided, this defaults to the
                -- executable's current working directory.
                -> IO (FileBrowser n)
-newFileBrowser name mCwd = do
+newFileBrowser selPredicate name mCwd = do
     initialCwd <- case mCwd of
         Just path -> return path
         Nothing -> D.getCurrentDirectory
@@ -216,9 +232,30 @@ newFileBrowser name mCwd = do
                         , fileBrowserEntryFilter = Nothing
                         , fileBrowserSearchString = Nothing
                         , fileBrowserException = Nothing
+                        , fileBrowserSelectable = selPredicate
                         }
 
     setWorkingDirectory initialCwd b
+
+-- | A file entry selector that permits selection of all file entries
+-- except directories. Use this if you want users to be able to navigate
+-- directories in the browser. If you want users to be able to select
+-- only directories, use 'selectDirectories'.
+selectNonDirectories :: FileInfo -> Bool
+selectNonDirectories i =
+    case fileInfoFileType i of
+        Just Directory -> False
+        _ -> True
+
+
+-- | A file entry selector that permits selection of directories
+-- only. This prevents directory navigation and only supports directory
+-- selection.
+selectDirectories :: FileInfo -> Bool
+selectDirectories i =
+    case fileInfoFileType i of
+        Just Directory -> True
+        _ -> False
 
 -- | Set the filtering function used to determine which entries in
 -- the browser's current directory appear in the browser. 'Nothing'
@@ -477,9 +514,11 @@ maybeSelectCurrentEntry b =
     case fileBrowserCursor b of
         Nothing -> return b
         Just entry ->
-            case fileInfoFileType entry of
+            if fileBrowserSelectable b entry
+            then return $ b & fileBrowserSelectionStateL .~ Just entry
+            else case fileInfoFileType entry of
                 Just Directory -> liftIO $ setWorkingDirectory (fileInfoFilePath entry) b
-                _ -> return $ b & fileBrowserSelectionStateL .~ Just entry
+                _ -> return b
 
 -- | Render a file browser. This renders a list of entries in the
 -- working directory, a cursor to select from among the entries, a
