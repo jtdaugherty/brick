@@ -472,6 +472,11 @@ maybeSelectCurrentEntry b =
 -- header displaying the working directory, and a footer displaying
 -- information about the selected entry.
 --
+-- Note that if the most recent file browser operation produced an
+-- exception in 'fileBrowserException', that exception is not rendered
+-- by this function. That exception needs to be rendered (if at all) by
+-- the calling application.
+--
 -- The file browser is greedy in both dimensions.
 renderFileBrowser :: (Show n, Ord n)
                   => Bool
