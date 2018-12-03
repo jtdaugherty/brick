@@ -448,7 +448,8 @@ fileBrowserCursor b = snd <$> listSelectedElement (b^.fileBrowserEntriesL)
 -- Events handled regardless of mode:
 --
 -- * @Enter@: set the file browser's selected entry
---   ('fileBrowserSelection') for use by the calling application
+--   ('fileBrowserSelection') for use by the calling application,
+--   subject to 'fileBrowserSelectable'.
 -- * @Ctrl-n@: select the next entry
 -- * @Ctrl-p@: select the previous entry
 -- * 'List' navigation keys
