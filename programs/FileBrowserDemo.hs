@@ -2,13 +2,16 @@
 {-# LANGUAGE CPP #-}
 module Main where
 
+import qualified Control.Exception as E
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid
 #endif
 import qualified Graphics.Vty as V
 
+import qualified Data.Text as Text
 import qualified Brick.Main as M
 import qualified Brick.Widgets.List as L
+import Brick.AttrMap (AttrName)
 import Brick.Types
   ( Widget
   , BrickEvent(..)
@@ -23,6 +26,7 @@ import Brick.Widgets.Border
 import Brick.Widgets.Core
   ( vBox, (<=>), padTop
   , hLimit, vLimit, txt
+  , withDefAttr, emptyWidget
   )
 import Brick.Widgets.FileBrowser as FB
 import qualified Brick.AttrMap as A
@@ -41,7 +45,11 @@ drawUI b = [center $ ui <=> help]
              borderWithLabel (txt "Choose a file") $
              FB.renderFileBrowser True b
         help = padTop (T.Pad 1) $
-               vBox [ hCenter $ txt "Up/Down: select"
+               vBox [ case fileBrowserException b of
+                          Nothing -> emptyWidget
+                          Just e -> hCenter $ withDefAttr errorAttr $
+                                    txt $ Text.pack $ E.displayException e
+                    , hCenter $ txt "Up/Down: select"
                     , hCenter $ txt "/: search, Ctrl-C or Esc: cancel search"
                     , hCenter $ txt "Enter: change directory or select file"
                     , hCenter $ txt "Esc: quit"
@@ -61,6 +69,9 @@ appEvent b (VtyEvent ev) =
                 Just _ -> M.halt b'
 appEvent b _ = M.continue b
 
+errorAttr :: AttrName
+errorAttr = "error"
+
 theMap :: A.AttrMap
 theMap = A.attrMap V.defAttr
     [ (L.listSelectedFocusedAttr, V.black `on` V.yellow)
@@ -72,6 +83,7 @@ theMap = A.attrMap V.defAttr
     , (FB.fileBrowserNamedPipeAttr, fg V.yellow)
     , (FB.fileBrowserSymbolicLinkAttr, fg V.cyan)
     , (FB.fileBrowserUnixSocketAttr, fg V.red)
+    , (errorAttr, fg V.red)
     ]
 
 theApp :: M.App (FileBrowser Name) e Name

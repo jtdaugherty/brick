@@ -1,6 +1,7 @@
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 -- | This module provids a file browser widget that allows users to
 -- navigate directory trees, search for files and directories, and
 -- select a file of interest.
@@ -25,6 +26,21 @@
 -- names, so add those to your attribute map to get the appearance you
 -- want. File browsers also make use of a 'List' internally, so the
 -- 'List' attributes will affect how the list appears.
+--
+-- File browsers catch 'IOException's when changing directories. If a
+-- call to 'setWorkingDirectory' triggers an 'IOException' while reading
+-- the working directory, the resulting 'IOException' is stored in the
+-- file browser and is accessible with 'fileBrowserException'. The
+-- 'setWorkingDirectory' function clears the exception field if the
+-- working directory is read successfully. The caller is responsible for
+-- deciding when and whether to display the exception to the user. In
+-- the event that an 'IOException' is raised as described here, the file
+-- browser will always present @..@ as a navigation option to allow the
+-- user to continue navigating up the directory tree. It does this even
+-- if the current or parent directory does not exist or cannot be read,
+-- so it is always safe to present a file browser for any working
+-- directory. Bear in mind that the @..@ entry is always subjected to
+-- filtering and searching.
 module Brick.Widgets.FileBrowser
   ( -- * Types
     FileBrowser
@@ -49,6 +65,7 @@ module Brick.Widgets.FileBrowser
   , fileBrowserCursor
   , fileBrowserIsSearching
   , fileBrowserSelection
+  , fileBrowserException
 
   -- * Attributes
   , fileBrowserAttr
@@ -77,9 +94,12 @@ module Brick.Widgets.FileBrowser
   -- * Miscellaneous
   , prettyFileSize
 
+  -- * Utilities
+  , entriesForDirectory
   )
 where
 
+import qualified Control.Exception as E
 import Control.Monad (forM)
 import Control.Monad.IO.Class (liftIO)
 import Data.Char (toLower, isPrint)
@@ -115,6 +135,7 @@ data FileBrowser n =
                 , fileBrowserSelectionState :: Maybe FileInfo
                 , fileBrowserEntryFilter :: Maybe (FileInfo -> Bool)
                 , fileBrowserSearchString :: Maybe T.Text
+                , fileBrowserException :: Maybe E.IOException
                 }
 
 -- | Information about a file entry in the browser.
@@ -184,6 +205,7 @@ newFileBrowser name mCwd = do
                         , fileBrowserSelectionState = Nothing
                         , fileBrowserEntryFilter = Nothing
                         , fileBrowserSearchString = Nothing
+                        , fileBrowserException = Nothing
                         }
 
     setWorkingDirectory initialCwd b
@@ -200,11 +222,41 @@ setFileBrowserEntryFilter f b =
 -- | Set the working directory of the file browser. This scans the new
 -- directory and repopulates the browser while maintaining any active
 -- search string and/or entry filtering.
+--
+-- If the directory scan raises an 'IOException', the exception is
+-- stored the browser and is accessible with 'fileBrowserException'. If
+-- no exception is raised, the exception field is cleared. Regardless of
+-- whether an exception is raised, @..@ is always presented as a valid
+-- option in the browser.
 setWorkingDirectory :: FilePath -> FileBrowser n -> IO (FileBrowser n)
 setWorkingDirectory path b = do
-    entries <- entriesForDirectory path
-    let b' = setEntries entries b
+    entriesResult <- E.try $ entriesForDirectory path
+
+    let (entries, exc) = case entriesResult of
+            Left (e::E.IOException) -> ([], Just e)
+            Right es -> (es, Nothing)
+
+    allEntries <- if path == "/" then return entries else do
+        parentResult <- E.try $ parentOf path
+        return $ case parentResult of
+            Left (_::E.IOException) -> entries
+            Right parent -> parent : entries
+
+    let b' = setEntries allEntries b
     return $ b' & fileBrowserWorkingDirectoryL .~ path
+                & fileBrowserExceptionL .~ exc
+
+parentOf :: FilePath -> IO FileInfo
+parentOf path = do
+    filePath <- D.canonicalizePath $ FP.takeDirectory path
+    status <- U.getFileStatus filePath
+    let U.COff sz = U.fileSize status
+    return FileInfo { fileInfoFilename = ".."
+                    , fileInfoFilePath = filePath
+                    , fileInfoSanitizedFilename = ".."
+                    , fileInfoFileType = fileTypeFromStatus status
+                    , fileInfoFileSize = sz
+                    }
 
 -- | Get the working directory of the file browser.
 getWorkingDirectory :: FileBrowser n -> FilePath
@@ -280,6 +332,16 @@ prettyFileSize i
         divBy :: Int64 -> Double -> Double
         divBy a b = ((fromIntegral a) :: Double) / b
 
+-- | Build a list of file info entries for the specified directory. This
+-- does not catch any exceptions, so the caller is responsible for
+-- handling them.
+--
+-- The entries returned are all entries in the specified directory
+-- except for @.@ and @..@. Directories are always given first. Entries
+-- are sorted in case-insensitive lexicographic order.
+--
+-- This function is exported for those who want to implement their own
+-- file browser using the types in this module.
 entriesForDirectory :: FilePath -> IO [FileInfo]
 entriesForDirectory rawPath = do
     path <- D.makeAbsolute rawPath
@@ -287,13 +349,7 @@ entriesForDirectory rawPath = do
     -- Get all entries except "." and "..", then sort them
     dirContents <- D.listDirectory path
 
-    let addParent = if path == "/"
-                    then id
-                    else (parentDir :)
-        parentDir = ".."
-        allFiles = addParent dirContents
-
-    infos <- forM allFiles $ \f -> do
+    infos <- forM dirContents $ \f -> do
         filePath <- D.canonicalizePath $ path FP.</> f
         status <- U.getFileStatus filePath
         let U.COff sz = U.fileSize status
@@ -411,7 +467,10 @@ maybeSelectCurrentEntry b =
                 Just Directory -> liftIO $ setWorkingDirectory (fileInfoFilePath entry) b
                 _ -> return $ b & fileBrowserSelectionStateL .~ Just entry
 
--- | Render a file browser.
+-- | Render a file browser. This renders a list of entries in the
+-- working directory, a cursor to select from among the entries, a
+-- header displaying the working directory, and a footer displaying
+-- information about the selected entry.
 --
 -- The file browser is greedy in both dimensions.
 renderFileBrowser :: (Show n, Ord n)
