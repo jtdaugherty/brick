@@ -333,7 +333,7 @@ handler:
 .. code:: haskell
 
    myEvent :: s -> BrickEvent n CounterEvent -> EventM n (Next s)
-   myEvent s (AppEvent (CounterEvent i)) = ...
+   myEvent s (AppEvent (Counter i)) = ...
 
 The next step is to actually *generate* our custom events and
 inject them into the ``brick`` event stream so they make it to the
