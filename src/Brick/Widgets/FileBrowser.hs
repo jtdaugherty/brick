@@ -488,7 +488,8 @@ handleFileBrowserEventSearching e b =
         Vty.EvKey Vty.KBS [] ->
             return $ updateFileBrowserSearch (fmap safeInit) b
         Vty.EvKey Vty.KEnter [] ->
-            maybeSelectCurrentEntry b
+            updateFileBrowserSearch (const Nothing) <$>
+                maybeSelectCurrentEntry b
         Vty.EvKey (Vty.KChar c) [] ->
             return $ updateFileBrowserSearch (fmap (flip T.snoc c)) b
         _ ->
