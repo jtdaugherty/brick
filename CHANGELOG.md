@@ -2,6 +2,16 @@
 Brick changelog
 ---------------
 
+0.42
+----
+
+New features:
+ * Added `Brick.Widgets.FileBrowser`, which provides a filesystem
+   browser for selecting files and directories. Read the Haddock
+   module documentation and see the included demo program,
+   `programs/FileBrowserDemo.hs`, for information on using the new
+   functionality.
+
 0.41.5
 ------
 
