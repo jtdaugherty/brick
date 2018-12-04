@@ -2,6 +2,13 @@
 Brick changelog
 ---------------
 
+0.42.1
+------
+
+Behavior changes:
+ * File browsers in search mode now terminate search mode when `Enter`
+   is pressed, resulting in better behavior.
+
 0.42
 ----
 
