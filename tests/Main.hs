@@ -2,6 +2,9 @@
 {-# LANGUAGE TypeFamilies #-}
 
 import Control.Applicative
+import Data.Bool (bool)
+import System.Exit (exitFailure, exitSuccess)
+
 import Data.IMap (IMap, Run(Run))
 import Data.IntMap (IntMap)
 import Test.QuickCheck
@@ -103,5 +106,5 @@ prop_null m = IMap.null m == IntMap.null (lower m)
 
 return []
 
-main :: IO Bool
-main = $quickCheckAll
+main :: IO ()
+main = $quickCheckAll >>= bool exitFailure exitSuccess
