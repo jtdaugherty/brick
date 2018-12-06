@@ -50,6 +50,7 @@ module Brick.Widgets.FileBrowser
   ( -- * Types
     FileBrowser
   , FileInfo(..)
+  , FileStatus(..)
   , FileType(..)
   -- * Making a new file browser
   , newFileBrowser
@@ -74,6 +75,7 @@ module Brick.Widgets.FileBrowser
   , fileBrowserSelection
   , fileBrowserException
   , fileBrowserSelectable
+  , fileInfoFileType
 
   -- * Attributes
   , fileBrowserAttr
@@ -95,16 +97,18 @@ module Brick.Widgets.FileBrowser
   , fileBrowserEntryFilterL
   , fileBrowserSelectableL
   , fileInfoFilenameL
-  , fileInfoFileSizeL
   , fileInfoSanitizedFilenameL
   , fileInfoFilePathL
-  , fileInfoFileTypeL
+  , fileInfoFileStatusL
+  , fileStatusSizeL
+  , fileStatusFileTypeL
 
   -- * Miscellaneous
   , prettyFileSize
 
   -- * Utilities
   , entriesForDirectory
+  , getFileInfo
   )
 where
 
@@ -163,6 +167,16 @@ data FileBrowser n =
                 -- change the selection function.
                 }
 
+-- | File status information.
+data FileStatus =
+    FileStatus { fileStatusSize :: Int64
+               -- ^ The size, in bytes, of this entry's file.
+               , fileStatusFileType :: Maybe FileType
+               -- ^ The type of this entry's file, if it could be
+               -- determined.
+               }
+               deriving (Show, Eq)
+
 -- | Information about a file entry in the browser.
 data FileInfo =
     FileInfo { fileInfoFilename :: String
@@ -175,13 +189,12 @@ data FileInfo =
              -- '?'). This is for display purposes only.
              , fileInfoFilePath :: FilePath
              -- ^ The full path to this entry's file.
-             , fileInfoFileType :: Maybe FileType
-             -- ^ The type of this entry's file, if it could be
-             -- determined.
-             , fileInfoFileSize :: Int64
-             -- ^ The size, in bytes, of this entry's file.
+             , fileInfoFileStatus :: Either E.IOException FileStatus
+             -- ^ The file status if it could be obtained, or the
+             -- exception that was caught when attempting to read the
+             -- file's status.
              }
-             deriving (Show, Eq, Read)
+             deriving (Show, Eq)
 
 -- | The type of file entries in the browser.
 data FileType =
@@ -203,6 +216,7 @@ data FileType =
 
 suffixLenses ''FileBrowser
 suffixLenses ''FileInfo
+suffixLenses ''FileStatus
 
 -- | Make a new file browser state. The provided resource name will be
 -- used to render the 'List' viewport of the browser.
@@ -253,7 +267,6 @@ selectNonDirectories i =
         Just Directory -> False
         _ -> True
 
-
 -- | A file entry selector that permits selection of directories
 -- only. This prevents directory navigation and only supports directory
 -- selection.
@@ -300,16 +313,48 @@ setWorkingDirectory path b = do
                 & fileBrowserExceptionL .~ exc
 
 parentOf :: FilePath -> IO FileInfo
-parentOf path = do
-    filePath <- D.canonicalizePath $ FP.takeDirectory path
-    status <- U.getFileStatus filePath
-    let U.COff sz = U.fileSize status
-    return FileInfo { fileInfoFilename = ".."
+parentOf path = getFileInfo ".." path
+
+-- | Build a 'FileInfo' for the specified file and path. If an
+-- 'IOException' is raised while attempting to get the file information,
+-- the 'fileInfoFileStatus' field is populated with the exception.
+-- Otherwise it is populated with the 'FileStatus' for the file.
+getFileInfo :: String
+            -- ^ The name of the file to inspect. This filename is only
+            -- used to set the 'fileInfoFilename' and sanitized filename
+            -- fields; the actual file to be inspected is referred
+            -- to by the second argument. This is decomposed so that
+            -- 'FileInfo's can be used to represent information about
+            -- entries like @..@, whose display names differ from their
+            -- physical paths.
+            -> FilePath
+            -- ^ The actual full path to the file or directory to
+            -- inspect.
+            -> IO FileInfo
+getFileInfo name fullPath = do
+    filePath <- D.makeAbsolute fullPath
+    statusResult <- E.try $ U.getSymbolicLinkStatus filePath
+
+    let stat = do
+            status <- statusResult
+            let U.COff sz = U.fileSize status
+            return FileStatus { fileStatusFileType = fileTypeFromStatus status
+                              , fileStatusSize = sz
+                              }
+
+    return FileInfo { fileInfoFilename = name
                     , fileInfoFilePath = filePath
-                    , fileInfoSanitizedFilename = ".."
-                    , fileInfoFileType = fileTypeFromStatus status
-                    , fileInfoFileSize = sz
+                    , fileInfoSanitizedFilename = sanitizeFilename name
+                    , fileInfoFileStatus = stat
                     }
+
+-- | Get the file type for this file info entry. If the file type could
+-- not be obtained due to an 'IOException', return 'Nothing'.
+fileInfoFileType :: FileInfo -> Maybe FileType
+fileInfoFileType i =
+    case fileInfoFileStatus i of
+        Left _ -> Nothing
+        Right stat -> fileStatusFileType stat
 
 -- | Get the working directory of the file browser.
 getWorkingDirectory :: FileBrowser n -> FilePath
@@ -386,8 +431,11 @@ prettyFileSize i
         divBy a b = ((fromIntegral a) :: Double) / b
 
 -- | Build a list of file info entries for the specified directory. This
--- does not catch any exceptions, so the caller is responsible for
--- handling them.
+-- function does not catch any exceptions raised by calling
+-- 'makeAbsolute' or 'listDirectory', but it does catch exceptions on
+-- a per-file basis. Any exceptions caught when inspecting individual
+-- files are stored in the 'fileInfoFileStatus' field of each
+-- 'FileInfo'.
 --
 -- The entries returned are all entries in the specified directory
 -- except for @.@ and @..@. Directories are always given first. Entries
@@ -403,15 +451,7 @@ entriesForDirectory rawPath = do
     dirContents <- D.listDirectory path
 
     infos <- forM dirContents $ \f -> do
-        filePath <- D.canonicalizePath $ path FP.</> f
-        status <- U.getFileStatus filePath
-        let U.COff sz = U.fileSize status
-        return FileInfo { fileInfoFilename = f
-                        , fileInfoFilePath = filePath
-                        , fileInfoSanitizedFilename = sanitizeFilename f
-                        , fileInfoFileType = fileTypeFromStatus status
-                        , fileInfoFileSize = sz
-                        }
+        getFileInfo f (path FP.</> f)
 
     let dirsFirst a b = if fileInfoFileType a == Just Directory &&
                            fileInfoFileType b == Just Directory
@@ -563,11 +603,15 @@ renderFileBrowser foc b =
                 SymbolicLink -> "symbolic link"
                 UnixSocket -> "socket"
         selInfoFor i =
-            let maybeSize = if fileInfoFileType i == Just RegularFile
-                            then ", " <> prettyFileSize (fileInfoFileSize i)
-                            else ""
-            in txt $ (T.pack $ fileInfoSanitizedFilename i) <> ": " <>
-                     fileTypeLabel (fileInfoFileType i) <> maybeSize
+            let label = case fileInfoFileStatus i of
+                    Left _ -> "unknown"
+                    Right stat ->
+                        let maybeSize = if fileStatusFileType stat == Just RegularFile
+                                        then ", " <> prettyFileSize (fileStatusSize stat)
+                                        else ""
+                        in fileTypeLabel (fileStatusFileType stat) <> maybeSize
+            in txt $ (T.pack $ fileInfoSanitizedFilename i) <> ": " <> label
+
         maybeSearchInfo = case b^.fileBrowserSearchStringL of
             Nothing -> emptyWidget
             Just s -> padRight Max $
