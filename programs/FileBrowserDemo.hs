@@ -64,9 +64,12 @@ appEvent b (VtyEvent ev) =
             b' <- FB.handleFileBrowserEvent ev b
             -- If the browser has a selected file after handling the
             -- event (because the user pressed Enter), shut down.
-            case fileBrowserSelection b' of
-                Nothing -> M.continue b'
-                Just _ -> M.halt b'
+            case ev of
+                V.EvKey V.KEnter [] ->
+                    case fileBrowserSelection b' of
+                        [] -> M.continue b'
+                        _ -> M.halt b'
+                _ -> M.continue b'
 appEvent b _ = M.continue b
 
 errorAttr :: AttrName
@@ -83,6 +86,7 @@ theMap = A.attrMap V.defAttr
     , (FB.fileBrowserNamedPipeAttr, fg V.yellow)
     , (FB.fileBrowserSymbolicLinkAttr, fg V.cyan)
     , (FB.fileBrowserUnixSocketAttr, fg V.red)
+    , (FB.fileBrowserSelectedAttr, V.white `on` V.magenta)
     , (errorAttr, fg V.red)
     ]
 
