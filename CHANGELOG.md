@@ -2,6 +2,30 @@
 Brick changelog
 ---------------
 
+0.43
+----
+
+API changes:
+ * The FileBrowser module got the ability to select multiple files
+   (#204). This means that the `fileBrowserSelection` function now
+   returns a list of `FileInfo` rather than at most one via `Maybe`.
+   The module also now uses a new attribute, `fileBrowserSelectedAttr`,
+   to indicate entries that are currently selected (in addition to
+   displaying an asterisk after their filenames). Lastly, the file
+   size and type fields of `FileInfo` have been replaced with a
+   new type, `FileStatus`, and `FileInfo` now carries an `Either
+   IOException FileStatus`. As part of that safety improvement,
+   `setWorkingDirectory` now no longer clobbers the entire entry listing
+   if any of the listings fail to stat. In addition, the FileBrowser now
+   uses the correct file stat routines to deal with symbolic links.
+
+Package changes:
+ * Added lower bound on `directory` (thanks Fraser Tweedale)
+
+Test suite changes:
+ * Test suite now propagates success/failure to exit status (thanks
+   Fraser Tweedale)
+
 0.42.1
 ------
 
