@@ -91,7 +91,7 @@ library
                        vty >= 5.24,
                        transformers,
                        data-clist >= 0.1,
-                       directory,
+                       directory >= 1.2.5.0,
                        dlist,
                        filepath,
                        containers,
