@@ -3,6 +3,7 @@
 
 import Control.Applicative
 import Data.Bool (bool)
+import Data.Traversable (sequenceA)
 import System.Exit (exitFailure, exitSuccess)
 
 import Data.IMap (IMap, Run(Run))
@@ -10,6 +11,8 @@ import Data.IntMap (IntMap)
 import Test.QuickCheck
 import qualified Data.IMap as IMap
 import qualified Data.IntMap as IntMap
+
+import qualified List
 
 instance Arbitrary v => Arbitrary (Run v) where
     arbitrary = liftA2 (\(Positive n) -> Run n) arbitrary arbitrary
@@ -107,4 +110,6 @@ prop_null m = IMap.null m == IntMap.null (lower m)
 return []
 
 main :: IO ()
-main = $quickCheckAll >>= bool exitFailure exitSuccess
+main =
+  (all id <$> sequenceA [$quickCheckAll, List.main])
+  >>= bool exitFailure exitSuccess

@@ -448,7 +448,10 @@ test-suite brick-tests
     ghc-options:       -Wno-orphans
   default-language:    Haskell2010
   main-is:             Main.hs
+  other-modules:       List
   build-depends:       base <=5,
                        brick,
                        containers,
+                       microlens,
+                       vector,
                        QuickCheck
