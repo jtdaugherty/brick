@@ -118,7 +118,7 @@ import qualified Control.Exception as E
 import Control.Monad (forM)
 import Control.Monad.IO.Class (liftIO)
 import Data.Char (toLower, isPrint)
-import Data.Maybe (fromMaybe, isJust)
+import Data.Maybe (fromMaybe, isJust, fromJust)
 import qualified Data.Foldable as F
 import qualified Data.Text as T
 #if !(MIN_VERSION_base(4,11,0))
@@ -126,6 +126,7 @@ import Data.Monoid
 #endif
 import Data.Int (Int64)
 import Data.List (sortBy, isSuffixOf)
+import qualified Data.Set as Set
 import qualified Data.Vector as V
 import Lens.Micro
 import qualified Graphics.Vty as Vty
@@ -145,8 +146,9 @@ import Brick.Widgets.List
 -- in this module.
 data FileBrowser n =
     FileBrowser { fileBrowserWorkingDirectory :: FilePath
-                , fileBrowserEntries :: List n (Bool, FileInfo)
+                , fileBrowserEntries :: List n FileInfo
                 , fileBrowserLatestResults :: [FileInfo]
+                , fileBrowserSelectedFiles :: Set.Set String
                 , fileBrowserName :: n
                 , fileBrowserEntryFilter :: Maybe (FileInfo -> Bool)
                 , fileBrowserSearchString :: Maybe T.Text
@@ -248,6 +250,7 @@ newFileBrowser selPredicate name mCwd = do
     let b = FileBrowser { fileBrowserWorkingDirectory = initialCwd
                         , fileBrowserEntries = list name mempty 1
                         , fileBrowserLatestResults = mempty
+                        , fileBrowserSelectedFiles = mempty
                         , fileBrowserName = name
                         , fileBrowserEntryFilter = Nothing
                         , fileBrowserSearchString = Nothing
@@ -311,9 +314,10 @@ setWorkingDirectory path b = do
     let b' = setEntries allEntries b
     return $ b' & fileBrowserWorkingDirectoryL .~ path
                 & fileBrowserExceptionL .~ exc
+                & fileBrowserSelectedFilesL .~ mempty
 
 parentOf :: FilePath -> IO FileInfo
-parentOf path = getFileInfo ".." path
+parentOf path = getFileInfo ".." $ FP.takeDirectory path
 
 -- | Build a 'FileInfo' for the specified file and path. If an
 -- 'IOException' is raised while attempting to get the file information,
@@ -376,7 +380,8 @@ fileBrowserIsSearching b = isJust $ b^.fileBrowserSearchStringL
 -- cursor, use 'fileBrowserCursor'.
 fileBrowserSelection :: FileBrowser n -> [FileInfo]
 fileBrowserSelection b =
-    fmap snd $ F.toList $ V.filter fst (b^.fileBrowserEntriesL.listElementsL)
+    let getEntry filename = fromJust $ F.find ((== filename) . fileInfoFilename) $ b^.fileBrowserLatestResultsL
+    in fmap getEntry $ F.toList $ b^.fileBrowserSelectedFilesL
 
 -- | Modify the file browser's active search string. This causes the
 -- browser's displayed entries to change to those in its current
@@ -413,7 +418,7 @@ applyFilterAndSearch b =
                             (b^.fileBrowserSearchStringL)
         match i = filterMatch i && searchMatch i
         matching = filter match $ b^.fileBrowserLatestResultsL
-    in b { fileBrowserEntries = list (b^.fileBrowserNameL) (V.fromList $ (False,) <$> matching) 1 }
+    in b { fileBrowserEntries = list (b^.fileBrowserNameL) (V.fromList matching) 1 }
 
 -- | Generate a textual abbreviation of a file size, e.g. "10.2M" or "12
 -- bytes".
@@ -484,7 +489,7 @@ fileTypeFromStatus s =
 
 -- | Get the file information for the file under the cursor, if any.
 fileBrowserCursor :: FileBrowser n -> Maybe FileInfo
-fileBrowserCursor b = (snd . snd) <$> listSelectedElement (b^.fileBrowserEntriesL)
+fileBrowserCursor b = snd <$> listSelectedElement (b^.fileBrowserEntriesL)
 
 -- | Handle a Vty input event. Note that event handling can
 -- cause a directory change so the caller should be aware that
@@ -567,7 +572,7 @@ maybeSelectCurrentEntry b =
         Nothing -> return b
         Just entry ->
             if fileBrowserSelectable b entry
-            then return $ b & fileBrowserEntriesL %~ listModify (_1 .~ True)
+            then return $ b & fileBrowserSelectedFilesL %~ Set.insert (fileInfoFilename entry)
             else case fileInfoFileType entry of
                 Just Directory -> liftIO $ setWorkingDirectory (fileInfoFilePath entry) b
                 _ -> return b
@@ -576,7 +581,7 @@ selectCurrentEntry :: FileBrowser n -> EventM n (FileBrowser n)
 selectCurrentEntry b =
     case fileBrowserCursor b of
         Nothing -> return b
-        Just _ -> return $ b & fileBrowserEntriesL %~ listModify (_1 .~ True)
+        Just e -> return $ b & fileBrowserSelectedFilesL %~ Set.insert (fileInfoFilename e)
 
 -- | Render a file browser. This renders a list of entries in the
 -- working directory, a cursor to select from among the entries, a
@@ -596,12 +601,12 @@ renderFileBrowser :: (Show n, Ord n)
                   -- ^ The browser to render.
                   -> Widget n
 renderFileBrowser foc b =
-    let maxFilenameLength = maximum $ (length . fileInfoFilename . snd) <$> (b^.fileBrowserEntriesL)
+    let maxFilenameLength = maximum $ (length . fileInfoFilename) <$> (b^.fileBrowserEntriesL)
         cwdHeader = padRight Max $
                     str $ sanitizeFilename $ fileBrowserWorkingDirectory b
         selInfo = case listSelectedElement (b^.fileBrowserEntriesL) of
             Nothing -> vLimit 1 $ fill ' '
-            Just (_, (_, i)) -> padRight Max $ selInfoFor i
+            Just (_, i) -> padRight Max $ selInfoFor i
         fileTypeLabel Nothing = "unknown"
         fileTypeLabel (Just t) =
             case t of
@@ -630,13 +635,14 @@ renderFileBrowser foc b =
 
     in withDefAttr fileBrowserAttr $
        vBox [ withDefAttr fileBrowserCurrentDirectoryAttr cwdHeader
-            , renderList (renderFileInfo foc maxFilenameLength) foc (b^.fileBrowserEntriesL)
+            , renderList (renderFileInfo foc maxFilenameLength (b^.fileBrowserSelectedFilesL))
+                         foc (b^.fileBrowserEntriesL)
             , maybeSearchInfo
             , withDefAttr fileBrowserSelectionInfoAttr selInfo
             ]
 
-renderFileInfo :: Bool -> Int -> Bool -> (Bool, FileInfo) -> Widget n
-renderFileInfo foc maxLen listSel (sel, info) =
+renderFileInfo :: Bool -> Int -> Set.Set String -> Bool -> FileInfo -> Widget n
+renderFileInfo foc maxLen selFiles listSel info =
     (if foc
      then (if listSel then forceAttr listSelectedFocusedAttr
                else if sel then forceAttr fileBrowserSelectedAttr else id)
@@ -644,6 +650,7 @@ renderFileInfo foc maxLen listSel (sel, info) =
                else if sel then forceAttr fileBrowserSelectedAttr else id)) $
     padRight Max body
     where
+        sel = fileInfoFilename info `Set.member` selFiles
         addAttr = maybe id (withDefAttr . attrForFileType) (fileInfoFileType info)
         body = addAttr (hLimit (maxLen + 1) $
                padRight Max $
