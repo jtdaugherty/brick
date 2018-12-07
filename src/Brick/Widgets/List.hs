@@ -296,7 +296,11 @@ listRemove pos l | V.null (l^.listElementsL) = l
 -- the list bounds, zero is used instead.
 listReplace :: V.Vector e -> Maybe Int -> List n e -> List n e
 listReplace es idx l =
-    let newSel = if V.null es then Nothing else clamp 0 (V.length es - 1) <$> idx
+    let
+      newSel = if V.null es then Nothing else inBoundsOrZero <$> idx
+      inBoundsOrZero i
+        | i == clamp 0 (V.length es - 1) i = i
+        | otherwise = 0
     in l & listSelectedL .~ newSel
          & listElementsL .~ es
 
@@ -335,16 +339,14 @@ listMoveByPages pages theList = do
 -- `Just (length - 1)` (last element). Subject to validation.
 listMoveBy :: Int -> List n e -> List n e
 listMoveBy amt l =
-    let current = case l^.listSelectedL of
+    let len = length (l^.listElementsL)
+        newSel = case l^.listSelectedL of
           Nothing
-            | amt > 0 -> Just 0
-            | otherwise -> Just (V.length (l^.listElementsL) - 1)
-          cur -> cur
-        clamp' a b c
-          | a <= b = Just (clamp a b c)
-          | otherwise = Nothing
-        newSel = clamp' 0 (V.length (l^.listElementsL) - 1) =<< (amt +) <$> current
-    in l & listSelectedL .~ newSel
+            | amt > 0 -> 0
+            | otherwise -> len - 1
+          Just i -> clamp 0 (len - 1) (amt + i)
+    in
+      l & listSelectedL .~ (if len > 0 then Just newSel else Nothing)
 
 -- | Set the selected index for a list to the specified index, subject
 -- to validation.

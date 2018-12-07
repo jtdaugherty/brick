@@ -6,6 +6,7 @@ module List
   ) where
 
 import Data.Function (on)
+import Data.Maybe (isNothing)
 import Data.Monoid (Endo(..))
 
 import qualified Data.Vector as V
@@ -203,6 +204,47 @@ prop_moveOpsNeverChangeList ops l =
     l' = applyListOps moveOp ops l
   in
     l' ^. listElementsL == l ^. listElementsL
+
+-- If the list is empty, empty selection is used.
+-- Otherwise, if the specified selected index is not in list bounds,
+-- zero is used instead.
+prop_replaceSetIndex
+  :: (Eq a)
+  => [ListOp a] -> List n a -> [a] -> Int -> Bool
+prop_replaceSetIndex ops l xs i =
+  let
+    v = V.fromList xs
+    l' = applyListOps op ops l
+    l'' = listReplace v (Just i) l'
+    i' = clamp 0 (length v - 1) i
+    inBounds = i == i'
+  in
+    l'' ^. listSelectedL == case (null v, inBounds) of
+      (True, _) -> Nothing
+      (False, True) -> Just i
+      (False, False) -> Just 0
+
+-- Replacing with no index always clears the index
+prop_replaceNoIndex :: (Eq a) => [ListOp a] -> List n a -> [a] -> Bool
+prop_replaceNoIndex ops l xs =
+  let
+    v = V.fromList xs
+    l' = applyListOps op ops l
+  in
+    isNothing (listReplace v Nothing l' ^. listSelectedL)
+
+-- | Move the list selected index. If the index is `Just x`, adjust by the
+-- specified amount; if it is `Nothing` (i.e. there is no selection) and the
+-- direction is positive, set to `Just 0` (first element), otherwise set to
+-- `Just (length - 1)` (last element). Subject to validation.
+prop_moveByWhenNoSelection :: List n a -> Int -> Property
+prop_moveByWhenNoSelection l amt =
+  let
+    l' = l & listSelectedL .~ Nothing
+    len = length (l ^. listElementsL)
+    expected = if amt > 0 then 0 else len - 1
+  in
+    len > 0 ==> listMoveBy amt l' ^. listSelectedL == Just expected
 
 
 return []
