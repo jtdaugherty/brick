@@ -233,6 +233,19 @@ prop_replaceNoIndex ops l xs =
   in
     isNothing (listReplace v Nothing l' ^. listSelectedL)
 
+-- | Move the list selected index. If the index is `Just x`, adjust by the
+-- specified amount; if it is `Nothing` (i.e. there is no selection) and the
+-- direction is positive, set to `Just 0` (first element), otherwise set to
+-- `Just (length - 1)` (last element). Subject to validation.
+prop_moveByWhenNoSelection :: List n a -> Int -> Property
+prop_moveByWhenNoSelection l amt =
+  let
+    l' = l & listSelectedL .~ Nothing
+    len = length (l ^. listElementsL)
+    expected = if amt > 0 then 0 else len - 1
+  in
+    len > 0 ==> listMoveBy amt l' ^. listSelectedL == Just expected
+
 
 return []
 
