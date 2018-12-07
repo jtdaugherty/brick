@@ -296,7 +296,11 @@ listRemove pos l | V.null (l^.listElementsL) = l
 -- the list bounds, zero is used instead.
 listReplace :: V.Vector e -> Maybe Int -> List n e -> List n e
 listReplace es idx l =
-    let newSel = if V.null es then Nothing else clamp 0 (V.length es - 1) <$> idx
+    let
+      newSel = if V.null es then Nothing else inBoundsOrZero <$> idx
+      inBoundsOrZero i
+        | i == clamp 0 (V.length es - 1) i = i
+        | otherwise = 0
     in l & listSelectedL .~ newSel
          & listElementsL .~ es
 
