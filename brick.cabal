@@ -94,7 +94,7 @@ library
                        directory >= 1.2.5.0,
                        dlist,
                        filepath,
-                       containers,
+                       containers >= 0.5.7,
                        microlens >= 0.3.0.0,
                        microlens-th,
                        microlens-mtl,

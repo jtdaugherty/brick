@@ -14,6 +14,7 @@ import Data.Maybe (isNothing)
 import Data.Monoid (Endo(..))
 import Data.Semigroup (Semigroup((<>)))
 
+import qualified Data.Sequence as Seq
 import qualified Data.Vector as V
 import Lens.Micro
 import Test.QuickCheck
@@ -271,6 +272,12 @@ prop_splitAtLength_Vector = splitAtLength . V.fromList
 
 prop_splitAtAppend_Vector :: (Eq a) => [a] -> Int -> Bool
 prop_splitAtAppend_Vector = splitAtAppend . V.fromList
+
+prop_splitAtLength_Seq :: [a] -> Int -> Bool
+prop_splitAtLength_Seq = splitAtLength . Seq.fromList
+
+prop_splitAtAppend_Seq :: (Eq a) => [a] -> Int -> Bool
+prop_splitAtAppend_Seq = splitAtAppend . Seq.fromList
 
 
 return []

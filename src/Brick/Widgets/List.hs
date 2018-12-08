@@ -79,6 +79,7 @@ import Data.Foldable (find, toList)
 import Data.List.NonEmpty (NonEmpty((:|)))
 import Data.Maybe (fromMaybe)
 import Data.Semigroup (Semigroup, (<>), sconcat)
+import qualified Data.Sequence as Seq
 import Graphics.Vty (Event(..), Key(..), Modifier(..))
 import qualified Data.Vector as V
 import GHC.Generics (Generic)
@@ -140,12 +141,21 @@ class Splittable t where
 
   -- | Slice the structure.  Equivalent to @(take n . drop i) xs@,
   -- therefore total.
+  --
+  -- The default implementation applies 'splitAt' two times: first
+  -- to drop elements leading up to the slice, and again to drop
+  -- elements after the slice.
+  --
   slice :: Int {- ^ start index -} -> Int {- ^ length -} -> t a -> t a
   slice i n = fst . splitAt n . snd . splitAt i
 
 -- | /O(1)/ 'splitAt'.
 instance Splittable V.Vector where
   splitAt = V.splitAt
+
+-- | /O(log(min(i,n-i)))/ 'splitAt'.
+instance Splittable Seq.Seq where
+  splitAt = Seq.splitAt
 
 
 handleListEvent
