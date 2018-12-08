@@ -2,19 +2,27 @@
 Brick changelog
 ---------------
 
+0.44.1
+------
+
+Bug fixes:
+ * `Brick.Markup` now properly renders empty lines in markup (#209)
+
 0.44
----
+----
 
 API changes:
  * The `List` type got its container type generalized thanks to a lot of
-   work by Fraser Tweedale. Thanks to this work, the `List` now supports
-   both `Data.Vector` and `Data.Sequence` as its container types out of
-   the box and can be extended to support other sequence types with some
-   simple type class instances. In addition, property tests are provided
-   for `List` and its asymptotics are noted in the documentation. Along
-   the way, various bugs in some of the list movement functions got
-   fixed to bring them in line with the advertised behavior in the
-   documentation. Thanks, Fraser!
+   work by Fraser Tweedale. Note that this change is
+   backwards-compatible with older Brick programs that use the `List`.
+   Thanks to this work, the `List` now supports both `Data.Vector`
+   and `Data.Sequence` as its container types out of the box and can
+   be extended to support other sequence types with some simple type
+   class instances. In addition, property tests are provided for `List`
+   and its asymptotics are noted in the documentation. Along the way,
+   various bugs in some of the list movement functions got fixed to
+   bring them in line with the advertised behavior in the documentation.
+   Thanks, Fraser!
 
 0.43
 ----
