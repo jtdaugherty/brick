@@ -60,10 +60,11 @@ module Brick.Widgets.List
 
   -- * Classes
   , Splittable(..)
+  , Reversible(..)
   )
 where
 
-import Prelude hiding (splitAt)
+import Prelude hiding (reverse, splitAt)
 
 #if !MIN_VERSION_base(4,8,0)
 import Control.Applicative ((<$>),(<*>),pure)
@@ -109,6 +110,7 @@ import Brick.AttrMap
 -- * 'listInsert': 'Applicative' and 'Semigroup'
 -- * 'listRemove': 'Semigroup'
 -- * 'listClear': 'Monoid'
+-- * 'listReverse': 'Reversible'
 --
 data GenericList n t e =
     List { listElements :: !(t e)
@@ -156,6 +158,22 @@ instance Splittable V.Vector where
 -- | /O(log(min(i,n-i)))/ 'splitAt'.
 instance Splittable Seq.Seq where
   splitAt = Seq.splitAt
+
+
+-- | Ordered container types where the order of elements can be
+-- reversed.  Only required if you want to use 'listReverse'.
+--
+class Reversible t where
+  {-# MINIMAL reverse #-}
+  reverse :: t a -> t a
+
+-- | /O(n)/ 'reverse'
+instance Reversible V.Vector where
+  reverse = V.reverse
+
+-- | /O(n)/ 'reverse'
+instance Reversible Seq.Seq where
+  reverse = Seq.reverse
 
 
 handleListEvent
@@ -516,12 +534,12 @@ listClear l = l & listElementsL .~ mempty & listSelectedL .~ Nothing
 -- | Reverse the list.  The element selected before the reversal will
 -- again be the selected one.
 --
--- For now, this is only implemented for 'Vector'-based lists.
---
-listReverse :: List n e -> List n e
-listReverse theList = theList & listElementsL %~ V.reverse & listSelectedL .~ newSel
-  where n = length (listElements theList)
-        newSel = (-) <$> pure (n-1) <*> listSelected theList
+listReverse
+  :: (Reversible t, Foldable t)
+  => GenericList n t e -> GenericList n t e
+listReverse l = l
+  & listElementsL %~ reverse
+  & listSelectedL %~ fmap (length (l ^. listElementsL) - 1 -)
 
 -- | Apply a function to the selected element. If no element is selected
 -- the list is not modified.
