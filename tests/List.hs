@@ -1,14 +1,25 @@
+{-# LANGUAGE DeriveTraversable #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 
 module List
   (
     main
   ) where
 
+import Prelude hiding (reverse, splitAt)
+
 import Data.Function (on)
+import qualified Data.List
 import Data.Maybe (isNothing)
 import Data.Monoid (Endo(..))
+import Data.Proxy
+import Data.Semigroup (Semigroup((<>)))
 
+import qualified Data.Sequence as Seq
 import qualified Data.Vector as V
 import Lens.Micro
 import Test.QuickCheck
@@ -105,6 +116,11 @@ prop_reverseMaintainsSelectedElement ops l =
     l'' = listReverse l'
   in
     fmap snd (listSelectedElement l') == fmap snd (listSelectedElement l'')
+
+-- reversing maintains size of list
+prop_reverseMaintainsSizeOfList :: List n a -> Bool
+prop_reverseMaintainsSizeOfList l =
+  length (l ^. listElementsL) == length (listReverse l ^. listElementsL)
 
 -- an inserted element may always be found at the given index
 -- (when target index is clamped to 0 <= n <= len)
@@ -245,6 +261,83 @@ prop_moveByWhenNoSelection l amt =
     expected = if amt > 0 then 0 else len - 1
   in
     len > 0 ==> listMoveBy amt l' ^. listSelectedL == Just expected
+
+
+splitAtLength :: (Foldable t, Splittable t) => t a -> Int -> Bool
+splitAtLength l i =
+  let
+    len = length l
+    (h, t) = splitAt i l
+  in
+    length h + length t == len
+    && length h == clamp 0 len i
+
+splitAtAppend
+  :: (Splittable t, Semigroup (t a), Eq (t a))
+  => t a -> Int -> Bool
+splitAtAppend l i = uncurry (<>) (splitAt i l) == l
+
+prop_splitAtLength_Vector :: [a] -> Int -> Bool
+prop_splitAtLength_Vector = splitAtLength . V.fromList
+
+prop_splitAtAppend_Vector :: (Eq a) => [a] -> Int -> Bool
+prop_splitAtAppend_Vector = splitAtAppend . V.fromList
+
+prop_splitAtLength_Seq :: [a] -> Int -> Bool
+prop_splitAtLength_Seq = splitAtLength . Seq.fromList
+
+prop_splitAtAppend_Seq :: (Eq a) => [a] -> Int -> Bool
+prop_splitAtAppend_Seq = splitAtAppend . Seq.fromList
+
+
+reverseSingleton
+  :: forall t a. (Reversible t, Applicative t, Eq (t a))
+  => Proxy t -> a -> Bool
+reverseSingleton _ a =
+  let l = pure a :: t a
+  in reverse l == l
+
+reverseAppend
+  :: (Reversible t, Semigroup (t a), Eq (t a))
+  => t a -> t a -> Bool
+reverseAppend l1 l2 =
+  reverse (l1 <> l2) == reverse l2 <> reverse l1
+
+prop_reverseSingleton_Vector :: (Eq a) => a -> Bool
+prop_reverseSingleton_Vector = reverseSingleton (Proxy :: Proxy V.Vector)
+
+prop_reverseAppend_Vector :: (Eq a) => [a] -> [a] -> Bool
+prop_reverseAppend_Vector l1 l2 =
+  reverseAppend (V.fromList l1) (V.fromList l2)
+
+prop_reverseSingleton_Seq :: (Eq a) => a -> Bool
+prop_reverseSingleton_Seq = reverseSingleton (Proxy :: Proxy Seq.Seq)
+
+prop_reverseAppend_Seq :: (Eq a) => [a] -> [a] -> Bool
+prop_reverseAppend_Seq l1 l2 =
+  reverseAppend (Seq.fromList l1) (Seq.fromList l2)
+
+
+
+-- Laziness tests.  Here we create a custom container type
+-- that we use to ensure certain operations do not cause the
+-- whole container to be evaulated.
+--
+newtype L a = L [a]
+  deriving (Functor, Foldable, Traversable)
+
+instance Splittable L where
+  splitAt i (L xs) = over both L (Data.List.splitAt i xs)
+
+-- moveBy positive amount does not evaluate 'length'
+prop_moveByPosLazy :: Bool
+prop_moveByPosLazy =
+  let
+    v = L (1:2:3:4:undefined) :: L Int
+    l = list () v 1
+    l' = listMoveBy 1 l
+  in
+    l' ^. listSelectedL == Just 1
 
 
 return []
