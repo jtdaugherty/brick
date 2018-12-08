@@ -585,14 +585,13 @@ listMoveBy
   :: (Foldable t, Splittable t)
   => Int -> GenericList n t e -> GenericList n t e
 listMoveBy amt l =
-    let len = length (l^.listElementsL)
-        newSel = case l^.listSelectedL of
+    let target = case l ^. listSelectedL of
           Nothing
             | amt > 0 -> 0
-            | otherwise -> len - 1
-          Just i -> splitClamp l (amt + i)
+            | otherwise -> length (l ^. listElementsL) - 1
+          Just i -> max 0 (amt + i)  -- don't be negative
     in
-      l & listSelectedL .~ (if len > 0 then Just newSel else Nothing)
+      listMoveTo target l
 
 -- | Set the selected index for a list to the specified index, subject
 -- to validation.

@@ -1,4 +1,6 @@
+{-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeSynonymInstances #-}
@@ -11,6 +13,7 @@ module List
 import Prelude hiding (reverse, splitAt)
 
 import Data.Function (on)
+import qualified Data.List
 import Data.Maybe (isNothing)
 import Data.Monoid (Endo(..))
 import Data.Proxy
@@ -313,6 +316,29 @@ prop_reverseSingleton_Seq = reverseSingleton (Proxy :: Proxy Seq.Seq)
 prop_reverseAppend_Seq :: (Eq a) => [a] -> [a] -> Bool
 prop_reverseAppend_Seq l1 l2 =
   reverseAppend (Seq.fromList l1) (Seq.fromList l2)
+
+
+
+-- Laziness tests.  Here we create a custom container type
+-- that we use to ensure certain operations do not cause the
+-- whole container to be evaulated.
+--
+newtype L a = L [a]
+  deriving (Functor, Foldable, Traversable)
+
+instance Splittable L where
+  splitAt i (L xs) = over both L (Data.List.splitAt i xs)
+
+-- moveBy positive amount does not evaluate 'length'
+prop_moveByPosLazy :: Bool
+prop_moveByPosLazy =
+  let
+    v = L (1:2:3:4:undefined) :: L Int
+    l = list () v 1
+    l' = listMoveBy 1 l
+  in
+    l' ^. listSelectedL == Just 1
+
 
 return []
 
