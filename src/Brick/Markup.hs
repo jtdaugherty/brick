@@ -16,7 +16,7 @@ import Control.Monad (forM)
 import qualified Data.Text as T
 import Data.Text.Markup
 
-import Graphics.Vty (Attr, vertCat, horizCat, text')
+import Graphics.Vty (Attr, vertCat, horizCat, text', defAttr)
 
 import Brick.AttrMap
 import Brick.Types
@@ -51,6 +51,10 @@ markup m =
               is <- forM pairs $ \(t, aSrc) -> do
                   a <- getAttr aSrc
                   return $ text' a t
-              return $ horizCat is
+              if null is
+                 then do
+                     def <- getAttr defAttr
+                     return $ text' def $ T.singleton ' '
+                 else return $ horizCat is
       lineImgs <- mapM mkLine markupLines
       return $ emptyResult & imageL .~ vertCat lineImgs
