@@ -67,16 +67,17 @@ where
 import Prelude hiding (reverse, splitAt)
 
 #if !MIN_VERSION_base(4,8,0)
-import Control.Applicative ((<$>),(<*>),pure)
-import Data.Foldable (Foldable)
+import Control.Applicative ((<$>), (<*>), pure, (<|>))
+import Data.Foldable (Foldable, find, toList)
 import Data.Traversable (Traversable)
-#endif
+#else
 import Control.Applicative ((<|>))
+import Data.Foldable (find, toList)
+#endif
 import Control.Monad.Trans.State (evalState, get, put)
 
 import Lens.Micro ((^.), (^?), (&), (.~), (%~), _2, _head)
 import Data.Functor (($>))
-import Data.Foldable (find, toList)
 import Data.List.NonEmpty (NonEmpty((:|)))
 import Data.Maybe (fromMaybe)
 import Data.Semigroup (Semigroup, (<>), sconcat)
@@ -518,7 +519,7 @@ listMoveUp = listMoveBy (-1)
 listMovePageUp
   :: (Foldable t, Splittable t, Ord n)
   => GenericList n t e -> EventM n (GenericList n t e)
-listMovePageUp theList = listMoveByPages (-1::Double) theList
+listMovePageUp = listMoveByPages (-1::Double)
 
 -- | Move the list selected index down by one. (Moves the cursor down,
 -- adds one to the index.)
@@ -541,7 +542,7 @@ listMoveDown = listMoveBy 1
 listMovePageDown
   :: (Foldable t, Splittable t, Ord n)
   => GenericList n t e -> EventM n (GenericList n t e)
-listMovePageDown theList = listMoveByPages (1::Double) theList
+listMovePageDown = listMoveByPages (1::Double)
 
 -- | Move the list selected index by some (fractional) number of pages.
 --
@@ -557,7 +558,9 @@ listMoveByPages pages theList = do
     case v of
         Nothing -> return theList
         Just vp -> let
-            nElems = round $ pages * (fromIntegral $ vp^.vpSize._2) / (fromIntegral $ theList^.listItemHeightL)
+            nElems = round $
+              pages * fromIntegral (vp^.vpSize._2)
+              / fromIntegral (theList^.listItemHeightL)
           in
             return $ listMoveBy nElems theList
 
