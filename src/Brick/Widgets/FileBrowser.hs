@@ -293,7 +293,7 @@ setFileBrowserEntryFilter f b =
 -- search string and/or entry filtering.
 --
 -- If the directory scan raises an 'IOException', the exception is
--- stored the browser and is accessible with 'fileBrowserException'. If
+-- stored in the browser and is accessible with 'fileBrowserException'. If
 -- no exception is raised, the exception field is cleared. Regardless of
 -- whether an exception is raised, @..@ is always presented as a valid
 -- option in the browser.
