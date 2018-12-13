@@ -10,8 +10,7 @@
 --
 -- To use these in your widgets, see
 -- 'Brick.Widgets.Core.withBorderStyle'. By default, widgets rendered
--- without a specified border style use 'unicode' via the 'Default'
--- instance provided by 'BorderStyle'.
+-- without a specified border style use 'unicode' style.
 module Brick.Widgets.Border.Style
   ( BorderStyle(..)
   , borderStyleFromChar
