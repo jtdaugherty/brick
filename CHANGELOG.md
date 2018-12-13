@@ -2,6 +2,15 @@
 Brick changelog
 ---------------
 
+0.45
+----
+
+API changes:
+ * List got a new `listFindBy` function (thanks Fraser Tweedale). This
+   function uses a predicate to find a matching element in the list and
+   move the cursor to that item.
+ * Data.Text.Markup got a new `empty` function (#213)
+
 0.44.1
 ------
 
