@@ -41,6 +41,7 @@ module Brick.Widgets.List
   , listMoveBy
   , listMoveTo
   , listMoveToElement
+  , listFindBy
   , listMoveUp
   , listMoveDown
   , listMoveByPages
@@ -67,16 +68,15 @@ where
 import Prelude hiding (reverse, splitAt)
 
 #if !MIN_VERSION_base(4,8,0)
-import Control.Applicative ((<$>), (<*>), pure, (<|>))
+import Control.Applicative ((<$>), (<*>), pure)
 import Data.Foldable (Foldable, find, toList)
 import Data.Traversable (Traversable)
 #else
-import Control.Applicative ((<|>))
 import Data.Foldable (find, toList)
 #endif
 import Control.Monad.Trans.State (evalState, get, put)
 
-import Lens.Micro ((^.), (^?), (&), (.~), (%~), _2, _head)
+import Lens.Micro ((^.), (^?), (&), (.~), (%~), _2, _head, set)
 import Data.Functor (($>))
 import Data.List.NonEmpty (NonEmpty((:|)))
 import Data.Maybe (fromMaybe)
@@ -545,18 +545,32 @@ splitClamp l i =
         -- is in the list, so we don't need to know the length
         clamp 0 (if null t then length (l ^. listElementsL) - 1 else i) i
 
--- | Set the selected index for a list to the index of the specified
--- element if it is in the list, or leave the list unmodified otherwise.
+-- | Set the selected index for a list to the index of the first
+-- occurence of the specified element if it is in the list, or leave
+-- the list unmodified otherwise.
 --
--- Complexity: same as 'traverse' for the container type (typically
--- /O(n)/).
-listMoveToElement :: (Eq e, Traversable t)
+-- /O(n)/.  Only evaluates as much of the container as needed.
+listMoveToElement :: (Eq e, Foldable t, Splittable t)
                   => e
                   -> GenericList n t e
                   -> GenericList n t e
-listMoveToElement e l =
-    let i = fmap fst $ find ((== e) . snd) $ imap (,) (l^.listElementsL)
-    in l & listSelectedL %~ (i <|>)
+listMoveToElement e = listFindBy (== e) . set listSelectedL Nothing
+
+-- | Set the selected index to the next element matching the
+-- predicate.  If there is no selected element, the search starts at
+-- the beginning.  If no matching element is found, leave the list
+-- unmodified.
+--
+-- /O(n)/.  Only evaluates as much of the container as needed.
+listFindBy :: (Foldable t, Splittable t)
+           => (e -> Bool)
+           -> GenericList n t e
+           -> GenericList n t e
+listFindBy test l =
+    let start = maybe 0 (+1) (l ^. listSelectedL)
+        (_, t) = splitAt start (l ^. listElementsL)
+        result = find (test . snd) . zip [0..] . toList $ t
+    in maybe id (set listSelectedL . Just . (start +) . fst) result l
 
 -- | Return a list's selected element, if any.
 --
