@@ -12,6 +12,7 @@ module List
 
 import Prelude hiding (reverse, splitAt)
 
+import Data.Foldable (find)
 import Data.Function (on)
 import qualified Data.List
 import Data.Maybe (isNothing)
@@ -38,6 +39,7 @@ data ListMoveOp a
   | MoveBy Int
   | MoveTo Int
   | MoveToElement a
+  | FindElement a
   deriving (Show)
 
 instance Arbitrary a => Arbitrary (ListMoveOp a) where
@@ -47,6 +49,7 @@ instance Arbitrary a => Arbitrary (ListMoveOp a) where
     , MoveBy <$> arbitrary
     , MoveTo <$> arbitrary
     , MoveToElement <$> arbitrary
+    , FindElement <$> arbitrary
     ]
 
 -- List operations.  We don't have "page"-based movement operations
@@ -67,7 +70,7 @@ instance Arbitrary a => Arbitrary (ListOp a) where
     , (1, Replace <$> arbitrary <*> arbitrary)
     , (1, pure Clear)
     , (1, pure Reverse)
-    , (5, arbitrary)
+    , (6, arbitrary)
     ]
 
 -- Turn a ListOp into a List endomorphism
@@ -88,6 +91,7 @@ moveOp MoveDown = listMoveDown
 moveOp (MoveBy n) = listMoveBy n
 moveOp (MoveTo n) = listMoveTo n
 moveOp (MoveToElement a) = listMoveToElement a
+moveOp (FindElement a) = listFindBy (== a)
 
 applyListOps
   :: (Foldable t)
@@ -155,6 +159,31 @@ prop_insertMoveTo ops l i a =
   in
     fmap snd sel == Just a
 
+-- inserting an element and repeatedly seeking it always
+-- reaches the element we inserted, at the index where we
+-- inserted it.
+--
+prop_insertFindBy :: (Eq a) => [ListOp a] -> List n a -> Int -> a -> Bool
+prop_insertFindBy ops l i a =
+  let
+    l' = applyListOps op ops l
+    l'' = set listSelectedL Nothing . listInsert i a $ l'
+    seeks = converging ((==) `on` (^. listSelectedL)) (listFindBy (== a)) l''
+    i' = clamp 0 (length (l' ^. listElementsL)) i -- we can't have inserted past len
+  in
+    (find ((== Just i') . (^. listSelectedL)) seeks >>= listSelectedElement)
+    == Just (i', a)
+
+-- Find will never decrease the selected index.  Note that we don't
+-- need to handle the 'Nothing' case because ∀a. Nothing < Just a.
+prop_findByNonDecreasing :: (Eq a) => [ListOp a] -> List n a -> a -> Bool
+prop_findByNonDecreasing ops l a =
+  let
+    l' = applyListOps op ops l
+    l'' = listFindBy (== a) l'
+  in
+    l' ^. listSelectedL <= l'' ^. listSelectedL
+
 -- inserting then deleting always yields a list with the original elems
 prop_insertRemove :: (Eq a) => Int -> a -> List n a -> Bool
 prop_insertRemove i a l =
@@ -188,10 +217,16 @@ prop_removeInsert i l =
   in
     l' ^. listElementsL == l ^. listElementsL
 
+-- Apply @f@ until @test a (f a) == True@, then return @a@.
 converge :: (a -> a -> Bool) -> (a -> a) -> a -> a
-converge test f a
-  | test (f a) a = a
-  | otherwise = converge test f (f a)
+converge test f = last . converging test f
+
+-- Apply @f@ until @test a (f a) == True@, returning the start,
+-- intermediate and final values as a list.
+converging :: (a -> a -> Bool) -> (a -> a) -> a -> [a]
+converging test f a
+  | test a (f a) = [a]
+  | otherwise = a : converging test f (f a)
 
 -- listMoveUp always reaches 0 (or list is empty)
 prop_moveUp :: (Eq a) => [ListOp a] -> List n a -> Bool
@@ -338,6 +373,18 @@ prop_moveByPosLazy =
     l' = listMoveBy 1 l
   in
     l' ^. listSelectedL == Just 1
+
+-- listFindBy is lazy
+prop_findByLazy :: Bool
+prop_findByLazy =
+  let
+    v = L (1:2:3:4:undefined) :: L Int
+    l = list () v 1 & listSelectedL .~ Nothing
+    l' = listFindBy even l
+    l'' = listFindBy even l'
+  in
+    l' ^. listSelectedL == Just 1
+    && l'' ^. listSelectedL == Just 3
 
 
 return []
