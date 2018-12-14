@@ -12,7 +12,7 @@ module Data.Text.Markup
   , fromList
   , fromText
   , toText
-  , empty
+  , isEmpty
   , (@@)
   )
 where
@@ -54,8 +54,8 @@ toText :: (Eq a) => Markup a -> T.Text
 toText = T.concat . (fst <$>) . concat . markupToList
 
 -- | Test whether the markup is empty.
-empty :: Markup a -> Bool
-empty (Markup ls) = null ls
+isEmpty :: Markup a -> Bool
+isEmpty (Markup ls) = null ls
 
 -- | Set the metadata for a range of character positions in a piece of
 -- markup. This is useful for, e.g., syntax highlighting.
