@@ -69,6 +69,7 @@ at these projects:
  * `towerHanoi`, animated solutions to The Tower of Hanoi: https://github.com/shajenM/projects/tree/master/towerHanoi
  * `VOIDSPACE`, a space-themed typing-tutor game: https://github.com/ChrisPenner/void-space
  * `solitaire`, the card game: https://github.com/ambuc/solitaire
+ * `sudoku-tui`, a Sudoku implementation: https://github.com/evanrelf/sudoku-tui
 
 Getting Started
 ---------------
