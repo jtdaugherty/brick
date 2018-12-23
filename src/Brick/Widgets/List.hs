@@ -265,6 +265,15 @@ list name es h =
 -- for drawing and 'listItemHeight'. At most, it will evaluate up to
 -- element @(i + h + 1)@ where @i@ is the selected index and @h@ is the
 -- available height.
+--
+-- Note that this function renders the list with the 'listAttr' as
+-- the default attribute and then uses 'listSelectedAttr' as the
+-- default attribute for the selected item if the list is not focused
+-- or 'listSelectedFocusedAttr' otherwise. This is provided as a
+-- convenience so that the item rendering function doesn't have to be
+-- concerned with attributes, but if those attributes are undesirable
+-- for your purposes, 'forceAttr' can always be used by the item
+-- rendering function to ensure that another attribute is used instead.
 renderList :: (Traversable t, Splittable t, Ord n, Show n)
            => (Bool -> e -> Widget n)
            -- ^ Rendering function, True for the selected element
