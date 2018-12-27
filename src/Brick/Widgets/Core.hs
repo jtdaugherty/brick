@@ -422,16 +422,20 @@ fill ch =
 -- in the specified order (uppermost first). Defers growth policies to
 -- the growth policies of the contained widgets (if any are greedy, so
 -- is the box).
+{-# NOINLINE vBox #-}
 vBox :: [Widget n] -> Widget n
 vBox [] = emptyWidget
+vBox [a] = a
 vBox pairs = renderBox vBoxRenderer pairs
 
 -- | Horizontal box layout: put the specified widgets next to each other
 -- in the specified order (leftmost first). Defers growth policies to
 -- the growth policies of the contained widgets (if any are greedy, so
 -- is the box).
+{-# NOINLINE hBox #-}
 hBox :: [Widget n] -> Widget n
 hBox [] = emptyWidget
+hBox [a] = a
 hBox pairs = renderBox hBoxRenderer pairs
 
 -- | The process of rendering widgets in a box layout is exactly the
@@ -1227,6 +1231,7 @@ visibleRegion vrloc sz p =
 -- | Horizontal box layout: put the specified widgets next to each other
 -- in the specified order. Defers growth policies to the growth policies
 -- of both widgets.  This operator is a binary version of 'hBox'.
+{-# NOINLINE (<+>) #-}
 (<+>) :: Widget n
       -- ^ Left
       -> Widget n
@@ -1237,9 +1242,21 @@ visibleRegion vrloc sz p =
 -- | Vertical box layout: put the specified widgets one above the other
 -- in the specified order. Defers growth policies to the growth policies
 -- of both widgets.  This operator is a binary version of 'vBox'.
+{-# NOINLINE (<=>) #-}
 (<=>) :: Widget n
       -- ^ Top
       -> Widget n
       -- ^ Bottom
       -> Widget n
 (<=>) a b = vBox [a, b]
+
+{-# RULES
+"baseHbox" forall a b   . a <+> b                 = hBox [a, b]
+"hBox2"    forall as bs . hBox [hBox as, hBox bs] = hBox (as ++ bs)
+"hboxL"    forall as b  . hBox [hBox as, b]       = hBox (as ++ [b])
+"hboxR"    forall a bs  . hBox [a, hBox bs]       = hBox (a : bs)
+"baseVbox" forall a b   . a <=> b                 = vBox [a, b]
+"vBox2"    forall as bs . vBox [vBox as, vBox bs] = vBox (as ++ bs)
+"vboxL"    forall as b  . vBox [vBox as, b]       = vBox (as ++ [b])
+"vboxR"    forall a bs  . vBox [a, vBox bs]       = vBox (a : bs)
+#-}
