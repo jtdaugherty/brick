@@ -2,6 +2,20 @@
 Brick changelog
 ---------------
 
+0.46
+----
+
+Performance improvements:
+ * The box combinators `<=>`, `<+>`, `vBox`, and `hBox` got GHC rewrite
+   rules that will optimize away redundant boxes. This change improves
+   performance for chains of `<+>` or `<=>` as well as nested boxes
+   using `hBox` and `vBox`. Previously chains of e.g. `<+>` produced
+   binary trees of boxes that incurred more rendering overhead. Those
+   are now optimized away.
+
+API changes:
+ * Data.Text.Markup: renamed `empty` to `isEmpty`
+
 0.45
 ----
 
