@@ -71,6 +71,10 @@ at these projects:
  * `solitaire`, the card game: https://github.com/ambuc/solitaire
  * `sudoku-tui`, a Sudoku implementation: https://github.com/evanrelf/sudoku-tui
 
+These third-party packages also extend `brick`:
+
+ * [`brick-filetree`](https://github.com/ChrisPenner/brick-filetree) [[Hackage]](http://hackage.haskell.org/package/brick-filetree) - Interactively explore a file tree selecting or flagging files and directories
+
 Getting Started
 ---------------
 
@@ -114,13 +118,6 @@ Feature Overview
  * A filesystem browser for file and directory selection
  * Borders can be configured to automatically connect!
  
-Additional Packages
--------------------
-
-The following packages contain additional functionality which extends `brick`
-
- * [`brick-filetree`](https://github.com/ChrisPenner/brick-filetree) [[Hackage]](http://hackage.haskell.org/package/brick-filetree) - Interactively explore a file tree selecting or flagging files and directories
-
 Brick-Users Discussion
 ----------------------
 
