@@ -73,7 +73,7 @@ at these projects:
 
 These third-party packages also extend `brick`:
 
- * [`brick-filetree`](https://github.com/ChrisPenner/brick-filetree) [[Hackage]](http://hackage.haskell.org/package/brick-filetree) - Interactively explore a file tree selecting or flagging files and directories
+ * [`brick-filetree`](https://github.com/ChrisPenner/brick-filetree) [[Hackage]](http://hackage.haskell.org/package/brick-filetree) - A widget for exploring a directory tree and selecting or flagging files and directories
 
 Getting Started
 ---------------
