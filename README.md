@@ -1,28 +1,18 @@
 ![](logo/brick-final-clearbg-with-text.svg)
 
-`brick` is a Haskell terminal user interface programming library in the
-style of [gloss](http://hackage.haskell.org/package/gloss). This means
-you write a function that describes how your user interface should look,
-but the library takes care of a lot of the book-keeping that so commonly
-goes into writing such programs.
+`brick` is a Haskell terminal user interface (TUI) programming toolkit.
+To use it, you write a pure function that describes how your user
+interface should look based on your current application state and you
+provide a state transformation function to handle events.
 
 `brick` exposes a declarative API. Unlike most GUI toolkits which
 require you to write a long and tedious sequence of "create a widget,
 now bind an event handler", `brick` just requires you to describe your
-interface using a set of declarative combinators. Then you provide a
-function to transform your application state when input or other kinds
-of events arrive.
+interface using a set of declarative layout combinators.
 
 Under the hood, this library builds upon
 [vty](http://hackage.haskell.org/package/vty), so some knowledge of Vty
 will be helpful in using this library.
-
-Release Announcements / News
-----------------------------
-
-Find out about `brick` releases and other news on Twitter:
-
-https://twitter.com/brick_haskell/
 
 Example
 -------
@@ -74,6 +64,13 @@ at these projects:
 These third-party packages also extend `brick`:
 
  * [`brick-filetree`](https://github.com/ChrisPenner/brick-filetree) [[Hackage]](http://hackage.haskell.org/package/brick-filetree) - A widget for exploring a directory tree and selecting or flagging files and directories
+
+Release Announcements / News
+----------------------------
+
+Find out about `brick` releases and other news on Twitter:
+
+https://twitter.com/brick_haskell/
 
 Getting Started
 ---------------
