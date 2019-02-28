@@ -995,13 +995,8 @@ viewport :: (Ord n, Show n)
          -> Widget n
 viewport vpname typ p =
     clickable vpname $ Widget Greedy Greedy $ do
-      -- First, update the viewport size.
-      c <- getContext
-      let newVp = VP 0 0 newSize
-          newSize = (c^.availWidthL, c^.availHeightL)
-          doInsert (Just vp) = Just $ vp & vpSize .~ newSize
-          doInsert Nothing = Just newVp
-
+      -- Observe the viewport name so we can detect multiple uses of the
+      -- name.
       let observeName :: (Ord n, Show n) => n -> RenderM n ()
           observeName n = do
               observed <- use observedNamesL
@@ -1017,12 +1012,19 @@ viewport vpname typ p =
 
       observeName vpname
 
+      -- Update the viewport size.
+      c <- getContext
+      let newVp = VP 0 0 newSize
+          newSize = (c^.availWidthL, c^.availHeightL)
+          doInsert (Just vp) = Just $ vp & vpSize .~ newSize
+          doInsert Nothing = Just newVp
+
       lift $ modify (& viewportMapL %~ (M.alter doInsert vpname))
 
-      -- Then render the sub-rendering with the rendering layout
-      -- constraint released (but raise an exception if we are asked to
-      -- render an infinitely-sized widget in the viewport's scrolling
-      -- dimension)
+      -- Then render the viewport content widget with the rendering
+      -- layout constraint released (but raise an exception if we are
+      -- asked to render an infinitely-sized widget in the viewport's
+      -- scrolling dimension)
       let release = case typ of
             Vertical -> vRelease
             Horizontal -> hRelease
