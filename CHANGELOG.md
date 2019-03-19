@@ -2,6 +2,21 @@
 Brick changelog
 ---------------
 
+0.47
+----
+
+API changes:
+ * Changed `Brick.Main.customMain` so that it now takes an additional
+   (first) argument: the initial `Vty` handle to use. This lets the
+   caller have more control over the terminal state when, for example,
+   they have previously set up Vty to do other work before calling
+   `customMain`.
+ * Added `Brick.Main.customMainWithVty`. This function is the same as
+   `customMain` except that it also returns the final `Vty` handle that
+   it used internally *without* shutting that Vty handle down. This
+   allows the caller to continue using the terminal without resetting it
+   after `customMainWithVty` finishes executing.
+
 0.46
 ----
 
