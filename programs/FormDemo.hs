@@ -145,7 +145,8 @@ main = do
         f = setFieldValid False AgeField $
             mkForm initialUserInfo
 
-    f' <- customMain buildVty Nothing app f
+    initialVty <- buildVty
+    f' <- customMain initialVty buildVty Nothing app f
 
     putStrLn "The starting form state was:"
     print initialUserInfo

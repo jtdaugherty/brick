@@ -123,7 +123,8 @@ main = do
           V.setMode (V.outputIface v) V.Mouse True
           return v
 
-    void $ M.customMain buildVty Nothing app $ St [] Nothing
+    initialVty <- buildVty
+    void $ M.customMain initialVty buildVty Nothing app $ St [] Nothing
            "Try clicking on various UI elements.\n\
            \Observe that the click coordinates identify the\n\
            \underlying widget coordinates.\n\

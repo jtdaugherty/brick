@@ -82,4 +82,6 @@ main = do
         writeBChan chan Counter
         threadDelay 1000000
 
-    void $ customMain (V.mkVty V.defaultConfig) (Just chan) theApp initialState
+    let buildVty = V.mkVty V.defaultConfig
+    initialVty <- buildVty
+    void $ customMain initialVty buildVty (Just chan) theApp initialState

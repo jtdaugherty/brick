@@ -290,7 +290,9 @@ main = do
     writeBChan chan Tick
     threadDelay 100000 -- decides how fast your game moves
   g <- initGame
-  void $ customMain (V.mkVty V.defaultConfig) (Just chan) app g
+  let buildVty = V.mkVty V.defaultConfig
+  initialVty <- buildVty
+  void $ customMain initialVty buildVty (Just chan) app g
 ```
 
 We do need to import `Vty.Graphics` since `customMain` allows us
@@ -482,7 +484,9 @@ main = do
     writeBChan chan Tick
     int <- atomically $ readTVar tv
     threadDelay int
-  customMain (V.mkVty V.defaultConfig) (Just chan) app (initialGame tv)
+  let buildVty = V.mkVty V.defaultConfig
+  initialVty <- buildVty
+  customMain initialVty buildVty (Just chan) app (initialGame tv)
     >>= printResult
 ```
 

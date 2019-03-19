@@ -1,7 +1,9 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 module Brick.Main
   ( App(..)
   , defaultMain
   , customMain
+  , customMainWithVty
   , simpleMain
   , resizeOrQuit
   , simpleApp
@@ -46,7 +48,7 @@ module Brick.Main
   )
 where
 
-import Control.Exception (finally)
+import qualified Control.Exception as E
 import Lens.Micro ((^.), (&), (.~), (%~), _1, _2)
 import Control.Monad (forever)
 import Control.Monad.Trans.Class (lift)
@@ -127,7 +129,9 @@ defaultMain :: (Ord n)
             -- ^ The initial application state.
             -> IO s
 defaultMain app st = do
-    customMain (mkVty defaultConfig) Nothing app st
+    let builder = mkVty defaultConfig
+    initialVty <- builder
+    customMain initialVty builder Nothing app st
 
 -- | A simple main entry point which takes a widget and renders it. This
 -- event loop terminates when the user presses any key, but terminal
@@ -170,39 +174,42 @@ data InternalNext n a = InternalSuspendAndResume (RenderState n) (IO a)
 readBrickEvent :: BChan (BrickEvent n e) -> BChan e -> IO (BrickEvent n e)
 readBrickEvent brickChan userChan = either id AppEvent <$> readBChan2 brickChan userChan
 
-runWithNewVty :: (Ord n)
-              => Vty
-              -> BChan (BrickEvent n e)
-              -> Maybe (BChan e)
-              -> App s e n
-              -> RenderState n
-              -> s
-              -> IO (InternalNext n s)
-runWithNewVty buildVty brickChan mUserChan app initialRS initialSt =
-    withVty buildVty $ \vty -> do
-        pid <- forkIO $ supplyVtyEvents vty brickChan
-        let readEvent = case mUserChan of
-              Nothing -> readBChan brickChan
-              Just uc -> readBrickEvent brickChan uc
-            runInner rs st = do
-              (result, newRS) <- runVty vty readEvent app st (resetRenderState rs)
-              case result of
-                  SuspendAndResume act -> do
-                      killThread pid
-                      return $ InternalSuspendAndResume newRS act
-                  Halt s -> do
-                      killThread pid
-                      return $ InternalHalt s
-                  Continue s -> runInner newRS s
-        runInner initialRS initialSt
+runWithVty :: (Ord n)
+           => Vty
+           -> BChan (BrickEvent n e)
+           -> Maybe (BChan e)
+           -> App s e n
+           -> RenderState n
+           -> s
+           -> IO (InternalNext n s)
+runWithVty vty brickChan mUserChan app initialRS initialSt = do
+    pid <- forkIO $ supplyVtyEvents vty brickChan
+    let readEvent = case mUserChan of
+          Nothing -> readBChan brickChan
+          Just uc -> readBrickEvent brickChan uc
+        runInner rs st = do
+          (result, newRS) <- runVty vty readEvent app st (resetRenderState rs)
+          case result of
+              SuspendAndResume act -> do
+                  killThread pid
+                  return $ InternalSuspendAndResume newRS act
+              Halt s -> do
+                  killThread pid
+                  return $ InternalHalt s
+              Continue s -> runInner newRS s
+    runInner initialRS initialSt
 
 -- | The custom event loop entry point to use when the simpler ones
--- don't permit enough control.
+-- don't permit enough control. Returns the final application state
+-- after the application halts.
 customMain :: (Ord n)
-           => IO Vty
-           -- ^ An IO action to build a Vty handle. This is used to
-           -- build a Vty handle whenever the event loop begins or is
-           -- resumed after suspension.
+           => Vty
+           -- ^ The initial Vty handle to use.
+           -> IO Vty
+           -- ^ An IO action to build a Vty handle. This is used
+           -- to build a Vty handle whenever the event loop needs
+           -- to reinitialize the terminal, e.g. on resume after
+           -- suspension.
            -> Maybe (BChan e)
            -- ^ An event channel for sending custom events to the event
            -- loop (you write to this channel, the event loop reads from
@@ -213,20 +220,49 @@ customMain :: (Ord n)
            -> s
            -- ^ The initial application state.
            -> IO s
-customMain buildVty mUserChan app initialAppState = do
-    initialVty <- buildVty
+customMain initialVty buildVty mUserChan app initialAppState = do
+    (s, vty) <- customMainWithVty initialVty buildVty mUserChan app initialAppState
+    shutdown vty
+    return s
+
+-- | Like 'customMain', except the last 'Vty' handle used by the
+-- application is returned without being shut down with 'shutdown'. This
+-- allows the caller to re-use the 'Vty' handle for something else, such
+-- as another Brick application.
+customMainWithVty :: (Ord n)
+                  => Vty
+                  -- ^ The initial Vty handle to use.
+                  -> IO Vty
+                  -- ^ An IO action to build a Vty handle. This is used
+                  -- to build a Vty handle whenever the event loop needs
+                  -- to reinitialize the terminal, e.g. on resume after
+                  -- suspension.
+                  -> Maybe (BChan e)
+                  -- ^ An event channel for sending custom events to the event
+                  -- loop (you write to this channel, the event loop reads from
+                  -- it). Provide 'Nothing' if you don't plan on sending custom
+                  -- events.
+                  -> App s e n
+                  -- ^ The application.
+                  -> s
+                  -- ^ The initial application state.
+                  -> IO (s, Vty)
+customMainWithVty initialVty buildVty mUserChan app initialAppState = do
     let run vty rs st brickChan = do
-            result <- runWithNewVty vty brickChan mUserChan app rs st
+            result <- runWithVty vty brickChan mUserChan app rs st
+                `E.catch` (\(e::E.SomeException) -> shutdown vty >> E.throw e)
             case result of
-                InternalHalt s -> return s
+                InternalHalt s -> return (s, vty)
                 InternalSuspendAndResume newRS action -> do
+                    shutdown vty
                     newAppState <- action
                     newVty <- buildVty
                     run newVty (newRS { renderCache = mempty }) newAppState brickChan
 
-        emptyES = ES [] mempty
+    let emptyES = ES [] mempty
         emptyRS = RS M.empty mempty S.empty mempty mempty
         eventRO = EventRO M.empty initialVty mempty emptyRS
+
     (st, eState) <- runStateT (runReaderT (runEventM (appStartEvent app initialAppState)) eventRO) emptyES
     let initialRS = RS M.empty (esScrollRequests eState) S.empty mempty []
     brickChan <- newBChan 20
@@ -373,10 +409,6 @@ invalidateCacheEntry n = EventM $ do
 invalidateCache :: (Ord n) => EventM n ()
 invalidateCache = EventM $ do
     lift $ modify (\s -> s { cacheInvalidateRequests = S.insert InvalidateEntire $ cacheInvalidateRequests s })
-
-withVty :: Vty -> (Vty -> IO a) -> IO a
-withVty vty useVty = do
-    useVty vty `finally` shutdown vty
 
 getRenderState :: EventM n (RenderState n)
 getRenderState = EventM $ asks oldState
