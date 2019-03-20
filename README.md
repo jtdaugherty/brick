@@ -60,6 +60,7 @@ at these projects:
  * `VOIDSPACE`, a space-themed typing-tutor game: https://github.com/ChrisPenner/void-space
  * `solitaire`, the card game: https://github.com/ambuc/solitaire
  * `sudoku-tui`, a Sudoku implementation: https://github.com/evanrelf/sudoku-tui
+ * `summoner-tui`, an interactive frontend to the Summoner tool: https://github.com/kowainik/summoner/tree/master/summoner-tui
 
 These third-party packages also extend `brick`:
 
