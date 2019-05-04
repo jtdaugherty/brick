@@ -80,7 +80,7 @@ install:
 script:
   # test that source-distributions can be generated
   - (cd "." && cabal sdist)
-  - mv "."/dist/brick-*.tar.gz ${DISTDIR}/
+  - mv ./dist/brick-*.tar.gz ${DISTDIR}/ || mv ./dist-newstyle/sdist/brick-*.tar.gz ${DISTDIR}/
   - cd ${DISTDIR} || false
   - find . -maxdepth 1 -name '*.tar.gz' -exec tar -xvf '{}' \;
   - "printf 'packages: brick-*/*.cabal\\n' > cabal.project"
