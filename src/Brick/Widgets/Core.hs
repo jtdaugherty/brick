@@ -1261,4 +1261,4 @@ visibleRegion vrloc sz p =
 "vBox2"    forall as bs . vBox [vBox as, vBox bs] = vBox (as ++ bs)
 "vboxL"    forall as b  . vBox [vBox as, b]       = vBox (as ++ [b])
 "vboxR"    forall a bs  . vBox [a, vBox bs]       = vBox (a : bs)
-#-}
+  #-}
