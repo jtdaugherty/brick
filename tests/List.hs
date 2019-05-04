@@ -98,6 +98,13 @@ applyListOps
   => (op a -> List n a -> List n a) -> t (op a) -> List n a -> List n a
 applyListOps f = appEndo . foldMap (Endo . f)
 
+
+-- | Initial selection is always 0 (or Nothing for empty list)
+prop_initialSelection :: [a] -> Bool
+prop_initialSelection xs =
+  list () (V.fromList xs) 1 ^. listSelectedL ==
+    if null xs then Nothing else Just 0
+
 -- list operations keep the selected index in bounds
 prop_listOpsMaintainSelectedValid
   :: (Eq a) => [ListOp a] -> List n a -> Bool
