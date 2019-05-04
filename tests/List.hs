@@ -106,9 +106,9 @@ prop_listOpsMaintainSelectedValid ops l =
   in
     case l' ^. listSelectedL of
       -- either there is no selection and list is empty
-      Nothing -> null (l' ^. listElementsL)
+      Nothing -> null l'
       -- or the selected index is valid
-      Just i -> i >= 0 && i < length (l' ^. listElementsL)
+      Just i -> i >= 0 && i < length l'
 
 -- reversing a list keeps the selected element the same
 prop_reverseMaintainsSelectedElement
@@ -124,7 +124,7 @@ prop_reverseMaintainsSelectedElement ops l =
 -- reversing maintains size of list
 prop_reverseMaintainsSizeOfList :: List n a -> Bool
 prop_reverseMaintainsSizeOfList l =
-  length (l ^. listElementsL) == length (listReverse l ^. listElementsL)
+  length l == length (listReverse l)
 
 -- an inserted element may always be found at the given index
 -- (when target index is clamped to 0 <= n <= len)
@@ -132,7 +132,7 @@ prop_insert :: (Eq a) => Int -> a -> List n a -> Bool
 prop_insert i a l =
   let
     l' = listInsert i a l
-    i' = clamp 0 (length (l ^. listElementsL)) i
+    i' = clamp 0 (length l) i
   in
     listSelectedElement (listMoveTo i' l') == Just (i', a)
 
@@ -142,7 +142,7 @@ prop_insertSize i a l =
   let
     l' = listInsert i a l
   in
-    length (l' ^. listElementsL) == length (l ^. listElementsL) + 1
+    length l' == length l + 1
 
 -- inserting an element and moving to it always succeeds and
 -- the selected element is the one we inserted.
@@ -169,7 +169,7 @@ prop_insertFindBy ops l i a =
     l' = applyListOps op ops l
     l'' = set listSelectedL Nothing . listInsert i a $ l'
     seeks = converging ((==) `on` (^. listSelectedL)) (listFindBy (== a)) l''
-    i' = clamp 0 (length (l' ^. listElementsL)) i -- we can't have inserted past len
+    i' = clamp 0 (length l') i -- we can't have inserted past len
   in
     (find ((== Just i') . (^. listSelectedL)) seeks >>= listSelectedElement)
     == Just (i', a)
@@ -188,7 +188,7 @@ prop_findByNonDecreasing ops l a =
 prop_insertRemove :: (Eq a) => Int -> a -> List n a -> Bool
 prop_insertRemove i a l =
   let
-    i' = clamp 0 (length (l ^. listElementsL)) i
+    i' = clamp 0 (length l) i
     l' = listInsert i' a l -- pre-clamped
     l'' = listRemove i' l'
   in
@@ -199,13 +199,13 @@ prop_insertRemove i a l =
 prop_remove :: Int -> List n a -> Bool
 prop_remove i l =
   let
-    len = length (l ^. listElementsL)
+    len = length l
     i' = clamp 0 (len - 1) i
     test
       | len > 0 && i == i' = (== len - 1)  -- i is in bounds
       | otherwise = (== len)               -- i is out of bounds
   in
-    test (length (listRemove i l ^. listElementsL))
+    test (length (listRemove i l))
 
 -- deleting an element and re-inserting it at same position
 -- gives the original list elements
@@ -234,7 +234,7 @@ prop_moveUp ops l =
   let
     l' = applyListOps op ops l
     l'' = converge ((==) `on` (^. listSelectedL)) listMoveUp l'
-    len = length (l'' ^. listElementsL)
+    len = length l''
   in
     maybe (len == 0) (== 0) (l'' ^. listSelectedL)
 
@@ -244,7 +244,7 @@ prop_moveDown ops l =
   let
     l' = applyListOps op ops l
     l'' = converge ((==) `on` (^. listSelectedL)) listMoveDown l'
-    len = length (l'' ^. listElementsL)
+    len = length l''
   in
     maybe (len == 0) (== len - 1) (l'' ^. listSelectedL)
 
@@ -292,7 +292,7 @@ prop_moveByWhenNoSelection :: List n a -> Int -> Property
 prop_moveByWhenNoSelection l amt =
   let
     l' = l & listSelectedL .~ Nothing
-    len = length (l ^. listElementsL)
+    len = length l
     expected = if amt > 0 then 0 else len - 1
   in
     len > 0 ==> listMoveBy amt l' ^. listSelectedL == Just expected

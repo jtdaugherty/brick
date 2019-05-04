@@ -418,7 +418,7 @@ listRemove :: (Splittable t, Foldable t, Semigroup (t e))
            -- size)
            -> GenericList n t e
            -> GenericList n t e
-listRemove pos l | null (l^.listElementsL) = l
+listRemove pos l | null l = l
                  | pos /= splitClamp l pos = l
                  | otherwise =
     let newSel = case l^.listSelectedL of
@@ -517,7 +517,7 @@ listMoveBy amt l =
     let target = case l ^. listSelectedL of
             Nothing
                 | amt > 0 -> 0
-                | otherwise -> length (l ^. listElementsL) - 1
+                | otherwise -> length l - 1
             Just i -> max 0 (amt + i)  -- don't be negative
     in listMoveTo target l
 
@@ -541,12 +541,10 @@ listMoveTo :: (Foldable t, Splittable t)
            -> GenericList n t e
            -> GenericList n t e
 listMoveTo pos l =
-    let len = length (l ^. listElementsL)
+    let len = length l
         i = if pos < 0 then len - pos else pos
         newSel = splitClamp l i
-    in l & listSelectedL .~ if not (null (l ^. listElementsL))
-                            then Just newSel
-                            else Nothing
+    in l & listSelectedL .~ if null l then Nothing else Just newSel
 
 -- | Split-based clamp that avoids evaluating 'length' of the structure
 -- (unless the structure is already fully evaluated).
@@ -560,7 +558,7 @@ splitClamp l i =
         --
         -- Otherwise if tail is not empty, then we already know that i
         -- is in the list, so we don't need to know the length
-        clamp 0 (if null t then length (l ^. listElementsL) - 1 else i) i
+        clamp 0 (if null t then length l - 1 else i) i
 
 -- | Set the selected index for a list to the index of the first
 -- occurence of the specified element if it is in the list, or leave
@@ -627,7 +625,7 @@ listReverse :: (Reversible t, Foldable t)
             -> GenericList n t e
 listReverse l =
     l & listElementsL %~ reverse
-      & listSelectedL %~ fmap (length (l ^. listElementsL) - 1 -)
+      & listSelectedL %~ fmap (length l - 1 -)
 
 -- | Apply a function to the selected element. If no element is selected
 -- the list is not modified.
