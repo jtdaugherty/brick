@@ -386,8 +386,8 @@ folds over the binary `<=>` and `<+>` operations.
 
 The score is straightforward, but it is the first border in
 this tutorial. Borders are well documented in the [border
-demo](https://github.com/jtdaugherty/brick/blob/master/programs/BorderDe
-mo.hs) and the Haddocks for that matter.
+demo](https://github.com/jtdaugherty/brick/blob/master/programs/BorderDemo.hs)
+and the Haddocks for that matter.
 
 We also only show the "game over" widget if the game is actually over.
 In that case, we are rendering the string widget with the `gameOverAttr`
