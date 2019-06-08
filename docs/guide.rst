@@ -1804,7 +1804,7 @@ write:
            ctx <- getContext
            let a = ctx^.attrL
            return $ Result (Graphics.Vty.charFill a ch (ctx^.availWidthL) (ctx^.availHeightL))
-                           [] []
+                           [] [] [] Brick.BorderMap.empty
 
 Rendering Sub-Widgets
 ---------------------
