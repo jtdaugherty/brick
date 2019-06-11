@@ -44,7 +44,7 @@ To get an idea of what some people have done with `brick`, take a look
 at these projects:
 
  * `tetris`, an implementation of the Tetris game: https://github.com/SamTay/tetris
- * `gotta-go-fast`, a typing tutor: https://github.com/hot-leaf-juice/gotta-go-fast
+ * `gotta-go-fast`, a typing tutor: https://github.com/callum-oakley/gotta-go-fast
  * `haskell-player`, an `afplay` frontend: https://github.com/potomak/haskell-player
  * `mushu`, an `MPD` client: https://github.com/elaye/mushu
  * `matterhorn`, a client for [Mattermost](https://about.mattermost.com/): https://github.com/matterhorn-chat/matterhorn
