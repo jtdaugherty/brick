@@ -99,6 +99,7 @@ import Brick.Main (lookupViewport)
 import Brick.Widgets.Core
 import Brick.Util (clamp)
 import Brick.AttrMap
+import qualified Data.List as L
 
 -- | List state. Lists have a container @t@ of element type @e@ that is
 -- the data stored by the list. Internally, Lists handle the following
@@ -168,6 +169,9 @@ instance Splittable V.Vector where
 -- | /O(log(min(i,n-i)))/ 'splitAt'.
 instance Splittable Seq.Seq where
     splitAt = Seq.splitAt
+
+instance Splittable [] where
+    splitAt = L.splitAt
 
 -- | Ordered container types where the order of elements can be
 -- reversed. Only required if you want to use 'listReverse'.
