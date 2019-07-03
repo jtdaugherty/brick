@@ -2,6 +2,16 @@
 Brick changelog
 ---------------
 
+0.47.1
+------
+
+Bug fixes:
+ * userguide: update stale Result construction
+ * Added test case for List initial selection (thanks Fraser Tweedale)
+ * Fixed build on GHC 7.10 due to RULES pragma formatting issue (thanks
+   Fraser Tweedale)
+ * Various CI-related fixes (thanks Fraser Tweedale)
+
 0.47
 ----
 
