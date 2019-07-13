@@ -276,10 +276,11 @@ txtWrapWith settings s =
           [one] -> return $ emptyResult & imageL .~ (V.text' (c^.attrL) one)
           multiple ->
               let maxLength = maximum $ safeTextWidth <$> multiple
+                  padding = V.charFill (c^.attrL) ' ' (c^.availWidthL - maxLength) (length lineImgs)
                   lineImgs = lineImg <$> multiple
                   lineImg lStr = V.text' (c^.attrL)
                                    (lStr <> T.replicate (maxLength - safeTextWidth lStr) " ")
-              in return $ emptyResult & imageL .~ (V.vertCat lineImgs)
+              in return $ emptyResult & imageL .~ (V.horizCat [V.vertCat lineImgs, padding])
 
 -- | Build a widget from a 'String'. Breaks newlines up and space-pads
 -- short lines out to the length of the longest line.
