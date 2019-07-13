@@ -130,15 +130,18 @@ newtype EventM n a =
            }
            deriving (Functor, Applicative, Monad, MonadIO)
 
--- | Widget growth policies. These policies communicate to layout
--- algorithms how a widget uses space when being rendered. These
--- policies influence rendering order and space allocation in the box
--- layout algorithm.
+-- | Widget size policies. These policies communicate how a widget uses
+-- space when being rendered. These policies influence rendering order
+-- and space allocation in the box layout algorithm for 'hBox' and
+-- 'vBox'.
 data Size = Fixed
-          -- ^ Fixed widgets take up the same amount of space no matter
-          -- how much they are given (non-greedy).
+          -- ^ Widgets advertising this size policy should take up the
+          -- same amount of space no matter how much they are given,
+          -- i.e. their size depends on their contents alone rather than
+          -- on the size of the rendering area.
           | Greedy
-          -- ^ Greedy widgets take up all the space they are given.
+          -- ^ Widgets advertising this size policy must take up all the
+          -- space they are given.
           deriving (Show, Eq, Ord)
 
 -- | The type of widgets.
