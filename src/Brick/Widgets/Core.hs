@@ -243,12 +243,16 @@ takeColumns numCols (c:cs) =
 -- | Make a widget from a string, but wrap the words in the input's
 -- lines at the available width using the default wrapping settings. The
 -- input string should not contain escapes.
+--
+-- Unlike 'str', this is greedy horizontally.
 strWrap :: String -> Widget n
 strWrap = strWrapWith defaultWrapSettings
 
 -- | Make a widget from a string, but wrap the words in the input's
 -- lines at the available width using the specified wrapping settings.
 -- The input string should not contain escapes.
+--
+-- Unlike 'str', this is greedy horizontally.
 strWrapWith :: WrapSettings -> String -> Widget n
 strWrapWith settings t = txtWrapWith settings $ T.pack t
 
@@ -258,12 +262,16 @@ safeTextWidth = V.safeWcswidth . T.unpack
 -- | Make a widget from text, but wrap the words in the input's lines at
 -- the available width using the default wrapping settings. The input
 -- text should not contain escapes.
+--
+-- Unlike 'txt', this is greedy horizontally.
 txtWrap :: T.Text -> Widget n
 txtWrap = txtWrapWith defaultWrapSettings
 
 -- | Make a widget from text, but wrap the words in the input's lines at
 -- the available width using the specified wrapping settings. The input
 -- text should not contain escapes.
+--
+-- Unlike 'txt', this is greedy horizontally.
 txtWrapWith :: WrapSettings -> T.Text -> Widget n
 txtWrapWith settings s =
     Widget Greedy Fixed $ do
