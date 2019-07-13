@@ -43,24 +43,24 @@ Featured Projects
 To get an idea of what some people have done with `brick`, take a look
 at these projects:
 
- * `tetris`, an implementation of the Tetris game: https://github.com/SamTay/tetris
- * `gotta-go-fast`, a typing tutor: https://github.com/callum-oakley/gotta-go-fast
- * `haskell-player`, an `afplay` frontend: https://github.com/potomak/haskell-player
- * `mushu`, an `MPD` client: https://github.com/elaye/mushu
- * `matterhorn`, a client for [Mattermost](https://about.mattermost.com/): https://github.com/matterhorn-chat/matterhorn
- * `viewprof`, a GHC profile viewer: https://github.com/maoe/viewprof
- * `tart`, a mouse-driven ASCII art drawing program: https://github.com/jtdaugherty/tart
- * `silly-joy`, an interpreter for Joy: https://github.com/rootmos/silly-joy
- * `herms`, a command-line tool for managing kitchen recipes: https://github.com/jackkiefer/herms
- * `purebred`, a mail user agent: https://github.com/purebred-mua/purebred
- * `2048Haskell`, an implementation of the 2048 game: https://github.com/8Gitbrix/2048Haskell
- * `bhoogle`, a [Hoogle](https://www.haskell.org/hoogle/) client: https://github.com/andrevdm/bhoogle
- * `clifm`, a file manager: https://github.com/pasqu4le/clifm
- * `towerHanoi`, animated solutions to The Tower of Hanoi: https://github.com/shajenM/projects/tree/master/towerHanoi
- * `VOIDSPACE`, a space-themed typing-tutor game: https://github.com/ChrisPenner/void-space
- * `solitaire`, the card game: https://github.com/ambuc/solitaire
- * `sudoku-tui`, a Sudoku implementation: https://github.com/evanrelf/sudoku-tui
- * `summoner-tui`, an interactive frontend to the Summoner tool: https://github.com/kowainik/summoner/tree/master/summoner-tui
+ * [`tetris`](https://github.com/SamTay/tetris), an implementation of the Tetris game
+ * [`gotta-go-fast`](https://github.com/callum-oakley/gotta-go-fast), a typing tutor
+ * [`haskell-player`](https://github.com/potomak/haskell-player), an `afplay` frontend
+ * [`mushu`](https://github.com/elaye/mushu), an `MPD` client
+ * [`matterhorn`](https://github.com/matterhorn-chat/matterhorn), a client for [Mattermost](https://about.mattermost.com/)
+ * [`viewprof`](https://github.com/maoe/viewprof), a GHC profile viewer
+ * [`tart`](https://github.com/jtdaugherty/tart), a mouse-driven ASCII art drawing program
+ * [`silly-joy`](https://github.com/rootmos/silly-joy), an interpreter for Joy
+ * [`herms`](https://github.com/jackkiefer/herms), a command-line tool for managing kitchen recipes
+ * [`purebred`](https://github.com/purebred-mua/purebred), a mail user agent
+ * [`2048Haskell`](https://github.com/8Gitbrix/2048Haskell), an implementation of the 2048 game
+ * [`bhoogle`](https://github.com/andrevdm/bhoogle), a [Hoogle](https://www.haskell.org/hoogle/) client
+ * [`clifm`](https://github.com/pasqu4le/clifm), a file manager
+ * [`towerHanoi`](https://github.com/shajenM/projects/tree/master/towerHanoi), animated solutions to The Tower of Hanoi
+ * [`VOIDSPACE`](https://github.com/ChrisPenner/void-space), a space-themed typing-tutor game
+ * [`solitaire`](https://github.com/ambuc/solitaire), the card game
+ * [`sudoku-tui`](https://github.com/evanrelf/sudoku-tui), a Sudoku implementation
+ * [`summoner-tui`](https://github.com/kowainik/summoner/tree/master/summoner-tui), an interactive frontend to the Summoner tool
 
 These third-party packages also extend `brick`:
 
