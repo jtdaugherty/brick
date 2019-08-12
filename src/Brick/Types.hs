@@ -108,16 +108,16 @@ data Padding = Pad Int
 -- obtains the target value of the specified lens, invokes 'handleEvent'
 -- on it, and stores the resulting transformed value back in the state
 -- using the lens.
-handleEventLensed :: a
+handleEventLensed :: Monad m => a
                   -- ^ The state value.
                   -> Lens' a b
                   -- ^ The lens to use to extract and store the target
                   -- of the event.
-                  -> (e -> b -> EventM n b)
+                  -> (e -> b -> EventM n m b)
                   -- ^ The event handler.
                   -> e
                   -- ^ The event to handle.
-                  -> EventM n a
+                  -> EventM n m a
 handleEventLensed v target handleEvent ev = do
     newB <- handleEvent ev (v^.target)
     return $ v & target .~ newB
@@ -125,8 +125,8 @@ handleEventLensed v target handleEvent ev = do
 -- | The monad in which event handlers run. Although it may be tempting
 -- to dig into the reader value yourself, just use
 -- 'Brick.Main.lookupViewport'.
-newtype EventM n a =
-    EventM { runEventM :: ReaderT (EventRO n) (StateT (EventState n) IO) a
+newtype EventM n m a =
+    EventM { runEventM :: ReaderT (EventRO n) (StateT (EventState n) m) a
            }
            deriving (Functor, Applicative, Monad, MonadIO)
 

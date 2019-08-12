@@ -51,6 +51,7 @@ where
 import qualified Control.Exception as E
 import Lens.Micro ((^.), (&), (.~), (%~), _1, _2)
 import Control.Monad (forever)
+import Control.Monad.IO.Class
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.State
 import Control.Monad.Trans.Reader
@@ -94,7 +95,7 @@ import Brick.AttrMap
 -- state to be provided by you and iteratively modified by event
 -- handlers. The resource name type is the type of names you can assign
 -- to rendering resources such as viewports and cursor locations.
-data App s e n =
+data App s e n m =
     App { appDraw :: s -> [Widget n]
         -- ^ This function turns your application state into a list of
         -- widget layers. The layers are listed topmost first.
@@ -106,12 +107,12 @@ data App s e n =
         -- is that many widgets may request a cursor placement but your
         -- application state is what you probably want to use to decide
         -- which one wins.
-        , appHandleEvent :: s -> BrickEvent n e -> EventM n (Next s)
+        , appHandleEvent :: s -> BrickEvent n e -> EventM n m (Next m s)
         -- ^ This function takes the current application state and an
         -- event and returns an action to be taken and a corresponding
         -- transformed application state. Possible options are
         -- 'continue', 'suspendAndResume', and 'halt'.
-        , appStartEvent :: s -> EventM n s
+        , appStartEvent :: s -> EventM n m s
         -- ^ This function gets called once just prior to the first
         -- drawing of your application. Here is where you can make
         -- initial scrolling requests, for example.
@@ -122,24 +123,24 @@ data App s e n =
 -- | The default main entry point which takes an application and an
 -- initial state and returns the final state returned by a 'halt'
 -- operation.
-defaultMain :: (Ord n)
-            => App s e n
+defaultMain :: MonadIO m => (Ord n)
+            => App s e n m
             -- ^ The application.
             -> s
             -- ^ The initial application state.
-            -> IO s
+            -> m s
 defaultMain app st = do
-    let builder = mkVty defaultConfig
+    let builder = liftIO $ mkVty defaultConfig
     initialVty <- builder
     customMain initialVty builder Nothing app st
 
 -- | A simple main entry point which takes a widget and renders it. This
 -- event loop terminates when the user presses any key, but terminal
 -- resize events cause redraws.
-simpleMain :: (Ord n)
+simpleMain :: MonadIO m => (Ord n)
            => Widget n
            -- ^ The widget to draw.
-           -> IO ()
+           -> m ()
 simpleMain w = defaultMain (simpleApp w) ()
 
 -- | A simple application with reasonable defaults to be overridden as
@@ -150,7 +151,7 @@ simpleMain w = defaultMain (simpleApp w) ()
 -- * Has no start event handler
 -- * Provides no attribute map
 -- * Never shows any cursors
-simpleApp :: Widget n -> App s e n
+simpleApp :: Monad m => Widget n -> App s e n m
 simpleApp w =
     App { appDraw = const [w]
         , appHandleEvent = resizeOrQuit
@@ -164,37 +165,37 @@ simpleApp w =
 -- a halt. This is a convenience function useful as an 'appHandleEvent'
 -- value for simple applications using the 'Event' type that do not need
 -- to get more sophisticated user input.
-resizeOrQuit :: s -> BrickEvent n e -> EventM n (Next s)
+resizeOrQuit :: Monad m => s -> BrickEvent n e -> EventM n m (Next m s)
 resizeOrQuit s (VtyEvent (EvResize _ _)) = continue s
 resizeOrQuit s _ = halt s
 
-data InternalNext n a = InternalSuspendAndResume (RenderState n) (IO a)
-                      | InternalHalt a
+data InternalNext n m a = InternalSuspendAndResume (RenderState n) (m a)
+                        | InternalHalt a
 
 readBrickEvent :: BChan (BrickEvent n e) -> BChan e -> IO (BrickEvent n e)
-readBrickEvent brickChan userChan = either id AppEvent <$> readBChan2 brickChan userChan
+readBrickEvent brickChan userChan = liftIO $ either id AppEvent <$> readBChan2 brickChan userChan
 
-runWithVty :: (Ord n)
+runWithVty :: MonadIO m => (Ord n)
            => Vty
            -> BChan (BrickEvent n e)
            -> Maybe (BChan e)
-           -> App s e n
+           -> App s e n m
            -> RenderState n
            -> s
-           -> IO (InternalNext n s)
+           -> m (InternalNext n m s)
 runWithVty vty brickChan mUserChan app initialRS initialSt = do
-    pid <- forkIO $ supplyVtyEvents vty brickChan
-    let readEvent = case mUserChan of
+    pid <- liftIO $ forkIO $ supplyVtyEvents vty brickChan
+    let readEvent = liftIO $ case mUserChan of
           Nothing -> readBChan brickChan
           Just uc -> readBrickEvent brickChan uc
         runInner rs st = do
           (result, newRS) <- runVty vty readEvent app st (resetRenderState rs)
           case result of
               SuspendAndResume act -> do
-                  killThread pid
+                  liftIO $ killThread pid
                   return $ InternalSuspendAndResume newRS act
               Halt s -> do
-                  killThread pid
+                  liftIO $ killThread pid
                   return $ InternalHalt s
               Continue s -> runInner newRS s
     runInner initialRS initialSt
@@ -202,10 +203,10 @@ runWithVty vty brickChan mUserChan app initialRS initialSt = do
 -- | The custom event loop entry point to use when the simpler ones
 -- don't permit enough control. Returns the final application state
 -- after the application halts.
-customMain :: (Ord n)
+customMain :: MonadIO m => (Ord n)
            => Vty
            -- ^ The initial Vty handle to use.
-           -> IO Vty
+           -> m Vty
            -- ^ An IO action to build a Vty handle. This is used
            -- to build a Vty handle whenever the event loop needs
            -- to reinitialize the terminal, e.g. on resume after
@@ -215,24 +216,24 @@ customMain :: (Ord n)
            -- loop (you write to this channel, the event loop reads from
            -- it). Provide 'Nothing' if you don't plan on sending custom
            -- events.
-           -> App s e n
+           -> App s e n m
            -- ^ The application.
            -> s
            -- ^ The initial application state.
-           -> IO s
+           -> m s
 customMain initialVty buildVty mUserChan app initialAppState = do
     (s, vty) <- customMainWithVty initialVty buildVty mUserChan app initialAppState
-    shutdown vty
+    liftIO $ shutdown vty
     return s
 
 -- | Like 'customMain', except the last 'Vty' handle used by the
 -- application is returned without being shut down with 'shutdown'. This
 -- allows the caller to re-use the 'Vty' handle for something else, such
 -- as another Brick application.
-customMainWithVty :: (Ord n)
+customMainWithVty :: MonadIO m => (Ord n)
                   => Vty
                   -- ^ The initial Vty handle to use.
-                  -> IO Vty
+                  -> m Vty
                   -- ^ An IO action to build a Vty handle. This is used
                   -- to build a Vty handle whenever the event loop needs
                   -- to reinitialize the terminal, e.g. on resume after
@@ -242,19 +243,19 @@ customMainWithVty :: (Ord n)
                   -- loop (you write to this channel, the event loop reads from
                   -- it). Provide 'Nothing' if you don't plan on sending custom
                   -- events.
-                  -> App s e n
+                  -> App s e n m
                   -- ^ The application.
                   -> s
                   -- ^ The initial application state.
-                  -> IO (s, Vty)
+                  -> m (s, Vty)
 customMainWithVty initialVty buildVty mUserChan app initialAppState = do
     let run vty rs st brickChan = do
             result <- runWithVty vty brickChan mUserChan app rs st
-                `E.catch` (\(e::E.SomeException) -> shutdown vty >> E.throw e)
+                -- `E.catch` (\(e::E.SomeException) -> shutdown vty >> E.throw e)
             case result of
                 InternalHalt s -> return (s, vty)
                 InternalSuspendAndResume newRS action -> do
-                    shutdown vty
+                    liftIO $ shutdown vty
                     newAppState <- action
                     newVty <- buildVty
                     run newVty (newRS { renderCache = mempty }) newAppState brickChan
@@ -265,7 +266,7 @@ customMainWithVty initialVty buildVty mUserChan app initialAppState = do
 
     (st, eState) <- runStateT (runReaderT (runEventM (appStartEvent app initialAppState)) eventRO) emptyES
     let initialRS = RS M.empty (esScrollRequests eState) S.empty mempty []
-    brickChan <- newBChan 20
+    brickChan <- liftIO $ newBChan 20
     run initialVty initialRS st brickChan
 
 supplyVtyEvents :: Vty -> BChan (BrickEvent n e) -> IO ()
@@ -274,13 +275,14 @@ supplyVtyEvents vty chan =
         e <- nextEvent vty
         writeBChan chan $ VtyEvent e
 
-runVty :: (Ord n)
+runVty :: MonadIO m
+       => (Ord n)
        => Vty
-       -> IO (BrickEvent n e)
-       -> App s e n
+       -> m (BrickEvent n e)
+       -> App s e n m
        -> s
        -> RenderState n
-       -> IO (Next s, RenderState n)
+       -> m (Next m s, RenderState n)
 runVty vty readEvent app appState rs = do
     (firstRS, exts) <- renderApp vty app appState rs
     e <- readEvent
@@ -367,7 +369,7 @@ applyInvalidations ns cache =
 -- no such state could be found, either because the name was invalid
 -- or because no rendering has occurred (e.g. in an 'appStartEvent'
 -- handler).
-lookupViewport :: (Ord n) => n -> EventM n (Maybe Viewport)
+lookupViewport :: Monad m => (Ord n) => n -> EventM n m (Maybe Viewport)
 lookupViewport n = EventM $ asks (M.lookup n . eventViewportMap)
 
 -- | Did the specified mouse coordinates (column, row) intersect the
@@ -379,7 +381,7 @@ clickedExtent (c, r) (Extent _ (Location (lc, lr)) (w, h) _) =
 
 -- | Given a resource name, get the most recent rendering extent for the
 -- name (if any).
-lookupExtent :: (Eq n) => n -> EventM n (Maybe (Extent n))
+lookupExtent :: Monad m => (Eq n) => n -> EventM n m (Maybe (Extent n))
 lookupExtent n = EventM $ asks (listToMaybe . filter f . latestExtents)
     where
         f (Extent n' _ _ _) = n == n'
@@ -389,28 +391,28 @@ lookupExtent n = EventM $ asks (listToMaybe . filter f . latestExtents)
 -- the list is the most specific extent and the last extent is the most
 -- generic (top-level). So if two extents A and B both intersected the
 -- mouse click but A contains B, then they would be returned [B, A].
-findClickedExtents :: (Int, Int) -> EventM n [Extent n]
+findClickedExtents :: Monad m => (Int, Int) -> EventM n m [Extent n]
 findClickedExtents pos = EventM $ asks (findClickedExtents_ pos . latestExtents)
 
 findClickedExtents_ :: (Int, Int) -> [Extent n] -> [Extent n]
 findClickedExtents_ pos = reverse . filter (clickedExtent pos)
 
 -- | Get the Vty handle currently in use.
-getVtyHandle :: EventM n Vty
+getVtyHandle :: Monad m => EventM n m Vty
 getVtyHandle = EventM $ asks eventVtyHandle
 
 -- | Invalidate the rendering cache entry with the specified resource
 -- name.
-invalidateCacheEntry :: (Ord n) => n -> EventM n ()
+invalidateCacheEntry :: Monad m => (Ord n) => n -> EventM n m ()
 invalidateCacheEntry n = EventM $ do
     lift $ modify (\s -> s { cacheInvalidateRequests = S.insert (InvalidateSingle n) $ cacheInvalidateRequests s })
 
 -- | Invalidate the entire rendering cache.
-invalidateCache :: (Ord n) => EventM n ()
+invalidateCache :: Monad m => (Ord n) => EventM n m ()
 invalidateCache = EventM $ do
     lift $ modify (\s -> s { cacheInvalidateRequests = S.insert InvalidateEntire $ cacheInvalidateRequests s })
 
-getRenderState :: EventM n (RenderState n)
+getRenderState :: Monad m => EventM n m (RenderState n)
 getRenderState = EventM $ asks oldState
 
 resetRenderState :: RenderState n -> RenderState n
@@ -418,7 +420,7 @@ resetRenderState s =
     s & observedNamesL .~ S.empty
       & clickableNamesL .~ mempty
 
-renderApp :: Vty -> App s e n -> s -> RenderState n -> IO (RenderState n, [Extent n])
+renderApp :: MonadIO m => Vty -> App s e n m -> s -> RenderState n -> m (RenderState n, [Extent n])
 renderApp vty app appState rs = do
     sz <- displayBounds $ outputIface vty
     let (newRS, pic, theCursor, exts) = renderFinal (appAttrMap app appState)
@@ -432,7 +434,7 @@ renderApp vty app appState rs = do
                                                           (cloc^.locationRowL)
                              }
 
-    update vty picWithCursor
+    liftIO $ update vty picWithCursor
 
     return (newRS, exts)
 
@@ -459,45 +461,45 @@ showCursorNamed name locs =
 
 -- | A viewport scrolling handle for managing the scroll state of
 -- viewports.
-data ViewportScroll n =
+data ViewportScroll n m =
     ViewportScroll { viewportName :: n
                    -- ^ The name of the viewport to be controlled by
                    -- this scrolling handle.
-                   , hScrollPage :: Direction -> EventM n ()
+                   , hScrollPage :: Direction -> EventM n m ()
                    -- ^ Scroll the viewport horizontally by one page in
                    -- the specified direction.
-                   , hScrollBy :: Int -> EventM n ()
+                   , hScrollBy :: Int -> EventM n m ()
                    -- ^ Scroll the viewport horizontally by the
                    -- specified number of rows or columns depending on
                    -- the orientation of the viewport.
-                   , hScrollToBeginning :: EventM n ()
+                   , hScrollToBeginning :: EventM n m ()
                    -- ^ Scroll horizontally to the beginning of the
                    -- viewport.
-                   , hScrollToEnd :: EventM n ()
+                   , hScrollToEnd :: EventM n m ()
                    -- ^ Scroll horizontally to the end of the viewport.
-                   , vScrollPage :: Direction -> EventM n ()
+                   , vScrollPage :: Direction -> EventM n m ()
                    -- ^ Scroll the viewport vertically by one page in
                    -- the specified direction.
-                   , vScrollBy :: Int -> EventM n ()
+                   , vScrollBy :: Int -> EventM n m ()
                    -- ^ Scroll the viewport vertically by the specified
                    -- number of rows or columns depending on the
                    -- orientation of the viewport.
-                   , vScrollToBeginning :: EventM n ()
+                   , vScrollToBeginning :: EventM n m ()
                    -- ^ Scroll vertically to the beginning of the viewport.
-                   , vScrollToEnd :: EventM n ()
+                   , vScrollToEnd :: EventM n m ()
                    -- ^ Scroll vertically to the end of the viewport.
-                   , setTop :: Int -> EventM n ()
+                   , setTop :: Int -> EventM n m ()
                    -- ^ Set the top row offset of the viewport.
-                   , setLeft :: Int -> EventM n ()
+                   , setLeft :: Int -> EventM n m ()
                    -- ^ Set the left column offset of the viewport.
                    }
 
-addScrollRequest :: (n, ScrollRequest) -> EventM n ()
+addScrollRequest :: Monad m => (n, ScrollRequest) -> EventM n m ()
 addScrollRequest req = EventM $ do
     lift $ modify (\s -> s { esScrollRequests = req : esScrollRequests s })
 
 -- | Build a viewport scroller for the viewport with the specified name.
-viewportScroll :: n -> ViewportScroll n
+viewportScroll :: Monad m => n -> ViewportScroll n m
 viewportScroll n =
     ViewportScroll { viewportName       = n
                    , hScrollPage        = \dir -> addScrollRequest (n, HScrollPage dir)
@@ -514,17 +516,17 @@ viewportScroll n =
 
 -- | Continue running the event loop with the specified application
 -- state.
-continue :: s -> EventM n (Next s)
+continue :: Monad m => s -> EventM n m (Next m s)
 continue = return . Continue
 
 -- | Halt the event loop and return the specified application state as
 -- the final state value.
-halt :: s -> EventM n (Next s)
+halt :: Monad m => s -> EventM n m (Next m s)
 halt = return . Halt
 
 -- | Suspend the event loop, save the terminal state, and run the
 -- specified action. When it returns an application state value, restore
 -- the terminal state, empty the rendering cache, redraw the application
 -- from the new state, and resume the event loop.
-suspendAndResume :: IO s -> EventM n (Next s)
+suspendAndResume :: Monad m => m s -> EventM n m (Next m s)
 suspendAndResume = return . SuspendAndResume

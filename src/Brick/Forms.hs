@@ -112,7 +112,7 @@ import Lens.Micro
 --  * @b@ - the form field's internal state type
 --  * @e@ - your application's event type
 --  * @n@ - your application's resource name type
-data FormField a b e n =
+data FormField a b e n m =
     FormField { formFieldName        :: n
               -- ^ The name identifying this form field.
               , formFieldValidate    :: b -> Maybe a
@@ -135,7 +135,7 @@ data FormField a b e n =
               -- ^ A function to render this form field. Parameters are
               -- whether the field is currently focused, followed by the
               -- field state.
-              , formFieldHandleEvent :: BrickEvent n e -> b -> EventM n b
+              , formFieldHandleEvent :: BrickEvent n e -> b -> EventM n m b
               -- ^ An event handler for this field. This receives the
               -- event and the field state and returns a new field
               -- state.
@@ -160,7 +160,7 @@ data FormField a b e n =
 --    fields.
 --  * @e@ - your application's event type
 --  * @n@ - your application's resource name type
-data FormFieldState s e n where
+data FormFieldState s e n m where
     FormFieldState :: { formFieldState :: b
                       -- ^ The current state value associated with
                       -- the field collection. Note that this type is
@@ -170,7 +170,7 @@ data FormFieldState s e n where
                       -- ^ A lens to extract and store a
                       -- successfully-validated form input back into
                       -- your form state.
-                      , formFields     :: [FormField a b e n]
+                      , formFields     :: [FormField a b e n m]
                       -- ^ The form fields, in order, that the user will
                       -- interact with to manipulate this state value.
                       , formFieldRenderHelper :: Widget n -> Widget n
@@ -182,7 +182,7 @@ data FormFieldState s e n where
                       , formFieldConcat :: [Widget n] -> Widget n
                       -- ^ Concatenation function for this field's input
                       -- renderings.
-                      } -> FormFieldState s e n
+                      } -> FormFieldState s e n m
 
 -- | A form: a sequence of input fields that manipulate the fields of an
 -- underlying state that you choose.
@@ -193,8 +193,8 @@ data FormFieldState s e n where
 --    manipulated by the fields in this form.
 --  * @e@ - your application's event type
 --  * @n@ - your application's resource name type
-data Form s e n =
-    Form { formFieldStates  :: [FormFieldState s e n]
+data Form s e n m =
+    Form { formFieldStates  :: [FormFieldState s e n m]
          , formFocus        :: FocusRing n
          -- ^ The focus ring for the form, indicating which form field
          -- has input focus.
@@ -222,33 +222,33 @@ data Form s e n =
 -- > (str "Please check: " <+>) @@=
 -- >   checkboxField alive AliveField "Alive?"
 infixr 5 @@=
-(@@=) :: (Widget n -> Widget n) -> (s -> FormFieldState s e n) -> s -> FormFieldState s e n
+(@@=) :: (Widget n -> Widget n) -> (s -> FormFieldState s e n m) -> s -> FormFieldState s e n m
 (@@=) h mkFs s =
     let v = mkFs s
     in v { formFieldRenderHelper = h . (formFieldRenderHelper v) }
 
 -- | Set the focused field of a form.
-setFormFocus :: (Eq n) => n -> Form s e n -> Form s e n
+setFormFocus :: (Eq n) => n -> Form s e n m -> Form s e n m
 setFormFocus n f = f { formFocus = focusSetCurrent n $ formFocus f }
 
 -- | Set a form field's concatenation function.
-setFieldConcat :: ([Widget n] -> Widget n) -> FormFieldState s e n -> FormFieldState s e n
+setFieldConcat :: ([Widget n] -> Widget n) -> FormFieldState s e n m -> FormFieldState s e n m
 setFieldConcat f s = s { formFieldConcat = f }
 
 -- | Set a form's concatenation function.
-setFormConcat :: ([Widget n] -> Widget n) -> Form s e n -> Form s e n
+setFormConcat :: ([Widget n] -> Widget n) -> Form s e n m -> Form s e n m
 setFormConcat func f = f { formConcatAll = func }
 
 -- | Create a new form with the specified input fields and an initial
 -- form state. The fields are initialized from the state using their
 -- state lenses and the first form input is focused initially.
-newForm :: [s -> FormFieldState s e n]
+newForm :: [s -> FormFieldState s e n m]
         -- ^ The form field constructors. This is intended to be
         -- populated using the various field constructors in this
         -- module.
         -> s
         -- ^ The initial form state used to populate the fields.
-        -> Form s e n
+        -> Form s e n m
 newForm mkEs s =
     let es = mkEs <*> pure s
     in Form { formFieldStates = es
@@ -257,7 +257,7 @@ newForm mkEs s =
             , formConcatAll   = vBox
             }
 
-formFieldNames :: FormFieldState s e n -> [n]
+formFieldNames :: FormFieldState s e n m -> [n]
 formFieldNames (FormFieldState _ _ fields _ _) = formFieldName <$> fields
 
 -- | A form field for manipulating a boolean value. This represents
@@ -265,7 +265,7 @@ formFieldNames (FormFieldState _ _ fields _ _) = formFieldName <$> fields
 --
 -- This field responds to `Space` keypresses to toggle the checkbox and
 -- to mouse clicks.
-checkboxField :: (Ord n, Show n)
+checkboxField :: (Ord n, Show n, Monad m)
               => Lens' s Bool
               -- ^ The state lens for this value.
               -> n
@@ -274,7 +274,7 @@ checkboxField :: (Ord n, Show n)
               -- ^ The label for the check box, to appear at its right.
               -> s
               -- ^ The initial form state.
-              -> FormFieldState s e n
+              -> FormFieldState s e n m
 checkboxField = checkboxCustomField '[' 'X' ']'
 
 -- | A form field for manipulating a boolean value. This represents
@@ -283,7 +283,7 @@ checkboxField = checkboxCustomField '[' 'X' ']'
 --
 -- This field responds to `Space` keypresses to toggle the checkbox and
 -- to mouse clicks.
-checkboxCustomField :: (Ord n, Show n)
+checkboxCustomField :: (Ord n, Show n, Monad m)
                     => Char
                     -- ^ Left bracket character.
                     -> Char
@@ -298,7 +298,7 @@ checkboxCustomField :: (Ord n, Show n)
                     -- ^ The label for the check box, to appear at its right.
                     -> s
                     -- ^ The initial form state.
-                    -> FormFieldState s e n
+                    -> FormFieldState s e n m
 checkboxCustomField lb check rb stLens name label initialState =
     let initVal = initialState ^. stLens
 
@@ -329,7 +329,7 @@ renderCheckbox lb check rb label n foc val =
 -- choices in a scrollable list. This uses a 'List' internally.
 --
 -- This field responds to the same input events that a 'List' does.
-listField :: forall s e n a . (Ord n, Show n, Eq a)
+listField :: forall s e n a m . (Ord n, Show n, Eq a, Monad m)
           => (s -> Vector a)
           -- ^ Possible choices.
           -> Lens' s (Maybe a)
@@ -343,7 +343,7 @@ listField :: forall s e n a . (Ord n, Show n, Eq a)
           -- ^ The resource name for the input field.
           -> s
           -- ^ The initial form state.
-          -> FormFieldState s e n
+          -> FormFieldState s e n m
 listField options stLens renderItem itemHeight name initialState =
     let optionsVector = options initialState
         initVal = initialState ^. customStLens
@@ -374,7 +374,7 @@ listField options stLens renderItem itemHeight name initialState =
 --
 -- This field responds to `Space` keypresses to select a radio button
 -- option and to mouse clicks.
-radioField :: (Ord n, Show n, Eq a)
+radioField :: (Ord n, Show n, Eq a, Monad m)
            => Lens' s a
            -- ^ The state lens for this value.
            -> [(a, n, T.Text)]
@@ -382,7 +382,7 @@ radioField :: (Ord n, Show n, Eq a)
            -- of type @a@, a resource name, and a text label.
            -> s
            -- ^ The initial form state.
-           -> FormFieldState s e n
+           -> FormFieldState s e n m
 radioField = radioCustomField '[' '*' ']'
 
 -- | A form field for selecting a single choice from a set of possible
@@ -391,7 +391,7 @@ radioField = radioCustomField '[' '*' ']'
 --
 -- This field responds to `Space` keypresses to select a radio button
 -- option and to mouse clicks.
-radioCustomField :: (Ord n, Show n, Eq a)
+radioCustomField :: (Ord n, Show n, Eq a, Monad m)
                  => Char
                  -> Char
                  -> Char
@@ -402,7 +402,7 @@ radioCustomField :: (Ord n, Show n, Eq a)
                  -- of type @a@, a resource name, and a text label.
                  -> s
                  -- ^ The initial form state.
-                 -> FormFieldState s e n
+                 -> FormFieldState s e n m
 radioCustomField lb check rb stLens options initialState =
     let initVal = initialState ^. stLens
 
@@ -454,7 +454,7 @@ renderRadio lb check rb val name label foc cur =
 --
 -- This field responds to all events handled by 'editor', including
 -- mouse events.
-editField :: (Ord n, Show n)
+editField :: (Ord n, Show n, Monad m)
           => Lens' s a
           -- ^ The state lens for this value.
           -> n
@@ -476,7 +476,7 @@ editField :: (Ord n, Show n)
           -- representation of the rendered editor.
           -> s
           -- ^ The initial form state.
-          -> FormFieldState s e n
+          -> FormFieldState s e n m
 editField stLens n limit ini val renderText wrapEditor initialState =
     let initVal = applyEdit gotoEnd $
                   editor n limit initialText
@@ -509,14 +509,14 @@ editField stLens n limit ini val renderText wrapEditor initialState =
 --
 -- This field responds to all events handled by 'editor', including
 -- mouse events.
-editShowableField :: (Ord n, Show n, Read a, Show a)
+editShowableField :: (Ord n, Show n, Read a, Show a, Monad m)
                   => Lens' s a
                   -- ^ The state lens for this value.
                   -> n
                   -- ^ The resource name for the input field.
                   -> s
                   -- ^ The initial form state.
-                  -> FormFieldState s e n
+                  -> FormFieldState s e n m
 editShowableField stLens n =
     let ini = T.pack . show
         val = readMaybe . T.unpack . T.intercalate "\n"
@@ -529,7 +529,7 @@ editShowableField stLens n =
 --
 -- This field responds to all events handled by 'editor', including
 -- mouse events.
-editTextField :: (Ord n, Show n)
+editTextField :: (Ord n, Show n, Monad m)
               => Lens' s T.Text
               -- ^ The state lens for this value.
               -> n
@@ -538,7 +538,7 @@ editTextField :: (Ord n, Show n)
               -- ^ The optional line limit for the editor (see 'editor').
               -> s
               -- ^ The initial form state.
-              -> FormFieldState s e n
+              -> FormFieldState s e n m
 editTextField stLens n limit =
     let ini = id
         val = Just . T.intercalate "\n"
@@ -551,14 +551,14 @@ editTextField stLens n limit =
 --
 -- This field responds to all events handled by 'editor', including
 -- mouse events.
-editPasswordField :: (Ord n, Show n)
+editPasswordField :: (Ord n, Show n, Monad m)
                   => Lens' s T.Text
                   -- ^ The state lens for this value.
                   -> n
                   -- ^ The resource name for the input field.
                   -> s
                   -- ^ The initial form state.
-                  -> FormFieldState s e n
+                  -> FormFieldState s e n m
 editPasswordField stLens n =
     let ini = id
         val = Just . T.concat
@@ -585,14 +585,14 @@ focusedFormInputAttr = formAttr <> "focusedInput"
 -- values according to the fields' validation functions. This is useful
 -- when we need to decide whether the form state is up to date with
 -- respect to the form input fields.
-allFieldsValid :: Form s e n -> Bool
+allFieldsValid :: Form s e n m -> Bool
 allFieldsValid = null . invalidFields
 
 -- | Returns the resource names associated with all form input fields
 -- that currently have invalid inputs. This is useful when we need to
 -- force the user to repair invalid inputs before moving on from a form
 -- editing session.
-invalidFields :: Form s e n -> [n]
+invalidFields :: Form s e n m -> [n]
 invalidFields f = concat $ getInvalidFields <$> formFieldStates f
 
 -- | Manually indicate that a field has invalid contents. This can be
@@ -604,9 +604,9 @@ setFieldValid :: (Eq n)
               -- ^ Whether the field is considered valid.
               -> n
               -- ^ The name of the form field to set as (in)valid.
-              -> Form s e n
+              -> Form s e n m
               -- ^ The form to modify.
-              -> Form s e n
+              -> Form s e n m
 setFieldValid v n form =
     let go1 [] = []
         go1 (s:ss) =
@@ -621,7 +621,7 @@ setFieldValid v n form =
 
     in form { formFieldStates = go1 (formFieldStates form) }
 
-getInvalidFields :: FormFieldState s e n -> [n]
+getInvalidFields :: FormFieldState s e n m -> [n]
 getInvalidFields (FormFieldState st _ fs _ _) =
     let gather (FormField n validate extValid _ _) =
             if (not extValid || (isNothing $ validate st)) then [n] else []
@@ -640,7 +640,7 @@ getInvalidFields (FormFieldState st _ fs _ _) =
 --
 -- Finally, all of the resulting field renderings are concatenated with
 -- the form's concatenation function (see 'setFormConcat').
-renderForm :: (Eq n) => Form s e n -> Widget n
+renderForm :: (Eq n) => Form s e n m -> Widget n
 renderForm (Form es fr _ concatAll) =
     concatAll $ renderFormFieldState fr <$> es
 
@@ -650,7 +650,7 @@ renderForm (Form es fr _ concatAll) =
 -- you want.
 renderFormFieldState :: (Eq n)
                      => FocusRing n
-                     -> FormFieldState s e n
+                     -> FormFieldState s e n m
                      -> Widget n
 renderFormFieldState fr (FormFieldState st _ fields helper concatFields) =
     let renderFields [] = []
@@ -688,7 +688,7 @@ renderFormFieldState fr (FormFieldState st _ fields helper concatFields) =
 -- lens. The external validation flag is ignored during this step to
 -- ensure that external validators have a chance to get the intermediate
 -- validated value.
-handleFormEvent :: (Eq n) => BrickEvent n e -> Form s e n -> EventM n (Form s e n)
+handleFormEvent :: (Eq n, Monad m) => BrickEvent n e -> Form s e n m -> EventM n m (Form s e n m)
 handleFormEvent (VtyEvent (EvKey (KChar '\t') [])) f =
     return $ f { formFocus = focusNext $ formFocus f }
 handleFormEvent (VtyEvent (EvKey KBackTab [])) f =
@@ -727,7 +727,7 @@ handleFormEvent e@(VtyEvent (EvKey KRight [])) f =
                 Just grp -> return $ f { formFocus = focusSetCurrent (entryAfter grp n) (formFocus f) }
 handleFormEvent e f = forwardToCurrent e f
 
-getFocusGrouping :: (Eq n) => Form s e n -> n -> Maybe [n]
+getFocusGrouping :: (Eq n) => Form s e n m -> n -> Maybe [n]
 getFocusGrouping f n = findGroup (formFieldStates f)
     where
         findGroup [] = Nothing
@@ -749,13 +749,13 @@ entryBefore as a =
         i' = if i == 0 then length as - 1 else i - 1
     in as !! i'
 
-forwardToCurrent :: (Eq n) => BrickEvent n e -> Form s e n -> EventM n (Form s e n)
+forwardToCurrent :: (Eq n, Monad m) => BrickEvent n e -> Form s e n m -> EventM n m (Form s e n m)
 forwardToCurrent e f =
     case focusGetCurrent (formFocus f) of
         Nothing -> return f
         Just n  -> handleFormFieldEvent n e f
 
-handleFormFieldEvent :: (Eq n) => n -> BrickEvent n e -> Form s e n -> EventM n (Form s e n)
+handleFormFieldEvent :: (Eq n, Monad m) => n -> BrickEvent n e -> Form s e n m -> EventM n m (Form s e n m)
 handleFormFieldEvent n ev f = findFieldState [] (formFieldStates f)
     where
         findFieldState _ [] = return f

@@ -128,10 +128,10 @@ data Extent n = Extent { extentName      :: n
                        deriving (Show, Read, Generic, NFData)
 
 -- | The type of actions to take upon completion of an event handler.
-data Next a = Continue a
-            | SuspendAndResume (IO a)
-            | Halt a
-            deriving Functor
+data Next m a = Continue a
+              | SuspendAndResume (m a)
+              | Halt a
+              deriving Functor
 
 -- | Scrolling direction.
 data Direction = Up

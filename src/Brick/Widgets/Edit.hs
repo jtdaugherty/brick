@@ -83,7 +83,7 @@ instance (Show t, Show n) => Show (Editor t n) where
 instance Named (Editor t n) n where
     getName = editorName
 
-handleEditorEvent :: (Eq t, Monoid t) => Event -> Editor t n -> EventM n (Editor t n)
+handleEditorEvent :: (Monad m, Eq t, Monoid t) => Event -> Editor t n -> EventM n m (Editor t n)
 handleEditorEvent e ed =
         let f = case e of
                   EvKey (KChar 'a') [MCtrl] -> Z.gotoBOL

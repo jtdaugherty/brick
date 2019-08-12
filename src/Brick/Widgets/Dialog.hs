@@ -76,7 +76,7 @@ data Dialog a =
 
 suffixLenses ''Dialog
 
-handleDialogEvent :: Event -> Dialog a -> EventM n (Dialog a)
+handleDialogEvent :: Monad m => Event -> Dialog a -> EventM n m (Dialog a)
 handleDialogEvent ev d =
     return $ case ev of
         EvKey (KChar '\t') [] -> nextButtonBy 1 True d

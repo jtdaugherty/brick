@@ -116,7 +116,7 @@ where
 
 import qualified Control.Exception as E
 import Control.Monad (forM)
-import Control.Monad.IO.Class (liftIO)
+import Control.Monad.IO.Class
 import Data.Char (toLower, isPrint)
 import Data.Maybe (fromMaybe, isJust, fromJust)
 import qualified Data.Foldable as F
@@ -514,7 +514,7 @@ fileBrowserCursor b = snd <$> listSelectedElement (b^.fileBrowserEntriesL)
 --
 -- * @Esc@, @Ctrl-C@: cancel search mode
 -- * Text input: update search string
-handleFileBrowserEvent :: (Ord n) => Vty.Event -> FileBrowser n -> EventM n (FileBrowser n)
+handleFileBrowserEvent :: MonadIO m => (Ord n) => Vty.Event -> FileBrowser n -> EventM n m (FileBrowser n)
 handleFileBrowserEvent e b =
     if fileBrowserIsSearching b
     then handleFileBrowserEventSearching e b
@@ -524,7 +524,7 @@ safeInit :: T.Text -> T.Text
 safeInit t | T.length t == 0 = t
            | otherwise = T.init t
 
-handleFileBrowserEventSearching :: (Ord n) => Vty.Event -> FileBrowser n -> EventM n (FileBrowser n)
+handleFileBrowserEventSearching :: MonadIO m => (Ord n) => Vty.Event -> FileBrowser n -> EventM n m (FileBrowser n)
 handleFileBrowserEventSearching e b =
     case e of
         Vty.EvKey (Vty.KChar 'c') [Vty.MCtrl] ->
@@ -541,7 +541,7 @@ handleFileBrowserEventSearching e b =
         _ ->
             handleFileBrowserEventCommon e b
 
-handleFileBrowserEventNormal :: (Ord n) => Vty.Event -> FileBrowser n -> EventM n (FileBrowser n)
+handleFileBrowserEventNormal :: MonadIO m => (Ord n) => Vty.Event -> FileBrowser n -> EventM n m (FileBrowser n)
 handleFileBrowserEventNormal e b =
     case e of
         Vty.EvKey (Vty.KChar '/') [] ->
@@ -556,7 +556,7 @@ handleFileBrowserEventNormal e b =
         _ ->
             handleFileBrowserEventCommon e b
 
-handleFileBrowserEventCommon :: (Ord n) => Vty.Event -> FileBrowser n -> EventM n (FileBrowser n)
+handleFileBrowserEventCommon :: Monad m => (Ord n) => Vty.Event -> FileBrowser n -> EventM n m (FileBrowser n)
 handleFileBrowserEventCommon e b =
     case e of
         Vty.EvKey (Vty.KChar 'n') [Vty.MCtrl] ->
@@ -566,7 +566,7 @@ handleFileBrowserEventCommon e b =
         _ ->
             handleEventLensed b fileBrowserEntriesL handleListEvent e
 
-maybeSelectCurrentEntry :: FileBrowser n -> EventM n (FileBrowser n)
+maybeSelectCurrentEntry :: MonadIO m => FileBrowser n -> EventM n m (FileBrowser n)
 maybeSelectCurrentEntry b =
     case fileBrowserCursor b of
         Nothing -> return b
@@ -577,7 +577,7 @@ maybeSelectCurrentEntry b =
                 Just Directory -> liftIO $ setWorkingDirectory (fileInfoFilePath entry) b
                 _ -> return b
 
-selectCurrentEntry :: FileBrowser n -> EventM n (FileBrowser n)
+selectCurrentEntry :: Monad m => FileBrowser n -> EventM n m (FileBrowser n)
 selectCurrentEntry b =
     case fileBrowserCursor b of
         Nothing -> return b

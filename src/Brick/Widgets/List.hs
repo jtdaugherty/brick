@@ -191,10 +191,10 @@ instance Reversible Seq.Seq where
 -- * Page Down (PgDown)
 -- * Go to first element (Home)
 -- * Go to last element (End)
-handleListEvent :: (Foldable t, Splittable t, Ord n)
+handleListEvent :: (Foldable t, Splittable t, Ord n, Monad m)
                 => Event
                 -> GenericList n t e
-                -> EventM n (GenericList n t e)
+                -> EventM n m (GenericList n t e)
 handleListEvent e theList =
     case e of
         EvKey KUp [] -> return $ listMoveUp theList
@@ -218,13 +218,13 @@ handleListEvent e theList =
 -- * Half Page Down (Ctrl-d)
 -- * Go to first element (g)
 -- * Go to last element (G)
-handleListEventVi :: (Foldable t, Splittable t, Ord n)
-                  => (Event -> GenericList n t e -> EventM n (GenericList n t e))
+handleListEventVi :: (Foldable t, Splittable t, Ord n, Monad m)
+                  => (Event -> GenericList n t e -> EventM n m (GenericList n t e))
                   -- ^ Fallback event handler to use if none of the vi keys
                   -- match.
                   -> Event
                   -> GenericList n t e
-                  -> EventM n (GenericList n t e)
+                  -> EventM n m (GenericList n t e)
 handleListEventVi fallback e theList =
     case e of
         EvKey (KChar 'k') [] -> return $ listMoveUp theList
@@ -462,8 +462,8 @@ listMoveUp = listMoveBy (-1)
 
 -- | Move the list selected index up by one page.
 listMovePageUp
-  :: (Foldable t, Splittable t, Ord n)
-  => GenericList n t e -> EventM n (GenericList n t e)
+  :: (Foldable t, Splittable t, Ord n, Monad m)
+  => GenericList n t e -> EventM n m (GenericList n t e)
 listMovePageUp = listMoveByPages (-1::Double)
 
 -- | Move the list selected index down by one. (Moves the cursor down,
@@ -474,16 +474,16 @@ listMoveDown :: (Foldable t, Splittable t)
 listMoveDown = listMoveBy 1
 
 -- | Move the list selected index down by one page.
-listMovePageDown :: (Foldable t, Splittable t, Ord n)
+listMovePageDown :: (Foldable t, Splittable t, Ord n, Monad m)
                  => GenericList n t e
-                 -> EventM n (GenericList n t e)
+                 -> EventM n m (GenericList n t e)
 listMovePageDown = listMoveByPages (1::Double)
 
 -- | Move the list selected index by some (fractional) number of pages.
-listMoveByPages :: (Foldable t, Splittable t, Ord n, RealFrac m)
+listMoveByPages :: (Foldable t, Splittable t, Ord n, RealFrac m, Monad m2)
                 => m
                 -> GenericList n t e
-                -> EventM n (GenericList n t e)
+                -> EventM n m2 (GenericList n t e)
 listMoveByPages pages theList = do
     v <- lookupViewport (theList^.listNameL)
     case v of
