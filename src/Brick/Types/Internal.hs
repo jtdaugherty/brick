@@ -130,6 +130,7 @@ data Extent n = Extent { extentName      :: n
 -- | The type of actions to take upon completion of an event handler.
 data Next m a = Continue a
               | SuspendAndResume (m a)
+              | PerformAction (m a)
               | Halt a
               deriving Functor
 

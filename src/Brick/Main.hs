@@ -12,6 +12,7 @@ module Brick.Main
   , continue
   , halt
   , suspendAndResume
+  , performAction
   , lookupViewport
   , lookupExtent
   , findClickedExtents
@@ -198,6 +199,9 @@ runWithVty vty brickChan mUserChan app initialRS initialSt = do
                   liftIO $ killThread pid
                   return $ InternalHalt s
               Continue s -> runInner newRS s
+              PerformAction act -> do
+                s <- act
+                runInner newRS s
     runInner initialRS initialSt
 
 -- | The custom event loop entry point to use when the simpler ones
@@ -530,3 +534,6 @@ halt = return . Halt
 -- from the new state, and resume the event loop.
 suspendAndResume :: Monad m => m s -> EventM n m (Next m s)
 suspendAndResume = return . SuspendAndResume
+
+performAction :: Monad m => m s -> EventM n m (Next m s)
+performAction = return . PerformAction
