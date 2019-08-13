@@ -97,7 +97,7 @@ import Brick.AttrMap
 -- handlers. The resource name type is the type of names you can assign
 -- to rendering resources such as viewports and cursor locations.
 data App s e n m =
-    App { appDraw :: s -> [Widget n]
+    App { appDraw :: s -> m [Widget n]
         -- ^ This function turns your application state into a list of
         -- widget layers. The layers are listed topmost first.
         , appChooseCursor :: s -> [CursorLocation n] -> Maybe (CursorLocation n)
@@ -154,7 +154,7 @@ simpleMain w = defaultMain (simpleApp w) ()
 -- * Never shows any cursors
 simpleApp :: Monad m => Widget n -> App s e n m
 simpleApp w =
-    App { appDraw = const [w]
+    App { appDraw = const $ pure [w]
         , appHandleEvent = resizeOrQuit
         , appStartEvent = return
         , appAttrMap = const $ attrMap defAttr []
@@ -427,8 +427,9 @@ resetRenderState s =
 renderApp :: MonadIO m => Vty -> App s e n m -> s -> RenderState n -> m (RenderState n, [Extent n])
 renderApp vty app appState rs = do
     sz <- displayBounds $ outputIface vty
+    d <- (appDraw app appState)
     let (newRS, pic, theCursor, exts) = renderFinal (appAttrMap app appState)
-                                        (appDraw app appState)
+                                        d
                                         sz
                                         (appChooseCursor app appState)
                                         rs
