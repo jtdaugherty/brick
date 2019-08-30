@@ -36,6 +36,8 @@ module Brick.Widgets.Edit
   -- * Attributes
   , editAttr
   , editFocusedAttr
+  -- * UTF-8 decoding of editor pastes
+  , DecodeUtf8(..)
   )
 where
 
@@ -45,7 +47,9 @@ import Data.Monoid
 import Lens.Micro
 import Graphics.Vty (Event(..), Key(..), Modifier(..))
 
+import qualified Data.ByteString as BS
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 import qualified Data.Text.Zipper as Z hiding ( textZipper )
 import qualified Data.Text.Zipper.Generic as Z
 
@@ -63,6 +67,8 @@ import Brick.AttrMap
 -- * Ctrl-u: delete all from cursor to beginning of line
 -- * Arrow keys: move cursor
 -- * Enter: break the current line at the cursor position
+-- * Paste: Bracketed Pastes from the terminal will be pasted, provided
+--   the incoming data is UTF-8-encoded.
 data Editor t n =
     Editor { editContents :: Z.TextZipper t
            -- ^ The contents of the editor
@@ -83,9 +89,28 @@ instance (Show t, Show n) => Show (Editor t n) where
 instance Named (Editor t n) n where
     getName = editorName
 
-handleEditorEvent :: (Eq t, Monoid t) => Event -> Editor t n -> EventM n (Editor t n)
+-- | Values that can be constructed by decoding bytestrings in UTF-8
+-- encoding.
+class DecodeUtf8 t where
+    -- | Decode a bytestring assumed to be text in UTF-8 encoding. If
+    -- the decoding fails, return 'Left'. This must not raise
+    -- exceptions.
+    decodeUtf8 :: BS.ByteString -> Either String t
+
+instance DecodeUtf8 T.Text where
+    decodeUtf8 bs = case T.decodeUtf8' bs of
+        Left e -> Left $ show e
+        Right t -> Right t
+
+instance DecodeUtf8 String where
+    decodeUtf8 bs = T.unpack <$> decodeUtf8 bs
+
+handleEditorEvent :: (DecodeUtf8 t, Eq t, Monoid t) => Event -> Editor t n -> EventM n (Editor t n)
 handleEditorEvent e ed =
         let f = case e of
+                  EvPaste bs -> case decodeUtf8 bs of
+                      Left _ -> id
+                      Right t -> Z.insertMany t
                   EvKey (KChar 'a') [MCtrl] -> Z.gotoBOL
                   EvKey (KChar 'e') [MCtrl] -> Z.gotoEOL
                   EvKey (KChar 'd') [MCtrl] -> Z.deleteChar
