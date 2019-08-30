@@ -2,6 +2,20 @@
 Brick changelog
 ---------------
 
+0.48
+----
+
+New features:
+ * The `Edit` widget now supports `EvPaste` Vty events by default,
+   assuming UTF-8 encoding of pasted bytes. If pasted bytes are not
+   UTF-8-decodable, the pastes will be ignored. In any case, users can
+   still intercept `EvPaste` events as before and handle them as desired
+   if the default behavior is not desirable.
+
+Other changes:
+ * `txtWrapWith` now always pads its output to the available width to
+   obey its `Greedy` requirement.
+
 0.47.1
 ------
 
