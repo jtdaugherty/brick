@@ -102,6 +102,7 @@ module Brick.Widgets.FileBrowser
   , fileInfoSanitizedFilenameL
   , fileInfoFilePathL
   , fileInfoFileStatusL
+  , fileInfoLinkTargetTypeL
   , fileStatusSizeL
   , fileStatusFileTypeL
 
@@ -197,6 +198,9 @@ data FileInfo =
              -- ^ The file status if it could be obtained, or the
              -- exception that was caught when attempting to read the
              -- file's status.
+             , fileInfoLinkTargetType :: Maybe FileType
+             -- ^ If this entry is a symlink, this indicates the type of
+             -- file the symlink points to, if it could be obtained.
              }
              deriving (Show, Eq)
 
@@ -268,6 +272,10 @@ selectNonDirectories :: FileInfo -> Bool
 selectNonDirectories i =
     case fileInfoFileType i of
         Just Directory -> False
+        Just SymbolicLink ->
+            case fileInfoLinkTargetType i of
+                Just Directory -> False
+                _ -> True
         _ -> True
 
 -- | A file entry selector that permits selection of directories
@@ -277,6 +285,10 @@ selectDirectories :: FileInfo -> Bool
 selectDirectories i =
     case fileInfoFileType i of
         Just Directory -> True
+        Just SymbolicLink ->
+            case fileInfoLinkTargetType i of
+                Just Directory -> True
+                _ -> False
         _ -> False
 
 -- | Set the filtering function used to determine which entries in
@@ -346,10 +358,23 @@ getFileInfo name fullPath = do
                               , fileStatusSize = sz
                               }
 
+    targetTy <- case fileStatusFileType <$> stat of
+        Right (Just SymbolicLink) -> do
+            targetPathResult <- E.try $ U.readSymbolicLink filePath
+            case targetPathResult of
+                Left (_::E.SomeException) -> return Nothing
+                Right targetPath -> do
+                    targetInfo <- liftIO $ getFileInfo "unused" targetPath
+                    case fileInfoFileStatus targetInfo of
+                        Right (FileStatus _ targetTy) -> return targetTy
+                        _ -> return Nothing
+        _ -> return Nothing
+
     return FileInfo { fileInfoFilename = name
                     , fileInfoFilePath = filePath
                     , fileInfoSanitizedFilename = sanitizeFilename name
                     , fileInfoFileStatus = stat
+                    , fileInfoLinkTargetType = targetTy
                     }
 
 -- | Get the file type for this file info entry. If the file type could
@@ -574,8 +599,16 @@ maybeSelectCurrentEntry b =
             if fileBrowserSelectable b entry
             then return $ b & fileBrowserSelectedFilesL %~ Set.insert (fileInfoFilename entry)
             else case fileInfoFileType entry of
-                Just Directory -> liftIO $ setWorkingDirectory (fileInfoFilePath entry) b
-                _ -> return b
+                Just Directory ->
+                    liftIO $ setWorkingDirectory (fileInfoFilePath entry) b
+                Just SymbolicLink ->
+                    case fileInfoLinkTargetType entry of
+                        Just Directory -> do
+                            liftIO $ setWorkingDirectory (fileInfoFilePath entry) b
+                        _ ->
+                            return b
+                _ ->
+                    return b
 
 selectCurrentEntry :: FileBrowser n -> EventM n (FileBrowser n)
 selectCurrentEntry b =
