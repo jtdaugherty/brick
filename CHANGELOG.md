@@ -2,6 +2,16 @@
 Brick changelog
 ---------------
 
+0.49
+----
+
+New features:
+ * The `FileBrowser` now supports navigation of directories via
+   symlinks, so `Enter` on a symlink will descend into the target path
+   of the symlink if that path is a directory. Part of this change is
+   that the `FileInfo` type got a new file, `fileInfoLinkTargetType`,
+   that indicates the type of file that the link points to, if any.
+
 0.48
 ----
 
