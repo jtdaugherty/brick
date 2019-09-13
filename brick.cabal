@@ -101,7 +101,7 @@ library
                        config-ini,
                        vector,
                        contravariant,
-                       stm >= 2.4,
+                       stm >= 2.4.3,
                        text,
                        text-zipper >= 0.7.1,
                        template-haskell,
