@@ -2,6 +2,14 @@
 Brick changelog
 ---------------
 
+0.50
+----
+
+API changes:
+ * Added `writeBChanNonBlocking`, which does a non-blocking write to a
+   `BChan` and returns whether the write succeeded. This required
+   raising the STM lower bound to 2.4.3.
+
 0.49
 ----
 
