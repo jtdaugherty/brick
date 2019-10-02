@@ -37,7 +37,7 @@ build-type:          Simple
 cabal-version:       1.18
 Homepage:            https://github.com/jtdaugherty/brick/
 Bug-reports:         https://github.com/jtdaugherty/brick/issues
-tested-with:         GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.1, GHC == 8.6.5
+tested-with:         GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.1, GHC == 8.6.5, GHC == 8.8.1
 
 extra-doc-files:     README.md,
                      docs/guide.rst,
@@ -87,7 +87,7 @@ library
     Brick.Types.Internal
     Brick.Widgets.Internal
 
-  build-depends:       base <= 4.12.0.0,
+  build-depends:       base <= 4.13.0.0,
                        vty >= 5.24,
                        transformers,
                        data-clist >= 0.1,
