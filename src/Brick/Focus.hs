@@ -9,6 +9,7 @@ module Brick.Focus
   , focusPrev
   , focusGetCurrent
   , focusSetCurrent
+  , focusRingLength
   , focusRingCursor
   , withFocusRing
   , focusRingModify
@@ -75,6 +76,10 @@ focusSetCurrent n r@(FocusRing l) =
     case C.rotateTo n l of
         Nothing -> r
         Just l' -> FocusRing l'
+
+-- | Get the size of the FocusRing.
+focusRingLength :: FocusRing n -> Int
+focusRingLength (FocusRing l) = C.size l
 
 -- | Modify the internal circular list structure of a focus ring
 -- directly. This function permits modification of the circular list
