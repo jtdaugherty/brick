@@ -347,35 +347,49 @@ getFileInfo :: String
             -- ^ The actual full path to the file or directory to
             -- inspect.
             -> IO FileInfo
-getFileInfo name fullPath = do
-    filePath <- D.makeAbsolute fullPath
-    statusResult <- E.try $ U.getSymbolicLinkStatus filePath
+getFileInfo name = go []
+    where
+        go history fullPath = do
+            filePath <- D.makeAbsolute fullPath
+            statusResult <- E.try $ U.getSymbolicLinkStatus filePath
 
-    let stat = do
-            status <- statusResult
-            let U.COff sz = U.fileSize status
-            return FileStatus { fileStatusFileType = fileTypeFromStatus status
-                              , fileStatusSize = sz
-                              }
+            let stat = do
+                  status <- statusResult
+                  let U.COff sz = U.fileSize status
+                  return FileStatus { fileStatusFileType = fileTypeFromStatus status
+                                    , fileStatusSize = sz
+                                    }
 
-    targetTy <- case fileStatusFileType <$> stat of
-        Right (Just SymbolicLink) -> do
-            targetPathResult <- E.try $ U.readSymbolicLink filePath
-            case targetPathResult of
-                Left (_::E.SomeException) -> return Nothing
-                Right targetPath -> do
-                    targetInfo <- liftIO $ getFileInfo "unused" targetPath
-                    case fileInfoFileStatus targetInfo of
-                        Right (FileStatus _ targetTy) -> return targetTy
-                        _ -> return Nothing
-        _ -> return Nothing
+            targetTy <- case fileStatusFileType <$> stat of
+                Right (Just SymbolicLink) -> do
+                    targetPathResult <- E.try $ U.readSymbolicLink filePath
+                    case targetPathResult of
+                        Left (_::E.SomeException) -> return Nothing
+                        Right targetPath ->
+                            -- Watch out for recursive symlink chains:
+                            -- if history starts repeating, abort the
+                            -- symlink following process.
+                            --
+                            -- Examples:
+                            --   $ ln -s foo foo
+                            --
+                            --   $ ln -s foo bar
+                            --   $ ln -s bar foo
+                            if targetPath `elem` history
+                            then return Nothing
+                            else do
+                                targetInfo <- liftIO $ go (fullPath : history) targetPath
+                                case fileInfoFileStatus targetInfo of
+                                    Right (FileStatus _ targetTy) -> return targetTy
+                                    _ -> return Nothing
+                _ -> return Nothing
 
-    return FileInfo { fileInfoFilename = name
-                    , fileInfoFilePath = filePath
-                    , fileInfoSanitizedFilename = sanitizeFilename name
-                    , fileInfoFileStatus = stat
-                    , fileInfoLinkTargetType = targetTy
-                    }
+            return FileInfo { fileInfoFilename = name
+                            , fileInfoFilePath = filePath
+                            , fileInfoSanitizedFilename = sanitizeFilename name
+                            , fileInfoFileStatus = stat
+                            , fileInfoLinkTargetType = targetTy
+                            }
 
 -- | Get the file type for this file info entry. If the file type could
 -- not be obtained due to an 'IOException', return 'Nothing'.
