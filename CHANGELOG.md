@@ -2,6 +2,21 @@
 Brick changelog
 ---------------
 
+0.50.1
+------
+
+Bug fixes:
+ * Fixed a bug where a self-referential symlink would cause the file
+   browser to get into a loop and ultimately crash. (Thanks Kevin Quick)
+
+API changes:
+ * Added `Brick.Focus.focusRingLength` to get the size of a focus ring.
+   (Thanks Róman Joost)
+
+Other changes:
+ * Updated Travis configuration and base dependency to support GHC
+   8.8.1. (thanks Brandon Hamilton)
+
 0.50
 ----
 
