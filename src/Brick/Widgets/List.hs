@@ -561,7 +561,7 @@ splitClamp l i =
         clamp 0 (if null t then length l - 1 else i) i
 
 -- | Set the selected index for a list to the index of the first
--- occurence of the specified element if it is in the list, or leave
+-- occurrence of the specified element if it is in the list, or leave
 -- the list unmodified otherwise.
 --
 -- /O(n)/.  Only evaluates as much of the container as needed.
