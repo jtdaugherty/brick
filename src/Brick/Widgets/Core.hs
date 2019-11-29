@@ -660,7 +660,7 @@ catDynBorder
 catDynBorder towardsA towardsB a b
     -- Currently, we check if the 'BorderStyle's are exactly the same. In the
     -- future, it might be nice to relax this restriction. For example, if a
-    -- horizontal border is being rewritten to accomodate a neighboring
+    -- horizontal border is being rewritten to accommodate a neighboring
     -- vertical border, all we care about is that the two 'bsVertical's line up
     -- sanely. After all, if the horizontal border's 'bsVertical' is the same
     -- as the vertical one's, and the horizontal border's 'BorderStyle' is
