@@ -78,6 +78,7 @@ module Brick.Types
 
   -- * Renderer internals (for benchmarking)
   , RenderState
+  , initialRenderState
   )
 where
 

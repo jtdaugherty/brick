@@ -15,6 +15,7 @@ module Brick.Types.Internal
   , Viewport(..)
   , ViewportType(..)
   , RenderState(..)
+  , initialRenderState
   , Direction(..)
   , CursorLocation(..)
   , cursorLocationL
@@ -253,6 +254,9 @@ data RenderState n =
        , renderCache :: M.Map n (Result n)
        , clickableNames :: [n]
        } deriving (Read, Show, Generic, NFData)
+
+initialRenderState :: RenderState n
+initialRenderState = RS M.empty [] S.empty M.empty []
 
 data EventRO n = EventRO { eventViewportMap :: M.Map n Viewport
                          , eventVtyHandle :: Vty
