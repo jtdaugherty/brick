@@ -94,7 +94,7 @@ Documentation for `brick` comes in a variety of forms:
 * [The official brick user guide](https://github.com/jtdaugherty/brick/blob/master/docs/guide.rst)
 * [Samuel Tay's brick tutorial](https://github.com/jtdaugherty/brick/blob/master/docs/samtay-tutorial.md)
 * Haddock (all modules)
-* [Demo programs](https://github.com/jtdaugherty/brick/blob/master/programs) and [Screenshots](https://github.com/jtdaugherty/brick/blob/master/docs/programs-screenshots.md)
+* [Demo programs](https://github.com/jtdaugherty/brick/blob/master/programs) ([Screenshots](https://github.com/jtdaugherty/brick/blob/master/docs/programs-screenshots.md))
 * [FAQ](https://github.com/jtdaugherty/brick/blob/master/FAQ.md)
 
 Feature Overview
