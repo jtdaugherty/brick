@@ -782,7 +782,6 @@ fileExtensionMatch ext i = case fileInfoFileType i of
     Just Directory -> True
     Just RegularFile -> ('.' : (toLower <$> ext)) `isSuffixOf` (toLower <$> fileInfoFilename i)
     Just SymbolicLink -> case fileInfoLinkTargetType i of
-        Nothing -> error "impossible"
         Just Directory -> True
         _ -> False
     _ -> False
