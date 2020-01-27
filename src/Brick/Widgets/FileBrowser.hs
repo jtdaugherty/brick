@@ -779,5 +779,10 @@ fileTypeMatch tys i = maybe False (`elem` tys) $ fileInfoFileType i
 -- @TEST.XML@ and it will match directories regardless of name.
 fileExtensionMatch :: String -> FileInfo -> Bool
 fileExtensionMatch ext i = case fileInfoFileType i of
+    Just Directory -> True
     Just RegularFile -> ('.' : (toLower <$> ext)) `isSuffixOf` (toLower <$> fileInfoFilename i)
-    _ -> True
+    Just SymbolicLink -> case fileInfoLinkTargetType i of
+        Nothing -> error "impossible"
+        Just Directory -> True
+        _ -> False
+    _ -> False
