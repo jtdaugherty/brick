@@ -778,5 +778,6 @@ fileTypeMatch tys i = maybe False (`elem` tys) $ fileInfoFileType i
 -- argument of @"xml"@ would match regular files @test.xml@ and
 -- @TEST.XML@ and it will match directories regardless of name.
 fileExtensionMatch :: String -> FileInfo -> Bool
-fileExtensionMatch ext i =
-    ('.' : (toLower <$> ext)) `isSuffixOf` (toLower <$> fileInfoFilename i)
+fileExtensionMatch ext i = case fileInfoFileType i of
+    Just RegularFile -> ('.' : (toLower <$> ext)) `isSuffixOf` (toLower <$> fileInfoFilename i)
+    _ -> True
