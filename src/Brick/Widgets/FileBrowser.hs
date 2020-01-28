@@ -777,6 +777,11 @@ fileTypeMatch tys i = maybe False (`elem` tys) $ fileInfoFileType i
 -- regular file with the specified extension. For example, an extension
 -- argument of @"xml"@ would match regular files @test.xml@ and
 -- @TEST.XML@ and it will match directories regardless of name.
+--
+-- This matcher also matches symlinks if and only if their targets are
+-- directories. This is intended to make it possible to use this matcher
+-- to find files with certain extensions, but also support directory
+-- traversal via symlinks.
 fileExtensionMatch :: String -> FileInfo -> Bool
 fileExtensionMatch ext i = case fileInfoFileType i of
     Just Directory -> True
