@@ -2,6 +2,21 @@
 Brick changelog
 ---------------
 
+0.51
+----
+
+API changes:
+ * Added Brick.Focus.focusRingToList, which returns all of the elements
+   in a focus ring as a list, starting with the focused entry and
+   wrapping around (#257; thanks @4eUeP)
+
+Bug fixes:
+ * Fix Brick.Widgets.FileBrowser.fileExtensionMatch to match directories
+   and also match symlinks that link to directories (thanks @YVee1)
+
+Other changes:
+ * Added demonstration program screenshot gallery (thanks @drola)
+
 0.50.1
 ------
 
