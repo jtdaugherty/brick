@@ -82,8 +82,11 @@ focusSetCurrent n r@(FocusRing l) =
 focusRingLength :: FocusRing n -> Int
 focusRingLength (FocusRing l) = C.size l
 
--- | Starting with the currently-focused, go right and accumulate all
--- resource names of the FocusRing in a list.
+-- | Return all of the entries in the focus ring, starting with the
+-- currently-focused entry and wrapping around the ring.
+--
+-- For example, if a ring contains A, B, C, and D, and the current entry
+-- is B, the result will be [B, C, D, A].
 focusRingToList :: FocusRing n -> [n]
 focusRingToList (FocusRing l) = C.rightElements l
 
