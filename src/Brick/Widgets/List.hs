@@ -461,9 +461,9 @@ listMoveUp :: (Foldable t, Splittable t)
 listMoveUp = listMoveBy (-1)
 
 -- | Move the list selected index up by one page.
-listMovePageUp
-  :: (Foldable t, Splittable t, Ord n)
-  => GenericList n t e -> EventM n (GenericList n t e)
+listMovePageUp :: (Foldable t, Splittable t, Ord n)
+               => GenericList n t e
+               -> EventM n (GenericList n t e)
 listMovePageUp = listMoveByPages (-1::Double)
 
 -- | Move the list selected index down by one. (Moves the cursor down,
