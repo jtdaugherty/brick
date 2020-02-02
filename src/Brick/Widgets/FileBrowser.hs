@@ -53,6 +53,7 @@ module Brick.Widgets.FileBrowser
   , FileInfo(..)
   , FileStatus(..)
   , FileType(..)
+
   -- * Making a new file browser
   , newFileBrowser
   , selectNonDirectories
