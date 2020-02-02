@@ -599,6 +599,31 @@ handleFileBrowserEventNormal e b =
 handleFileBrowserEventCommon :: (Ord n) => Vty.Event -> FileBrowser n -> EventM n (FileBrowser n)
 handleFileBrowserEventCommon e b =
     case e of
+        Vty.EvKey (Vty.KChar 'b') [Vty.MCtrl] -> do
+            let old = b ^. fileBrowserEntriesL
+            new <- listMovePageUp old
+            return $ b & fileBrowserEntriesL .~ new
+        Vty.EvKey (Vty.KChar 'f') [Vty.MCtrl] -> do
+            let old = b ^. fileBrowserEntriesL
+            new <- listMovePageDown old
+            return $ b & fileBrowserEntriesL .~ new
+        Vty.EvKey (Vty.KChar 'd') [Vty.MCtrl] -> do
+            let old = b ^. fileBrowserEntriesL
+            new <- listMoveByPages (0.5::Double) old
+            return $ b & fileBrowserEntriesL .~ new
+        Vty.EvKey (Vty.KChar 'u') [Vty.MCtrl] -> do
+            let old = b ^. fileBrowserEntriesL
+            new <- listMoveByPages (-0.5::Double) old
+            return $ b & fileBrowserEntriesL .~ new
+        Vty.EvKey (Vty.KChar 'g') [] ->
+            return $ b & fileBrowserEntriesL %~ listMoveTo 0
+        Vty.EvKey (Vty.KChar 'G') [] -> do
+            let sz = length (listElements $ b^.fileBrowserEntriesL)
+            return $ b & fileBrowserEntriesL %~ listMoveTo (sz - 1)
+        Vty.EvKey (Vty.KChar 'j') [] ->
+            return $ b & fileBrowserEntriesL %~ listMoveBy 1
+        Vty.EvKey (Vty.KChar 'k') [] ->
+            return $ b & fileBrowserEntriesL %~ listMoveBy (-1)
         Vty.EvKey (Vty.KChar 'n') [Vty.MCtrl] ->
             return $ b & fileBrowserEntriesL %~ listMoveBy 1
         Vty.EvKey (Vty.KChar 'p') [Vty.MCtrl] ->
