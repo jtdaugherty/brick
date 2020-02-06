@@ -118,6 +118,7 @@ library
                        data-clist >= 0.1,
                        directory >= 1.2.5.0,
                        dlist,
+                       exceptions >= 0.10.0,
                        filepath,
                        containers >= 0.5.7,
                        microlens >= 0.3.0.0,
