@@ -91,7 +91,6 @@ import Data.Vector (Vector)
 
 import Brick
 import Brick.Focus
-import Brick.Widgets.Core (showCursor)
 import Brick.Widgets.Edit
 import Brick.Widgets.List
 import qualified Data.Text.Zipper as Z
