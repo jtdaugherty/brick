@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
@@ -6,7 +7,9 @@ import Control.Applicative
 #endif
 
 import Control.Monad (void)
+#if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid ((<>))
+#endif
 import qualified Graphics.Vty as V
 
 import qualified Brick.Types as T

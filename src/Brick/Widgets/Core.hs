@@ -91,9 +91,11 @@ module Brick.Widgets.Core
   )
 where
 
-#if MIN_VERSION_base(4,8,0)
+#if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid ((<>))
-#else
+#endif
+
+#if !MIN_VERSION_base(4,8,0)
 import Control.Applicative
 import Data.Monoid ((<>), mempty)
 #endif

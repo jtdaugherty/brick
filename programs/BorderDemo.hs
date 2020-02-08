@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
@@ -5,7 +6,10 @@ module Main where
 import Control.Applicative ((<$>))
 #endif
 
+#if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid ((<>))
+#endif
+
 import qualified Data.Text as T
 import qualified Graphics.Vty as V
 

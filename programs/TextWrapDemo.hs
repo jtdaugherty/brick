@@ -1,6 +1,9 @@
+{-# LANGUAGE CPP #-}
 module Main where
 
+#if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid ((<>))
+#endif
 import Brick
 import Text.Wrap (defaultWrapSettings, preserveIndentation)
 

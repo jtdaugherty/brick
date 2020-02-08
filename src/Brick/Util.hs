@@ -9,7 +9,9 @@ module Brick.Util
 where
 
 import Lens.Micro ((&), (%~))
+#if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid ((<>))
+#endif
 import Graphics.Vty
 
 import Brick.Types.Internal (Location(..), CursorLocation(..), cursorLocationL)

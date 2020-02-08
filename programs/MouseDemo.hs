@@ -1,12 +1,17 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 module Main where
 
+#if !MIN_VERSION_base(4,8,0)
 import Control.Applicative ((<$>))
+#endif
 import Lens.Micro ((^.), (&), (.~), (%~))
 import Lens.Micro.TH (makeLenses)
 import Control.Monad (void)
+#if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid ((<>))
+#endif
 import qualified Graphics.Vty as V
 
 import qualified Brick.Types as T
@@ -125,23 +130,24 @@ main = do
 
     initialVty <- buildVty
     void $ M.customMain initialVty buildVty Nothing app $ St [] Nothing
-           "Try clicking on various UI elements.\n\
-           \Observe that the click coordinates identify the\n\
-           \underlying widget coordinates.\n\
-           \\n\
-           \Lorem ipsum dolor sit amet,\n\
-           \consectetur adipiscing elit,\n\
-           \sed do eiusmod tempor incididunt ut labore\n\
-           \et dolore magna aliqua.\n\
-           \ \n\
-           \Ut enim ad minim veniam\n\
-           \quis nostrud exercitation ullamco laboris\n\
-           \nisi ut aliquip ex ea commodo consequat.\n\
-           \\n\
-           \Duis aute irure dolor in reprehenderit\n\
-           \in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\n\
-           \\n\
-           \Excepteur sint occaecat cupidatat not proident,\n\
-           \sunt in culpa qui officia deserunt mollit\n\
-           \anim id est laborum.\n"
+           (unlines [ "Try clicking on various UI elements."
+                    , "Observe that the click coordinates identify the"
+                    , "underlying widget coordinates."
+                    , ""
+                    , "Lorem ipsum dolor sit amet,"
+                    , "consectetur adipiscing elit,"
+                    , "sed do eiusmod tempor incididunt ut labore"
+                    , "et dolore magna aliqua."
+                    , ""
+                    , "Ut enim ad minim veniam"
+                    , "quis nostrud exercitation ullamco laboris"
+                    , "isi ut aliquip ex ea commodo consequat."
+                    , ""
+                    , "Duis aute irure dolor in reprehenderit"
+                    , "in voluptate velit esse cillum dolore eu fugiat nulla pariatur."
+                    , ""
+                    , "Excepteur sint occaecat cupidatat not proident,"
+                    , "sunt in culpa qui officia deserunt mollit"
+                    , "anim id est laborum."
+                    ])
            (E.editor TextBox Nothing "")

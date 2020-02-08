@@ -21,7 +21,7 @@ import Brick.Types
 import Brick.Types.Internal
 import Brick.AttrMap
 import Brick.Widgets.Border.Style
-import Brick.BorderMap (BorderMap, Edges(..))
+import Brick.BorderMap (BorderMap)
 import qualified Brick.BorderMap as BM
 
 renderFinal :: AttrMap

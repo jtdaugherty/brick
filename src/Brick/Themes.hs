@@ -89,7 +89,9 @@ import Data.Tuple (swap)
 import Data.List (intercalate)
 import Data.Bits ((.|.), (.&.))
 import Data.Maybe (fromMaybe, isNothing, catMaybes, mapMaybe)
+#if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid ((<>))
+#endif
 import qualified Data.Foldable as F
 
 import Data.Ini.Config

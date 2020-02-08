@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
@@ -5,7 +6,9 @@ module Main where
 import qualified Data.Text as T
 import Lens.Micro ((^.))
 import Lens.Micro.TH
+#if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid ((<>))
+#endif
 
 import qualified Graphics.Vty as V
 import Brick
