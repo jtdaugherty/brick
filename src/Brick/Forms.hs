@@ -112,9 +112,9 @@ import Lens.Micro
 --  * @e@ - your application's event type
 --  * @n@ - your application's resource name type
 data FormField a b e n =
-    FormField { formFieldName        :: n
+    FormField { formFieldName :: n
               -- ^ The name identifying this form field.
-              , formFieldValidate    :: b -> Maybe a
+              , formFieldValidate :: b -> Maybe a
               -- ^ A validation function converting this field's state
               -- into a value of your choosing. @Nothing@ indicates a
               -- validation failure. For example, this might validate
@@ -130,7 +130,7 @@ data FormField a b e n =
               -- can be set with 'setFieldValid'. The value of this
               -- field also affects the behavior of 'allFieldsValid' and
               -- 'getInvalidFields'.
-              , formFieldRender      :: Bool -> b -> Widget n
+              , formFieldRender :: Bool -> b -> Widget n
               -- ^ A function to render this form field. Parameters are
               -- whether the field is currently focused, followed by the
               -- field state.
@@ -165,11 +165,11 @@ data FormFieldState s e n where
                       -- the field collection. Note that this type is
                       -- existential. All form fields in the collection
                       -- must validate to this type.
-                      , formFieldLens  :: Lens' s a
+                      , formFieldLens :: Lens' s a
                       -- ^ A lens to extract and store a
                       -- successfully-validated form input back into
                       -- your form state.
-                      , formFields     :: [FormField a b e n]
+                      , formFields :: [FormField a b e n]
                       -- ^ The form fields, in order, that the user will
                       -- interact with to manipulate this state value.
                       , formFieldRenderHelper :: Widget n -> Widget n
@@ -194,10 +194,10 @@ data FormFieldState s e n where
 --  * @n@ - your application's resource name type
 data Form s e n =
     Form { formFieldStates  :: [FormFieldState s e n]
-         , formFocus        :: FocusRing n
+         , formFocus :: FocusRing n
          -- ^ The focus ring for the form, indicating which form field
          -- has input focus.
-         , formState        :: s
+         , formState :: s
          -- ^ The current state of the form. Forms guarantee that only
          -- valid inputs ever get stored in the state, and that after
          -- each input event on a form field, if that field contains a
@@ -305,14 +305,14 @@ checkboxCustomField lb check rb stLens name label initialState =
         handleEvent (VtyEvent (EvKey (KChar ' ') [])) s = return $ not s
         handleEvent _ s = return s
 
-    in FormFieldState { formFieldState        = initVal
-                      , formFields            = [ FormField name Just True
-                                                            (renderCheckbox lb check rb label name)
-                                                            handleEvent
-                                                ]
-                      , formFieldLens         = stLens
+    in FormFieldState { formFieldState = initVal
+                      , formFields = [ FormField name Just True
+                                                 (renderCheckbox lb check rb label name)
+                                                 handleEvent
+                                     ]
+                      , formFieldLens = stLens
                       , formFieldRenderHelper = id
-                      , formFieldConcat       = vBox
+                      , formFieldConcat = vBox
                       }
 
 renderCheckbox :: Char -> Char -> Char -> T.Text -> n -> Bool -> Bool -> Widget n
@@ -359,14 +359,14 @@ listField options stLens renderItem itemHeight name initialState =
         handleEvent (VtyEvent e) s = handleListEvent e s
         handleEvent _ s = return s
 
-    in FormFieldState { formFieldState        = initVal
-                      , formFields            = [ FormField name Just True
-                                                            (renderList renderItem)
-                                                            handleEvent
-                                                ]
-                      , formFieldLens         = customStLens
+    in FormFieldState { formFieldState = initVal
+                      , formFields = [ FormField name Just True
+                                                 (renderList renderItem)
+                                                 handleEvent
+                                     ]
+                      , formFieldLens = customStLens
                       , formFieldRenderHelper = id
-                      , formFieldConcat       = vBox
+                      , formFieldConcat = vBox
                       }
 -- | A form field for selecting a single choice from a set of possible
 -- choices. Each choice has an associated value and text label.
@@ -429,11 +429,11 @@ radioCustomField lb check rb stLens options initialState =
                       (renderRadio lb check rb val name label)
                       (handleEvent val)
 
-    in FormFieldState { formFieldState        = initVal
-                      , formFields            = optionFields
-                      , formFieldLens         = stLens
+    in FormFieldState { formFieldState = initVal
+                      , formFields = optionFields
+                      , formFieldLens = stLens
                       , formFieldRenderHelper = id
-                      , formFieldConcat       = vBox
+                      , formFieldConcat = vBox
                       }
 
 renderRadio :: (Eq a) => Char -> Char -> Char -> a -> n -> T.Text -> Bool -> a -> Widget n
@@ -492,13 +492,13 @@ editField stLens n limit ini val renderText wrapEditor initialState =
         handleEvent _ ed = return ed
 
     in FormFieldState { formFieldState = initVal
-                      , formFields     = [ FormField n
-                                                     (val . getEditContents)
-                                                     True
-                                                     (\b e -> wrapEditor $ renderEditor renderText b e)
-                                                     handleEvent
-                                         ]
-                      , formFieldLens  = stLens
+                      , formFields = [ FormField n
+                                                 (val . getEditContents)
+                                                 True
+                                                 (\b e -> wrapEditor $ renderEditor renderText b e)
+                                                 handleEvent
+                                     ]
+                      , formFieldLens = stLens
                       , formFieldRenderHelper = id
                       , formFieldConcat = vBox
                       }
