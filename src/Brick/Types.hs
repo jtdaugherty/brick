@@ -129,10 +129,9 @@ handleEventLensed v target handleEvent ev = do
 newtype EventM n a =
     EventM { runEventM :: ReaderT (EventRO n) (StateT (EventState n) IO) a
            }
-  deriving
-    ( Functor, Applicative, Monad, MonadIO
-    , MonadThrow, MonadCatch, MonadMask
-    )
+           deriving ( Functor, Applicative, Monad, MonadIO
+                    , MonadThrow, MonadCatch, MonadMask
+                    )
 
 -- | Widget size policies. These policies communicate how a widget uses
 -- space when being rendered. These policies influence rendering order
