@@ -393,8 +393,11 @@ radioField = radioCustomField '[' '*' ']'
 -- option and to mouse clicks.
 radioCustomField :: (Ord n, Show n, Eq a)
                  => Char
+                 -- ^ Left bracket character.
                  -> Char
+                 -- ^ Checkmark character.
                  -> Char
+                 -- ^ Right bracket character.
                  -> Lens' s a
                  -- ^ The state lens for this value.
                  -> [(a, n, T.Text)]
