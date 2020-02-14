@@ -2,6 +2,23 @@
 Brick changelog
 ---------------
 
+0.52
+----
+
+API changes:
+ * EventM now provides a MonadFail instance
+ * EventM now provides MonadMask, MonadCatch, and MonadThrow instances
+   (thanks Fraser Tweedale)
+
+Other changes:
+ * The FileBrowser now has support for vi-style bindings in addition to
+   its previous bindings. New bindings include:
+   * `j`/`k`: next/previous element
+   * `C-n`/`C-p`: page down/up
+   * `C-d`/`C-u`: half page down/up
+   * `g`: select first entry
+   * `G`: select last entry
+
 0.51
 ----
 
