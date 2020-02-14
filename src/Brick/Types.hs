@@ -89,7 +89,7 @@ import Data.Monoid (Monoid(..))
 import Lens.Micro (_1, _2, to, (^.), (&), (.~), Lens')
 import Lens.Micro.Type (Getting)
 import Control.Monad.Catch (MonadThrow, MonadCatch, MonadMask)
-#if !MIN_VERSION_base(4,9,0)
+#if !MIN_VERSION_base(4,12,0)
 import Control.Monad.Fail (MonadFail)
 #endif
 import Control.Monad.Trans.State.Lazy
