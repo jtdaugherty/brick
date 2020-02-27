@@ -283,7 +283,9 @@ txtWrapWith settings s =
                      | otherwise = l
       case force theLines of
           [] -> return emptyResult
-          [one] -> return $ emptyResult & imageL .~ (V.text' (c^.attrL) one)
+          [one] -> do
+              let padding = V.charFill (c^.attrL) ' ' (c^.availWidthL - safeTextWidth one) 1
+              return $ emptyResult & imageL .~ (V.horizCat [V.text' (c^.attrL) one, padding])
           multiple ->
               let maxLength = maximum $ safeTextWidth <$> multiple
                   padding = V.charFill (c^.attrL) ' ' (c^.availWidthL - maxLength) (length lineImgs)
