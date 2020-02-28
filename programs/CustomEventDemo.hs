@@ -78,7 +78,7 @@ main :: IO ()
 main = do
     chan <- newBChan 10
 
-    forkIO $ forever $ do
+    void $ forkIO $ forever $ do
         writeBChan chan Counter
         threadDelay 1000000
 
