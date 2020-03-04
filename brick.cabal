@@ -2,8 +2,9 @@ name:                brick
 version:             0.52
 synopsis:            A declarative terminal user interface library
 description:
-  Write terminal applications painlessly with 'brick'! You write an
-  event handler and a drawing function and the library does the rest.
+  Write terminal user interfaces (TUIs) painlessly with 'brick'! You
+  write an event handler and a drawing function and the library does the
+  rest.
   .
   .
   > module Main where
