@@ -53,13 +53,14 @@ import Data.Monoid
 import qualified Data.Semigroup as Sem
 
 import Control.DeepSeq
+import Data.Bits ((.|.))
 import qualified Data.Map as M
 import Data.Maybe (catMaybes)
 import Data.List (inits)
 import Data.String (IsString(..))
 import GHC.Generics (Generic)
 
-import Graphics.Vty (Attr(..), MaybeDefault(..))
+import Graphics.Vty (Attr(..), MaybeDefault(..), Style)
 
 -- | An attribute name. Attribute names are hierarchical; use 'mappend'
 -- ('<>') to assemble them. Hierarchy in an attribute name is used to
@@ -137,12 +138,16 @@ mergeWithDefault a (AttrMap d _) = combineAttrs d a
 
 -- | Look up the specified attribute name in the map. Map lookups
 -- proceed as follows. If the attribute map is forcing all lookups to a
--- specific attribute, that attribute is returned. If the attribute name
--- is empty, the map's default attribute is returned. If the attribute
--- name is non-empty, very subsequence of names from the specified name
--- are used to perform a lookup, and the results are combined as in
--- 'mergeWithDefault', with more specific results taking precedence over
--- less specific ones.
+-- specific attribute, that attribute is returned along with its style
+-- settings. If the attribute name is empty, the map's default attribute
+-- is returned. If the attribute name is non-empty, every subsequence of
+-- names from the specified name are used to perform a lookup and the
+-- results are combined as in 'mergeWithDefault', with more specific
+-- results taking precedence over less specific ones. As attributes are
+-- merged, styles are also merged. If a more specific attribute name
+-- introduces a style (underline, say) and a less specific attribute
+-- name introduces an additional style (bold, say) then the final result
+-- will include both styles.
 --
 -- For example:
 --
@@ -172,7 +177,7 @@ getDefaultAttr (AttrMap d _) = d
 
 combineAttrs :: Attr -> Attr -> Attr
 combineAttrs (Attr s1 f1 b1 u1) (Attr s2 f2 b2 u2) =
-    Attr (s1 `combineMDs` s2)
+    Attr (s1 `combineStyles` s2)
          (f1 `combineMDs` f2)
          (b1 `combineMDs` b2)
          (u1 `combineMDs` u2)
@@ -181,6 +186,12 @@ combineMDs :: MaybeDefault a -> MaybeDefault a -> MaybeDefault a
 combineMDs _ (SetTo v) = SetTo v
 combineMDs (SetTo v) _ = SetTo v
 combineMDs _ v = v
+
+combineStyles :: MaybeDefault Style -> MaybeDefault Style -> MaybeDefault Style
+combineStyles (SetTo a) (SetTo b) = SetTo $ a .|. b
+combineStyles _ (SetTo v) = SetTo v
+combineStyles (SetTo v) _ = SetTo v
+combineStyles _ v = v
 
 -- | Insert a set of attribute mappings to an attribute map.
 applyAttrMappings :: [(AttrName, Attr)] -> AttrMap -> AttrMap
