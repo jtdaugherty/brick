@@ -2,6 +2,15 @@
 Brick changelog
 ---------------
 
+0.52.1
+------
+
+Bug fixes:
+ * Attribute map lookups now merge styles in addition to merging colors
+   (see `eb857e6bb176e119ac76f5e2af475f1b49812088`).
+ * `txtWrapWith` now pads in the single-line case (see also
+   `926d317c46b19d4e576748891a1702080287aa03`, #234, and #263)
+
 0.52
 ----
 
