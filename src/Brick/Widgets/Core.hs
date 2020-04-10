@@ -807,7 +807,7 @@ vLimit h p =
 -- defers to the limited widget horizontally.
 vLimitPercent :: Int -> Widget n -> Widget n
 vLimitPercent h' p =
-    Widget (vSize p) Fixed $ do
+    Widget (hSize p) Fixed $ do
       let h = clamp 0 100 h'
       ctx <- getContext
       let usableHeight = ctx^.availHeightL
