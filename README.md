@@ -61,6 +61,7 @@ at these projects:
  * [`solitaire`](https://github.com/ambuc/solitaire), the card game
  * [`sudoku-tui`](https://github.com/evanrelf/sudoku-tui), a Sudoku implementation
  * [`summoner-tui`](https://github.com/kowainik/summoner/tree/master/summoner-tui), an interactive frontend to the Summoner tool
+ * [`wrapping-editor`](https://github.com/ta0kira/wrapping-editor), an embeddable editor with support for Brick
 
 These third-party packages also extend `brick`:
 
