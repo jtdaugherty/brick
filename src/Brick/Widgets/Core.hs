@@ -236,11 +236,9 @@ takeColumns :: Int -> String -> String
 takeColumns _ "" = ""
 takeColumns numCols (c:cs) =
     let w = V.safeWcwidth c
-    in if w == numCols
-       then [c]
-       else if w < numCols
-            then c : takeColumns (numCols - w) cs
-            else ""
+    in if w > numCols
+       then []
+       else c : takeColumns (numCols - w) cs
 
 -- | Make a widget from a string, but wrap the words in the input's
 -- lines at the available width using the default wrapping settings. The
