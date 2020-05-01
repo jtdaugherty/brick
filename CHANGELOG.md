@@ -2,6 +2,20 @@
 Brick changelog
 ---------------
 
+0.53
+----
+
+Package changes:
+ * Relaxed base bounds to allow building with GHC 8.10 (thanks Joshua
+   Chia)
+
+Bug fixes:
+ * `vLimitPercent`: use correct horizontal size policy from child
+   (thanks Janek Spaderna)
+ * `str`: be more aggressive in determining how many characters to
+   display (attempt to display as many zero-width characters as
+   possible)
+
 0.52.1
 ------
 
