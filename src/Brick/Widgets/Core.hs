@@ -242,7 +242,7 @@ takeColumns numCols (c:cs) =
 
 -- | Make a widget from a string, but wrap the words in the input's
 -- lines at the available width using the default wrapping settings. The
--- input string should not contain escapes.
+-- input string should not contain escape sequences or carriage returns.
 --
 -- Unlike 'str', this is greedy horizontally.
 strWrap :: String -> Widget n
@@ -250,7 +250,8 @@ strWrap = strWrapWith defaultWrapSettings
 
 -- | Make a widget from a string, but wrap the words in the input's
 -- lines at the available width using the specified wrapping settings.
--- The input string should not contain escapes.
+-- The input string should not contain escape sequences or carriage
+-- returns.
 --
 -- Unlike 'str', this is greedy horizontally.
 strWrapWith :: WrapSettings -> String -> Widget n
@@ -261,7 +262,7 @@ safeTextWidth = V.safeWcswidth . T.unpack
 
 -- | Make a widget from text, but wrap the words in the input's lines at
 -- the available width using the default wrapping settings. The input
--- text should not contain escapes.
+-- text should not contain escape sequences or carriage returns.
 --
 -- Unlike 'txt', this is greedy horizontally.
 txtWrap :: T.Text -> Widget n
@@ -269,7 +270,7 @@ txtWrap = txtWrapWith defaultWrapSettings
 
 -- | Make a widget from text, but wrap the words in the input's lines at
 -- the available width using the specified wrapping settings. The input
--- text should not contain escapes.
+-- text should not contain escape sequences or carriage returns.
 --
 -- Unlike 'txt', this is greedy horizontally.
 txtWrapWith :: WrapSettings -> T.Text -> Widget n
@@ -296,7 +297,7 @@ txtWrapWith settings s =
 -- interface corruption will result since the terminal will likely
 -- render it as taking up more than a single column. The caller should
 -- replace tabs with the appropriate number of spaces as desired. The
--- reinput string should not contain escapes.
+-- input string should not contain escape sequences or carriage returns.
 str :: String -> Widget n
 str s =
     Widget Fixed Fixed $ do
@@ -322,7 +323,7 @@ str s =
 -- interface corruption will result since the terminal will likely
 -- render it as taking up more than a single column. The caller should
 -- replace tabs with the appropriate number of spaces as desired. The
--- reinput text should not contain escapes.
+-- input text should not contain escape sequences or carriage returns.
 txt :: T.Text -> Widget n
 txt = str . T.unpack
 
