@@ -124,6 +124,8 @@ handleEditorEvent e ed =
                   EvKey KLeft [] -> Z.moveLeft
                   EvKey KRight [] -> Z.moveRight
                   EvKey KBS [] -> Z.deletePrevChar
+                  EvKey KHome [] -> Z.gotoBOL
+                  EvKey KEnd [] -> Z.gotoEOL
                   _ -> id
         in return $ applyEdit f ed
 
