@@ -67,6 +67,7 @@ module Brick.Widgets.FileBrowser
 
   -- * Handling events
   , handleFileBrowserEvent
+  , maybeSelectCurrentEntry
 
   -- * Rendering
   , renderFileBrowser
