@@ -2,6 +2,17 @@
 Brick changelog
 ---------------
 
+0.54
+----
+
+API changes:
+ * Exported `Brick.Widgets.FileBrowser.maybeSelectCurrentEntry` (thanks
+   Róman Joost)
+
+Other changes:
+ * Added handlers for the `Home` and `End` keys to
+   `Brick.Widgets.Edit.handleEditorEvent` (thanks Róman Joost)
+
 0.53
 ----
 
