@@ -62,6 +62,7 @@ at these projects:
  * [`sudoku-tui`](https://github.com/evanrelf/sudoku-tui), a Sudoku implementation
  * [`summoner-tui`](https://github.com/kowainik/summoner/tree/master/summoner-tui), an interactive frontend to the Summoner tool
  * [`wrapping-editor`](https://github.com/ta0kira/wrapping-editor), an embeddable editor with support for Brick
+ * [`git-brunch`](https://github.com/andys8/git-brunch), a git branch checkout utility
 
 These third-party packages also extend `brick`:
 
