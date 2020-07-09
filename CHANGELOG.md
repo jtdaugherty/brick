@@ -2,6 +2,26 @@
 Brick changelog
 ---------------
 
+0.53
+----
+
+Package changes:
+ * Increased lower bound on `vty` dependency to 5.29.
+ * Permit builds with GHC 8.10 (thanks Joshua Chia)
+
+Bug fixes:
+ * `customMain` now restores the initial terminal input state on
+   shutdown. This means that changes to the input state flags in the last
+   `suspendAndResume` before program exit are no longer propagated to the
+   end user's terminal environment (which could lead to broken or garbled
+   terminal I/O).
+ * Fixed a bug in `vLimitPercent` where it did not defer to the right
+   size policy of the child (thanks Janek Spaderna)
+ * `str` and `txt` now display as many zero-width characters as possible.
+   Prior to this change they would count the number of displayable
+   characters and stop too early without looking for more zero-width
+   characters.
+
 0.52.1
 ------
 
