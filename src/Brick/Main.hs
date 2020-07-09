@@ -75,6 +75,8 @@ import Graphics.Vty
   , nextEvent
   , mkVty
   , defaultConfig
+  , restoreInputState
+  , inputIface
   )
 import Graphics.Vty.Attributes (defAttr)
 
@@ -202,6 +204,10 @@ runWithVty vty brickChan mUserChan app initialRS initialSt = do
 -- | The custom event loop entry point to use when the simpler ones
 -- don't permit enough control. Returns the final application state
 -- after the application halts.
+--
+-- Note that this function guarantees that the terminal input state
+-- prior to the first Vty initialization is the terminal input state
+-- that is restored on shutdown (regardless of exceptions).
 customMain :: (Ord n)
            => Vty
            -- ^ The initial Vty handle to use.
@@ -221,8 +227,13 @@ customMain :: (Ord n)
            -- ^ The initial application state.
            -> IO s
 customMain initialVty buildVty mUserChan app initialAppState = do
+    let restoreInitialState = restoreInputState $ inputIface initialVty
+
     (s, vty) <- customMainWithVty initialVty buildVty mUserChan app initialAppState
+        `E.catch` (\(e::E.SomeException) -> restoreInitialState >> E.throw e)
+
     shutdown vty
+    restoreInitialState
     return s
 
 -- | Like 'customMain', except the last 'Vty' handle used by the
@@ -526,5 +537,10 @@ halt = return . Halt
 -- specified action. When it returns an application state value, restore
 -- the terminal state, empty the rendering cache, redraw the application
 -- from the new state, and resume the event loop.
+--
+-- Note that any changes made to the terminal's input state are ignored
+-- when Brick resumes execution and are not preserved in the final
+-- terminal input state after the Brick application returns the terminal
+-- to the user.
 suspendAndResume :: IO s -> EventM n (Next s)
 suspendAndResume = return . SuspendAndResume
