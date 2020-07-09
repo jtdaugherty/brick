@@ -67,6 +67,7 @@ module Brick.Widgets.FileBrowser
 
   -- * Handling events
   , handleFileBrowserEvent
+  , maybeSelectCurrentEntry
 
   -- * Rendering
   , renderFileBrowser
@@ -631,6 +632,12 @@ handleFileBrowserEventCommon e b =
         _ ->
             handleEventLensed b fileBrowserEntriesL handleListEvent e
 
+-- | If the browser's current entry is selectable according to
+-- @fileBrowserSelectable@, add it to the selection set and return.
+-- If not, and if the entry is a directory or a symlink targeting a
+-- directory, set the browser's current path to the selected directory.
+--
+-- Otherwise, return the browser state unchanged.
 maybeSelectCurrentEntry :: FileBrowser n -> EventM n (FileBrowser n)
 maybeSelectCurrentEntry b =
     case fileBrowserCursor b of

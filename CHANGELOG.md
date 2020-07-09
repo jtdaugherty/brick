@@ -2,12 +2,11 @@
 Brick changelog
 ---------------
 
-0.53
+0.55
 ----
 
 Package changes:
  * Increased lower bound on `vty` dependency to 5.29.
- * Permit builds with GHC 8.10 (thanks Joshua Chia)
 
 Bug fixes:
  * `customMain` now restores the initial terminal input state on
@@ -15,12 +14,31 @@ Bug fixes:
    `suspendAndResume` before program exit are no longer propagated to the
    end user's terminal environment (which could lead to broken or garbled
    terminal I/O).
- * Fixed a bug in `vLimitPercent` where it did not defer to the right
-   size policy of the child (thanks Janek Spaderna)
- * `str` and `txt` now display as many zero-width characters as possible.
-   Prior to this change they would count the number of displayable
-   characters and stop too early without looking for more zero-width
-   characters.
+
+0.54
+----
+
+API changes:
+ * Exported `Brick.Widgets.FileBrowser.maybeSelectCurrentEntry` (thanks
+   Róman Joost)
+
+Other changes:
+ * Added handlers for the `Home` and `End` keys to
+   `Brick.Widgets.Edit.handleEditorEvent` (thanks Róman Joost)
+
+0.53
+----
+
+Package changes:
+ * Relaxed base bounds to allow building with GHC 8.10 (thanks Joshua
+   Chia)
+
+Bug fixes:
+ * `vLimitPercent`: use correct horizontal size policy from child
+   (thanks Janek Spaderna)
+ * `str`: be more aggressive in determining how many characters to
+   display (attempt to display as many zero-width characters as
+   possible)
 
 0.52.1
 ------
