@@ -63,6 +63,7 @@ at these projects:
  * [`summoner-tui`](https://github.com/kowainik/summoner/tree/master/summoner-tui), an interactive frontend to the Summoner tool
  * [`wrapping-editor`](https://github.com/ta0kira/wrapping-editor), an embeddable editor with support for Brick
  * [`git-brunch`](https://github.com/andys8/git-brunch), a git branch checkout utility
+ * [`hascard`](https://github.com/Yvee1/hascard), a program for reviewing "flash card" notes
 
 These third-party packages also extend `brick`:
 
