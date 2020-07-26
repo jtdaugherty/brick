@@ -43,31 +43,33 @@ Featured Projects
 To get an idea of what some people have done with `brick`, take a look
 at these projects:
 
- * [`tetris`](https://github.com/SamTay/tetris), an implementation of the Tetris game
- * [`gotta-go-fast`](https://github.com/callum-oakley/gotta-go-fast), a typing tutor
- * [`haskell-player`](https://github.com/potomak/haskell-player), an `afplay` frontend
- * [`mushu`](https://github.com/elaye/mushu), an `MPD` client
- * [`matterhorn`](https://github.com/matterhorn-chat/matterhorn), a client for [Mattermost](https://about.mattermost.com/)
- * [`viewprof`](https://github.com/maoe/viewprof), a GHC profile viewer
- * [`tart`](https://github.com/jtdaugherty/tart), a mouse-driven ASCII art drawing program
- * [`silly-joy`](https://github.com/rootmos/silly-joy), an interpreter for Joy
- * [`herms`](https://github.com/jackkiefer/herms), a command-line tool for managing kitchen recipes
- * [`purebred`](https://github.com/purebred-mua/purebred), a mail user agent
- * [`2048Haskell`](https://github.com/8Gitbrix/2048Haskell), an implementation of the 2048 game
- * [`bhoogle`](https://github.com/andrevdm/bhoogle), a [Hoogle](https://www.haskell.org/hoogle/) client
- * [`clifm`](https://github.com/pasqu4le/clifm), a file manager
- * [`towerHanoi`](https://github.com/shajenM/projects/tree/master/towerHanoi), animated solutions to The Tower of Hanoi
- * [`VOIDSPACE`](https://github.com/ChrisPenner/void-space), a space-themed typing-tutor game
- * [`solitaire`](https://github.com/ambuc/solitaire), the card game
- * [`sudoku-tui`](https://github.com/evanrelf/sudoku-tui), a Sudoku implementation
- * [`summoner-tui`](https://github.com/kowainik/summoner/tree/master/summoner-tui), an interactive frontend to the Summoner tool
- * [`wrapping-editor`](https://github.com/ta0kira/wrapping-editor), an embeddable editor with support for Brick
- * [`git-brunch`](https://github.com/andys8/git-brunch), a git branch checkout utility
- * [`hascard`](https://github.com/Yvee1/hascard), a program for reviewing "flash card" notes
+| Project | Description |
+| [`tetris`](https://github.com/SamTay/tetris) | An implementation of the Tetris game |
+| [`gotta-go-fast`](https://github.com/callum-oakley/gotta-go-fast) | A typing tutor |
+| [`haskell-player`](https://github.com/potomak/haskell-player) | An `afplay` frontend |
+| [`mushu`](https://github.com/elaye/mushu) | An `MPD` client |
+| [`matterhorn`](https://github.com/matterhorn-chat/matterhorn) | A client for [Mattermost](https://about.mattermost.com/) |
+| [`viewprof`](https://github.com/maoe/viewprof) | A GHC profile viewer |
+| [`tart`](https://github.com/jtdaugherty/tart) | A mouse-driven ASCII art drawing program |
+| [`silly-joy`](https://github.com/rootmos/silly-joy) | An interpreter for Joy |
+| [`herms`](https://github.com/jackkiefer/herms) | A command-line tool for managing kitchen recipes |
+| [`purebred`](https://github.com/purebred-mua/purebred) | A mail user agent |
+| [`2048Haskell`](https://github.com/8Gitbrix/2048Haskell) | An implementation of the 2048 game |
+| [`bhoogle`](https://github.com/andrevdm/bhoogle) | A [Hoogle](https://www.haskell.org/hoogle/) client |
+| [`clifm`](https://github.com/pasqu4le/clifm) | A file manager |
+| [`towerHanoi`](https://github.com/shajenM/projects/tree/master/towerHanoi) | Animated solutions to The Tower of Hanoi |
+| [`VOIDSPACE`](https://github.com/ChrisPenner/void-space) | A space-themed typing-tutor game |
+| [`solitaire`](https://github.com/ambuc/solitaire) | The card game |
+| [`sudoku-tui`](https://github.com/evanrelf/sudoku-tui) | A Sudoku implementation |
+| [`summoner-tui`](https://github.com/kowainik/summoner/tree/master/summoner-tui) | An interactive frontend to the Summoner tool |
+| [`wrapping-editor`](https://github.com/ta0kira/wrapping-editor) | An embeddable editor with support for Brick |
+| [`git-brunch`](https://github.com/andys8/git-brunch) | A git branch checkout utility |
+| [`hascard`](https://github.com/Yvee1/hascard) | A program for reviewing "flash card" notes |
 
 These third-party packages also extend `brick`:
 
- * [`brick-filetree`](https://github.com/ChrisPenner/brick-filetree) [[Hackage]](http://hackage.haskell.org/package/brick-filetree) - A widget for exploring a directory tree and selecting or flagging files and directories
+| Project | Description |
+| [`brick-filetree`](https://github.com/ChrisPenner/brick-filetree) [[Hackage]](http://hackage.haskell.org/package/brick-filetree) | A widget for exploring a directory tree and selecting or flagging files and directories |
 
 Release Announcements / News
 ----------------------------
