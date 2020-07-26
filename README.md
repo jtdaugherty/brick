@@ -44,6 +44,7 @@ To get an idea of what some people have done with `brick`, take a look
 at these projects:
 
 | Project | Description |
+| ------- | ----------- |
 | [`tetris`](https://github.com/SamTay/tetris) | An implementation of the Tetris game |
 | [`gotta-go-fast`](https://github.com/callum-oakley/gotta-go-fast) | A typing tutor |
 | [`haskell-player`](https://github.com/potomak/haskell-player) | An `afplay` frontend |
@@ -69,6 +70,7 @@ at these projects:
 These third-party packages also extend `brick`:
 
 | Project | Description |
+| ------- | ----------- |
 | [`brick-filetree`](https://github.com/ChrisPenner/brick-filetree) [[Hackage]](http://hackage.haskell.org/package/brick-filetree) | A widget for exploring a directory tree and selecting or flagging files and directories |
 
 Release Announcements / News
