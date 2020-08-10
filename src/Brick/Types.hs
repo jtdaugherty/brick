@@ -33,10 +33,12 @@ module Brick.Types
   , getContext
 
   -- ** The rendering context
-  , Context(ctxAttrName, availWidth, availHeight, ctxBorderStyle, ctxAttrMap, ctxDynBorders)
+  , Context(ctxAttrName, availWidth, availHeight, windowWidth, windowHeight, ctxBorderStyle, ctxAttrMap, ctxDynBorders)
   , attrL
   , availWidthL
   , availHeightL
+  , windowWidthL
+  , windowHeightL
   , ctxAttrMapL
   , ctxAttrNameL
   , ctxBorderStyleL

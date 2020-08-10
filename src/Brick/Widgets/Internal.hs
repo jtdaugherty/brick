@@ -35,7 +35,7 @@ renderFinal aMap layerRenders sz chooseCursor rs = (newRS, picWithBg, theCursor,
         (layerResults, !newRS) = flip runState rs $ sequence $
             (\p -> runReaderT p ctx) <$>
             (render <$> cropToContext <$> layerRenders)
-        ctx = Context mempty (fst sz) (snd sz) defaultBorderStyle aMap False
+        ctx = Context mempty (fst sz) (snd sz) (fst sz) (snd sz) defaultBorderStyle aMap False
         pic = V.picForLayers $ uncurry V.resize sz <$> (^.imageL) <$> layerResults
         -- picWithBg is a workaround for runaway attributes.
         -- See https://github.com/coreyoconnor/vty/issues/95
