@@ -1,0 +1,3 @@
+raw-project
+  package brick
+     flags: +demos
