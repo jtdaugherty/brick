@@ -113,7 +113,7 @@ library
     Brick.Types.Internal
     Brick.Widgets.Internal
 
-  build-depends:       base <= 4.14.0.0,
+  build-depends:       base <= 4.14.1.0,
                        vty >= 5.29,
                        transformers,
                        data-clist >= 0.1,
