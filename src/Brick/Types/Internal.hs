@@ -268,6 +268,8 @@ data Context =
     Context { ctxAttrName :: AttrName
             , availWidth :: Int
             , availHeight :: Int
+            , windowWidth :: Int
+            , windowHeight :: Int
             , ctxBorderStyle :: BorderStyle
             , ctxAttrMap :: AttrMap
             , ctxDynBorders :: Bool
