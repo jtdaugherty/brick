@@ -10,6 +10,7 @@ module Brick.Widgets.ProgressBar
 where
 
 import Lens.Micro ((^.))
+import Data.List (splitAt)
 import Data.Maybe (fromMaybe)
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid
@@ -48,7 +49,11 @@ progressBar mLabel progress =
             rightPart = replicate (barWidth - (labelWidth + length leftPart)) ' '
             fullBar = leftPart <> label <> rightPart
             completeWidth = round $ progress * toEnum (length fullBar)
-            completePart = take completeWidth fullBar
-            incompletePart = drop completeWidth fullBar
+            adjustedCompleteWidth = if completeWidth == length fullBar && progress < 1.0
+                                    then completeWidth - 1
+                                    else if completeWidth == 0 && progress > 0.0
+                                         then 1
+                                         else completeWidth
+            (completePart, incompletePart) = splitAt adjustedCompleteWidth fullBar
         render $ (withAttr progressCompleteAttr $ str completePart) <+>
                  (withAttr progressIncompleteAttr $ str incompletePart)
