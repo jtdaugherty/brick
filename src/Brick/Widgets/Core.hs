@@ -992,6 +992,13 @@ cacheUpdate n r = lift $ modify (& renderCacheL %~ M.insert n r)
 -- taking preference. If a viewport receives more than one scrolling
 -- request from 'Brick.Main.EventM', all are honored in the order in
 -- which they are received.
+--
+-- Some caution should be advised when using this function. The viewport
+-- renders its contents anew each time the viewport is drawn; in many
+-- cases this is prohibitively expensive, and viewports should not be
+-- used to display large contents for scrolling. This function is best
+-- used when the contents are not too large OR when the contents are
+-- large and render-cacheable.
 viewport :: (Ord n, Show n)
          => n
          -- ^ The name of the viewport (must be unique and stable for
