@@ -139,6 +139,18 @@ library
   if impl(ghc < 8.0)
     build-depends:     semigroups
 
+executable brick-tail-demo
+  hs-source-dirs:      programs
+  ghc-options:         -threaded -Wall -Wcompat -O2
+  default-language:    Haskell2010
+  default-extensions:  CPP
+  main-is:             TailDemo.hs
+  build-depends:       base,
+                       brick,
+                       text,
+                       vty,
+                       random
+
 executable brick-readme-demo
   if !flag(demos)
     Buildable: False
