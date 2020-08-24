@@ -2,9 +2,8 @@
 module Main where
 
 import qualified Data.Text as T
-import Control.Monad (void, forever)
+import Control.Monad (void)
 import Control.Concurrent
-import Data.IORef
 import System.Random
 
 import Brick
@@ -112,23 +111,21 @@ initialState =
 -- window, prefixed with a line number. This function simulates the kind
 -- of behavior that you'd get from running 'tail -f' on a file.
 generateLines :: BChan CustomEvent -> IO ()
-generateLines chan = do
-    lineNumRef <- newIORef (1::Integer)
+generateLines chan = go (1::Integer)
+    where
+        go lineNum = do
+            -- Wait a random amount of time (in milliseconds)
+            let delayOptions = [500, 1000, 2000]
+            delay <- randomVal delayOptions
+            threadDelay $ delay * 1000
 
-    forever $ do
-        lineNum <- readIORef lineNumRef
-        writeIORef lineNumRef (lineNum + 1)
+            -- Choose a random line of text from our collection
+            l <- randomVal textLines
 
-        -- Wait a random amount of time (in milliseconds)
-        let delayOptions = [500, 1000, 2000]
-        delay <- randomVal delayOptions
-        threadDelay $ delay * 1000
+            -- Send it to the application to be added to the UI
+            writeBChan chan $ NewLine $ (T.pack $ "Line " <> show lineNum <> " - ") <> l
 
-        -- Choose a random line of text from our collection
-        l <- randomVal textLines
-
-        -- Send it to the application to be added to the UI
-        writeBChan chan $ NewLine $ (T.pack $ "Line " <> show lineNum <> " - ") <> l
+            go $ lineNum + 1
 
 randomVal :: [a] -> IO a
 randomVal as = do
