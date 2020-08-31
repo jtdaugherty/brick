@@ -468,7 +468,7 @@ editField :: (Ord n, Show n)
           -- the editor's initial contents. The resulting text may
           -- contain newlines.
           -> ([T.Text] -> Maybe a)
-          -- ^ The validation function that converts the editors
+          -- ^ The validation function that converts the editor's
           -- contents into a valid value of type @a@.
           -> ([T.Text] -> Widget n)
           -- ^ The rendering function for the editor's contents (see
