@@ -50,6 +50,7 @@ module Brick.Forms
   , newForm
   , formFocus
   , formState
+  , formStateLens
   , handleFormEvent
   , renderForm
   , renderFormFieldState
@@ -207,6 +208,14 @@ data Form s e n =
          , formConcatAll :: [Widget n] -> Widget n
          -- ^ Concatenation function for this form's field renderings.
          }
+
+-- | A lens into the formState of a form.
+--
+-- This could be useful if you want to preseve focus properties, etc.
+-- of your form but need to modify the underlying application state.
+
+formStateLens :: Lens' (Form s e n) s
+formStateLens = lens formState (\f s -> f { formState = s })
 
 -- | Compose a new rendering augmentation function with the one in the
 -- form field collection. For example, we might put a label on the left
