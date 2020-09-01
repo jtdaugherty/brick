@@ -235,6 +235,11 @@ infixr 5 @@=
 -- This updates all form fields to be consistent with the new form
 -- state. Where possible, this attempts to maintain other input state,
 -- such as text editor cursor position.
+--
+-- Note that since this updates the form fields, this means that any
+-- field values will be completely overwritten! This may or may not
+-- be what you want, since a user actively using the form could get
+-- confused if their edits go away. Use carefully.
 updateFormState :: s -> Form s e n -> Form s e n
 updateFormState newState f =
     let updateField fs = case fs of
