@@ -60,6 +60,7 @@ module Brick.Forms
   , setFormConcat
   , setFieldConcat
   , setFormFocus
+  , updateFormState
 
   -- * Simple form field constructors
   , editTextField
@@ -169,6 +170,9 @@ data FormFieldState s e n where
                       -- ^ A lens to extract and store a
                       -- successfully-validated form input back into
                       -- your form state.
+                      , formFieldUpdate :: a -> b -> b
+                      -- ^ Given a new form state value, update the form
+                      -- field state in place.
                       , formFields :: [FormField a b e n]
                       -- ^ The form fields, in order, that the user will
                       -- interact with to manipulate this state value.
@@ -226,6 +230,20 @@ infixr 5 @@=
     let v = mkFs s
     in v { formFieldRenderHelper = h . (formFieldRenderHelper v) }
 
+-- | Update the state contained in a form.
+--
+-- This updates all form fields to be consistent with the new form
+-- state. Where possible, this attempts to maintain other input state,
+-- such as text editor cursor position.
+updateFormState :: s -> Form s e n -> Form s e n
+updateFormState newState f =
+    let updateField fs = case fs of
+            FormFieldState st l upd s rh concatAll ->
+                FormFieldState (upd (newState^.l) st) l upd s rh concatAll
+    in f { formState = newState
+         , formFieldStates = updateField <$> formFieldStates f
+         }
+
 -- | Set the focused field of a form.
 setFormFocus :: (Eq n) => n -> Form s e n -> Form s e n
 setFormFocus n f = f { formFocus = focusSetCurrent n $ formFocus f }
@@ -257,7 +275,7 @@ newForm mkEs s =
             }
 
 formFieldNames :: FormFieldState s e n -> [n]
-formFieldNames (FormFieldState _ _ fields _ _) = formFieldName <$> fields
+formFieldNames (FormFieldState _ _ _ fields _ _) = formFieldName <$> fields
 
 -- | A form field for manipulating a boolean value. This represents
 -- 'True' as @[X] label@ and 'False' as @[ ] label@.
@@ -311,6 +329,8 @@ checkboxCustomField lb check rb stLens name label initialState =
                                                  handleEvent
                                      ]
                       , formFieldLens = stLens
+                      , formFieldUpdate =
+                          \val _ -> val
                       , formFieldRenderHelper = id
                       , formFieldConcat = vBox
                       }
@@ -365,6 +385,10 @@ listField options stLens renderItem itemHeight name initialState =
                                                  handleEvent
                                      ]
                       , formFieldLens = customStLens
+                      , formFieldUpdate = \listState l ->
+                           case listSelectedElement listState of
+                               Nothing -> l
+                               Just (_, e) -> listMoveToElement e l
                       , formFieldRenderHelper = id
                       , formFieldConcat = vBox
                       }
@@ -432,6 +456,7 @@ radioCustomField lb check rb stLens options initialState =
     in FormFieldState { formFieldState = initVal
                       , formFields = optionFields
                       , formFieldLens = stLens
+                      , formFieldUpdate = \val _ -> val
                       , formFieldRenderHelper = id
                       , formFieldConcat = vBox
                       }
@@ -499,6 +524,11 @@ editField stLens n limit ini val renderText wrapEditor initialState =
                                                  handleEvent
                                      ]
                       , formFieldLens = stLens
+                      , formFieldUpdate = \newVal e ->
+                          let newTxt = ini newVal
+                          in if newTxt == (T.unlines $ getEditContents e)
+                             then e
+                             else applyEdit (Z.insertMany newTxt . Z.clearZipper) e
                       , formFieldRenderHelper = id
                       , formFieldConcat = vBox
                       }
@@ -613,18 +643,18 @@ setFieldValid v n form =
     let go1 [] = []
         go1 (s:ss) =
             let s' = case s of
-                       FormFieldState st l fs rh concatAll ->
+                       FormFieldState st l upd fs rh concatAll ->
                            let go2 [] = []
                                go2 (f@(FormField fn val _ r h):ff)
                                    | n == fn = FormField fn val v r h : ff
                                    | otherwise = f : go2 ff
-                           in FormFieldState st l (go2 fs) rh concatAll
+                           in FormFieldState st l upd (go2 fs) rh concatAll
             in s' : go1 ss
 
     in form { formFieldStates = go1 (formFieldStates form) }
 
 getInvalidFields :: FormFieldState s e n -> [n]
-getInvalidFields (FormFieldState st _ fs _ _) =
+getInvalidFields (FormFieldState st _ _ fs _ _) =
     let gather (FormField n validate extValid _ _) =
             if (not extValid || (isNothing $ validate st)) then [n] else []
     in concat $ gather <$> fs
@@ -654,7 +684,7 @@ renderFormFieldState :: (Eq n)
                      => FocusRing n
                      -> FormFieldState s e n
                      -> Widget n
-renderFormFieldState fr (FormFieldState st _ fields helper concatFields) =
+renderFormFieldState fr (FormFieldState st _ _ fields helper concatFields) =
     let renderFields [] = []
         renderFields ((FormField n validate extValid renderField _):fs) =
             let maybeInvalid = if (isJust $ validate st) && extValid
@@ -763,7 +793,7 @@ handleFormFieldEvent n ev f = findFieldState [] (formFieldStates f)
         findFieldState _ [] = return f
         findFieldState prev (e:es) =
             case e of
-                FormFieldState st stLens fields helper concatAll -> do
+                FormFieldState st stLens upd fields helper concatAll -> do
                     let findField [] = return Nothing
                         findField (field:rest) =
                             case field of
@@ -780,7 +810,7 @@ handleFormFieldEvent n ev f = findFieldState [] (formFieldStates f)
                     case result of
                         Nothing -> findFieldState (prev <> [e]) es
                         Just (newSt, maybeSt) ->
-                            let newFieldState = FormFieldState newSt stLens fields helper concatAll
+                            let newFieldState = FormFieldState newSt stLens upd fields helper concatAll
                             in return $ f { formFieldStates = prev <> [newFieldState] <> es
                                           , formState = case maybeSt of
                                               Nothing -> formState f
