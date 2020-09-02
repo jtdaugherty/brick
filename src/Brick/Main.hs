@@ -87,15 +87,17 @@ import Brick.Widgets.Internal
 import Brick.AttrMap
 
 -- | The library application abstraction. Your application's operations
--- are represented here and passed to one of the various main functions
--- in this module. An application is in terms of an application state
--- type 's', an application event type 'e', and a resource name type
--- 'n'. In the simplest case 'e' is unused (left polymorphic or set to
--- '()'), but you may define your own event type and use 'customMain'
--- to provide custom events. The state type is the type of application
--- state to be provided by you and iteratively modified by event
--- handlers. The resource name type is the type of names you can assign
--- to rendering resources such as viewports and cursor locations.
+-- are provided in an @App@ and then the @App@ is provided to one of the
+-- various main functions in this module. An application @App s e n@
+-- is in terms of an application state type @s@, an application event
+-- type @e@, and a resource name type @n@. In the simplest case 'e' is
+-- unused (left polymorphic or set to @()@), but you may define your own
+-- event type and use 'customMain' to provide custom events. The state
+-- type @s@ is the type of application state to be provided by you and
+-- iteratively modified by event handlers. The resource name type @n@
+-- is the type of names you can assign to rendering resources such as
+-- viewports and cursor locations. Your application must define this
+-- type.
 data App s e n =
     App { appDraw :: s -> [Widget n]
         -- ^ This function turns your application state into a list of
