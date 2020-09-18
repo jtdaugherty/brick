@@ -36,6 +36,7 @@ renderFinal aMap layerRenders (w, h) chooseCursor rs =
         (layerResults, !newRS) = flip runState rs $ sequence $
             (\p -> runReaderT p ctx) <$>
             (render <$> cropToContext <$> layerRenders)
+
         ctx = Context { ctxAttrName = mempty
                       , availWidth = w
                       , availHeight = h
@@ -50,6 +51,7 @@ renderFinal aMap layerRenders (w, h) chooseCursor rs =
         -- picWithBg is a workaround for runaway attributes.
         -- See https://github.com/coreyoconnor/vty/issues/95
         picWithBg = pic { V.picBackground = V.Background ' ' V.defAttr }
+
         layerCursors = (^.cursorsL) <$> layerResults
         layerExtents = reverse $ (^.extentsL) <$> layerResults
         theCursor = chooseCursor $ concat layerCursors
