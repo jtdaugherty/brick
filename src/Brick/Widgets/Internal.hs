@@ -30,7 +30,8 @@ renderFinal :: AttrMap
             -> ([CursorLocation n] -> Maybe (CursorLocation n))
             -> RenderState n
             -> (RenderState n, V.Picture, Maybe (CursorLocation n), [Extent n])
-renderFinal aMap layerRenders sz chooseCursor rs = (newRS, picWithBg, theCursor, concat layerExtents)
+renderFinal aMap layerRenders sz chooseCursor rs =
+    (newRS, picWithBg, theCursor, concat layerExtents)
     where
         (layerResults, !newRS) = flip runState rs $ sequence $
             (\p -> runReaderT p ctx) <$>
