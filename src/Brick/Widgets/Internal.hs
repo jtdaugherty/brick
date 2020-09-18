@@ -30,14 +30,23 @@ renderFinal :: AttrMap
             -> ([CursorLocation n] -> Maybe (CursorLocation n))
             -> RenderState n
             -> (RenderState n, V.Picture, Maybe (CursorLocation n), [Extent n])
-renderFinal aMap layerRenders sz chooseCursor rs =
+renderFinal aMap layerRenders (w, h) chooseCursor rs =
     (newRS, picWithBg, theCursor, concat layerExtents)
     where
         (layerResults, !newRS) = flip runState rs $ sequence $
             (\p -> runReaderT p ctx) <$>
             (render <$> cropToContext <$> layerRenders)
-        ctx = Context mempty (fst sz) (snd sz) (fst sz) (snd sz) defaultBorderStyle aMap False
-        pic = V.picForLayers $ uncurry V.resize sz <$> (^.imageL) <$> layerResults
+        ctx = Context { ctxAttrName = mempty
+                      , availWidth = w
+                      , availHeight = h
+                      , windowWidth = w
+                      , windowHeight = h
+                      , ctxBorderStyle = defaultBorderStyle
+                      , ctxAttrMap = aMap
+                      , ctxDynBorders = False
+                      }
+        pic = V.picForLayers $ uncurry V.resize (w, h) <$> (^.imageL) <$> layerResults
+
         -- picWithBg is a workaround for runaway attributes.
         -- See https://github.com/coreyoconnor/vty/issues/95
         picWithBg = pic { V.picBackground = V.Background ' ' V.defAttr }
