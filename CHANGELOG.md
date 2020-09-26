@@ -2,6 +2,28 @@
 Brick changelog
 ---------------
 
+0.56
+----
+
+Package changes:
+ * Increased upper bound for `base` to support GHC 8.10.2 (thanks Ryan
+   Scott)
+
+API changes:
+ * Added `Brick.Forms.updateFormState` to update the state contained
+   within (and managed by) a Form. This function takes care of the
+   details of updating the form fields themselves to be consistent with
+   the change in underlying state.
+ * Added the overall window width (`windowWidth`) and height
+   (`windowHeight`) to `Context`, the rendering context type (thanks Tom
+   McLaughlin)
+
+Other changes:
+ * Added `brick-tail-demo`, a demonstration program for writing a
+   `tail`-style output-following interface.
+ * Updated `Brick.Widgets.ProgressBar` so that it handles near-endpoint
+   cases more naturally (fixes #281)
+
 0.55
 ----
 
