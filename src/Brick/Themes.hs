@@ -30,7 +30,8 @@
 -- (without quotes) or a comma-delimited list of one or more of the
 -- following values (e.g. @"[bold,underline]"@) indicating that all
 -- of the specified styles be used. Valid styles are @standout@,
--- @underline@, @reverseVideo@, @blink@, @dim@, @italic@, and @bold@.
+-- @underline@, @reverseVideo@, @blink@, @dim@, @italic@,
+-- @strikethrough@, and @bold@.
 --
 -- The @other@ section specifies for each attribute name in the theme
 -- the same @fg@, @bg@, and @style@ settings as for the default
@@ -251,6 +252,7 @@ allStyles :: [(T.Text, Style)]
 allStyles =
     [ ("standout", standout)
     , ("underline", underline)
+    , ("strikethrough", strikethrough)
     , ("reversevideo", reverseVideo)
     , ("blink", blink)
     , ("dim", dim)
