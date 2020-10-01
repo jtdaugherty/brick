@@ -2,6 +2,17 @@
 Brick changelog
 ---------------
 
+0.57
+----
+
+Package changes:
+ * Raised lower bound on `vty` to 5.31 to get the new `strikethrough`
+   style.
+
+New features:
+ * Added support for the `strikethrough` style in Brick theme
+   customization files.
+
 0.56
 ----
 
