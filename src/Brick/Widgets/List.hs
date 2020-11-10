@@ -88,7 +88,10 @@ import Lens.Micro ((^.), (^?), (&), (.~), (%~), _2, _head, set)
 import Data.Functor (($>))
 import Data.List.NonEmpty (NonEmpty((:|)))
 import Data.Maybe (fromMaybe)
-import Data.Semigroup (Semigroup, (<>), sconcat)
+#if !(MIN_VERSION_base(4,11,0))
+import Data.Semigroup (Semigroup, (<>))
+#endif
+import Data.Semigroup (sconcat)
 import qualified Data.Sequence as Seq
 import Graphics.Vty (Event(..), Key(..), Modifier(..))
 import qualified Data.Vector as V
