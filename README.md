@@ -41,7 +41,8 @@ Featured Projects
 -----------------
 
 To get an idea of what some people have done with `brick`, take a look
-at these projects:
+at these projects. If you have made something and would like me to
+include it, get in touch!
 
 | Project | Description |
 | ------- | ----------- |
