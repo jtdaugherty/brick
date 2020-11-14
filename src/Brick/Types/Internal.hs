@@ -247,11 +247,11 @@ data BrickEvent n e = VtyEvent Event
                     deriving (Show, Eq, Ord)
 
 data RenderState n =
-    RS { viewportMap :: M.Map n Viewport
-       , rsScrollRequests :: [(n, ScrollRequest)]
+    RS { viewportMap :: !(M.Map n Viewport)
+       , rsScrollRequests :: ![(n, ScrollRequest)]
        , observedNames :: !(S.Set n)
-       , renderCache :: M.Map n (Result n)
-       , clickableNames :: [n]
+       , renderCache :: !(M.Map n (Result n))
+       , clickableNames :: ![n]
        } deriving (Read, Show, Generic, NFData)
 
 data EventRO n = EventRO { eventViewportMap :: M.Map n Viewport
