@@ -2,6 +2,13 @@
 Brick changelog
 ---------------
 
+0.57.1
+------
+
+Bug fixes:
+ * Fixed a small space leak in the main rendering loop (#260)
+ * Get `TailDemo` building on more versions of GHC
+
 0.57
 ----
 
