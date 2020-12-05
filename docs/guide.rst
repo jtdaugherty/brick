@@ -1205,7 +1205,7 @@ simply wrap it with ``visible``:
    -- Assuming that App uses 'Name' for its resource names:
    data Name = Viewport1
    let w = viewport Viewport1 Horizontal $
-           (visible $ str "Hello," <+> (str " world!")
+           (visible $ str "Hello,") <+> (str " world!")
 
 This example requests that the ``Viewport1`` viewport be scrolled so
 that "Hello," is visible. We could extend this example with a value
