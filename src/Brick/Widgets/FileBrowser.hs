@@ -715,14 +715,14 @@ renderFileBrowser foc b =
 
     in withDefAttr fileBrowserAttr $
        vBox [ withDefAttr fileBrowserCurrentDirectoryAttr cwdHeader
-            , renderList (renderFileInfo foc maxFilenameLength (b^.fileBrowserSelectedFilesL))
+            , renderList (renderFileInfo foc maxFilenameLength (b^.fileBrowserSelectedFilesL) (b^.fileBrowserNameL))
                          foc (b^.fileBrowserEntriesL)
             , maybeSearchInfo
             , withDefAttr fileBrowserSelectionInfoAttr selInfo
             ]
 
-renderFileInfo :: Bool -> Int -> Set.Set String -> Bool -> FileInfo -> Widget n
-renderFileInfo foc maxLen selFiles listSel info =
+renderFileInfo :: Bool -> Int -> Set.Set String -> n -> Bool -> FileInfo -> Widget n
+renderFileInfo foc maxLen selFiles n listSel info =
     (if foc
      then (if listSel then forceAttr listSelectedFocusedAttr
                else if sel then forceAttr fileBrowserSelectedAttr else id)
@@ -734,6 +734,7 @@ renderFileInfo foc maxLen selFiles listSel info =
         addAttr = maybe id (withDefAttr . attrForFileType) (fileInfoFileType info)
         body = addAttr (hLimit (maxLen + 1) $
                padRight Max $
+               (if listSel then showCursor n (Location (0,0)) else id) $
                str $ fileInfoSanitizedFilename info <> suffix)
         suffix = (if fileInfoFileType info == Just Directory then "/" else "") <>
                  (if sel then "*" else "")
