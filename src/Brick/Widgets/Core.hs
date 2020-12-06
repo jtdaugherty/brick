@@ -862,7 +862,8 @@ updateAttrMap f p =
 
 -- | When rendering the specified widget, force all attribute lookups
 -- in the attribute map to use the value currently assigned to the
--- specified attribute name.
+-- specified attribute name. Note that it will still inherit from the
+-- default attribute. To override that as well, use 'modifyDefAttr'.
 forceAttr :: AttrName -> Widget n -> Widget n
 forceAttr an p =
     Widget (hSize p) (vSize p) $ do
