@@ -67,6 +67,7 @@ include it, get in touch!
 | [`wrapping-editor`](https://github.com/ta0kira/wrapping-editor) | An embeddable editor with support for Brick |
 | [`git-brunch`](https://github.com/andys8/git-brunch) | A git branch checkout utility |
 | [`hascard`](https://github.com/Yvee1/hascard) | A program for reviewing "flash card" notes |
+| [`ttyme`](https://github.com/evuez/ttyme) | A TUI for [Harvest](https://www.getharvest.com/) |
 
 These third-party packages also extend `brick`:
 
