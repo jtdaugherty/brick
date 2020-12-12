@@ -73,7 +73,7 @@ module Brick.Widgets.List
   )
 where
 
-import Prelude hiding (reverse, splitAt)
+import Prelude hiding (reverse, splitAt, filter)
 
 import Control.Applicative ((<|>))
 #if !MIN_VERSION_base(4,8,0)
@@ -97,6 +97,7 @@ import qualified Data.Sequence as Seq
 import Graphics.Vty (Event(..), Key(..), Modifier(..))
 import qualified Data.Vector as V
 import GHC.Generics (Generic)
+import qualified Data.Witherable.Class as W
 
 import Brick.Types
 import Brick.Main (lookupViewport)
@@ -145,6 +146,11 @@ type List n e = GenericList n V.Vector e
 
 instance Named (GenericList n t e) n where
     getName = listName
+
+instance W.Filterable t => W.Filterable (GenericList n t) where
+  catMaybes l = l & listElementsL %~ W.catMaybes
+
+instance (Traversable t, W.Filterable t) => W.Witherable (GenericList n t) where
 
 -- | Ordered container types that can be split at a given index. An
 -- instance of this class is required for a container type to be usable
