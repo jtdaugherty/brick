@@ -75,6 +75,7 @@ where
 
 import Prelude hiding (reverse, splitAt)
 
+import Control.Applicative ((<|>))
 #if !MIN_VERSION_base(4,8,0)
 import Control.Applicative ((<$>), (<*>), pure)
 import Data.Foldable (Foldable, find, toList)
@@ -574,10 +575,11 @@ listMoveToElement :: (Eq e, Foldable t, Splittable t)
                   -> GenericList n t e
 listMoveToElement e = listFindBy (== e) . set listSelectedL Nothing
 
--- | Set the selected index to the next element matching the
--- predicate.  If there is no selected element, the search starts at
--- the beginning.  If no matching element is found, leave the list
--- unmodified.
+-- | Starting from the currently-selected position, attempt to find
+-- and select the next element matching the predicate. If there are no
+-- matches for the remainder of the list or if the list has no selection
+-- at all, the search starts at the beginning. If no matching element is
+-- found anywhere in the list, leave the list unmodified.
 --
 -- /O(n)/.  Only evaluates as much of the container as needed.
 listFindBy :: (Foldable t, Splittable t)
@@ -586,9 +588,11 @@ listFindBy :: (Foldable t, Splittable t)
            -> GenericList n t e
 listFindBy test l =
     let start = maybe 0 (+1) (l ^. listSelectedL)
-        (_, t) = splitAt start (l ^. listElementsL)
-        result = find (test . snd) . zip [0..] . toList $ t
-    in maybe id (set listSelectedL . Just . (start +) . fst) result l
+        (h, t) = splitAt start (l ^. listElementsL)
+        tailResult = find (test . snd) . zip [start..] . toList $ t
+        headResult = find (test . snd) . zip [0..] . toList $ h
+        result = tailResult <|> headResult
+    in maybe id (set listSelectedL . Just . fst) result l
 
 -- | Return a list's selected element, if any.
 --
