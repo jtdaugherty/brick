@@ -50,6 +50,7 @@ module Brick.Widgets.List
   , listMoveTo
   , listMoveToElement
   , listFindBy
+  , listCycleFindBy
   , listMoveUp
   , listMoveDown
   , listMoveByPages
@@ -589,6 +590,20 @@ listFindBy test l =
         (_, t) = splitAt start (l ^. listElementsL)
         result = find (test . snd) . zip [0..] . toList $ t
     in maybe id (set listSelectedL . Just . (start +) . fst) result l
+
+-- | Like 'listFindBy', but continues searching from the top of the list
+-- if no match is found, until completing one full cycle.
+listCycleFindBy :: (Foldable t, Splittable t)
+           => (e -> Bool)
+           -> GenericList n t e
+           -> GenericList n t e
+listCycleFindBy test l =
+    let start = maybe 0 (+1) (l ^. listSelectedL)
+        (right,left) = splitAt start (l ^. listElementsL)
+        resultLeft = find (test . snd) . zip [0..] . toList $ left
+        resultRight = find (test . snd) . zip [0..] . toList $ right
+    in maybe (maybe id (set listSelectedL . Just . fst) resultRight)
+        (set listSelectedL . Just . (start +) . fst) resultLeft l
 
 -- | Return a list's selected element, if any.
 --
