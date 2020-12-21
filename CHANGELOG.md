@@ -2,6 +2,30 @@
 Brick changelog
 ---------------
 
+0.58
+----
+
+Package changes:
+ * Updated dependency constraints to build on GHC 9.0.1 (thanks Ondřej
+   Súkup)
+
+API changes:
+ * The FileBrowser module now exports individual functions for
+   each of the events that it handles. This allows end users to
+   trigger the behaviors directly rather than relying on the built-in
+   `handleFileBrowserEvent` function. The documentation has been updated
+   to indicate which functions are triggered by each key event. (Thanks
+   David B. Lamkins)
+
+Other changes:
+ * The `List` module's `listFindBy` function now attempts to find a
+   match anywhere in the list rather than just somewhere between the
+   cursor and the end of the list.
+ * The `FileBrowser` now positions a cursor at the beginning of the
+   selected entry when the file browser is focused. (thanks Mario Lang)
+ * The user guide's viewport visibility example got an important
+   syntactic fix. (thanks Mario Lang)
+
 0.57.1
 ------
 
