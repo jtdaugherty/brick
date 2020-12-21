@@ -553,22 +553,22 @@ fileBrowserCursor b = snd <$> listSelectedElement (b^.fileBrowserEntriesL)
 --
 -- Events handled regardless of mode:
 --
--- * @Ctrl-b@: actionFileBrowserListPageUp
--- * @Ctrl-f@: actionFileBrowserListPageDown
--- * @Ctrl-d@: actionFileBrowserListHalfPageDown
--- * @Ctrl-u@: actionFileBrowserListHalfPageUp
--- * @g@: actionFileBrowserListTop
--- * @G@: actionFileBrowserListBottom
--- * @j@: actionFileBrowserListNext
--- * @k@: actionFileBrowserListPrev
--- * @Ctrl-n@: actionFileBrowserListNext
--- * @Ctrl-p@: actionFileBrowserListPrev
+-- * @Ctrl-b@: 'actionFileBrowserListPageUp'
+-- * @Ctrl-f@: 'actionFileBrowserListPageDown'
+-- * @Ctrl-d@: 'actionFileBrowserListHalfPageDown'
+-- * @Ctrl-u@: 'actionFileBrowserListHalfPageUp'
+-- * @g@: 'actionFileBrowserListTop'
+-- * @G@: 'actionFileBrowserListBottom'
+-- * @j@: 'actionFileBrowserListNext'
+-- * @k@: 'actionFileBrowserListPrev'
+-- * @Ctrl-n@: 'actionFileBrowserListNext'
+-- * @Ctrl-p@: 'actionFileBrowserListPrev'
 --
 -- Events handled only in normal mode:
 --
--- * @/@: actionFileBrowserBeginSearch
--- * @Enter@: actionFileBrowserSelectEnter
--- * @Space@: actionFileBrowserSelectCurrent
+-- * @/@: 'actionFileBrowserBeginSearch'
+-- * @Enter@: 'actionFileBrowserSelectEnter'
+-- * @Space@: 'actionFileBrowserSelectCurrent'
 --
 -- Events handled only in search mode:
 --
