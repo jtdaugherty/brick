@@ -65,6 +65,19 @@ module Brick.Widgets.FileBrowser
   , updateFileBrowserSearch
   , setFileBrowserEntryFilter
 
+  -- * Actions
+  , actionFileBrowserBeginSearch
+  , actionFileBrowserSelectEnter
+  , actionFileBrowserSelectCurrent
+  , actionFileBrowserListPageUp
+  , actionFileBrowserListPageDown
+  , actionFileBrowserListHalfPageUp
+  , actionFileBrowserListHalfPageDown
+  , actionFileBrowserListTop
+  , actionFileBrowserListBottom
+  , actionFileBrowserListNext
+  , actionFileBrowserListPrev
+
   -- * Handling events
   , handleFileBrowserEvent
   , maybeSelectCurrentEntry
@@ -540,21 +553,81 @@ fileBrowserCursor b = snd <$> listSelectedElement (b^.fileBrowserEntriesL)
 --
 -- Events handled regardless of mode:
 --
--- * @Enter@, @Space@: set the file browser's selected entry
---   ('fileBrowserSelection') for use by the calling application,
---   subject to 'fileBrowserSelectable'.
--- * @Ctrl-n@: select the next entry
--- * @Ctrl-p@: select the previous entry
--- * 'List' navigation keys
+-- * @Ctrl-b@: actionFileBrowserListPageUp
+-- * @Ctrl-f@: actionFileBrowserListPageDown
+-- * @Ctrl-d@: actionFileBrowserListHalfPageDown
+-- * @Ctrl-u@: actionFileBrowserListHalfPageUp
+-- * @g@: actionFileBrowserListTop
+-- * @G@: actionFileBrowserListBottom
+-- * @j@: actionFileBrowserListNext
+-- * @k@: actionFileBrowserListPrev
+-- * @Ctrl-n@: actionFileBrowserListNext
+-- * @Ctrl-p@: actionFileBrowserListPrev
 --
 -- Events handled only in normal mode:
 --
--- * @/@: enter search mode
+-- * @/@: actionFileBrowserBeginSearch
+-- * @Enter@: actionFileBrowserSelectEnter
+-- * @Space@: actionFileBrowserSelectCurrent
 --
 -- Events handled only in search mode:
 --
 -- * @Esc@, @Ctrl-C@: cancel search mode
 -- * Text input: update search string
+
+actionFileBrowserBeginSearch :: FileBrowser n -> EventM n (FileBrowser n)
+actionFileBrowserBeginSearch b =
+    return $ updateFileBrowserSearch (const $ Just "") b
+
+actionFileBrowserSelectEnter :: FileBrowser n -> EventM n (FileBrowser n)
+actionFileBrowserSelectEnter b =
+    maybeSelectCurrentEntry b
+
+actionFileBrowserSelectCurrent :: FileBrowser n -> EventM n (FileBrowser n)
+actionFileBrowserSelectCurrent b =
+    selectCurrentEntry b
+
+actionFileBrowserListPageUp :: Ord n => FileBrowser n -> EventM n (FileBrowser n)
+actionFileBrowserListPageUp b = do
+    let old = b ^. fileBrowserEntriesL
+    new <- listMovePageUp old
+    return $ b & fileBrowserEntriesL .~ new
+
+actionFileBrowserListPageDown :: Ord n => FileBrowser n -> EventM n (FileBrowser n)
+actionFileBrowserListPageDown b = do
+    let old = b ^. fileBrowserEntriesL
+    new <- listMovePageDown old
+    return $ b & fileBrowserEntriesL .~ new
+
+actionFileBrowserListHalfPageUp :: Ord n => FileBrowser n -> EventM n (FileBrowser n)
+actionFileBrowserListHalfPageUp b = do
+    let old = b ^. fileBrowserEntriesL
+    new <- listMoveByPages (-0.5::Double) old
+    return $ b & fileBrowserEntriesL .~ new
+
+actionFileBrowserListHalfPageDown :: Ord n => FileBrowser n -> EventM n (FileBrowser n)
+actionFileBrowserListHalfPageDown b = do
+    let old = b ^. fileBrowserEntriesL
+    new <- listMoveByPages (0.5::Double) old
+    return $ b & fileBrowserEntriesL .~ new
+
+actionFileBrowserListTop :: Ord n => FileBrowser n -> EventM n (FileBrowser n)
+actionFileBrowserListTop b =
+    return $ b & fileBrowserEntriesL %~ listMoveTo 0
+
+actionFileBrowserListBottom :: Ord n => FileBrowser n -> EventM n (FileBrowser n)
+actionFileBrowserListBottom b = do
+    let sz = length (listElements $ b^.fileBrowserEntriesL)
+    return $ b & fileBrowserEntriesL %~ listMoveTo (sz - 1)
+
+actionFileBrowserListNext :: Ord n => FileBrowser n -> EventM n (FileBrowser n)
+actionFileBrowserListNext b =
+    return $ b & fileBrowserEntriesL %~ listMoveBy 1
+
+actionFileBrowserListPrev :: Ord n => FileBrowser n -> EventM n (FileBrowser n)
+actionFileBrowserListPrev b =
+    return $ b & fileBrowserEntriesL %~ listMoveBy (-1)
+
 handleFileBrowserEvent :: (Ord n) => Vty.Event -> FileBrowser n -> EventM n (FileBrowser n)
 handleFileBrowserEvent e b =
     if fileBrowserIsSearching b
@@ -587,48 +660,39 @@ handleFileBrowserEventNormal e b =
     case e of
         Vty.EvKey (Vty.KChar '/') [] ->
             -- Begin file search
-            return $ updateFileBrowserSearch (const $ Just "") b
+            actionFileBrowserBeginSearch b
         Vty.EvKey Vty.KEnter [] ->
             -- Select file or enter directory
-            maybeSelectCurrentEntry b
+            actionFileBrowserSelectEnter b
         Vty.EvKey (Vty.KChar ' ') [] ->
             -- Select entry
-            selectCurrentEntry b
+            actionFileBrowserSelectCurrent b
         _ ->
             handleFileBrowserEventCommon e b
 
 handleFileBrowserEventCommon :: (Ord n) => Vty.Event -> FileBrowser n -> EventM n (FileBrowser n)
 handleFileBrowserEventCommon e b =
     case e of
-        Vty.EvKey (Vty.KChar 'b') [Vty.MCtrl] -> do
-            let old = b ^. fileBrowserEntriesL
-            new <- listMovePageUp old
-            return $ b & fileBrowserEntriesL .~ new
-        Vty.EvKey (Vty.KChar 'f') [Vty.MCtrl] -> do
-            let old = b ^. fileBrowserEntriesL
-            new <- listMovePageDown old
-            return $ b & fileBrowserEntriesL .~ new
-        Vty.EvKey (Vty.KChar 'd') [Vty.MCtrl] -> do
-            let old = b ^. fileBrowserEntriesL
-            new <- listMoveByPages (0.5::Double) old
-            return $ b & fileBrowserEntriesL .~ new
-        Vty.EvKey (Vty.KChar 'u') [Vty.MCtrl] -> do
-            let old = b ^. fileBrowserEntriesL
-            new <- listMoveByPages (-0.5::Double) old
-            return $ b & fileBrowserEntriesL .~ new
+        Vty.EvKey (Vty.KChar 'b') [Vty.MCtrl] ->
+            actionFileBrowserListPageUp b
+        Vty.EvKey (Vty.KChar 'f') [Vty.MCtrl] ->
+            actionFileBrowserListPageDown b
+        Vty.EvKey (Vty.KChar 'd') [Vty.MCtrl] ->
+            actionFileBrowserListHalfPageDown b
+        Vty.EvKey (Vty.KChar 'u') [Vty.MCtrl] ->
+            actionFileBrowserListHalfPageUp b
         Vty.EvKey (Vty.KChar 'g') [] ->
-            return $ b & fileBrowserEntriesL %~ listMoveTo 0
-        Vty.EvKey (Vty.KChar 'G') [] -> do
-            let sz = length (listElements $ b^.fileBrowserEntriesL)
-            return $ b & fileBrowserEntriesL %~ listMoveTo (sz - 1)
+            actionFileBrowserListTop b
+        Vty.EvKey (Vty.KChar 'G') [] ->
+            actionFileBrowserListBottom b
         Vty.EvKey (Vty.KChar 'j') [] ->
-            return $ b & fileBrowserEntriesL %~ listMoveBy 1
+            actionFileBrowserListNext b
         Vty.EvKey (Vty.KChar 'k') [] ->
-            return $ b & fileBrowserEntriesL %~ listMoveBy (-1)
+            actionFileBrowserListPrev b
         Vty.EvKey (Vty.KChar 'n') [Vty.MCtrl] ->
-            return $ b & fileBrowserEntriesL %~ listMoveBy 1
+            actionFileBrowserListNext b
         Vty.EvKey (Vty.KChar 'p') [Vty.MCtrl] ->
-            return $ b & fileBrowserEntriesL %~ listMoveBy (-1)
+            actionFileBrowserListPrev b
         _ ->
             handleEventLensed b fileBrowserEntriesL handleListEvent e
 
