@@ -181,16 +181,6 @@ prop_insertFindBy ops l i a =
     (find ((== Just i') . (^. listSelectedL)) seeks >>= listSelectedElement)
     == Just (i', a)
 
--- Find will never decrease the selected index.  Note that we don't
--- need to handle the 'Nothing' case because ∀a. Nothing < Just a.
-prop_findByNonDecreasing :: (Eq a) => [ListOp a] -> List n a -> a -> Bool
-prop_findByNonDecreasing ops l a =
-  let
-    l' = applyListOps op ops l
-    l'' = listFindBy (== a) l'
-  in
-    l' ^. listSelectedL <= l'' ^. listSelectedL
-
 -- inserting then deleting always yields a list with the original elems
 prop_insertRemove :: (Eq a) => Int -> a -> List n a -> Bool
 prop_insertRemove i a l =
