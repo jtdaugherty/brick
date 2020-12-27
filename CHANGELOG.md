@@ -2,6 +2,12 @@
 Brick changelog
 ---------------
 
+0.58.1
+------
+
+Bug fixes:
+ * Removed a defunct failing test from the List test suite
+
 0.58
 ----
 
