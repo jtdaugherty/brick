@@ -196,7 +196,7 @@ addVisibilityOffset :: Location -> Result n -> Result n
 addVisibilityOffset off r = r & visibilityRequestsL.each.vrPositionL %~ (off <>)
 
 addExtentOffset :: Location -> Result n -> Result n
-addExtentOffset off r = r & extentsL.each %~ (\(Extent n l sz o) -> Extent n (off <> l) sz o)
+addExtentOffset off r = r & extentsL.each %~ (\(Extent n l sz) -> Extent n (off <> l) sz)
 
 addDynBorderOffset :: Location -> Result n -> Result n
 addDynBorderOffset off r = r & bordersL %~ BM.translate off
@@ -207,7 +207,7 @@ reportExtent :: n -> Widget n -> Widget n
 reportExtent n p =
     Widget (hSize p) (vSize p) $ do
         result <- render p
-        let ext = Extent n (Location (0, 0)) sz (Location (0, 0))
+        let ext = Extent n (Location (0, 0)) sz
             sz = ( result^.imageL.to V.imageWidth
                  , result^.imageL.to V.imageHeight
                  )

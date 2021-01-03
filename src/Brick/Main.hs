@@ -309,15 +309,15 @@ runVty vty readEvent app appState rs = do
         VtyEvent (EvMouseDown c r button mods) -> do
             let matching = findClickedExtents_ (c, r) exts
             case matching of
-                (Extent n (Location (ec, er)) _ (Location (oC, oR)):_) ->
+                (Extent n (Location (ec, er)) _:_) ->
                     -- If the clicked extent was registered as
                     -- clickable, send a click event. Otherwise, just
                     -- send the raw mouse event
                     case n `elem` firstRS^.clickableNamesL of
                         True -> do
                             let localCoords = Location (lc, lr)
-                                lc = c - ec + oC
-                                lr = r - er + oR
+                                lc = c - ec
+                                lr = r - er
 
                                 -- If the clicked extent was a viewport,
                                 -- adjust the local coordinates by
@@ -334,15 +334,15 @@ runVty vty readEvent app appState rs = do
         VtyEvent (EvMouseUp c r button) -> do
             let matching = findClickedExtents_ (c, r) exts
             case matching of
-                (Extent n (Location (ec, er)) _ (Location (oC, oR)):_) ->
+                (Extent n (Location (ec, er)) _:_) ->
                     -- If the clicked extent was registered as
                     -- clickable, send a click event. Otherwise, just
                     -- send the raw mouse event
                     case n `elem` firstRS^.clickableNamesL of
                         True -> do
                             let localCoords = Location (lc, lr)
-                                lc = c - ec + oC
-                                lr = r - er + oR
+                                lc = c - ec
+                                lr = r - er
                                 -- If the clicked extent was a viewport,
                                 -- adjust the local coordinates by
                                 -- adding the viewport upper-left corner
@@ -386,7 +386,7 @@ lookupViewport n = EventM $ asks (M.lookup n . eventViewportMap)
 -- | Did the specified mouse coordinates (column, row) intersect the
 -- specified extent?
 clickedExtent :: (Int, Int) -> Extent n -> Bool
-clickedExtent (c, r) (Extent _ (Location (lc, lr)) (w, h) _) =
+clickedExtent (c, r) (Extent _ (Location (lc, lr)) (w, h)) =
    c >= lc && c < (lc + w) &&
    r >= lr && r < (lr + h)
 
@@ -395,7 +395,7 @@ clickedExtent (c, r) (Extent _ (Location (lc, lr)) (w, h) _) =
 lookupExtent :: (Eq n) => n -> EventM n (Maybe (Extent n))
 lookupExtent n = EventM $ asks (listToMaybe . filter f . latestExtents)
     where
-        f (Extent n' _ _ _) = n == n'
+        f (Extent n' _ _) = n == n'
 
 -- | Given a mouse click location, return the extents intersected by the
 -- click. The returned extents are sorted such that the first extent in

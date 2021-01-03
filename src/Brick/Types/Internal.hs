@@ -123,7 +123,6 @@ data EventState n = ES { esScrollRequests :: [(n, ScrollRequest)]
 data Extent n = Extent { extentName      :: n
                        , extentUpperLeft :: Location
                        , extentSize      :: (Int, Int)
-                       , extentOffset    :: Location
                        }
                        deriving (Show, Read, Generic, NFData)
 

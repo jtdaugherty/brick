@@ -97,14 +97,10 @@ cropExtents ctx es = catMaybes $ cropExtent <$> es
         --
         -- Otherwise its size and upper left corner are adjusted so that
         -- they are contained within the context region.
-        cropExtent (Extent n (Location (c, r)) (w, h) (Location (oC, oR))) =
+        cropExtent (Extent n (Location (c, r)) (w, h)) =
             -- First, clamp the upper-left corner to at least (0, 0).
             let c' = max c 0
                 r' = max r 0
-                -- Compute deltas for the offset since if the upper-left
-                -- corner moved, so should the offset.
-                dc = c' - c
-                dr = r' - r
                 -- Then, determine the new lower-right corner based on
                 -- the clamped corner.
                 endCol = c' + w
@@ -117,7 +113,7 @@ cropExtents ctx es = catMaybes $ cropExtent <$> es
                 -- clamped lower-right corner.
                 w' = endCol' - c'
                 h' = endRow' - r'
-                e = Extent n (Location (c', r')) (w', h') (Location (oC + dc, oR + dr))
+                e = Extent n (Location (c', r')) (w', h')
             in if w' < 0 || h' < 0
                then Nothing
                else Just e
