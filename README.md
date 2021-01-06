@@ -70,6 +70,7 @@ include it, get in touch!
 | [`ttyme`](https://github.com/evuez/ttyme) | A TUI for [Harvest](https://www.getharvest.com/) |
 | [`ghcup`](https://www.haskell.org/ghcup/) | A TUI for `ghcup`, the Haskell toolchain manager |
 | [`cbookview`](https://github.com/mlang/chessIO) | A TUI for exploring polyglot chess opening book files |
+| [`thock`](https://github.com/rmehri01/thock) | A modern TUI typing game featuring online racing against friends |
 
 These third-party packages also extend `brick`:
 
