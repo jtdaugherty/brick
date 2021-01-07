@@ -753,13 +753,13 @@ rewriteImage br (loRewrite, hiRewrite) old = rewriteHi . rewriteLo $ old where
     size = imagePrimary br old
     go = rewriteEdge (splitLoSecondary br) (splitHiSecondary br) (concatenateSecondary br)
     rewriteLo img
-        | I.null loRewrite = img
+        | I.null loRewrite || size == 0 = img
         | otherwise = concatenatePrimary br
             [ go loRewrite (splitLoPrimary br 1 img)
             , splitHiPrimary br 1 img
             ]
     rewriteHi img
-        | I.null hiRewrite = img
+        | I.null hiRewrite || size == 0 = img
         | otherwise = concatenatePrimary br
             [ splitLoPrimary br (size-1) img
             , go hiRewrite (splitHiPrimary br (size-1) img)
