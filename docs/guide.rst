@@ -620,7 +620,7 @@ A widget advertising a ``Fixed`` size in a given dimension is a widget
 that will always consume the same number of rows or columns no
 matter how many it is given. Widgets can advertise different
 vertical and horizontal growth policies for example, the
-``Brick.Widgets.Border.hCenter`` function centers a widget and is
+``Brick.Widgets.Center.hCenter`` function centers a widget and is
 ``Greedy`` horizontally and defers to the widget it centers for vertical
 growth behavior.
 
