@@ -55,6 +55,8 @@ module Brick.Widgets.List
   , listMoveByPages
   , listMovePageUp
   , listMovePageDown
+  , listMoveToBeginning
+  , listMoveToEnd
   , listInsert
   , listRemove
   , listReplace
@@ -203,8 +205,8 @@ handleListEvent e theList =
     case e of
         EvKey KUp [] -> return $ listMoveUp theList
         EvKey KDown [] -> return $ listMoveDown theList
-        EvKey KHome [] -> return $ listMoveTo 0 theList
-        EvKey KEnd [] -> return $ listMoveTo (length $ listElements theList) theList
+        EvKey KHome [] -> return $ listMoveToBeginning theList
+        EvKey KEnd [] -> return $ listMoveToEnd theList
         EvKey KPageDown [] -> listMovePageDown theList
         EvKey KPageUp [] -> listMovePageUp theList
         _ -> return theList
@@ -233,13 +235,25 @@ handleListEventVi fallback e theList =
     case e of
         EvKey (KChar 'k') [] -> return $ listMoveUp theList
         EvKey (KChar 'j') [] -> return $ listMoveDown theList
-        EvKey (KChar 'g') [] -> return $ listMoveTo 0 theList
-        EvKey (KChar 'G') [] -> return $ listMoveTo (length $ listElements theList) theList
+        EvKey (KChar 'g') [] -> return $ listMoveToBeginning theList
+        EvKey (KChar 'G') [] -> return $ listMoveToEnd theList
         EvKey (KChar 'f') [MCtrl] -> listMovePageDown theList
         EvKey (KChar 'b') [MCtrl] -> listMovePageUp theList
         EvKey (KChar 'd') [MCtrl] -> listMoveByPages (0.5::Double) theList
         EvKey (KChar 'u') [MCtrl] -> listMoveByPages (-0.5::Double) theList
         _ -> fallback e theList
+
+-- | Move the list selection to the first element in the list.
+listMoveToBeginning :: (Foldable t, Splittable t)
+                    => GenericList n t e
+                    -> GenericList n t e
+listMoveToBeginning = listMoveTo 0
+
+-- | Move the list selection to the last element in the list.
+listMoveToEnd :: (Foldable t, Splittable t)
+              => GenericList n t e
+              -> GenericList n t e
+listMoveToEnd l = listMoveTo (length $ listElements l) l
 
 -- | The top-level attribute used for the entire list.
 listAttr :: AttrName
