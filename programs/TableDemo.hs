@@ -9,7 +9,11 @@ import Brick
 import Brick.Widgets.Table
 
 ui :: Widget ()
-ui = table [[txt "foo", txt "bar"], [txt "stuff", txt "more things"]]
+ui = table [AlignCenter, AlignRight]
+           [ [txt "foo",   txt "bar"]
+           , [txt "stuff", txt "more things"]
+           , [txt "a",     txt "blah"]
+           ]
 
 main :: IO ()
 main = simpleMain ui
