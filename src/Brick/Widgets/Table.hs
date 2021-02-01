@@ -39,7 +39,7 @@ data ColumnAlignment =
     AlignLeft
     -- ^ Align all cells to the left (the default).
     | AlignCenter
-    -- ^ Center the content in all cells in the column.
+    -- ^ Center the content horizontally in all cells in the column.
     | AlignRight
     -- ^ Align all cells to the right.
     deriving (Eq, Show, Read)
@@ -49,7 +49,7 @@ data RowAlignment =
     AlignTop
     -- ^ Align all cells to the top (the default).
     | AlignMiddle
-    -- ^ Center the content verticall in all cells in the row.
+    -- ^ Center the content vertically in all cells in the row.
     | AlignBottom
     -- ^ Align all cells to the bottom.
     deriving (Eq, Show, Read)
