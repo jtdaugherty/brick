@@ -3,6 +3,7 @@ module Brick.Widgets.Table
   ( Table
   , ColumnAlignment(..)
   , RowAlignment(..)
+  , TableException(..)
   -- * Construction
   , table
 
