@@ -4,9 +4,9 @@ module Brick.Widgets.Table
   , table
   , alignRight
   , alignCenter
-  , noBorder
-  , noRowBorders
-  , noColumnBorders
+  , surroundingBorder
+  , rowBorders
+  , columnBorders
 
   , renderTable
   )
@@ -31,31 +31,31 @@ data ColumnAlignment =
 data Table n =
     Table { columnAlignments :: M.Map Int ColumnAlignment
           , tableRows :: [[Widget n]]
-          , surroundingBorder :: Bool
-          , rowBorders :: Bool
-          , columnBorders :: Bool
+          , drawSurroundingBorder :: Bool
+          , drawRowBorders :: Bool
+          , drawColumnBorders :: Bool
           }
 
 table :: [[Widget n]] -> Table n
 table rows =
     Table { columnAlignments = mempty
           , tableRows = rows
-          , surroundingBorder = True
-          , rowBorders = True
-          , columnBorders = True
+          , drawSurroundingBorder = True
+          , drawRowBorders = True
+          , drawColumnBorders = True
           }
 
-noBorder :: Table n -> Table n
-noBorder t =
-    t { surroundingBorder = False }
+surroundingBorder :: Bool -> Table n -> Table n
+surroundingBorder b t =
+    t { drawSurroundingBorder = b }
 
-noRowBorders :: Table n -> Table n
-noRowBorders t =
-    t { rowBorders = False }
+rowBorders :: Bool -> Table n -> Table n
+rowBorders b t =
+    t { drawRowBorders = b }
 
-noColumnBorders :: Table n -> Table n
-noColumnBorders t =
-    t { columnBorders = False }
+columnBorders :: Bool -> Table n -> Table n
+columnBorders b t =
+    t { drawColumnBorders = b }
 
 alignRight :: Int -> Table n -> Table n
 alignRight col =
@@ -72,7 +72,7 @@ setAlignment col a t =
 renderTable :: Table n -> Widget n
 renderTable t =
     joinBorders $
-    (if surroundingBorder t then border else id) $
+    (if drawSurroundingBorder t then border else id) $
     Widget Fixed Fixed $ do
         let rows = tableRows t
         cellResults <- forM rows $ mapM render
@@ -98,15 +98,15 @@ renderTable t =
                     render $ maybeAlign align width $
                         padBottom (Pad (height - (imageHeight $ image cell)))
                         (toW cell)
-                let maybeRowBorders = if rowBorders t
+                let maybeRowBorders = if drawRowBorders t
                                       then intersperse (hLimit width hBorder)
                                       else id
                 render $ vBox $ maybeRowBorders $
                         toW <$> paddedCells
         columns <- mapM mkColumn $ zip3 [0..] colWidths byColumn
         let maybeColumnBorders =
-                if columnBorders t
-                then let rowBorderHeight = if rowBorders t
+                if drawColumnBorders t
+                then let rowBorderHeight = if drawRowBorders t
                                            then length rows - 1
                                            else 0
                      in intersperse (vLimit (totalHeight + rowBorderHeight) vBorder)
