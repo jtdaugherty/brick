@@ -42,9 +42,9 @@ table rows =
     then error "table: all cells must have Fixed horizontal and vertical growth policies"
     else t
     where
-        allFixed = all (== Fixed) $ concat $ getPolicies <$> rows
-        getPolicies row = concat $ getCellPolicies <$> row
-        getCellPolicies w = [hSize w, vSize w]
+        allFixed = all fixedRow rows
+        fixedRow = all fixedCell
+        fixedCell w = hSize w == Fixed && vSize w == Fixed
         t = Table { columnAlignments = mempty
                   , tableRows = rows
                   , drawSurroundingBorder = True
