@@ -11,9 +11,9 @@ import Brick.Widgets.Center (center)
 
 ui :: Widget ()
 ui = center $ renderTable leftTable <+>
-              padLeft (Pad 10) (renderTable rightTableA <=>
-                                renderTable rightTableB <=>
-                                renderTable rightTableC)
+              padLeft (Pad 5) (renderTable rightTableA <=>
+                               renderTable rightTableB <=>
+                               renderTable rightTableC)
 
 innerTable :: Table ()
 innerTable =
