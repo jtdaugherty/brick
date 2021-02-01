@@ -173,7 +173,7 @@ renderTable t =
             byColumn = transpose cellResults
             toW = Widget Fixed Fixed . return
             totalHeight = sum rowHeights
-            maybeAlign align width w =
+            applyColAlignment align width w =
                 Widget Fixed Fixed $ do
                     result <- render w
                     case align of
@@ -189,7 +189,7 @@ renderTable t =
                  AlignBottom -> vLimit rHeight $ padTop Max $ toW result
             mkColumn (hAlign, width, colCells) = do
                 let paddedCells = flip map (zip3 allRowAligns rowHeights colCells) $ \(vAlign, rHeight, cell) ->
-                        maybeAlign hAlign width $
+                        applyColAlignment hAlign width $
                         applyRowAlignment rHeight vAlign cell
                     maybeRowBorders = if drawRowBorders t
                                       then intersperse (hLimit width hBorder)
