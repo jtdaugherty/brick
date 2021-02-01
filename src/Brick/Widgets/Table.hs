@@ -2,7 +2,10 @@
 module Brick.Widgets.Table
   ( Table
   , ColumnAlignment(..)
+  -- * Construction
   , table
+
+  -- * Configuration
   , alignLeft
   , alignRight
   , alignCenter
@@ -11,6 +14,7 @@ module Brick.Widgets.Table
   , rowBorders
   , columnBorders
 
+  -- * Rendering
   , renderTable
   )
 where
