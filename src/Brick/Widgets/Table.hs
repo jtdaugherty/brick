@@ -27,7 +27,7 @@ module Brick.Widgets.Table
 where
 
 import Control.Monad (forM)
-import Data.List (transpose, intersperse)
+import Data.List (transpose, intersperse, nub)
 import qualified Data.Map as M
 import Graphics.Vty (imageHeight, imageWidth)
 
@@ -91,8 +91,11 @@ table :: [[Widget n]] -> Table n
 table rows =
     if not allFixed
     then error "table: all cells must have Fixed horizontal and vertical growth policies"
-    else t
+    else if not allSameLength
+         then error "table: all rows must have the same number of cells"
+         else t
     where
+        allSameLength = length (nub (length <$> rows)) == 1
         allFixed = all fixedRow rows
         fixedRow = all fixedCell
         fixedCell w = hSize w == Fixed && vSize w == Fixed
