@@ -1,11 +1,16 @@
 module Brick.Widgets.Table
-  ( ColumnAlignment(..)
+  ( Table
+  , ColumnAlignment(..)
   , table
+  , alignRight
+  , alignCenter
+  , renderTable
   )
 where
 
 import Control.Monad (forM)
 import Data.List (transpose, intersperse)
+import qualified Data.Map as M
 import Graphics.Vty (imageHeight, imageWidth)
 
 import Brick.Types
@@ -19,10 +24,33 @@ data ColumnAlignment =
     | AlignRight
     deriving (Eq, Show, Read)
 
-table :: [ColumnAlignment] -> [[Widget n]] -> Widget n
-table _ [] = emptyWidget
-table aligns rows =
+data Table n =
+    Table { columnAlignments :: M.Map Int ColumnAlignment
+          , tableRows :: [[Widget n]]
+          }
+
+table :: [[Widget n]] -> Table n
+table rows =
+    Table { columnAlignments = mempty
+          , tableRows = rows
+          }
+
+alignRight :: Int -> Table n -> Table n
+alignRight col =
+    setAlignment col AlignRight
+
+alignCenter :: Int -> Table n -> Table n
+alignCenter col =
+    setAlignment col AlignCenter
+
+setAlignment :: Int -> ColumnAlignment -> Table n -> Table n
+setAlignment col a t =
+    t { columnAlignments = M.insert col a (columnAlignments t) }
+
+renderTable :: Table n -> Widget n
+renderTable t =
     joinBorders $ border $ Widget Fixed Fixed $ do
+        let rows = tableRows t
         cellResults <- forM rows $ mapM render
         let rowHeights = rowHeight <$> cellResults
             colWidths = colWidth <$> byColumn
@@ -40,14 +68,15 @@ table aligns rows =
                         AlignRight -> render $
                                           padLeft (Pad (width - imageWidth (image result))) $
                                           toW result
-            mkColumn (align, width, colCells) = do
+            mkColumn (colIdx, width, colCells) = do
+                let align = M.findWithDefault AlignLeft colIdx (columnAlignments t)
                 paddedCells <- forM (zip rowHeights colCells) $ \(height, cell) ->
                     render $ maybeAlign align width $
                         padBottom (Pad (height - (imageHeight $ image cell)))
                         (toW cell)
                 render $ vBox $ intersperse (hLimit width hBorder) $
                     toW <$> paddedCells
-        columns <- mapM mkColumn $ zip3 aligns colWidths byColumn
+        columns <- mapM mkColumn $ zip3 [0..] colWidths byColumn
         render $ hBox $
             intersperse (vLimit (totalHeight + (length rows - 1)) vBorder) $
             toW <$> columns
