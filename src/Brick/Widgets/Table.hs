@@ -6,6 +6,7 @@ module Brick.Widgets.Table
   , alignLeft
   , alignRight
   , alignCenter
+  , setAlignment
   , surroundingBorder
   , rowBorders
   , columnBorders
@@ -105,6 +106,8 @@ alignLeft = setAlignment AlignLeft
 alignCenter :: Int -> Table n -> Table n
 alignCenter = setAlignment AlignCenter
 
+-- | Set the alignment for the specified column index (starting at
+-- zero).
 setAlignment :: ColumnAlignment -> Int -> Table n -> Table n
 setAlignment a col t =
     t { columnAlignments = M.insert col a (columnAlignments t) }
