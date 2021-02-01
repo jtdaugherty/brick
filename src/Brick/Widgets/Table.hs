@@ -164,6 +164,8 @@ renderTable t =
         cellResults <- forM rows $ mapM render
         let rowHeights = rowHeight <$> cellResults
             colWidths = colWidth <$> byColumn
+            allRowAligns = (\i -> M.findWithDefault AlignTop i (rowAlignments t)) <$>
+                           [0..length rowHeights - 1]
             rowHeight = maximum . fmap (imageHeight . image)
             colWidth = maximum . fmap (imageWidth . image)
             byColumn = transpose cellResults
@@ -185,10 +187,9 @@ renderTable t =
                  AlignBottom -> vLimit rHeight $ padTop Max $ toW result
             mkColumn (colIdx, width, colCells) = do
                 let hAlign = M.findWithDefault AlignLeft colIdx (columnAlignments t)
-                    paddedCells = flip map (zip3 [0..] rowHeights colCells) $ \(rowIdx, rHeight, cell) ->
-                        let vAlign = M.findWithDefault AlignTop rowIdx (rowAlignments t)
-                        in maybeAlign hAlign width $
-                           applyRowAlignment rHeight vAlign cell
+                    paddedCells = flip map (zip3 allRowAligns rowHeights colCells) $ \(vAlign, rHeight, cell) ->
+                        maybeAlign hAlign width $
+                        applyRowAlignment rHeight vAlign cell
                 let maybeRowBorders = if drawRowBorders t
                                       then intersperse (hLimit width hBorder)
                                       else id
