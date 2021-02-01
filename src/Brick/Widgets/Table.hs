@@ -166,6 +166,8 @@ renderTable t =
             colWidths = colWidth <$> byColumn
             allRowAligns = (\i -> M.findWithDefault AlignTop i (rowAlignments t)) <$>
                            [0..length rowHeights - 1]
+            allColAligns = (\i -> M.findWithDefault AlignLeft i (columnAlignments t)) <$>
+                           [0..length byColumn - 1]
             rowHeight = maximum . fmap (imageHeight . image)
             colWidth = maximum . fmap (imageWidth . image)
             byColumn = transpose cellResults
@@ -185,16 +187,15 @@ renderTable t =
                  AlignTop -> toW result
                  AlignMiddle -> vLimit rHeight $ vCenter $ toW result
                  AlignBottom -> vLimit rHeight $ padTop Max $ toW result
-            mkColumn (colIdx, width, colCells) = do
-                let hAlign = M.findWithDefault AlignLeft colIdx (columnAlignments t)
-                    paddedCells = flip map (zip3 allRowAligns rowHeights colCells) $ \(vAlign, rHeight, cell) ->
+            mkColumn (hAlign, width, colCells) = do
+                let paddedCells = flip map (zip3 allRowAligns rowHeights colCells) $ \(vAlign, rHeight, cell) ->
                         maybeAlign hAlign width $
                         applyRowAlignment rHeight vAlign cell
-                let maybeRowBorders = if drawRowBorders t
+                    maybeRowBorders = if drawRowBorders t
                                       then intersperse (hLimit width hBorder)
                                       else id
                 render $ vBox $ maybeRowBorders paddedCells
-        columns <- mapM mkColumn $ zip3 [0..] colWidths byColumn
+        columns <- mapM mkColumn $ zip3 allColAligns colWidths byColumn
         let maybeColumnBorders =
                 if drawColumnBorders t
                 then let rowBorderHeight = if drawRowBorders t
