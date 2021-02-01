@@ -93,23 +93,20 @@ columnBorders b t =
 -- | Align the specified column to the right. The argument is the column
 -- index, starting with zero.
 alignRight :: Int -> Table n -> Table n
-alignRight col =
-    setAlignment col AlignRight
+alignRight = setAlignment AlignRight
 
 -- | Align the specified column to the left. The argument is the column
 -- index, starting with zero.
 alignLeft :: Int -> Table n -> Table n
-alignLeft col =
-    setAlignment col AlignLeft
+alignLeft = setAlignment AlignLeft
 
 -- | Align the specified column to center. The argument is the column
 -- index, starting with zero.
 alignCenter :: Int -> Table n -> Table n
-alignCenter col =
-    setAlignment col AlignCenter
+alignCenter = setAlignment AlignCenter
 
-setAlignment :: Int -> ColumnAlignment -> Table n -> Table n
-setAlignment col a t =
+setAlignment :: ColumnAlignment -> Int -> Table n -> Table n
+setAlignment a col t =
     t { columnAlignments = M.insert col a (columnAlignments t) }
 
 -- | Render the table.
