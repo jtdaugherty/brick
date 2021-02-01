@@ -27,6 +27,7 @@ module Brick.Widgets.Table
 where
 
 import Control.Monad (forM)
+import qualified Control.Exception as E
 import Data.List (transpose, intersperse, nub)
 import qualified Data.Map as M
 import Graphics.Vty (imageHeight, imageWidth)
@@ -55,6 +56,17 @@ data RowAlignment =
     | AlignBottom
     -- ^ Align all cells to the bottom.
     deriving (Eq, Show, Read)
+
+-- | A table creation exception.
+data TableException =
+    TEUnequalRowSizes
+    -- ^ Rows did not all have the same number of cells.
+    | TEInvalidCellSizePolicy
+    -- ^ Some cells in the table did not use the 'Fixed' size policy for
+    -- both horizontal and vertical sizing.
+    deriving (Eq, Show, Read)
+
+instance E.Exception TableException where
 
 -- | A table data structure.
 data Table n =
@@ -85,14 +97,18 @@ data Table n =
 -- always draw with 'joinBorders' enabled.
 --
 -- All cells of all rows MUST use the 'Fixed' growth policy for both
--- horizontal and vertical growth. If the argument list contains any
--- cells that use the 'Greedy' policy, this will throw an exception.
+-- horizontal and vertical growth. If the argument list contains
+-- any cells that use the 'Greedy' policy, this will raise a
+-- 'TableException'.
+--
+-- All rows must have the same number of cells. If not, this will raise
+-- a 'TableException'.
 table :: [[Widget n]] -> Table n
 table rows =
     if not allFixed
-    then error "table: all cells must have Fixed horizontal and vertical growth policies"
+    then E.throw TEInvalidCellSizePolicy
     else if not allSameLength
-         then error "table: all rows must have the same number of cells"
+         then E.throw TEUnequalRowSizes
          else t
     where
         allSameLength = length (nub (length <$> rows)) == 1
