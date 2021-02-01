@@ -22,10 +22,10 @@ outerTable :: Table ()
 outerTable =
     alignCenter 1 $
     alignRight 2 $
-    table [ [txt "Left",  txt "Center",      txt "Right"]
-          , [txt "X",     txt "Some things", txt "A"]
-          , [renderTable innerTable, txt "are", txt "B"]
-          , [txt "Z",     txt "centered",    txt "C"]
+    table [ [txt "Left",             txt "Center",      txt "Right"]
+          , [txt "X",                txt "Some things", txt "A"]
+          , [renderTable innerTable, txt "are",         txt "B"]
+          , [txt "Z",                txt "centered",    txt "C"]
           ]
 
 main :: IO ()
