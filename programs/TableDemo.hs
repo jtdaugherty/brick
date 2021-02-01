@@ -9,7 +9,7 @@ import Brick
 import Brick.Widgets.Table
 
 ui :: Widget ()
-ui = renderTable myTable
+ui = renderTable outerTable
 
 innerTable :: Table ()
 innerTable =
@@ -18,8 +18,8 @@ innerTable =
           , [txt "is",    txt "here"]
           ]
 
-myTable :: Table ()
-myTable =
+outerTable :: Table ()
+outerTable =
     alignCenter 1 $
     alignRight 2 $
     table [ [txt "Left",  txt "Center",      txt "Right"]
