@@ -1,3 +1,4 @@
+-- | Support for basic table drawing.
 module Brick.Widgets.Table
   ( Table
   , ColumnAlignment(..)
@@ -22,12 +23,17 @@ import Brick.Widgets.Core
 import Brick.Widgets.Center
 import Brick.Widgets.Border
 
+-- | Column alignment modes.
 data ColumnAlignment =
     AlignLeft
+    -- ^ Align all cells to the left (the default).
     | AlignCenter
+    -- ^ Center the content in all cells in the column.
     | AlignRight
+    -- ^ Align all cells to the right.
     deriving (Eq, Show, Read)
 
+-- | A table data structure.
 data Table n =
     Table { columnAlignments :: M.Map Int ColumnAlignment
           , tableRows :: [[Widget n]]
@@ -36,6 +42,22 @@ data Table n =
           , drawColumnBorders :: Bool
           }
 
+-- | Construct a new table.
+--
+-- The argument is the list of rows, with each element of the argument
+-- list being the columns of the respective row.
+--
+-- By default, all columns are left-aligned. Use the alignment functions
+-- in this module to change that behavior.
+--
+-- By default, the table will draw borders between columns, between
+-- rows, and around the outside of the table. Border-drawing behavior
+-- can be configured with the API in this module. Note that tables
+-- always draw with 'joinBorders' enabled.
+--
+-- All cells of all rows MUST use the 'Fixed' growth policy for both
+-- horizontal and vertical growth. If the argument list contains any
+-- cells that use the 'Greedy' policy, this will throw an exception.
 table :: [[Widget n]] -> Table n
 table rows =
     if not allFixed
@@ -52,22 +74,29 @@ table rows =
                   , drawColumnBorders = True
                   }
 
+-- | Configure whether the table draws a border on its exterior.
 surroundingBorder :: Bool -> Table n -> Table n
 surroundingBorder b t =
     t { drawSurroundingBorder = b }
 
+-- | Configure whether the table draws borders between its rows.
 rowBorders :: Bool -> Table n -> Table n
 rowBorders b t =
     t { drawRowBorders = b }
 
+-- | Configure whether the table draws borders between its columns.
 columnBorders :: Bool -> Table n -> Table n
 columnBorders b t =
     t { drawColumnBorders = b }
 
+-- | Align the specified column to the right. The argument is the column
+-- index, starting with zero.
 alignRight :: Int -> Table n -> Table n
 alignRight col =
     setAlignment col AlignRight
 
+-- | Align the specified column to center. The argument is the column
+-- index, starting with zero.
 alignCenter :: Int -> Table n -> Table n
 alignCenter col =
     setAlignment col AlignCenter
@@ -76,6 +105,7 @@ setAlignment :: Int -> ColumnAlignment -> Table n -> Table n
 setAlignment col a t =
     t { columnAlignments = M.insert col a (columnAlignments t) }
 
+-- | Render the table.
 renderTable :: Table n -> Widget n
 renderTable t =
     joinBorders $
