@@ -2,6 +2,7 @@
 module Brick.Widgets.Table
   ( Table
   , ColumnAlignment(..)
+  , RowAlignment(..)
   -- * Construction
   , table
 
@@ -9,7 +10,11 @@ module Brick.Widgets.Table
   , alignLeft
   , alignRight
   , alignCenter
-  , setAlignment
+  , alignTop
+  , alignMiddle
+  , alignBottom
+  , setColAlignment
+  , setRowAlignment
   , surroundingBorder
   , rowBorders
   , columnBorders
@@ -39,9 +44,20 @@ data ColumnAlignment =
     -- ^ Align all cells to the right.
     deriving (Eq, Show, Read)
 
+-- | Row alignment modes.
+data RowAlignment =
+    AlignTop
+    -- ^ Align all cells to the top (the default).
+    | AlignMiddle
+    -- ^ Center the content verticall in all cells in the row.
+    | AlignBottom
+    -- ^ Align all cells to the bottom.
+    deriving (Eq, Show, Read)
+
 -- | A table data structure.
 data Table n =
     Table { columnAlignments :: M.Map Int ColumnAlignment
+          , rowAlignments :: M.Map Int RowAlignment
           , tableRows :: [[Widget n]]
           , drawSurroundingBorder :: Bool
           , drawRowBorders :: Bool
@@ -74,6 +90,7 @@ table rows =
         fixedRow = all fixedCell
         fixedCell w = hSize w == Fixed && vSize w == Fixed
         t = Table { columnAlignments = mempty
+                  , rowAlignments = mempty
                   , tableRows = rows
                   , drawSurroundingBorder = True
                   , drawRowBorders = True
@@ -98,23 +115,44 @@ columnBorders b t =
 -- | Align the specified column to the right. The argument is the column
 -- index, starting with zero.
 alignRight :: Int -> Table n -> Table n
-alignRight = setAlignment AlignRight
+alignRight = setColAlignment AlignRight
 
 -- | Align the specified column to the left. The argument is the column
 -- index, starting with zero.
 alignLeft :: Int -> Table n -> Table n
-alignLeft = setAlignment AlignLeft
+alignLeft = setColAlignment AlignLeft
 
 -- | Align the specified column to center. The argument is the column
 -- index, starting with zero.
 alignCenter :: Int -> Table n -> Table n
-alignCenter = setAlignment AlignCenter
+alignCenter = setColAlignment AlignCenter
+
+-- | Align the specified row to the top. The argument is the row index,
+-- starting with zero.
+alignTop :: Int -> Table n -> Table n
+alignTop = setRowAlignment AlignTop
+
+-- | Align the specified row to the middle. The argument is the row
+-- index, starting with zero.
+alignMiddle :: Int -> Table n -> Table n
+alignMiddle = setRowAlignment AlignMiddle
+
+-- | Align the specified row to bottom. The argument is the row index,
+-- starting with zero.
+alignBottom :: Int -> Table n -> Table n
+alignBottom = setRowAlignment AlignBottom
 
 -- | Set the alignment for the specified column index (starting at
 -- zero).
-setAlignment :: ColumnAlignment -> Int -> Table n -> Table n
-setAlignment a col t =
+setColAlignment :: ColumnAlignment -> Int -> Table n -> Table n
+setColAlignment a col t =
     t { columnAlignments = M.insert col a (columnAlignments t) }
+
+-- | Set the alignment for the specified row index (starting at
+-- zero).
+setRowAlignment :: RowAlignment -> Int -> Table n -> Table n
+setRowAlignment a row t =
+    t { rowAlignments = M.insert row a (rowAlignments t) }
 
 -- | Render the table.
 renderTable :: Table n -> Widget n
@@ -140,17 +178,21 @@ renderTable t =
                         AlignRight -> render $
                                           padLeft (Pad (width - imageWidth (image result))) $
                                           toW result
+            applyRowAlignment rHeight align result =
+                case align of
+                 AlignTop -> toW result
+                 AlignMiddle -> vLimit rHeight $ vCenter $ toW result
+                 AlignBottom -> vLimit rHeight $ padTop Max $ toW result
             mkColumn (colIdx, width, colCells) = do
-                let align = M.findWithDefault AlignLeft colIdx (columnAlignments t)
-                paddedCells <- forM (zip rowHeights colCells) $ \(height, cell) ->
-                    render $ maybeAlign align width $
-                        padBottom (Pad (height - (imageHeight $ image cell)))
-                        (toW cell)
+                let hAlign = M.findWithDefault AlignLeft colIdx (columnAlignments t)
+                    paddedCells = flip map (zip3 [0..] rowHeights colCells) $ \(rowIdx, rHeight, cell) ->
+                        let vAlign = M.findWithDefault AlignTop rowIdx (rowAlignments t)
+                        in maybeAlign hAlign width $
+                           applyRowAlignment rHeight vAlign cell
                 let maybeRowBorders = if drawRowBorders t
                                       then intersperse (hLimit width hBorder)
                                       else id
-                render $ vBox $ maybeRowBorders $
-                        toW <$> paddedCells
+                render $ vBox $ maybeRowBorders paddedCells
         columns <- mapM mkColumn $ zip3 [0..] colWidths byColumn
         let maybeColumnBorders =
                 if drawColumnBorders t
