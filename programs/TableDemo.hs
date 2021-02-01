@@ -7,9 +7,10 @@ import Data.Monoid ((<>))
 #endif
 import Brick
 import Brick.Widgets.Table
+import Brick.Widgets.Center (center)
 
 ui :: Widget ()
-ui = renderTable outerTable
+ui = center $ renderTable outerTable
 
 innerTable :: Table ()
 innerTable =
