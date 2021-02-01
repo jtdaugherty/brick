@@ -3,6 +3,7 @@ module Brick.Widgets.Table
   ( Table
   , ColumnAlignment(..)
   , table
+  , alignLeft
   , alignRight
   , alignCenter
   , surroundingBorder
@@ -94,6 +95,12 @@ columnBorders b t =
 alignRight :: Int -> Table n -> Table n
 alignRight col =
     setAlignment col AlignRight
+
+-- | Align the specified column to the left. The argument is the column
+-- index, starting with zero.
+alignLeft :: Int -> Table n -> Table n
+alignLeft col =
+    setAlignment col AlignLeft
 
 -- | Align the specified column to center. The argument is the column
 -- index, starting with zero.
