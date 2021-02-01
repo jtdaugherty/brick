@@ -6,6 +6,7 @@ module Brick.Widgets.Table
   , alignCenter
   , noBorder
   , noRowBorders
+  , noColumnBorders
 
   , renderTable
   )
@@ -32,6 +33,7 @@ data Table n =
           , tableRows :: [[Widget n]]
           , surroundingBorder :: Bool
           , rowBorders :: Bool
+          , columnBorders :: Bool
           }
 
 table :: [[Widget n]] -> Table n
@@ -40,6 +42,7 @@ table rows =
           , tableRows = rows
           , surroundingBorder = True
           , rowBorders = True
+          , columnBorders = True
           }
 
 noBorder :: Table n -> Table n
@@ -49,6 +52,10 @@ noBorder t =
 noRowBorders :: Table n -> Table n
 noRowBorders t =
     t { rowBorders = False }
+
+noColumnBorders :: Table n -> Table n
+noColumnBorders t =
+    t { columnBorders = False }
 
 alignRight :: Int -> Table n -> Table n
 alignRight col =
@@ -97,6 +104,11 @@ renderTable t =
                 render $ vBox $ maybeRowBorders $
                         toW <$> paddedCells
         columns <- mapM mkColumn $ zip3 [0..] colWidths byColumn
-        render $ hBox $
-            intersperse (vLimit (totalHeight + (length rows - 1)) vBorder) $
-            toW <$> columns
+        let maybeColumnBorders =
+                if columnBorders t
+                then let rowBorderHeight = if rowBorders t
+                                           then length rows - 1
+                                           else 0
+                     in intersperse (vLimit (totalHeight + rowBorderHeight) vBorder)
+                else id
+        render $ hBox $ maybeColumnBorders $ toW <$> columns
