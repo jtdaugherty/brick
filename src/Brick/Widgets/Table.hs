@@ -15,6 +15,8 @@ module Brick.Widgets.Table
   , alignBottom
   , setColAlignment
   , setRowAlignment
+  , setDefaultColAlignment
+  , setDefaultRowAlignment
   , surroundingBorder
   , rowBorders
   , columnBorders
@@ -37,7 +39,7 @@ import Brick.Widgets.Border
 -- | Column alignment modes.
 data ColumnAlignment =
     AlignLeft
-    -- ^ Align all cells to the left (the default).
+    -- ^ Align all cells to the left.
     | AlignCenter
     -- ^ Center the content horizontally in all cells in the column.
     | AlignRight
@@ -47,7 +49,7 @@ data ColumnAlignment =
 -- | Row alignment modes.
 data RowAlignment =
     AlignTop
-    -- ^ Align all cells to the top (the default).
+    -- ^ Align all cells to the top.
     | AlignMiddle
     -- ^ Center the content vertically in all cells in the row.
     | AlignBottom
@@ -59,6 +61,8 @@ data Table n =
     Table { columnAlignments :: M.Map Int ColumnAlignment
           , rowAlignments :: M.Map Int RowAlignment
           , tableRows :: [[Widget n]]
+          , defaultColumnAlignment :: ColumnAlignment
+          , defaultRowAlignment :: RowAlignment
           , drawSurroundingBorder :: Bool
           , drawRowBorders :: Bool
           , drawColumnBorders :: Bool
@@ -71,6 +75,9 @@ data Table n =
 --
 -- By default, all columns are left-aligned. Use the alignment functions
 -- in this module to change that behavior.
+--
+-- By default, all rows are top-aligned. Use the alignment functions in
+-- this module to change that behavior.
 --
 -- By default, the table will draw borders between columns, between
 -- rows, and around the outside of the table. Border-drawing behavior
@@ -95,6 +102,8 @@ table rows =
                   , drawSurroundingBorder = True
                   , drawRowBorders = True
                   , drawColumnBorders = True
+                  , defaultColumnAlignment = AlignLeft
+                  , defaultRowAlignment = AlignTop
                   }
 
 -- | Configure whether the table draws a border on its exterior.
@@ -154,6 +163,18 @@ setRowAlignment :: RowAlignment -> Int -> Table n -> Table n
 setRowAlignment a row t =
     t { rowAlignments = M.insert row a (rowAlignments t) }
 
+-- | Set the default column alignment for columns with no explicitly
+-- configured alignment.
+setDefaultColAlignment :: ColumnAlignment -> Table n -> Table n
+setDefaultColAlignment a t =
+    t { defaultColumnAlignment = a }
+
+-- | Set the default row alignment for rows with no explicitly
+-- configured alignment.
+setDefaultRowAlignment :: RowAlignment -> Table n -> Table n
+setDefaultRowAlignment a t =
+    t { defaultRowAlignment = a }
+
 -- | Render the table.
 renderTable :: Table n -> Widget n
 renderTable t =
@@ -164,9 +185,9 @@ renderTable t =
         cellResults <- forM rows $ mapM render
         let rowHeights = rowHeight <$> cellResults
             colWidths = colWidth <$> byColumn
-            allRowAligns = (\i -> M.findWithDefault AlignTop i (rowAlignments t)) <$>
+            allRowAligns = (\i -> M.findWithDefault (defaultRowAlignment t) i (rowAlignments t)) <$>
                            [0..length rowHeights - 1]
-            allColAligns = (\i -> M.findWithDefault AlignLeft i (columnAlignments t)) <$>
+            allColAligns = (\i -> M.findWithDefault (defaultColumnAlignment t) i (columnAlignments t)) <$>
                            [0..length byColumn - 1]
             rowHeight = maximum . fmap (imageHeight . image)
             colWidth = maximum . fmap (imageWidth . image)
