@@ -1,9 +1,12 @@
 -- | Support for basic table drawing.
 module Brick.Widgets.Table
-  ( Table
+  (
+  -- * Types
+    Table
   , ColumnAlignment(..)
   , RowAlignment(..)
   , TableException(..)
+
   -- * Construction
   , table
 
