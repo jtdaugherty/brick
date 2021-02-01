@@ -38,12 +38,19 @@ data Table n =
 
 table :: [[Widget n]] -> Table n
 table rows =
-    Table { columnAlignments = mempty
-          , tableRows = rows
-          , drawSurroundingBorder = True
-          , drawRowBorders = True
-          , drawColumnBorders = True
-          }
+    if not allFixed
+    then error "table: all cells must have Fixed horizontal and vertical growth policies"
+    else t
+    where
+        allFixed = all (== Fixed) $ concat $ getPolicies <$> rows
+        getPolicies row = concat $ getCellPolicies <$> row
+        getCellPolicies w = [hSize w, vSize w]
+        t = Table { columnAlignments = mempty
+                  , tableRows = rows
+                  , drawSurroundingBorder = True
+                  , drawRowBorders = True
+                  , drawColumnBorders = True
+                  }
 
 surroundingBorder :: Bool -> Table n -> Table n
 surroundingBorder b t =
