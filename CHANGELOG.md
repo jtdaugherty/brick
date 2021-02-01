@@ -2,6 +2,18 @@
 Brick changelog
 ---------------
 
+0.59
+----
+
+API changes:
+ * `Brick.Widgets.List` got `listMoveToBeginning` and `listMoveToEnd`
+   functions
+ * `Extent`: removed the unused `extentOffset` field
+
+Bug fixes:
+ * Fixed a crash in the border rewriting code that attempted to rewrite
+   empty images (#305) (thanks @dmwit)
+
 0.58.1
 ------
 
