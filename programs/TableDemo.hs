@@ -15,6 +15,7 @@ myTable :: Table ()
 myTable =
     alignCenter 1 $
     alignRight 2 $
+    noBorder $
     table [ [txt "Left",  txt "Center",      txt "Right"]
           , [txt "X",     txt "Some things", txt "A"]
           , [txt "Y",     txt "are",         txt "B"]

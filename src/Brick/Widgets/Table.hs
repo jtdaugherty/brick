@@ -4,6 +4,8 @@ module Brick.Widgets.Table
   , table
   , alignRight
   , alignCenter
+  , noBorder
+
   , renderTable
   )
 where
@@ -27,13 +29,19 @@ data ColumnAlignment =
 data Table n =
     Table { columnAlignments :: M.Map Int ColumnAlignment
           , tableRows :: [[Widget n]]
+          , surroundingBorder :: Bool
           }
 
 table :: [[Widget n]] -> Table n
 table rows =
     Table { columnAlignments = mempty
           , tableRows = rows
+          , surroundingBorder = True
           }
+
+noBorder :: Table n -> Table n
+noBorder t =
+    t { surroundingBorder = False }
 
 alignRight :: Int -> Table n -> Table n
 alignRight col =
@@ -49,7 +57,9 @@ setAlignment col a t =
 
 renderTable :: Table n -> Widget n
 renderTable t =
-    joinBorders $ border $ Widget Fixed Fixed $ do
+    joinBorders $
+    (if surroundingBorder t then border else id) $
+    Widget Fixed Fixed $ do
         let rows = tableRows t
         cellResults <- forM rows $ mapM render
         let rowHeights = rowHeight <$> cellResults
