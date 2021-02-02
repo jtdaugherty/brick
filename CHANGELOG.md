@@ -2,6 +2,14 @@
 Brick changelog
 ---------------
 
+0.60
+----
+
+New features:
+ * Added `Brick.Widgets.Table` to support drawing basic tables. See
+   `programs/TableDemo.hs` for a demonstration (`cabal new-run -f demos
+   brick-table-demo`).
+
 0.59
 ----
 
