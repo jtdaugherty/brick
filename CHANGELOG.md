@@ -2,6 +2,12 @@
 Brick changelog
 ---------------
 
+0.60.1
+------
+
+Bug fixes:
+ * `table []` no longer raises `TEUnequalRowSizes`.
+
 0.60
 ----
 
