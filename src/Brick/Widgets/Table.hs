@@ -115,7 +115,7 @@ table rows =
          then E.throw TEUnequalRowSizes
          else t
     where
-        allSameLength = length (nub (length <$> rows)) == 1
+        allSameLength = length (nub (length <$> rows)) <= 1
         allFixed = all fixedRow rows
         fixedRow = all fixedCell
         fixedCell w = hSize w == Fixed && vSize w == Fixed
