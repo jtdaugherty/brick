@@ -958,10 +958,9 @@ vRelease p =
                         withReaderT (& availHeightL .~ unrestricted) (render p)
         Greedy -> Nothing
 
--- | Render the specified widget. If the widget has an entry in the
--- rendering cache using the specified name as the cache key, use the
--- rendered version from the cache instead. If not, render the widget
--- and update the cache.
+-- | If the specified resource name has an entry in the rendering cache,
+-- use the rendered version from the cache. If not, render the specified
+-- widget and update the cache with the result.
 --
 -- See also 'invalidateCacheEntry'.
 cached :: (Ord n) => n -> Widget n -> Widget n
