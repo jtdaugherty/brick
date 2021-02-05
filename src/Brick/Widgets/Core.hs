@@ -968,18 +968,27 @@ cached n w =
     Widget (hSize w) (vSize w) $ do
         result <- cacheLookup n
         case result of
-            Just prevResult -> return prevResult
+            Just (clickables, prevResult) -> do
+                clickableNamesL %= (clickables ++)
+                return prevResult
             Nothing  -> do
                 wResult <- render w
-                cacheUpdate n wResult
+                clickables <- renderedClickables wResult
+                cacheUpdate n (clickables, wResult)
                 return wResult
+    where
+        renderedClickables :: (Ord n) => Result n -> RenderM n [n]
+        renderedClickables renderResult = do
+            allClickables <- use clickableNamesL
+            return [extentName e | e <- renderResult^.extentsL, extentName e `elem` allClickables]
 
-cacheLookup :: (Ord n) => n -> RenderM n (Maybe (Result n))
+
+cacheLookup :: (Ord n) => n -> RenderM n (Maybe ([n], Result n))
 cacheLookup n = do
     cache <- lift $ gets (^.renderCacheL)
     return $ M.lookup n cache
 
-cacheUpdate :: (Ord n) => n -> Result n -> RenderM n ()
+cacheUpdate :: (Ord n) => n -> ([n], Result n) -> RenderM n ()
 cacheUpdate n r = lift $ modify (& renderCacheL %~ M.insert n r)
 
 -- | Render the specified widget in a named viewport with the
