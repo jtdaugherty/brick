@@ -962,6 +962,11 @@ vRelease p =
 -- use the rendered version from the cache. If not, render the specified
 -- widget and update the cache with the result.
 --
+-- To ensure that mouse events are emitted correctly for cached widgets, 
+-- in addition to the rendered widget, we also cache (the names of) 
+-- any clickable extents that were rendered and restore that when utilizing
+-- the cache.
+--
 -- See also 'invalidateCacheEntry'.
 cached :: (Ord n) => n -> Widget n -> Widget n
 cached n w =
@@ -977,6 +982,8 @@ cached n w =
                 cacheUpdate n (clickables, wResult)
                 return wResult
     where
+        -- Given the rendered result of a Widget, collect the list of "clickable" names
+        -- from the extents that were in the result.
         renderedClickables :: (Ord n) => Result n -> RenderM n [n]
         renderedClickables renderResult = do
             allClickables <- use clickableNamesL
