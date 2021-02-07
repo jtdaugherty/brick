@@ -2,6 +2,14 @@
 Brick changelog
 ---------------
 
+0.60.2
+------
+
+Bug fixes:
+ * Widgets reported as `clickable` are now reported as clickable even
+   when their renderings are cached with `cached` (#307; thanks Hari
+   Menon)
+
 0.60.1
 ------
 
