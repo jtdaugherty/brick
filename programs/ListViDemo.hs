@@ -57,7 +57,7 @@ appEvent l (T.VtyEvent e) =
         ev -> M.continue =<< (L.handleListEventVi L.handleListEvent) ev l
     where
       nextElement :: Vec.Vector Char -> Char
-      nextElement v = fromMaybe '?' $ Vec.find (flip Vec.notElem v) (Vec.fromList ['a' .. 'z'])
+      nextElement v = fromMaybe '?' $ Vec.find (`Vec.notElem` v) (Vec.fromList ['a' .. 'z'])
 appEvent l _ = M.continue l
 
 listDrawElement :: (Show a) => Bool -> a -> Widget ()
