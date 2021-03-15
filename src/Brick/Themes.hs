@@ -333,7 +333,7 @@ loadCustomizations path t = do
     case parseIniFile content (themeParser t) of
         Left e -> return $ Left e
         Right (customDef, customMap) ->
-            return $ Right $ applyCustomizations customDef (flip M.lookup customMap) t
+            return $ Right $ applyCustomizations customDef (`M.lookup` customMap) t
 
 vtyColorName :: Color -> T.Text
 vtyColorName c@(Color240 n) = case color240CodeToRGB (fromIntegral n) of
