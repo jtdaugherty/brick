@@ -162,7 +162,7 @@ attrMapLookup :: AttrName -> AttrMap -> Attr
 attrMapLookup _ (ForceAttr a) = a
 attrMapLookup (AttrName []) (AttrMap theDefault _) = theDefault
 attrMapLookup (AttrName ns) (AttrMap theDefault m) =
-    let results = catMaybes $ (\n -> M.lookup n m) <$> (AttrName <$> (inits ns))
+    let results = catMaybes $ (`M.lookup` m) <$> (AttrName <$> (inits ns))
     in foldl combineAttrs theDefault results
 
 -- | Set the default attribute value in an attribute map.
