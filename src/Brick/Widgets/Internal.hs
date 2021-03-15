@@ -34,7 +34,7 @@ renderFinal aMap layerRenders (w, h) chooseCursor rs =
     (newRS, picWithBg, theCursor, concat layerExtents)
     where
         (layerResults, !newRS) = flip runState rs $ sequence $
-            (\p -> runReaderT p ctx) <$>
+            (`runReaderT` ctx) <$>
             (render <$> cropToContext <$> layerRenders)
 
         ctx = Context { ctxAttrName = mempty
