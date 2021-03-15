@@ -95,8 +95,8 @@ appEvent st (T.MouseDown n _ _ loc) = do
     let T.Location pos = loc
     M.continue $ st & lastReportedClick .~ Just (n, loc)
                     & edit %~ E.applyEdit (if n == TextBox then moveCursor (swap pos) else id)
-appEvent st (T.MouseUp _ _ _) = M.continue $ st & lastReportedClick .~ Nothing
-appEvent st (T.VtyEvent (V.EvMouseUp _ _ _)) = M.continue $ st & lastReportedClick .~ Nothing
+appEvent st (T.MouseUp {}) = M.continue $ st & lastReportedClick .~ Nothing
+appEvent st (T.VtyEvent (V.EvMouseUp {})) = M.continue $ st & lastReportedClick .~ Nothing
 appEvent st (T.VtyEvent (V.EvKey V.KUp [V.MCtrl])) = M.vScrollBy (M.viewportScroll Prose) (-1) >> M.continue st
 appEvent st (T.VtyEvent (V.EvKey V.KDown [V.MCtrl])) = M.vScrollBy (M.viewportScroll Prose) 1 >> M.continue st
 appEvent st (T.VtyEvent (V.EvKey V.KEsc [])) = M.halt st
