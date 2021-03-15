@@ -60,16 +60,16 @@ prop_compare :: I -> I -> Bool
 prop_compare l r = compare l r == compare (lower l) (lower r)
 
 prop_applicativeIdentity :: I -> Bool
-prop_applicativeIdentity v = (pure id <*> v) == v
+prop_applicativeIdentity v = (id <$> v) == v
 
 prop_applicativeComposition :: IMap (O -> O) -> IMap (O -> O) -> IMap O -> Bool
-prop_applicativeComposition u v w = (pure (.) <*> u <*> v <*> w) == (u <*> (v <*> w))
+prop_applicativeComposition u v w = ((.) <$> u <*> v <*> w) == (u <*> (v <*> w))
 
 prop_applicativeHomomorphism :: (O -> O) -> O -> Bool
-prop_applicativeHomomorphism f x = (pure f <*> pure x :: I) == pure (f x)
+prop_applicativeHomomorphism f x = (f <$> pure x :: I) == pure (f x)
 
 prop_applicativeInterchange :: IMap (O -> O) -> O -> Bool
-prop_applicativeInterchange u y = (u <*> pure y) == (pure ($ y) <*> u)
+prop_applicativeInterchange u y = (u <*> pure y) == (($ y) <$> u)
 
 prop_empty :: Bool
 prop_empty = lower (IMap.empty :: I) == IntMap.empty

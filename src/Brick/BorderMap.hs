@@ -165,8 +165,8 @@ setCoordinates coordinates' m = BorderMap
     }
     where
     bounds' = neighbors coordinates'
-    values' = pure gc
-        <*> _coordinates m
+    values' = gc
+        <$> _coordinates m
         <*> coordinates'
         <*> bounds'
         <*> _values m
