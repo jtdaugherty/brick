@@ -65,6 +65,7 @@ module Brick.Forms
   -- * Simple form field constructors
   , editTextField
   , editShowableField
+  , editShowableFieldWithValidate
   , editPasswordField
   , radioField
   , checkboxField
@@ -83,6 +84,7 @@ module Brick.Forms
 where
 
 import Graphics.Vty hiding (showCursor)
+import Control.Monad ((<=<))
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid
 #endif
@@ -557,6 +559,32 @@ editShowableField :: (Ord n, Show n, Read a, Show a)
 editShowableField stLens n =
     let ini = T.pack . show
         val = readMaybe . T.unpack . T.intercalate "\n"
+        limit = Just 1
+        renderText = txt . T.unlines
+    in editField stLens n limit ini val renderText id
+
+-- | A form field using a single-line editor to edit the 'Show' representation
+-- of a state field value of type @a@. This automatically uses its 'Read'
+-- instance to validate the input, and also accepts an additional user-defined
+-- pass for validation. This field is mostly useful in cases where the
+-- user-facing representation of a value matches the 'Show' representation
+-- exactly, such as with 'Int', but you don't want to accept just /any/ 'Int'.
+--
+-- This field responds to all events handled by 'editor', including
+-- mouse events.
+editShowableFieldWithValidate :: (Ord n, Show n, Read a, Show a)
+                              => Lens' s a
+                              -- ^ The state lens for this value.
+                              -> n
+                              -- ^ The resource name for the input field.
+                              -> (a -> Maybe a)
+                              -- ^ Additional validation step for input.
+                              -> s
+                              -- ^ The initial form state.
+                              -> FormFieldState s e n
+editShowableFieldWithValidate stLens n validate =
+    let ini = T.pack . show
+        val = validate <=< readMaybe . T.unpack . T.intercalate "\n"
         limit = Just 1
         renderText = txt . T.unlines
     in editField stLens n limit ini val renderText id
