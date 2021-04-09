@@ -1355,6 +1355,11 @@ convert it into an appropriate state type for the field in question, and
 later validate that state and convert it back into the approprate type
 for storage in ``UserInfo``.
 
+The form value itself -- of type ``Form`` -- must be stored in your
+application state. You should only ever call ``newForm`` when you need
+to initialize a totally new form. Once initialized, the form needs to be
+kept around and updated by event handlers in order to work.
+
 For example, if the initial ``UserInfo`` value's ``_age`` field has the
 value ``0``, the ``editShowableField`` will call ``show`` on ``0``,
 convert that to ``Text``, and initialize the editor for ``_age`` with
