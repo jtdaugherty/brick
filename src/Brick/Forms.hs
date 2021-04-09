@@ -194,7 +194,8 @@ data FormFieldState s e n where
                       } -> FormFieldState s e n
 
 -- | A form: a sequence of input fields that manipulate the fields of an
--- underlying state that you choose.
+-- underlying state that you choose. This value must be stored in the
+-- Brick application's state.
 --
 -- Type variables are as follows:
 --
