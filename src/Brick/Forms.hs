@@ -88,7 +88,6 @@ module Brick.Forms
 where
 
 import Graphics.Vty hiding (showCursor)
-import Control.Monad ((<=<))
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid
 #endif
@@ -592,9 +591,9 @@ editShowableFieldWithValidate :: (Ord n, Show n, Read a, Show a)
 editShowableFieldWithValidate stLens n isValid =
     let ini = T.pack . show
         val ls = do
-            val <- readMaybe $ T.unpack $ T.intercalate "\n" ls
-            if isValid val
-               then return val
+            v <- readMaybe $ T.unpack $ T.intercalate "\n" ls
+            if isValid v
+               then return v
                else Nothing
         limit = Just 1
         renderText = txt . T.unlines
