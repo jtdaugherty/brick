@@ -72,6 +72,7 @@ include it, get in touch!
 | [`cbookview`](https://github.com/mlang/chessIO) | A TUI for exploring polyglot chess opening book files |
 | [`thock`](https://github.com/rmehri01/thock) | A modern TUI typing game featuring online racing against friends |
 | [`fifteen`](https://github.com/benjaminselfridge/fifteen) | An implementation of the [15 puzzle](https://en.wikipedia.org/wiki/15_puzzle) |
+| [`maze`](https://github.com/benjaminselfridge/maze) | A Brick-based maze game |
 
 These third-party packages also extend `brick`:
 
