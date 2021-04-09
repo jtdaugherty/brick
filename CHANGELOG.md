@@ -2,6 +2,14 @@
 Brick changelog
 ---------------
 
+0.61
+----
+
+API changes:
+ * Brick.Forms got `editShowableFieldWithValidate`, a generalization
+   of `editShowableField` that allows the caller to specify an
+   additional validation function (thanks Ben Selfridge)
+
 0.60.2
 ------
 
