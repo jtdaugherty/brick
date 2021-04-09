@@ -3,9 +3,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE ScopedTypeVariables #-}
--- | NOTE: This API is experimental and will probably change. Please try
--- it out! Feedback is very much appreciated, and your patience in the
--- face of breaking API changes is also appreciated! It's also worth
+-- | Note - This API is experimental and will probably change. Please
+-- try it out! Feedback is very much appreciated, and your patience in
+-- the face of breaking API changes is also appreciated! It's also worth
 -- bearing in mind that this API is designed to support a narrow range
 -- of use cases. If you find that you need more customization than this
 -- offers, then you will need to consider building your own layout and
