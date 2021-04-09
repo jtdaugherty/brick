@@ -561,11 +561,7 @@ editShowableField :: (Ord n, Show n, Read a, Show a)
                   -- ^ The initial form state.
                   -> FormFieldState s e n
 editShowableField stLens n =
-    let ini = T.pack . show
-        val = readMaybe . T.unpack . T.intercalate "\n"
-        limit = Just 1
-        renderText = txt . T.unlines
-    in editField stLens n limit ini val renderText id
+    editShowableFieldWithValidate stLens n (const True)
 
 -- | A form field using a single-line editor to edit the 'Show' representation
 -- of a state field value of type @a@. This automatically uses its 'Read'
