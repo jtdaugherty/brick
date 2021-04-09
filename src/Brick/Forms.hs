@@ -577,14 +577,20 @@ editShowableFieldWithValidate :: (Ord n, Show n, Read a, Show a)
                               -- ^ The state lens for this value.
                               -> n
                               -- ^ The resource name for the input field.
-                              -> (a -> Maybe a)
+                              -> (a -> Bool)
                               -- ^ Additional validation step for input.
+                              -- 'True' indicates that the value is
+                              -- valid.
                               -> s
                               -- ^ The initial form state.
                               -> FormFieldState s e n
-editShowableFieldWithValidate stLens n validate =
+editShowableFieldWithValidate stLens n isValid =
     let ini = T.pack . show
-        val = validate <=< readMaybe . T.unpack . T.intercalate "\n"
+        val ls = do
+            val <- readMaybe $ T.unpack $ T.intercalate "\n" ls
+            if isValid val
+               then return val
+               else Nothing
         limit = Just 1
         renderText = txt . T.unlines
     in editField stLens n limit ini val renderText id
