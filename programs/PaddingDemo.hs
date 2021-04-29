@@ -18,21 +18,21 @@ import Brick.Widgets.Core
   , padTopBottom
   , padLeftRight
   )
-import Brick.Widgets.Border as B
-import Brick.Widgets.Center as C
+import qualified Brick.Widgets.Border as B
+import qualified Brick.Widgets.Center as C
 import Brick.AttrMap (attrMap)
 import qualified Graphics.Vty as V
 
 ui :: Widget ()
 ui =
-    vBox [ hBox [ padLeft Max $ vCenter $ str "Left-padded"
+    vBox [ hBox [ padLeft Max $ C.vCenter $ str "Left-padded"
                 , B.vBorder
-                , padRight Max $ vCenter $ str "Right-padded"
+                , padRight Max $ C.vCenter $ str "Right-padded"
                 ]
          , B.hBorder
-         , hBox [ padTop Max $ hCenter $ str "Top-padded"
+         , hBox [ padTop Max $ C.hCenter $ str "Top-padded"
                 , B.vBorder
-                , padBottom Max $ hCenter $ str "Bottom-padded"
+                , padBottom Max $ C.hCenter $ str "Bottom-padded"
                 ]
          , B.hBorder
          , hBox [ padLeftRight 2 $ str "Padded by 2 on left/right"
