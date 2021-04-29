@@ -21,7 +21,7 @@ import Brick.Widgets.Core
   , cropTopTo
   , cropBottomTo
   )
-import Brick.Widgets.Border as B
+import Brick.Widgets.Border (border)
 import Brick.AttrMap (attrMap)
 import qualified Graphics.Vty as V
 
