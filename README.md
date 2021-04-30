@@ -75,6 +75,7 @@ include it, get in touch!
 | [`maze`](https://github.com/benjaminselfridge/maze) | A Brick-based maze game |
 | [`pboy`](https://github.com/2mol/pboy) | A tiny PDF organizer |
 | [`hyahtzee2`](https://github.com/DamienCassou/hyahtzee2#readme) | Famous Yahtzee dice game |
+| [`brewsage`](https://github.com/gerdreiss/brewsage#readme) | A TUI for Homebrew |
 
 These third-party packages also extend `brick`:
 
