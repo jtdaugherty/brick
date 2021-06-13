@@ -2,6 +2,14 @@
 Brick changelog
 ---------------
 
+0.63
+----
+
+API changes:
+ * The `Viewport` type got a new field, `_vpContentSize` (and a
+   corresponding lens `vpContentSize`) to get the size of the viewport's
+   contents.
+
 0.62
 ----
 
