@@ -42,6 +42,7 @@ module Brick.Types.Internal
   , vpSize
   , vpLeft
   , vpTop
+  , vpContentSize
   , imageL
   , cursorsL
   , extentsL
@@ -97,6 +98,8 @@ data Viewport =
        -- ^ The row offset of the top of the viewport.
        , _vpSize :: DisplayRegion
        -- ^ The size of the viewport.
+       , _vpContentSize :: DisplayRegion
+       -- ^ The size of the contents of the viewport.
        }
        deriving (Show, Read, Generic, NFData)
 

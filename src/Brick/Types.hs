@@ -21,6 +21,7 @@ module Brick.Types
   , vpSize
   , vpTop
   , vpLeft
+  , vpContentSize
 
   -- * Event-handling types
   , EventM(..)

@@ -1050,7 +1050,7 @@ viewport vpname typ p =
 
       -- Update the viewport size.
       c <- getContext
-      let newVp = VP 0 0 newSize
+      let newVp = VP 0 0 newSize (0, 0)
           newSize = (c^.availWidthL, c^.availHeightL)
           doInsert (Just vp) = Just $ vp & vpSize .~ newSize
           doInsert Nothing = Just newVp
@@ -1126,7 +1126,8 @@ viewport vpname typ p =
           fixLeft v = if V.imageWidth img < v^.vpSize._1
                    then v & vpLeft .~ 0
                    else v
-          updateVp = case typ of
+          updateContentSize v = v & vpContentSize .~ (V.imageWidth img, V.imageHeight img)
+          updateVp = updateContentSize . case typ of
               Both -> fixLeft . fixTop
               Horizontal -> fixLeft
               Vertical -> fixTop
