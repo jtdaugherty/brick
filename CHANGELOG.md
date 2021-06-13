@@ -2,6 +2,22 @@
 Brick changelog
 ---------------
 
+0.62
+----
+
+API changes:
+ * `Brick.Widgets.Core` got new functions
+   `crop{Left,Right,Bottom,Top}To`. Unlike the `crop...By` functions,
+   which crop on the specified side by a particular amount, these
+   `crop...To` functions crop on the specified side and take a desired
+   overall width of the final result and use that to determine how much
+   to crop. A widget `x` of width `w` could thus be cropped equivalently
+   with `cropLeftBy a x` and `cropLeftTo (w - a) x`.
+
+Other changes:
+ * Added `programs/CroppingDemo.hs` to demonstrate the new (and
+   preexisting) cropping functions.
+
 0.61
 ----
 

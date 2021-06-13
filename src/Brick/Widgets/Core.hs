@@ -71,6 +71,10 @@ module Brick.Widgets.Core
   , cropRightBy
   , cropTopBy
   , cropBottomBy
+  , cropLeftTo
+  , cropRightTo
+  , cropTopTo
+  , cropBottomTo
 
   -- * Extent reporting
   , reportExtent
@@ -905,6 +909,18 @@ cropLeftBy cols p =
       return $ addResultOffset (Location (-1 * cols, 0))
              $ result & imageL %~ cropped
 
+-- | Crop the specified widget to the specified size from the left.
+-- Defers to the cropped widget for growth policy.
+cropLeftTo :: Int -> Widget n -> Widget n
+cropLeftTo cols p =
+    Widget (hSize p) (vSize p) $ do
+        result <- render p
+        let w = V.imageWidth $ result^.imageL
+            amt = w - cols
+        if w <= cols
+           then return result
+           else render $ cropLeftBy amt $ Widget Fixed Fixed $ return result
+
 -- | Crop the specified widget on the right by the specified number of
 -- columns. Defers to the cropped widget for growth policy.
 cropRightBy :: Int -> Widget n -> Widget n
@@ -914,6 +930,18 @@ cropRightBy cols p =
       let amt = V.imageWidth (result^.imageL) - cols
           cropped img = if amt < 0 then V.emptyImage else V.cropRight amt img
       return $ result & imageL %~ cropped
+
+-- | Crop the specified widget to the specified size from the right.
+-- Defers to the cropped widget for growth policy.
+cropRightTo :: Int -> Widget n -> Widget n
+cropRightTo cols p =
+    Widget (hSize p) (vSize p) $ do
+        result <- render p
+        let w = V.imageWidth $ result^.imageL
+            amt = w - cols
+        if w <= cols
+           then return result
+           else render $ cropRightBy amt $ Widget Fixed Fixed $ return result
 
 -- | Crop the specified widget on the top by the specified number of
 -- rows. Defers to the cropped widget for growth policy.
@@ -926,6 +954,18 @@ cropTopBy rows p =
       return $ addResultOffset (Location (0, -1 * rows))
              $ result & imageL %~ cropped
 
+-- | Crop the specified widget to the specified size from the top.
+-- Defers to the cropped widget for growth policy.
+cropTopTo :: Int -> Widget n -> Widget n
+cropTopTo rows p =
+    Widget (hSize p) (vSize p) $ do
+        result <- render p
+        let h = V.imageHeight $ result^.imageL
+            amt = h - rows
+        if h <= rows
+           then return result
+           else render $ cropTopBy amt $ Widget Fixed Fixed $ return result
+
 -- | Crop the specified widget on the bottom by the specified number of
 -- rows. Defers to the cropped widget for growth policy.
 cropBottomBy :: Int -> Widget n -> Widget n
@@ -935,6 +975,18 @@ cropBottomBy rows p =
       let amt = V.imageHeight (result^.imageL) - rows
           cropped img = if amt < 0 then V.emptyImage else V.cropBottom amt img
       return $ result & imageL %~ cropped
+
+-- | Crop the specified widget to the specified size from the bottom.
+-- Defers to the cropped widget for growth policy.
+cropBottomTo :: Int -> Widget n -> Widget n
+cropBottomTo rows p =
+    Widget (hSize p) (vSize p) $ do
+        result <- render p
+        let h = V.imageHeight $ result^.imageL
+            amt = h - rows
+        if h <= rows
+           then return result
+           else render $ cropBottomBy amt $ Widget Fixed Fixed $ return result
 
 -- | When rendering the specified widget, also register a cursor
 -- positioning request using the specified name and location.

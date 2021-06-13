@@ -1,5 +1,5 @@
 name:                brick
-version:             0.61
+version:             0.62
 synopsis:            A declarative terminal user interface library
 description:
   Write terminal user interfaces (TUIs) painlessly with 'brick'! You
@@ -318,6 +318,19 @@ executable brick-suspend-resume-demo
                        text,
                        microlens >= 0.3.0.0,
                        microlens-th
+
+executable brick-cropping-demo
+  if !flag(demos)
+    Buildable: False
+  hs-source-dirs:      programs
+  ghc-options:         -threaded -Wall -Wcompat -O2
+  default-language:    Haskell2010
+  main-is:             CroppingDemo.hs
+  build-depends:       base,
+                       brick,
+                       vty,
+                       text,
+                       microlens
 
 executable brick-padding-demo
   if !flag(demos)

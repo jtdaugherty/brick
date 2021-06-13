@@ -73,6 +73,9 @@ include it, get in touch!
 | [`thock`](https://github.com/rmehri01/thock) | A modern TUI typing game featuring online racing against friends |
 | [`fifteen`](https://github.com/benjaminselfridge/fifteen) | An implementation of the [15 puzzle](https://en.wikipedia.org/wiki/15_puzzle) |
 | [`maze`](https://github.com/benjaminselfridge/maze) | A Brick-based maze game |
+| [`pboy`](https://github.com/2mol/pboy) | A tiny PDF organizer |
+| [`hyahtzee2`](https://github.com/DamienCassou/hyahtzee2#readme) | Famous Yahtzee dice game |
+| [`brewsage`](https://github.com/gerdreiss/brewsage#readme) | A TUI for Homebrew |
 
 These third-party packages also extend `brick`:
 

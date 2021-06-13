@@ -28,7 +28,7 @@ import Brick.Widgets.Core
   , hLimit, vLimit, txt
   , withDefAttr, emptyWidget
   )
-import Brick.Widgets.FileBrowser as FB
+import qualified Brick.Widgets.FileBrowser as FB
 import qualified Brick.AttrMap as A
 import Brick.Util (on, fg)
 import qualified Brick.Types as T
@@ -36,7 +36,7 @@ import qualified Brick.Types as T
 data Name = FileBrowser1
           deriving (Eq, Show, Ord)
 
-drawUI :: FileBrowser Name -> [Widget Name]
+drawUI :: FB.FileBrowser Name -> [Widget Name]
 drawUI b = [center $ ui <=> help]
     where
         ui = hCenter $
@@ -45,7 +45,7 @@ drawUI b = [center $ ui <=> help]
              borderWithLabel (txt "Choose a file") $
              FB.renderFileBrowser True b
         help = padTop (T.Pad 1) $
-               vBox [ case fileBrowserException b of
+               vBox [ case FB.fileBrowserException b of
                           Nothing -> emptyWidget
                           Just e -> hCenter $ withDefAttr errorAttr $
                                     txt $ Text.pack $ E.displayException e
@@ -58,7 +58,7 @@ drawUI b = [center $ ui <=> help]
 appEvent :: FB.FileBrowser Name -> BrickEvent Name e -> T.EventM Name (T.Next (FB.FileBrowser Name))
 appEvent b (VtyEvent ev) =
     case ev of
-        V.EvKey V.KEsc [] | not (fileBrowserIsSearching b) ->
+        V.EvKey V.KEsc [] | not (FB.fileBrowserIsSearching b) ->
             M.halt b
         _ -> do
             b' <- FB.handleFileBrowserEvent ev b
@@ -66,7 +66,7 @@ appEvent b (VtyEvent ev) =
             -- event (because the user pressed Enter), shut down.
             case ev of
                 V.EvKey V.KEnter [] ->
-                    case fileBrowserSelection b' of
+                    case FB.fileBrowserSelection b' of
                         [] -> M.continue b'
                         _ -> M.halt b'
                 _ -> M.continue b'
@@ -90,7 +90,7 @@ theMap = A.attrMap V.defAttr
     , (errorAttr, fg V.red)
     ]
 
-theApp :: M.App (FileBrowser Name) e Name
+theApp :: M.App (FB.FileBrowser Name) e Name
 theApp =
     M.App { M.appDraw = drawUI
           , M.appChooseCursor = M.showFirstCursor
