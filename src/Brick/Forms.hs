@@ -349,7 +349,7 @@ checkboxCustomField lb check rb stLens name label initialState =
 renderCheckbox :: Char -> Char -> Char -> T.Text -> n -> Bool -> Bool -> Widget n
 renderCheckbox lb check rb label n foc val =
     let addAttr = if foc then withDefAttr focusedFormInputAttr else id
-        csr = if foc then showCursor n (Location (1,0)) else id
+        csr = if foc then putCursor n (Location (1,0)) else id
     in clickable n $
        addAttr $ csr $
        (txt $ T.singleton lb <> (if val then T.singleton check else " ") <>
@@ -478,7 +478,7 @@ renderRadio lb check rb val name label foc cur =
                   then withDefAttr focusedFormInputAttr
                   else id
         isSet = val == cur
-        csr = if foc then showCursor name (Location (1,0)) else id
+        csr = if foc then putCursor name (Location (1,0)) else id
     in clickable name $
        addAttr $ csr $
        hBox [ txt $ T.singleton lb
