@@ -59,6 +59,7 @@ module Brick.Widgets.Core
 
   -- * Cursor placement
   , showCursor
+  , putCursor
 
   -- * Naming
   , Named(..)
@@ -994,7 +995,16 @@ showCursor :: n -> Location -> Widget n -> Widget n
 showCursor n cloc p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
-      return $ result & cursorsL %~ (CursorLocation cloc (Just n):)
+      return $ result & cursorsL %~ (CursorLocation cloc (Just n) True:)
+
+-- | When rendering the specified widget, also register a cursor
+-- positioning request using the specified name and location.
+-- The cursor will only be positioned but not made visible.
+putCursor :: n -> Location -> Widget n -> Widget n
+putCursor n cloc p =
+    Widget (hSize p) (vSize p) $ do
+      result <- render p
+      return $ result & cursorsL %~ (CursorLocation cloc (Just n) False:)
 
 hRelease :: Widget n -> Maybe (Widget n)
 hRelease p =
