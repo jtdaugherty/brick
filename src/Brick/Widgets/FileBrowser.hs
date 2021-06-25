@@ -798,7 +798,7 @@ renderFileInfo foc maxLen selFiles n listSel info =
         addAttr = maybe id (withDefAttr . attrForFileType) (fileInfoFileType info)
         body = addAttr (hLimit (maxLen + 1) $
                padRight Max $
-               (if foc && listSel then showCursor n (Location (0,0)) else id) $
+               (if foc && listSel then putCursor n (Location (0,0)) else id) $
                str $ fileInfoSanitizedFilename info <> suffix)
         suffix = (if fileInfoFileType info == Just Directory then "/" else "") <>
                  (if sel then "*" else "")

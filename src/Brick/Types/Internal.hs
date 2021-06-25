@@ -19,6 +19,7 @@ module Brick.Types.Internal
   , CursorLocation(..)
   , cursorLocationL
   , cursorLocationNameL
+  , cursorLocationVisibleL
   , Context(..)
   , EventState(..)
   , EventRO(..)
@@ -164,6 +165,8 @@ data CursorLocation n =
                    -- ^ The location
                    , cursorLocationName :: !(Maybe n)
                    -- ^ The name of the widget associated with the location
+                   , cursorLocationVisible :: !Bool
+                   -- ^ Weather the cursor should actually be visible
                    }
                    deriving (Read, Show, Generic, NFData)
 
