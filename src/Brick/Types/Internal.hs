@@ -166,7 +166,7 @@ data CursorLocation n =
                    , cursorLocationName :: !(Maybe n)
                    -- ^ The name of the widget associated with the location
                    , cursorLocationVisible :: !Bool
-                   -- ^ Weather the cursor should actually be visible
+                   -- ^ Whether the cursor should actually be visible
                    }
                    deriving (Read, Show, Generic, NFData)
 
