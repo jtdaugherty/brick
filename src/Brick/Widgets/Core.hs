@@ -153,12 +153,14 @@ class Named a n where
 -- | When rendering the specified widget, use the specified border style
 -- for any border rendering.
 withBorderStyle :: BorderStyle -> Widget n -> Widget n
-withBorderStyle bs p = Widget (hSize p) (vSize p) $ withReaderT (& ctxBorderStyleL .~ bs) (render p)
+withBorderStyle bs p = Widget (hSize p) (vSize p) $
+    withReaderT (ctxBorderStyleL .~ bs) (render p)
 
 -- | When rendering the specified widget, create borders that respond
 -- dynamically to their neighbors to form seamless connections.
 joinBorders :: Widget n -> Widget n
-joinBorders p = Widget (hSize p) (vSize p) $ withReaderT (& ctxDynBordersL .~ True) (render p)
+joinBorders p = Widget (hSize p) (vSize p) $
+    withReaderT (ctxDynBordersL .~ True) (render p)
 
 -- | When rendering the specified widget, use static borders. This
 -- may be marginally faster, but will introduce a small gap between
@@ -166,7 +168,8 @@ joinBorders p = Widget (hSize p) (vSize p) $ withReaderT (& ctxDynBordersL .~ Tr
 --
 -- This is the default for backwards compatibility.
 separateBorders :: Widget n -> Widget n
-separateBorders p = Widget (hSize p) (vSize p) $ withReaderT (&ctxDynBordersL .~ False) (render p)
+separateBorders p = Widget (hSize p) (vSize p) $
+    withReaderT (ctxDynBordersL .~ False) (render p)
 
 -- | After the specified widget has been rendered, freeze its borders. A
 -- frozen border will not be affected by neighbors, nor will it affect
@@ -340,7 +343,7 @@ hyperlink url p =
     Widget (hSize p) (vSize p) $ do
         c <- getContext
         let attr = attrMapLookup (c^.ctxAttrNameL) (c^.ctxAttrMapL) `V.withURL` url
-        withReaderT (& ctxAttrMapL %~ setDefaultAttr attr) (render p)
+        withReaderT (ctxAttrMapL %~ setDefaultAttr attr) (render p)
 
 -- | Pad the specified widget on the left. If max padding is used, this
 -- grows greedily horizontally; otherwise it defers to the padded
@@ -837,7 +840,7 @@ setAvailableSize (w, h) p =
 withAttr :: AttrName -> Widget n -> Widget n
 withAttr an p =
     Widget (hSize p) (vSize p) $
-      withReaderT (& ctxAttrNameL .~ an) (render p)
+      withReaderT (ctxAttrNameL .~ an) (render p)
 
 -- | Update the attribute map while rendering the specified widget: set
 -- its new default attribute to the one that we get by looking up the
@@ -847,7 +850,7 @@ modifyDefAttr :: (V.Attr -> V.Attr) -> Widget n -> Widget n
 modifyDefAttr f p =
     Widget (hSize p) (vSize p) $ do
         c <- getContext
-        withReaderT (& ctxAttrMapL %~ (setDefaultAttr (f $ getDefaultAttr (c^.ctxAttrMapL)))) (render p)
+        withReaderT (ctxAttrMapL %~ (setDefaultAttr (f $ getDefaultAttr (c^.ctxAttrMapL)))) (render p)
 
 -- | Update the attribute map while rendering the specified widget: set
 -- its new default attribute to the one that we get by looking up the
@@ -856,14 +859,14 @@ withDefAttr :: AttrName -> Widget n -> Widget n
 withDefAttr an p =
     Widget (hSize p) (vSize p) $ do
         c <- getContext
-        withReaderT (& ctxAttrMapL %~ (setDefaultAttr (attrMapLookup an (c^.ctxAttrMapL)))) (render p)
+        withReaderT (ctxAttrMapL %~ (setDefaultAttr (attrMapLookup an (c^.ctxAttrMapL)))) (render p)
 
 -- | When rendering the specified widget, update the attribute map with
 -- the specified transformation.
 updateAttrMap :: (AttrMap -> AttrMap) -> Widget n -> Widget n
 updateAttrMap f p =
     Widget (hSize p) (vSize p) $
-        withReaderT (& ctxAttrMapL %~ f) (render p)
+        withReaderT (ctxAttrMapL %~ f) (render p)
 
 -- | When rendering the specified widget, force all attribute lookups
 -- in the attribute map to use the value currently assigned to the
@@ -877,7 +880,7 @@ forceAttr :: AttrName -> Widget n -> Widget n
 forceAttr an p =
     Widget (hSize p) (vSize p) $ do
         c <- getContext
-        withReaderT (& ctxAttrMapL .~ (forceAttrMap (attrMapLookup an (c^.ctxAttrMapL)))) (render p)
+        withReaderT (ctxAttrMapL .~ (forceAttrMap (attrMapLookup an (c^.ctxAttrMapL)))) (render p)
 
 -- | Override the lookup of 'targetName' to return the attribute value
 -- associated with 'fromName' when rendering the specified widget.
@@ -992,32 +995,28 @@ cropBottomTo rows p =
 -- | When rendering the specified widget, also register a cursor
 -- positioning request using the specified name and location.
 showCursor :: n -> Location -> Widget n -> Widget n
-showCursor n cloc p =
-    Widget (hSize p) (vSize p) $ do
-      result <- render p
-      return $ result & cursorsL %~ (CursorLocation cloc (Just n) True:)
+showCursor n cloc p = Widget (hSize p) (vSize p) $ 
+    fmap (cursorsL %~ (CursorLocation cloc (Just n) True:)) (render p)
 
 -- | When rendering the specified widget, also register a cursor
 -- positioning request using the specified name and location.
 -- The cursor will only be positioned but not made visible.
 putCursor :: n -> Location -> Widget n -> Widget n
-putCursor n cloc p =
-    Widget (hSize p) (vSize p) $ do
-      result <- render p
-      return $ result & cursorsL %~ (CursorLocation cloc (Just n) False:)
+putCursor n cloc p = Widget (hSize p) (vSize p) $
+    fmap (cursorsL %~ (CursorLocation cloc (Just n) False:)) (render p)
 
 hRelease :: Widget n -> Maybe (Widget n)
 hRelease p =
     case hSize p of
         Fixed -> Just $ Widget Greedy (vSize p) $
-                        withReaderT (& availWidthL .~ unrestricted) (render p)
+                        withReaderT (availWidthL .~ unrestricted) (render p)
         Greedy -> Nothing
 
 vRelease :: Widget n -> Maybe (Widget n)
 vRelease p =
     case vSize p of
         Fixed -> Just $ Widget (hSize p) Greedy $
-                        withReaderT (& availHeightL .~ unrestricted) (render p)
+                        withReaderT (availHeightL .~ unrestricted) (render p)
         Greedy -> Nothing
 
 -- | If the specified resource name has an entry in the rendering cache,
@@ -1057,8 +1056,8 @@ cacheLookup n = do
     cache <- lift $ gets (^.renderCacheL)
     return $ M.lookup n cache
 
-cacheUpdate :: (Ord n) => n -> ([n], Result n) -> RenderM n ()
-cacheUpdate n r = lift $ modify (& renderCacheL %~ M.insert n r)
+cacheUpdate :: Ord n => n -> ([n], Result n) -> RenderM n ()
+cacheUpdate n r = lift $ modify (renderCacheL %~ M.insert n r)
 
 -- | Render the specified widget in a named viewport with the
 -- specified type. This permits widgets to be scrolled without being
@@ -1117,7 +1116,7 @@ viewport vpname typ p =
           doInsert (Just vp) = Just $ vp & vpSize .~ newSize
           doInsert Nothing = Just newVp
 
-      lift $ modify (& viewportMapL %~ (M.alter doInsert vpname))
+      lift $ modify (viewportMapL %~ (M.alter doInsert vpname))
 
       -- Then render the viewport content widget with the rendering
       -- layout constraint released (but raise an exception if we are
@@ -1158,7 +1157,7 @@ viewport vpname typ p =
                               Both -> scrollTo Horizontal rq (initialResult^.imageL) $
                                       scrollTo Vertical rq (initialResult^.imageL) $
                                       applyRequests rqs v
-                  lift $ modify (& viewportMapL %~ (M.insert vpname updatedVp))
+                  lift $ modify (viewportMapL %~ (M.insert vpname updatedVp))
 
       -- If the sub-rendering requested visibility, update the scroll
       -- state accordingly
@@ -1172,7 +1171,7 @@ viewport vpname typ p =
                           Both -> scrollToView Horizontal rq $ scrollToView Vertical rq vp'
                           Horizontal -> scrollToView typ rq vp'
                           Vertical -> scrollToView typ rq vp'
-                  lift $ modify (& viewportMapL %~ (M.insert vpname $ foldl updateVp vp rqs))
+                  lift $ modify (viewportMapL %~ (M.insert vpname $ foldl updateVp vp rqs))
 
       -- If the size of the rendering changes enough to make the
       -- viewport offsets invalid, reset them
@@ -1193,7 +1192,7 @@ viewport vpname typ p =
               Both -> fixLeft . fixTop
               Horizontal -> fixLeft
               Vertical -> fixTop
-      lift $ modify (& viewportMapL %~ (M.insert vpname (updateVp vp)))
+      lift $ modify (viewportMapL %~ (M.insert vpname (updateVp vp)))
 
       -- Get the viewport state now that it has been updated.
       mVpFinal <- lift $ gets (M.lookup vpname . (^.viewportMapL))
