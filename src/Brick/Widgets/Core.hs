@@ -995,15 +995,15 @@ cropBottomTo rows p =
 -- | When rendering the specified widget, also register a cursor
 -- positioning request using the specified name and location.
 showCursor :: n -> Location -> Widget n -> Widget n
-showCursor n cloc p = Widget (hSize p) (vSize p) $ 
-    fmap (cursorsL %~ (CursorLocation cloc (Just n) True:)) (render p)
+showCursor n cloc p = Widget (hSize p) (vSize p) $
+    (cursorsL %~ (CursorLocation cloc (Just n) True:)) <$> (render p)
 
 -- | When rendering the specified widget, also register a cursor
 -- positioning request using the specified name and location.
 -- The cursor will only be positioned but not made visible.
 putCursor :: n -> Location -> Widget n -> Widget n
 putCursor n cloc p = Widget (hSize p) (vSize p) $
-    fmap (cursorsL %~ (CursorLocation cloc (Just n) False:)) (render p)
+    (cursorsL %~ (CursorLocation cloc (Just n) False:)) <$> (render p)
 
 hRelease :: Widget n -> Maybe (Widget n)
 hRelease p =
