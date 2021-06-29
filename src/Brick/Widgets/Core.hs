@@ -1023,9 +1023,9 @@ vRelease p =
 -- use the rendered version from the cache. If not, render the specified
 -- widget and update the cache with the result.
 --
--- To ensure that mouse events are emitted correctly for cached widgets, 
--- in addition to the rendered widget, we also cache (the names of) 
--- any clickable extents that were rendered and restore that when utilizing
+-- To ensure that mouse events are emitted correctly for cached widgets,
+-- in addition to the rendered widget, we also cache (the names of) any
+-- clickable extents that were rendered and restore that when utilizing
 -- the cache.
 --
 -- See also 'invalidateCacheEntry'.
