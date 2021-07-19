@@ -126,6 +126,8 @@ handleEditorEvent e ed =
                   EvKey KBS [] -> Z.deletePrevChar
                   EvKey KHome [] -> Z.gotoBOL
                   EvKey KEnd [] -> Z.gotoEOL
+                  EvKey (KChar '<') [MMeta] -> Z.gotoBOF
+                  EvKey (KChar '>') [MMeta] -> Z.gotoEOF
                   _ -> id
         in return $ applyEdit f ed
 
