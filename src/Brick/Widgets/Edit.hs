@@ -59,8 +59,10 @@ import Brick.AttrMap
 
 -- | Editor state.  Editors support the following events by default:
 --
--- * Ctrl-a: go to beginning of line
--- * Ctrl-e: go to end of line
+-- * Meta-<: go to beginning of file
+-- * Meta->: go to end of file
+-- * Ctrl-a, Home: go to beginning of line
+-- * Ctrl-e, End: go to end of line
 -- * Ctrl-d, Del: delete character at cursor position
 -- * Backspace: delete character prior to cursor position
 -- * Ctrl-k: delete all from cursor to end of line
