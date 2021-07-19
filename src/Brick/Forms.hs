@@ -124,12 +124,12 @@ data FormField a b e n =
               -- ^ A validation function converting this field's state
               -- into a value of your choosing. @Nothing@ indicates a
               -- validation failure. For example, this might validate
-              -- an 'Editor' state value by parsing its text contents s
-              -- aan integer and return 'Maybe' 'Int'. This is for pure
-              -- avalue validation; if additional validation is required
-              -- a(e.g. via 'IO'), use this field's state value in an
-              -- aexternal validation routine and use 'setFieldValid' to
-              -- afeed the result back into the form.
+              -- an 'Editor' state value by parsing its text contents as
+              -- an integer and return 'Maybe' 'Int'. This is for pure
+              -- value validation; if additional validation is required
+              -- (e.g. via 'IO'), use this field's state value in an
+              -- external validation routine and use 'setFieldValid' to
+              -- feed the result back into the form.
               , formFieldExternallyValid :: Bool
               -- ^ Whether the field is valid according to an external
               -- validation source. Defaults to always being 'True' and
