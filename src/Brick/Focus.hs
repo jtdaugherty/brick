@@ -60,7 +60,7 @@ withFocusRing :: (Eq n, Named a n)
               -> (Bool -> a -> b)
               -- ^ A function that takes a value and its focus state.
               -> a
-              -- ^ The wiget state value that we need to check for focus.
+              -- ^ The widget state value that we need to check for focus.
               -> b
               -- ^ The rest of the computation.
 withFocusRing ring f a = f (focusGetCurrent ring == Just (getName a)) a
