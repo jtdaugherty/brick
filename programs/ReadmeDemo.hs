@@ -1,9 +1,9 @@
 module Main where
 
-import Brick
-import Brick.Widgets.Center
-import Brick.Widgets.Border
-import Brick.Widgets.Border.Style
+import Brick (Widget, simpleMain, (<+>), str, withBorderStyle)
+import Brick.Widgets.Center (center)
+import Brick.Widgets.Border (borderWithLabel, vBorder)
+import Brick.Widgets.Border.Style (unicode)
 
 ui :: Widget ()
 ui =
