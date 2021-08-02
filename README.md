@@ -77,6 +77,7 @@ include it, get in touch!
 | [`hyahtzee2`](https://github.com/DamienCassou/hyahtzee2#readme) | Famous Yahtzee dice game |
 | [`brewsage`](https://github.com/gerdreiss/brewsage#readme) | A TUI for Homebrew |
 | [`sandwich`](https://codedownio.github.io/sandwich/) | A test framework with a TUI interface |
+| [`youbrick`](https://github.com/florentc/youbrick) | A feed aggregator and launcher for Youtube channels |
 
 These third-party packages also extend `brick`:
 
