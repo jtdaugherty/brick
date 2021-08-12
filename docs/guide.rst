@@ -226,6 +226,13 @@ after the event handler is finished. We have three choices:
 * ``Brick.Main.continue s``: continue executing the event loop with the
   specified application state ``s`` as the next value. Commonly this is
   where you'd modify the state based on the event and return it.
+* ``Brick.Main.continueWithoutRedraw s``: continue executing the event
+  loop with the specified application state ``s`` as the next value, but
+  unlike ``continue``, do not redraw the screen using the new state.
+  This is a faster version of ``continue`` since it doesn't redraw the
+  screen; it just leaves up the previous screen contents. This function
+  is only useful when you know that your state change won't cause
+  anything on the screen to change. When in doubt, use ``continue``.
 * ``Brick.Main.halt s``: halt the event loop and return the final
   application state value ``s``. This state value is returned to the
   caller of ``defaultMain`` or ``customMain`` where it can be used prior

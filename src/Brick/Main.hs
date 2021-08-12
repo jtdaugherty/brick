@@ -10,6 +10,7 @@ module Brick.Main
 
   -- * Event handler functions
   , continue
+  , continueWithoutRedraw
   , halt
   , suspendAndResume
   , lookupViewport
@@ -114,7 +115,8 @@ data App s e n =
         -- ^ This function takes the current application state and an
         -- event and returns an action to be taken and a corresponding
         -- transformed application state. Possible options are
-        -- 'continue', 'suspendAndResume', and 'halt'.
+        -- 'continue', 'continueWithoutRedraw', 'suspendAndResume', and
+        -- 'halt'.
         , appStartEvent :: s -> EventM n s
         -- ^ This function gets called once just prior to the first
         -- drawing of your application. Here is where you can make
@@ -191,8 +193,8 @@ runWithVty vty brickChan mUserChan app initialRS initialSt = do
     let readEvent = case mUserChan of
           Nothing -> readBChan brickChan
           Just uc -> readBrickEvent brickChan uc
-        runInner rs st = do
-          (result, newRS) <- runVty vty readEvent app st (resetRenderState rs)
+        runInner rs es draw st = do
+          (result, newRS, newExtents) <- runVty vty readEvent app st (resetRenderState rs) es draw
           case result of
               SuspendAndResume act -> do
                   killThread pid
@@ -200,8 +202,10 @@ runWithVty vty brickChan mUserChan app initialRS initialSt = do
               Halt s -> do
                   killThread pid
                   return $ InternalHalt s
-              Continue s -> runInner newRS s
-    runInner initialRS initialSt
+              Continue s -> runInner newRS newExtents True s
+              ContinueWithoutRedraw s ->
+                  runInner newRS newExtents False s
+    runInner initialRS mempty True initialSt
 
 -- | The custom event loop entry point to use when the simpler ones
 -- don't permit enough control. Returns the final application state
@@ -293,9 +297,14 @@ runVty :: (Ord n)
        -> App s e n
        -> s
        -> RenderState n
-       -> IO (Next s, RenderState n)
-runVty vty readEvent app appState rs = do
-    (firstRS, exts) <- renderApp vty app appState rs
+       -> [Extent n]
+       -> Bool
+       -> IO (Next s, RenderState n, [Extent n])
+runVty vty readEvent app appState rs prevExtents draw = do
+    (firstRS, exts) <- case draw of
+        True -> renderApp vty app appState rs
+        False -> return (rs, prevExtents)
+
     e <- readEvent
 
     (e', nextRS, nextExts) <- case e of
@@ -361,10 +370,13 @@ runVty vty readEvent app appState rs = do
 
     (next, eState) <- runStateT (runReaderT (runEventM (appHandleEvent app appState e'))
                                 eventRO) emptyES
-    return (next, nextRS { rsScrollRequests = esScrollRequests eState
-                         , renderCache = applyInvalidations (cacheInvalidateRequests eState) $
-                                         renderCache nextRS
-                         })
+    return ( next
+           , nextRS { rsScrollRequests = esScrollRequests eState
+                    , renderCache = applyInvalidations (cacheInvalidateRequests eState) $
+                                    renderCache nextRS
+                    }
+           , nextExts
+           )
 
 applyInvalidations :: (Ord n) => S.Set (CacheInvalidateRequest n) -> M.Map n v -> M.Map n v
 applyInvalidations ns cache =
@@ -532,6 +544,17 @@ viewportScroll n =
 -- state.
 continue :: s -> EventM n (Next s)
 continue = return . Continue
+
+-- | Continue running the event loop with the specified application
+-- state without redrawing the screen. This is faster than 'continue'
+-- because it skips the redraw, but the drawback is that you need to
+-- be really sure that you don't want a screen redraw. If your state
+-- changed in a way that needs to be reflected on the screen, use
+-- 'continue'. This function is for cases where you know that you did
+-- something that won't have an impact on the screen state and you want
+-- to save on redraw cost.
+continueWithoutRedraw :: s -> EventM n (Next s)
+continueWithoutRedraw = return . ContinueWithoutRedraw
 
 -- | Halt the event loop and return the specified application state as
 -- the final state value.
