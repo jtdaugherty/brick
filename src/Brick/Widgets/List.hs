@@ -545,7 +545,7 @@ listMoveBy amt l =
 -- If @pos >= 0@, indexes from the start of the list (which gets
 -- evaluated up to the target index)
 --
--- If @pos < 0@, indexes from the end of the list (which evalutes
+-- If @pos < 0@, indexes from the end of the list (which evaluates
 -- 'length' of the list).
 --
 -- Complexity: same as 'splitAt' for the container type.

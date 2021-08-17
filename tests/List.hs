@@ -353,7 +353,7 @@ prop_reverseAppend_Seq l1 l2 =
 
 -- Laziness tests.  Here we create a custom container type
 -- that we use to ensure certain operations do not cause the
--- whole container to be evaulated.
+-- whole container to be evaluated.
 --
 newtype L a = L [a]
   deriving (Functor, Foldable, Traversable)

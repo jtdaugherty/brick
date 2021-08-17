@@ -540,7 +540,7 @@ viewport), a unique name is assigned in each use.
 appAttrMap: Managing Attributes
 -------------------------------
 
-In ``brick`` we use an *attribute map* to assign attibutes to elements
+In ``brick`` we use an *attribute map* to assign attributes to elements
 of the interface. Rather than specifying specific attributes when
 drawing a widget (e.g. red-on-black text) we specify an *attribute name*
 that is an abstract name for the kind of thing we are drawing, e.g.
@@ -1359,7 +1359,7 @@ just an argument to ``newForm``. This ``UserInfo`` value will be used
 to initialize all of the form fields. Each form field will use the lens
 provided to extract the initial value from the ``UserInfo`` record,
 convert it into an appropriate state type for the field in question, and
-later validate that state and convert it back into the approprate type
+later validate that state and convert it back into the appropriate type
 for storage in ``UserInfo``.
 
 The form value itself -- of type ``Form`` -- must be stored in your
