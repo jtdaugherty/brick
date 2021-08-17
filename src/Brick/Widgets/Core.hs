@@ -694,7 +694,7 @@ catDynBorders towardsA towardsB am bm = I.mapMaybe id
 -- | Given borders that should be placed next to each other (the first argument
 -- on the right or bottom, and the second argument on the left or top), compute
 -- new borders and the rewrites that should be done along the edges of the two
--- images to keep the image in synch with the border information.
+-- images to keep the image in sync with the border information.
 --
 -- The input borders are assumed to be disjoint. This property is not checked.
 catBorders
@@ -843,9 +843,8 @@ withAttr an p =
       withReaderT (ctxAttrNameL .~ an) (render p)
 
 -- | Update the attribute map while rendering the specified widget: set
--- its new default attribute to the one that we get by looking up the
--- specified attribute name in the map and then modifying it with the
--- specified function.
+-- its new default attribute to the one that we get by applying specified
+-- function to the current default attribute.
 modifyDefAttr :: (V.Attr -> V.Attr) -> Widget n -> Widget n
 modifyDefAttr f p =
     Widget (hSize p) (vSize p) $ do

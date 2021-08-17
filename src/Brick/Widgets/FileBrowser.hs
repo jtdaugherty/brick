@@ -3,7 +3,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TupleSections #-}
--- | This module provids a file browser widget that allows users to
+-- | This module provides a file browser widget that allows users to
 -- navigate directory trees, search for files and directories, and
 -- select entries of interest. For a complete working demonstration of
 -- this module, see @programs/FileBrowserDemo.hs@.

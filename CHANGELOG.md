@@ -501,14 +501,14 @@ API changes:
  * The Forms API got two new functions, `setFormConcat` and
    `setFieldConcat`, used for controlling the previously hard-coded
    concatenation behavior of form fields. These are optional and both
-   concatentation settings default to their former hard-coded values,
+   concatenation settings default to their former hard-coded values,
    `vBox` (#172).
 
 0.36.1
 ------
 
 Package changes:
- * Raiseed upper bound to support GHC 8.4.2 (#171)
+ * Raised upper bound to support GHC 8.4.2 (#171)
 
 Other changes:
  * Improved List accessor documentation (thanks liam <liam@magicseaweed.com>)
@@ -522,7 +522,7 @@ New features:
  * Dynamic border support: adjacent widgets that use borders can make
    those borders seamlessly connect to each other! Thanks
    so much to Daniel Wagner for this feature! Please see
-   `programs/DynamicBorderDemo.hs` for a demonstraton. Also see the
+   `programs/DynamicBorderDemo.hs` for a demonstration. Also see the
    "Joinable Borders" section of the User Guide.
 
 0.35.1

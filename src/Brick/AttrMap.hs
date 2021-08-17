@@ -17,7 +17,7 @@
 -- Attribute names are mapped to attributes, but some attributes may
 -- be partial (specify only a foreground or background color). When
 -- attribute name lookups occur, the attribute corresponding to a more
--- specific name ('parent <> child' as above) is sucessively merged with
+-- specific name ('parent <> child' as above) is successively merged with
 -- the parent attribute ('parent' as above) all the way to the "root"
 -- of the attribute map, the map's default attribute. In this way, more
 -- specific attributes inherit what they don't specify from more general

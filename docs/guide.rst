@@ -221,7 +221,7 @@ type* and *event type* of your application, respectively, and must match
 the corresponding types in ``App`` and ``EventM``.
 
 The return value type ``Next s`` value describes what should happen
-after the event handler is finished. We have three choices:
+after the event handler is finished. We have four choices:
 
 * ``Brick.Main.continue s``: continue executing the event loop with the
   specified application state ``s`` as the next value. Commonly this is
@@ -540,7 +540,7 @@ viewport), a unique name is assigned in each use.
 appAttrMap: Managing Attributes
 -------------------------------
 
-In ``brick`` we use an *attribute map* to assign attibutes to elements
+In ``brick`` we use an *attribute map* to assign attributes to elements
 of the interface. Rather than specifying specific attributes when
 drawing a widget (e.g. red-on-black text) we specify an *attribute name*
 that is an abstract name for the kind of thing we are drawing, e.g.
@@ -791,7 +791,7 @@ Brick provides support for customizable attribute themes. This works as
 follows:
 
 * The application provides a default theme built in to the program.
-* The application customizes the them by loading theme customizations
+* The application customizes the theme by loading theme customizations
   from a user-specified customization file.
 * The application can save new customizations to files for later
   re-loading.
@@ -941,12 +941,12 @@ in event handlers in ``EventM``:
      mExtent <- Brick.Main.lookupExtent FooBox
      case mExtent of
        Nothing -> ...
-       Just (Extent _ upperLeft (width, height) offset) -> ...
+       Just (Extent _ upperLeft (width, height)) -> ...
 
 Paste Support
 =============
 
-Some terminal emulators support "bracketed paste" support. This feature
+Some terminal emulators support "bracketed paste" mode. This feature
 enables OS-level paste operations to send the pasted content as a
 single chunk of data and bypass the usual input processing that the
 application does. This enables more secure handling of pasted data since
@@ -1359,7 +1359,7 @@ just an argument to ``newForm``. This ``UserInfo`` value will be used
 to initialize all of the form fields. Each form field will use the lens
 provided to extract the initial value from the ``UserInfo`` record,
 convert it into an appropriate state type for the field in question, and
-later validate that state and convert it back into the approprate type
+later validate that state and convert it back into the appropriate type
 for storage in ``UserInfo``.
 
 The form value itself -- of type ``Form`` -- must be stored in your

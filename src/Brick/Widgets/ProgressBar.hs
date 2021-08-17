@@ -10,7 +10,6 @@ module Brick.Widgets.ProgressBar
 where
 
 import Lens.Micro ((^.))
-import Data.List (splitAt)
 import Data.Maybe (fromMaybe)
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid
