@@ -2,6 +2,28 @@
 Brick changelog
 ---------------
 
+0.64
+----
+
+API changes:
+ * Added `Brick.Main.continueWithoutRedraw`, an alternative to
+   `Brick.Main.continue` that does not trigger a screen redraw. See the
+   Haddock and User Guide for details.
+ * Added `Brick.Widgets.Core.putCursor` to support Vty's new (as of
+   5.33) API for placing cursors without visually representing
+   them. This change also updated `Brick.Forms.renderCheckbox` and
+   `Brick.Forms.renderRadio` to use `putCursor`.
+
+Other improvements:
+ * `Brick.Widgets.Edit` now supports a few more Emacs-style keybindings
+   (thanks Mario Lang):
+    * `M-b` and `M-f` to navigate by word
+    * `C-b` and `C-f` for consistency
+    * `M-d` to delete word under cursor
+    * `C-t` to transpose previous character with current character
+    * `M-<` and `M->` to goto-beginning-of-file and end of file,
+      respectively
+
 0.63
 ----
 
