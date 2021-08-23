@@ -12,7 +12,8 @@ API changes:
  * Added `Brick.Widgets.Core.putCursor` to support Vty's new (as of
    5.33) API for placing cursors without visually representing
    them. This change also updated `Brick.Forms.renderCheckbox` and
-   `Brick.Forms.renderRadio` to use `putCursor`.
+   `Brick.Forms.renderRadio` to use `putCursor` (thanks to Mario Lang
+   for this work).
 
 Other improvements:
  * `Brick.Widgets.Edit` now supports a few more Emacs-style keybindings
