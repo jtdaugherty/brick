@@ -194,7 +194,10 @@ runWithVty vty brickChan mUserChan app initialRS initialSt = do
           Nothing -> readBChan brickChan
           Just uc -> readBrickEvent brickChan uc
         runInner rs es draw st = do
-          (result, newRS, newExtents) <- runVty vty readEvent app st (resetRenderState rs) es draw
+          let nextRS = if draw
+                       then resetRenderState rs
+                       else rs
+          (result, newRS, newExtents) <- runVty vty readEvent app st nextRS es draw
           case result of
               SuspendAndResume act -> do
                   killThread pid
