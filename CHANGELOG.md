@@ -2,6 +2,13 @@
 Brick changelog
 ---------------
 
+0.64.1
+------
+
+Bug fixes:
+ * Fixed a bug where mouse clicks could fail to be noticed if
+   "continueWithoutRedraw" was called.
+
 0.64
 ----
 
