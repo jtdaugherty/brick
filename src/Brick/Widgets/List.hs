@@ -253,7 +253,7 @@ listMoveToBeginning = listMoveTo 0
 listMoveToEnd :: (Foldable t, Splittable t)
               => GenericList n t e
               -> GenericList n t e
-listMoveToEnd l = listMoveTo (length $ listElements l) l
+listMoveToEnd l = listMoveTo (max 0 $ length (listElements l) - 1) l
 
 -- | The top-level attribute used for the entire list.
 listAttr :: AttrName
