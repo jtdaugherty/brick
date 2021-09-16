@@ -78,6 +78,7 @@ include it, get in touch!
 | [`brewsage`](https://github.com/gerdreiss/brewsage#readme) | A TUI for Homebrew |
 | [`sandwich`](https://codedownio.github.io/sandwich/) | A test framework with a TUI interface |
 | [`youbrick`](https://github.com/florentc/youbrick) | A feed aggregator and launcher for Youtube channels |
+| [`swarm`](https://github.com/byorgey/swarm/) | A 2D programming and resource gathering game |
 
 These third-party packages also extend `brick`:
 
