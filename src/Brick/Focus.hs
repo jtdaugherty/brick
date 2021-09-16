@@ -1,7 +1,5 @@
 -- | This module provides a type and functions for handling focus rings
 -- of values.
---
--- This interface is experimental.
 module Brick.Focus
   ( FocusRing
   , focusRing

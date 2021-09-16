@@ -3,10 +3,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE ScopedTypeVariables #-}
--- | Note - This API is experimental and will probably change. Please
--- try it out! Feedback is very much appreciated, and your patience in
--- the face of breaking API changes is also appreciated! It's also worth
--- bearing in mind that this API is designed to support a narrow range
+-- | Note - this API is designed to support a narrow (but common!) set
 -- of use cases. If you find that you need more customization than this
 -- offers, then you will need to consider building your own layout and
 -- event handling for input fields.
