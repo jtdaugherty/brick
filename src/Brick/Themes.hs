@@ -405,7 +405,7 @@ saveTheme path t = do
 attrToCustom :: Attr -> CustomAttr
 attrToCustom a =
     CustomAttr { customFg    = Just $ attrForeColor a
-               , customBg    = Just $ attrForeColor a
+               , customBg    = Just $ attrBackColor a
                , customStyle = case attrStyle a of
                    SetTo s -> Just s
                    _       -> Nothing
