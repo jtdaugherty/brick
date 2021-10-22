@@ -2,6 +2,14 @@
 Brick changelog
 ---------------
 
+0.64.2
+------
+
+Bug fixes:
+ * `Brick.Themes.saveTheme` now correctly saves background colors (#338)
+ * `Brick.Widgets.List.listMoveToEnd` now uses the correct destination
+   index (#337)
+
 0.64.1
 ------
 
