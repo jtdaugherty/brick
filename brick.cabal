@@ -38,7 +38,7 @@ build-type:          Simple
 cabal-version:       1.18
 Homepage:            https://github.com/jtdaugherty/brick/
 Bug-reports:         https://github.com/jtdaugherty/brick/issues
-tested-with:         GHC == 8.0.2, GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.5, GHC == 8.8.4, GHC == 8.10.2
+tested-with:         GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.5, GHC == 8.8.4, GHC == 8.10.7, GHC == 9.0.1
 
 extra-doc-files:     README.md,
                      docs/guide.rst,
@@ -114,7 +114,7 @@ library
     Brick.Types.Internal
     Brick.Widgets.Internal
 
-  build-depends:       base < 4.16.0.0,
+  build-depends:       base >= 4.9.0.0 && < 4.16.0.0,
                        vty >= 5.33,
                        transformers,
                        data-clist >= 0.1,
@@ -137,8 +137,6 @@ library
                        unix,
                        bytestring,
                        word-wrap >= 0.2
-  if impl(ghc < 8.0)
-    build-depends:     semigroups
 
 executable brick-table-demo
   if !flag(demos)
@@ -512,9 +510,7 @@ executable brick-progressbar-demo
 test-suite brick-tests
   type:                exitcode-stdio-1.0
   hs-source-dirs:      tests
-  ghc-options:         -Wall -Wcompat -O2
-  if impl(ghc >= 8)
-    ghc-options:       -Wno-orphans
+  ghc-options:         -Wall -Wcompat -Wno-orphans -O2
   default-language:    Haskell2010
   main-is:             Main.hs
   other-modules:       List
@@ -524,5 +520,3 @@ test-suite brick-tests
                        microlens,
                        vector,
                        QuickCheck
-  if impl(ghc < 8.0)
-    build-depends:     semigroups
