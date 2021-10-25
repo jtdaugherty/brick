@@ -84,11 +84,6 @@ module Brick.Types
   )
 where
 
-#if !MIN_VERSION_base(4,8,0)
-import Control.Applicative
-import Data.Monoid (Monoid(..))
-#endif
-
 import Lens.Micro (_1, _2, to, (^.), (&), (.~), Lens')
 import Lens.Micro.Type (Getting)
 import Control.Monad.Catch (MonadThrow, MonadCatch, MonadMask)

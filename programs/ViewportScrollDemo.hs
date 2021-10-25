@@ -2,10 +2,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-#if !MIN_VERSION_base(4,8,0)
-import Control.Applicative
-#endif
-
 import Control.Monad (void)
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid ((<>))

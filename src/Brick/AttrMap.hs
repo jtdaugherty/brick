@@ -45,11 +45,6 @@ module Brick.AttrMap
   )
 where
 
-#if !MIN_VERSION_base(4,8,0)
-import Control.Applicative ((<$>))
-import Data.Monoid
-#endif
-
 import qualified Data.Semigroup as Sem
 
 import Control.DeepSeq

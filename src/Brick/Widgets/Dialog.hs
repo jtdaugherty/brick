@@ -36,10 +36,6 @@ module Brick.Widgets.Dialog
   )
 where
 
-#if !MIN_VERSION_base(4,8,0)
-import Control.Applicative
-#endif
-
 import Lens.Micro
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid

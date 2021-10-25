@@ -100,11 +100,6 @@ where
 import Data.Monoid ((<>))
 #endif
 
-#if !MIN_VERSION_base(4,8,0)
-import Control.Applicative
-import Data.Monoid ((<>), mempty)
-#endif
-
 import Lens.Micro ((^.), (.~), (&), (%~), to, _1, _2, each, to, Lens')
 import Lens.Micro.Mtl (use, (%=))
 import Control.Monad ((>=>),when)

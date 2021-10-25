@@ -53,10 +53,6 @@ module Brick.Types.Internal
   )
 where
 
-#if !MIN_VERSION_base(4,8,0)
-import Data.Monoid
-#endif
-
 import Lens.Micro (_1, _2, Lens')
 import Lens.Micro.TH (makeLenses)
 import qualified Data.Set as S
