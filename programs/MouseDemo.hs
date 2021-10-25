@@ -3,9 +3,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Main where
 
-#if !MIN_VERSION_base(4,8,0)
-import Control.Applicative ((<$>))
-#endif
 import Lens.Micro ((^.), (&), (.~), (%~))
 import Lens.Micro.TH (makeLenses)
 import Control.Monad (void)

@@ -78,13 +78,7 @@ where
 import Prelude hiding (reverse, splitAt)
 
 import Control.Applicative ((<|>))
-#if !MIN_VERSION_base(4,8,0)
-import Control.Applicative ((<$>), (<*>), pure)
-import Data.Foldable (Foldable, find, toList)
-import Data.Traversable (Traversable)
-#else
 import Data.Foldable (find, toList)
-#endif
 import Control.Monad.Trans.State (evalState, get, put)
 
 import Lens.Micro ((^.), (^?), (&), (.~), (%~), _2, _head, set)
