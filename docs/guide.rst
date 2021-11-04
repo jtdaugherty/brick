@@ -391,8 +391,8 @@ bound for the event channel. In general, consider the performance of
 your event handler when choosing the channel capacity and design event
 producers so that they can block if the channel is full.
 
-Starting up: appStartEvent
-**************************
+appStartEvent: Starting up
+--------------------------
 
 When an application starts, it may be desirable to perform some of
 the duties typically only possible when an event has arrived, such as
