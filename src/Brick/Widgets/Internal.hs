@@ -123,17 +123,19 @@ cropBorders ctx = BM.crop Edges
     }
 
 renderDynBorder :: DynBorder -> V.Image
-renderDynBorder db = V.char (dbAttr db) . ($dbStyle db) $ case bsDraw <$> dbSegments db of
-    --    top   bot   left  right
-    Edges False False False False -> const ' '
-    Edges False False _     _     -> bsHorizontal
-    Edges _     _     False False -> bsVertical
-    Edges False True  False True  -> bsCornerTL
-    Edges False True  True  False -> bsCornerTR
-    Edges True  False False True  -> bsCornerBL
-    Edges True  False True  False -> bsCornerBR
-    Edges False True  True  True  -> bsIntersectT
-    Edges True  False True  True  -> bsIntersectB
-    Edges True  True  False True  -> bsIntersectL
-    Edges True  True  True  False -> bsIntersectR
-    Edges True  True  True  True  -> bsIntersectFull
+renderDynBorder db = V.char (dbAttr db) $ getBorderChar $ dbStyle db
+    where
+        getBorderChar = case bsDraw <$> dbSegments db of
+            --    top   bot   left  right
+            Edges False False False False -> const ' '
+            Edges False False _     _     -> bsHorizontal
+            Edges _     _     False False -> bsVertical
+            Edges False True  False True  -> bsCornerTL
+            Edges False True  True  False -> bsCornerTR
+            Edges True  False False True  -> bsCornerBL
+            Edges True  False True  False -> bsCornerBR
+            Edges False True  True  True  -> bsIntersectT
+            Edges True  False True  True  -> bsIntersectB
+            Edges True  True  False True  -> bsIntersectL
+            Edges True  True  True  False -> bsIntersectR
+            Edges True  True  True  True  -> bsIntersectFull
