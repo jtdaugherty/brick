@@ -125,7 +125,7 @@ cropBorders ctx = BM.crop Edges
 renderDynBorder :: DynBorder -> V.Image
 renderDynBorder db = V.char (dbAttr db) . ($dbStyle db) $ case bsDraw <$> dbSegments db of
     --    top   bot   left  right
-    Edges False False False False -> const ' ' -- dunno lol (but should never happen, so who cares)
+    Edges False False False False -> const ' '
     Edges False False _     _     -> bsHorizontal
     Edges _     _     False False -> bsVertical
     Edges False True  False True  -> bsCornerTL
