@@ -88,7 +88,7 @@ import Graphics.Vty hiding (showCursor)
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid
 #endif
-import Data.Maybe (isJust, isNothing)
+import Data.Maybe (fromJust, isJust, isNothing)
 import Data.List (elemIndex)
 import Data.Vector (Vector)
 
@@ -807,13 +807,13 @@ getFocusGrouping f n = findGroup (formFieldStates f)
 
 entryAfter :: (Eq a) => [a] -> a -> a
 entryAfter as a =
-    let Just i = elemIndex a as
+    let i = fromJust $ elemIndex a as
         i' = if i == length as - 1 then 0 else i + 1
     in as !! i'
 
 entryBefore :: (Eq a) => [a] -> a -> a
 entryBefore as a =
-    let Just i = elemIndex a as
+    let i = fromJust $ elemIndex a as
         i' = if i == 0 then length as - 1 else i - 1
     in as !! i'
 
