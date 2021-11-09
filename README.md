@@ -124,7 +124,7 @@ Feature Overview
 
  * Vertical and horizontal box layout widgets
  * Basic single- and multi-line text editor widgets
- * List widget
+ * List and table widgets
  * Progress bar widget
  * Simple dialog box widget
  * Border-drawing widgets (put borders around or in between things)
