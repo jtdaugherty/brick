@@ -95,6 +95,7 @@ module Brick.Widgets.Core
   , unsafeLookupViewport
   , cached
   , verticalScrollbarRenderer
+  , horizontalScrollbarRenderer
   , scrollbarAttr
   , scrollbarTroughAttr
 
