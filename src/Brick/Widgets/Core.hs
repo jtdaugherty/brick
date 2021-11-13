@@ -1330,6 +1330,8 @@ verticalScrollbar :: ScrollbarRenderer n
                   -> Int
                   -- ^ The total viewport content height.
                   -> Widget n
+verticalScrollbar vsRenderer vpHeight _ 0 =
+    hLimit 1 $ vLimit vpHeight $ renderScrollbarTrough vsRenderer
 verticalScrollbar vsRenderer vpHeight vOffset contentHeight =
     -- Get the proportion of the total content that is visible
     let visibleContentPercent :: Double
@@ -1382,6 +1384,8 @@ horizontalScrollbar :: ScrollbarRenderer n
                     -> Int
                     -- ^ The total viewport content width.
                     -> Widget n
+horizontalScrollbar hsRenderer vpWidth _ 0 =
+    vLimit 1 $ hLimit vpWidth $ renderScrollbarTrough hsRenderer
 horizontalScrollbar hsRenderer vpWidth hOffset contentWidth =
     -- Get the proportion of the total content that is visible
     let visibleContentPercent :: Double
