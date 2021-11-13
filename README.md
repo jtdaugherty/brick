@@ -135,7 +135,7 @@ Feature Overview
  * Type-safe, validated input form API (see the `Brick.Forms` module)
  * A filesystem browser for file and directory selection
  * Borders can be configured to automatically connect!
- 
+
 Brick-Users Discussion
 ----------------------
 
