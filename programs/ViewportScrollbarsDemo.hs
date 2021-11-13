@@ -42,15 +42,13 @@ import Brick.Widgets.Core
   , scrollbarTroughAttr
   )
 
-customSB :: ScrollbarRenderer n
-customSB =
+customScrollbars :: ScrollbarRenderer n
+customScrollbars =
     ScrollbarRenderer { renderScrollbar = fill '^'
                       , renderScrollbarTrough = fill '_'
                       }
 
-data Name = VP1
-          | VP2
-          | VP3
+data Name = VP1 | VP2
           deriving (Ord, Show, Eq)
 
 drawUi :: () -> [Widget Name]
@@ -60,14 +58,14 @@ drawUi = const [ui]
         pair = hBox [ padRight (T.Pad 5) $
                       B.border $
                       withHScrollBars OnBottom $
-                      withHScrollBarRenderer customSB $
-                      viewport VP2 Horizontal $
+                      withHScrollBarRenderer customScrollbars $
+                      viewport VP1 Horizontal $
                       str $ "Press left and right arrow keys to scroll this viewport.\n" <>
                             "This viewport uses a\n" <>
                             "custom scroll bar renderer!"
                     , B.border $
                       withVScrollBars OnLeft $
-                      viewport VP3 Both $
+                      viewport VP2 Both $
                       vBox $ str "Press ctrl-arrow keys to scroll this viewport horizontally and vertically."
                       : (str <$> [ "Line " <> show i | i <- [2..55::Int] ])
                     ]
@@ -78,14 +76,7 @@ vp1Scroll = M.viewportScroll VP1
 vp2Scroll :: M.ViewportScroll Name
 vp2Scroll = M.viewportScroll VP2
 
-vp3Scroll :: M.ViewportScroll Name
-vp3Scroll = M.viewportScroll VP3
-
 appEvent :: () -> T.BrickEvent Name e -> T.EventM Name (T.Next ())
-appEvent _ (T.VtyEvent (V.EvKey V.KDown  [V.MCtrl])) = M.vScrollBy vp3Scroll 1 >> M.continue ()
-appEvent _ (T.VtyEvent (V.EvKey V.KUp    [V.MCtrl])) = M.vScrollBy vp3Scroll (-1) >> M.continue ()
-appEvent _ (T.VtyEvent (V.EvKey V.KRight [V.MCtrl])) = M.hScrollBy vp3Scroll 1 >> M.continue ()
-appEvent _ (T.VtyEvent (V.EvKey V.KLeft  [V.MCtrl])) = M.hScrollBy vp3Scroll (-1) >> M.continue ()
 appEvent _ (T.VtyEvent (V.EvKey V.KDown []))  = M.vScrollBy vp1Scroll 1 >> M.continue ()
 appEvent _ (T.VtyEvent (V.EvKey V.KUp []))    = M.vScrollBy vp1Scroll (-1) >> M.continue ()
 appEvent _ (T.VtyEvent (V.EvKey V.KRight [])) = M.hScrollBy vp2Scroll 1 >> M.continue ()
