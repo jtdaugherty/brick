@@ -128,7 +128,7 @@ Feature Overview
  * Progress bar widget
  * Simple dialog box widget
  * Border-drawing widgets (put borders around or in between things)
- * Generic scrollable viewports
+ * Generic scrollable viewports and viewport scroll bars
  * General-purpose layout control combinators
  * Extensible widget-building API
  * User-customizable attribute themes
