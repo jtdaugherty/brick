@@ -22,6 +22,8 @@ module Brick.Types
   , vpTop
   , vpLeft
   , vpContentSize
+  , VScrollBarOrientation(..)
+  , HScrollBarOrientation(..)
 
   -- * Event-handling types
   , EventM(..)
@@ -40,6 +42,10 @@ module Brick.Types
   , availHeightL
   , windowWidthL
   , windowHeightL
+  , ctxVScrollBarOrientationL
+  , ctxVScrollBarRendererL
+  , ctxHScrollBarOrientationL
+  , ctxHScrollBarRendererL
   , ctxAttrMapL
   , ctxAttrNameL
   , ctxBorderStyleL
@@ -134,43 +140,8 @@ newtype EventM n a =
                     , MonadThrow, MonadCatch, MonadMask, MonadFail
                     )
 
--- | Widget size policies. These policies communicate how a widget uses
--- space when being rendered. These policies influence rendering order
--- and space allocation in the box layout algorithm for 'hBox' and
--- 'vBox'.
-data Size = Fixed
-          -- ^ Widgets advertising this size policy should take up the
-          -- same amount of space no matter how much they are given,
-          -- i.e. their size depends on their contents alone rather than
-          -- on the size of the rendering area.
-          | Greedy
-          -- ^ Widgets advertising this size policy must take up all the
-          -- space they are given.
-          deriving (Show, Eq, Ord)
-
--- | The type of widgets.
-data Widget n =
-    Widget { hSize :: Size
-           -- ^ This widget's horizontal growth policy
-           , vSize :: Size
-           -- ^ This widget's vertical growth policy
-           , render :: RenderM n (Result n)
-           -- ^ This widget's rendering function
-           }
-
--- | The type of the rendering monad. This monad is used by the
--- library's rendering routines to manage rendering state and
--- communicate rendering parameters to widgets' rendering functions.
-type RenderM n a = ReaderT Context (State (RenderState n)) a
-
--- | Get the current rendering context.
-getContext :: RenderM n Context
-getContext = ask
-
-suffixLenses ''Context
-
 -- | The rendering context's current drawing attribute.
-attrL :: forall r. Getting r Context Attr
+attrL :: forall r n. Getting r (Context n) Attr
 attrL = to (\c -> attrMapLookup (c^.ctxAttrNameL) (c^.ctxAttrMapL))
 
 instance TerminalLocation (CursorLocation n) where

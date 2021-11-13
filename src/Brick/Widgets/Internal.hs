@@ -41,6 +41,10 @@ renderFinal aMap layerRenders (w, h) chooseCursor rs =
                       , ctxBorderStyle = defaultBorderStyle
                       , ctxAttrMap = aMap
                       , ctxDynBorders = False
+                      , ctxVScrollBarOrientation = Nothing
+                      , ctxVScrollBarRenderer = Nothing
+                      , ctxHScrollBarOrientation = Nothing
+                      , ctxHScrollBarRenderer = Nothing
                       }
         pic = V.picForLayers $ uncurry V.resize (w, h) <$> (^.imageL) <$> layerResults
 
@@ -66,10 +70,10 @@ cropResultToContext result = do
                     & extentsL %~ cropExtents c
                     & bordersL %~ cropBorders c
 
-cropImage :: Context -> V.Image -> V.Image
+cropImage :: Context n -> V.Image -> V.Image
 cropImage c = V.crop (max 0 $ c^.availWidthL) (max 0 $ c^.availHeightL)
 
-cropCursors :: Context -> [CursorLocation n] -> [CursorLocation n]
+cropCursors :: Context n -> [CursorLocation n] -> [CursorLocation n]
 cropCursors ctx cs = catMaybes $ cropCursor <$> cs
     where
         -- A cursor location is removed if it is not within the region
@@ -83,7 +87,7 @@ cropCursors ctx cs = catMaybes $ cropCursor <$> cs
                , c^.cursorLocationL.locationColumnL >= ctx^.availWidthL
                ]
 
-cropExtents :: Context -> [Extent n] -> [Extent n]
+cropExtents :: Context n -> [Extent n] -> [Extent n]
 cropExtents ctx es = catMaybes $ cropExtent <$> es
     where
         -- An extent is cropped in places where it is not within the
@@ -114,7 +118,7 @@ cropExtents ctx es = catMaybes $ cropExtent <$> es
                then Nothing
                else Just e
 
-cropBorders :: Context -> BorderMap DynBorder -> BorderMap DynBorder
+cropBorders :: Context n -> BorderMap DynBorder -> BorderMap DynBorder
 cropBorders ctx = BM.crop Edges
     { eTop = 0
     , eBottom = availHeight ctx - 1

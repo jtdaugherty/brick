@@ -1232,6 +1232,22 @@ capture various cursor-based scenarios:
   its selected item visible regardless of its size, which makes
   the list widget scrolling-unaware.
 
+Showing Scroll Bars on Viewports
+--------------------------------
+
+Brick supports drawing both vertical and horizontal scroll bars on
+viewports. To enable scroll bars, wrap your call to ``viewport`` with
+a call to ``withVScrollBars`` and/or ``withHScrollBars``. If you don't
+like the appearance of the resulting scroll bars, you can customize
+how they are drawn by making your own ``ScrollbarRenderer`` and using
+``withVScrollBarRenderer`` and/or ``withHScrollBarRenderer``. Note that
+when you enable scrollbars, the content of your viewport will lose one
+column of available space if vertical scroll bars are enabled and one
+row of available space if horizontal scroll bars are enabled.
+
+For a demonstration of the scroll bar API in action, see the
+``ViewportScrollbarsDemo.hs`` demonstration program.
+
 Viewport Restrictions
 ---------------------
 
