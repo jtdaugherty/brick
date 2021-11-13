@@ -1065,32 +1065,44 @@ cacheLookup n = do
 cacheUpdate :: Ord n => n -> ([n], Result n) -> RenderM n ()
 cacheUpdate n r = lift $ modify (renderCacheL %~ M.insert n r)
 
+-- | Enable vertical scroll bars on all viewports in the specified
+-- widget and draw them with the specified orientation.
 withVScrollBars :: VScrollBarOrientation -> Widget n -> Widget n
 withVScrollBars orientation w =
     Widget (hSize w) (vSize w) $
         withReaderT (ctxVScrollBarOrientationL .~ Just orientation) (render w)
 
+-- | Render vertical viewport scroll bars in the specified widget with
+-- the specified renderer.
 withVScrollBarRenderer :: ScrollbarRenderer n -> Widget n -> Widget n
 withVScrollBarRenderer r w =
     Widget (hSize w) (vSize w) $
         withReaderT (ctxVScrollBarRendererL .~ Just r) (render w)
 
+-- | The default renderer for vertical viewport scroll bars. Override
+-- with 'withVScrollBarRenderer'.
 verticalScrollbarRenderer :: ScrollbarRenderer n
 verticalScrollbarRenderer =
     ScrollbarRenderer { renderScrollbar = fill '█'
                       , renderScrollbarTrough = fill ' '
                       }
 
+-- | Enable horizontal scroll bars on all viewports in the specified
+-- widget and draw them with the specified orientation.
 withHScrollBars :: HScrollBarOrientation -> Widget n -> Widget n
 withHScrollBars orientation w =
     Widget (hSize w) (vSize w) $
         withReaderT (ctxHScrollBarOrientationL .~ Just orientation) (render w)
 
+-- | Render horizontal viewport scroll bars in the specified widget with
+-- the specified renderer.
 withHScrollBarRenderer :: ScrollbarRenderer n -> Widget n -> Widget n
 withHScrollBarRenderer r w =
     Widget (hSize w) (vSize w) $
         withReaderT (ctxHScrollBarRendererL .~ Just r) (render w)
 
+-- | The default renderer for horizontal viewport scroll bars. Override
+-- with 'withHScrollBarRenderer'.
 horizontalScrollbarRenderer :: ScrollbarRenderer n
 horizontalScrollbarRenderer =
     ScrollbarRenderer { renderScrollbar = fill '█'
@@ -1109,13 +1121,14 @@ horizontalScrollbarRenderer =
 -- This function can automatically render vertical and horizontal scroll
 -- bars if desired. To enable scroll bars, wrap your call to 'viewport'
 -- with a call to 'withVScrollBars' and/or 'withHScrollBars'. If you
--- don't like the appearance of the resulting scroll bars, you can
--- customize how they are drawn by making your own 'ScrollbarRenderer'
--- and using 'withVScrollBarRenderer' and/or 'withHScrollBarRenderer'.
--- Note that when you enable scrollbars, the content of your viewport
--- will lose one column of available space if vertical scroll bars are
--- enabled and one row of available space if horizontal scroll bars are
--- enabled.
+-- don't like the appearance of the resulting scroll bars (defaults:
+-- 'verticalScrollbarRenderer' and 'horizontalScrollbarRenderer'),
+-- you can customize how they are drawn by making your own
+-- 'ScrollbarRenderer' and using 'withVScrollBarRenderer' and/or
+-- 'withHScrollBarRenderer'. Note that when you enable scrollbars, the
+-- content of your viewport will lose one column of available space if
+-- vertical scroll bars are enabled and one row of available space if
+-- horizontal scroll bars are enabled.
 --
 -- If a viewport receives more than one visibility request, then the
 -- visibility requests are merged with the inner visibility request
