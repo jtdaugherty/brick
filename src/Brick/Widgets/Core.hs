@@ -81,23 +81,25 @@ module Brick.Widgets.Core
   , reportExtent
   , clickable
 
-  -- * Scrollable viewports and scroll bars
-  , ScrollbarRenderer(..)
+  -- * Scrollable viewports
   , viewport
-  , withVScrollBars
-  , withVScrollBarRenderer
-  , withHScrollBars
-  , withHScrollBarRenderer
-  , verticalScrollbar
-  , horizontalScrollbar
   , visible
   , visibleRegion
   , unsafeLookupViewport
   , cached
+
+  -- ** Viewport scroll bars
+  , withVScrollBars
+  , withHScrollBars
+  , withVScrollBarRenderer
+  , withHScrollBarRenderer
+  , ScrollbarRenderer(..)
   , verticalScrollbarRenderer
   , horizontalScrollbarRenderer
   , scrollbarAttr
   , scrollbarTroughAttr
+  , verticalScrollbar
+  , horizontalScrollbar
 
   -- ** Adding offsets to cursor positions and visibility requests
   , addResultOffset
