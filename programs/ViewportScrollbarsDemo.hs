@@ -77,11 +77,11 @@ vp2Scroll :: M.ViewportScroll Name
 vp2Scroll = M.viewportScroll VP2
 
 appEvent :: () -> T.BrickEvent Name e -> T.EventM Name (T.Next ())
-appEvent _ (T.VtyEvent (V.EvKey V.KDown []))  = M.vScrollBy vp1Scroll 1 >> M.continue ()
-appEvent _ (T.VtyEvent (V.EvKey V.KUp []))    = M.vScrollBy vp1Scroll (-1) >> M.continue ()
-appEvent _ (T.VtyEvent (V.EvKey V.KRight [])) = M.hScrollBy vp2Scroll 1 >> M.continue ()
-appEvent _ (T.VtyEvent (V.EvKey V.KLeft []))  = M.hScrollBy vp2Scroll (-1) >> M.continue ()
-appEvent _ (T.VtyEvent (V.EvKey V.KEsc [])) = M.halt ()
+appEvent _ (T.VtyEvent (V.EvKey V.KRight []))  = M.hScrollBy vp1Scroll 1 >> M.continue ()
+appEvent _ (T.VtyEvent (V.EvKey V.KLeft []))   = M.hScrollBy vp1Scroll (-1) >> M.continue ()
+appEvent _ (T.VtyEvent (V.EvKey V.KDown []))   = M.vScrollBy vp2Scroll 1 >> M.continue ()
+appEvent _ (T.VtyEvent (V.EvKey V.KUp []))     = M.vScrollBy vp2Scroll (-1) >> M.continue ()
+appEvent _ (T.VtyEvent (V.EvKey V.KEsc []))    = M.halt ()
 appEvent _ _ = M.continue ()
 
 theme :: AttrMap
