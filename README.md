@@ -2,8 +2,8 @@
 
 `brick` is a Haskell terminal user interface (TUI) programming toolkit.
 To use it, you write a pure function that describes how your user
-interface should look based on your current application state and you
-provide a state transformation function to handle events.
+interface should be drawn based on your current application state and
+you provide a state transformation function to handle events.
 
 `brick` exposes a declarative API. Unlike most GUI toolkits which
 require you to write a long and tedious sequence of "create a widget,
@@ -40,9 +40,9 @@ Result:
 Featured Projects
 -----------------
 
-To get an idea of what some people have done with `brick`, take a look
-at these projects. If you have made something and would like me to
-include it, get in touch!
+To get an idea of what some people have done with `brick`, check out
+these projects. If you have made something and would like me to include
+it, get in touch!
 
 | Project | Description |
 | ------- | ----------- |

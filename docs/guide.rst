@@ -21,7 +21,7 @@ The process of writing an application using ``brick`` entails writing
 two important functions:
 
 - A *drawing function* that turns your application state into a
-  specification of how your interface should look, and
+  specification of how your interface should be drawn, and
 - An *event handler* that takes your application state and an input
   event and decides whether to change the state or quit the program.
 
@@ -334,7 +334,7 @@ define the counter event type:
 
 With this type declaration we can now use counter events in our app by
 using the application type ``App s CounterEvent n``. To handle these
-events we'll just need to look for ``AppEvent`` values in the event
+events we'll just need to check for ``AppEvent`` values in the event
 handler:
 
 .. code:: haskell
@@ -1288,7 +1288,7 @@ the above work in a type-safe manner.
 A Form Example
 --------------
 
-Let's look at an example data type that we'd want to use as the
+Let's consider an example data type that we'd want to use as the
 basis for an input interface. This example comes directly from the
 ``FormDemo.hs`` demonstration program.
 
