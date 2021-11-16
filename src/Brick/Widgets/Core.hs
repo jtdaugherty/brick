@@ -1372,8 +1372,10 @@ verticalScrollbar vsRenderer vpHeight vOffset contentHeight =
                                      (fromIntegral vOffset /
                                       fromIntegral contentHeight::Double)
 
-        sbAbove = withDefAttr scrollbarTroughAttr $ vLimit sbOffset $ renderScrollbarTrough vsRenderer
-        sbBelow = withDefAttr scrollbarTroughAttr $ vLimit (vpHeight - (sbOffset + sbSize)) $ renderScrollbarTrough vsRenderer
+        sbAbove = withDefAttr scrollbarTroughAttr $ vLimit sbOffset $
+                  renderScrollbarTrough vsRenderer
+        sbBelow = withDefAttr scrollbarTroughAttr $ vLimit (vpHeight - (sbOffset + sbSize)) $
+                  renderScrollbarTrough vsRenderer
         sbMiddle = withDefAttr scrollbarAttr $ vLimit sbSize $ renderScrollbar vsRenderer
 
         sb = hLimit 1 $
@@ -1426,8 +1428,10 @@ horizontalScrollbar hsRenderer vpWidth hOffset contentWidth =
                                      (fromIntegral hOffset /
                                       fromIntegral contentWidth::Double)
 
-        sbLeft = withDefAttr scrollbarTroughAttr $ hLimit sbOffset $ renderScrollbarTrough hsRenderer
-        sbRight = withDefAttr scrollbarTroughAttr $ hLimit (vpWidth - (sbOffset + sbSize)) $ renderScrollbarTrough hsRenderer
+        sbLeft = withDefAttr scrollbarTroughAttr $ hLimit sbOffset $
+                 renderScrollbarTrough hsRenderer
+        sbRight = withDefAttr scrollbarTroughAttr $ hLimit (vpWidth - (sbOffset + sbSize)) $
+                  renderScrollbarTrough hsRenderer
         sbMiddle = withDefAttr scrollbarAttr $ hLimit sbSize $ renderScrollbar hsRenderer
 
         sb = vLimit 1 $
