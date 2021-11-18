@@ -79,6 +79,8 @@ it, get in touch!
 | [`sandwich`](https://codedownio.github.io/sandwich/) | A test framework with a TUI interface |
 | [`youbrick`](https://github.com/florentc/youbrick) | A feed aggregator and launcher for Youtube channels |
 | [`swarm`](https://github.com/byorgey/swarm/) | A 2D programming and resource gathering game |
+| [`hledger-ui`](https://github.com/simonmichael/hledger) | A terminal UI for the hledger accounting system. |
+| [`hledger-iadd`](http://github.com/rootzlevel/hledger-iadd) | An interactive terminal UI for adding hledger journal entries |
 
 These third-party packages also extend `brick`:
 
