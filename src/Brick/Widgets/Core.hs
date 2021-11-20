@@ -91,6 +91,8 @@ module Brick.Widgets.Core
   -- ** Viewport scroll bars
   , withVScrollBars
   , withHScrollBars
+  , withClickableHScrollBars
+  , withClickableVScrollBars
   , withVScrollBarHandles
   , withHScrollBarHandles
   , withVScrollBarRenderer
@@ -1110,6 +1112,26 @@ withHScrollBars orientation w =
     Widget (hSize w) (vSize w) $
         withReaderT (ctxHScrollBarOrientationL .~ Just orientation) (render w)
 
+-- | Enable mouse click reporting on horizontal scroll bars in the
+-- specified widget. This must be used with 'withHScrollBars'. The
+-- provided function is used to build a resource name containing the
+-- scroll bar element clicked and the viewport name associated with the
+-- scroll bar. It is usually a data constructor of the @n@ type.
+withClickableHScrollBars :: (ClickableScrollbarElement -> n -> n) -> Widget n -> Widget n
+withClickableHScrollBars f w =
+    Widget (hSize w) (vSize w) $
+        withReaderT (ctxHScrollBarClickableConstrL .~ Just f) (render w)
+
+-- | Enable mouse click reporting on vertical scroll bars in the
+-- specified widget. This must be used with 'withVScrollBars'. The
+-- provided function is used to build a resource name containing the
+-- scroll bar element clicked and the viewport name associated with the
+-- scroll bar. It is usually a data constructor of the @n@ type.
+withClickableVScrollBars :: (ClickableScrollbarElement -> n -> n) -> Widget n -> Widget n
+withClickableVScrollBars f w =
+    Widget (hSize w) (vSize w) $
+        withReaderT (ctxVScrollBarClickableConstrL .~ Just f) (render w)
+
 -- | Enable scroll bar handles on all horizontal scroll bars in the
 -- specified widget. This will only have an effect if 'withHScrollBars'
 -- is also called.
@@ -1189,6 +1211,8 @@ viewport vpname typ p =
           hsRenderer = fromMaybe horizontalScrollbarRenderer (ctxHScrollBarRenderer c)
           showVHandles = ctxVScrollBarShowHandles c
           showHHandles = ctxHScrollBarShowHandles c
+          vsbClickableConstr = ctxVScrollBarClickableConstr c
+          hsbClickableConstr = ctxHScrollBarClickableConstr c
 
       -- Observe the viewport name so we can detect multiple uses of the
       -- name.
@@ -1309,7 +1333,9 @@ viewport vpname typ p =
       let addVScrollbar = case vsOrientation of
               Nothing -> id
               Just orientation ->
-                  let sb = verticalScrollbar vsRenderer showVHandles
+                  let sb = verticalScrollbar vsRenderer vpname
+                                                        vsbClickableConstr
+                                                        showVHandles
                                                         (vpFinal^.vpSize._2)
                                                         (vpFinal^.vpTop)
                                                         (vpFinal^.vpContentSize._2)
@@ -1320,7 +1346,9 @@ viewport vpname typ p =
           addHScrollbar = case hsOrientation of
               Nothing -> id
               Just orientation ->
-                  let sb = horizontalScrollbar hsRenderer showHHandles
+                  let sb = horizontalScrollbar hsRenderer vpname
+                                                          hsbClickableConstr
+                                                          showHHandles
                                                           (vpFinal^.vpSize._1)
                                                           (vpFinal^.vpLeft)
                                                           (vpFinal^.vpContentSize._1)
@@ -1364,6 +1392,14 @@ scrollbarTroughAttr = scrollbarAttr <> "trough"
 scrollbarHandleAttr :: AttrName
 scrollbarHandleAttr = scrollbarAttr <> "handle"
 
+maybeClick :: n
+           -> Maybe (ClickableScrollbarElement -> n -> n)
+           -> ClickableScrollbarElement
+           -> Widget n
+           -> Widget n
+maybeClick _ Nothing _ w = w
+maybeClick n (Just f) el w = clickable (f el n) w
+
 -- | Build a vertical scroll bar using the specified render and
 -- settings.
 --
@@ -1374,6 +1410,11 @@ scrollbarHandleAttr = scrollbarAttr <> "handle"
 -- context.
 verticalScrollbar :: ScrollbarRenderer n
                   -- ^ The renderer to use.
+                  -> n
+                  -- ^ The viewport name associated with this scroll
+                  -- bar.
+                  -> Maybe (ClickableScrollbarElement -> n -> n)
+                  -- ^ Constructor for clickable scroll bar element names.
                   -> Bool
                   -- ^ Whether to display handles.
                   -> Int
@@ -1383,16 +1424,23 @@ verticalScrollbar :: ScrollbarRenderer n
                   -> Int
                   -- ^ The total viewport content height.
                   -> Widget n
-verticalScrollbar vsRenderer False vpHeight vOffset contentHeight =
-    verticalScrollbar' vsRenderer vpHeight vOffset contentHeight
-verticalScrollbar vsRenderer True vpHeight vOffset contentHeight =
-    vBox [ hLimit 1 $ withDefAttr scrollbarHandleAttr $ renderScrollbarHandleBefore vsRenderer
-         , verticalScrollbar' vsRenderer vpHeight vOffset contentHeight
-         , hLimit 1 $ withDefAttr scrollbarHandleAttr $ renderScrollbarHandleAfter vsRenderer
+verticalScrollbar vsRenderer n constr False vpHeight vOffset contentHeight =
+    verticalScrollbar' vsRenderer n constr vpHeight vOffset contentHeight
+verticalScrollbar vsRenderer n constr True vpHeight vOffset contentHeight =
+    vBox [ maybeClick n constr SBHandleBefore $
+           hLimit 1 $ withDefAttr scrollbarHandleAttr $ renderScrollbarHandleBefore vsRenderer
+         , verticalScrollbar' vsRenderer n constr vpHeight vOffset contentHeight
+         , maybeClick n constr SBHandleAfter $
+           hLimit 1 $ withDefAttr scrollbarHandleAttr $ renderScrollbarHandleAfter vsRenderer
          ]
 
 verticalScrollbar' :: ScrollbarRenderer n
                    -- ^ The renderer to use.
+                   -> n
+                   -- ^ The viewport name associated with this scroll
+                   -- bar.
+                   -> Maybe (ClickableScrollbarElement -> n -> n)
+                   -- ^ Constructor for clickable scroll bar element names.
                    -> Int
                    -- ^ The total viewport height in effect.
                    -> Int
@@ -1400,9 +1448,9 @@ verticalScrollbar' :: ScrollbarRenderer n
                    -> Int
                    -- ^ The total viewport content height.
                    -> Widget n
-verticalScrollbar' vsRenderer vpHeight _ 0 =
+verticalScrollbar' vsRenderer _ _ vpHeight _ 0 =
     hLimit 1 $ vLimit vpHeight $ renderScrollbarTrough vsRenderer
-verticalScrollbar' vsRenderer vpHeight vOffset contentHeight =
+verticalScrollbar' vsRenderer n constr vpHeight vOffset contentHeight =
     Widget Fixed Greedy $ do
         c <- getContext
 
@@ -1431,11 +1479,14 @@ verticalScrollbar' vsRenderer vpHeight vOffset contentHeight =
                                          (fromIntegral vOffset /
                                           fromIntegral contentHeight::Double)
 
-            sbAbove = withDefAttr scrollbarTroughAttr $ vLimit sbOffset $
+            sbAbove = maybeClick n constr SBTroughBefore $
+                      withDefAttr scrollbarTroughAttr $ vLimit sbOffset $
                       renderScrollbarTrough vsRenderer
-            sbBelow = withDefAttr scrollbarTroughAttr $ vLimit (ctxHeight - (sbOffset + sbSize)) $
+            sbBelow = maybeClick n constr SBTroughAfter $
+                      withDefAttr scrollbarTroughAttr $ vLimit (ctxHeight - (sbOffset + sbSize)) $
                       renderScrollbarTrough vsRenderer
-            sbMiddle = withDefAttr scrollbarAttr $ vLimit sbSize $ renderScrollbar vsRenderer
+            sbMiddle = maybeClick n constr SBBar $
+                       withDefAttr scrollbarAttr $ vLimit sbSize $ renderScrollbar vsRenderer
 
             sb = hLimit 1 $
                  if sbSize == ctxHeight
@@ -1455,6 +1506,12 @@ verticalScrollbar' vsRenderer vpHeight vOffset contentHeight =
 -- context.
 horizontalScrollbar :: ScrollbarRenderer n
                     -- ^ The renderer to use.
+                    -> n
+                    -- ^ The viewport name associated with this scroll
+                    -- bar.
+                    -> Maybe (ClickableScrollbarElement -> n -> n)
+                    -- ^ Constructor for clickable scroll bar element
+                    -- names.
                     -> Bool
                     -- ^ Whether to show handles.
                     -> Int
@@ -1464,16 +1521,24 @@ horizontalScrollbar :: ScrollbarRenderer n
                     -> Int
                     -- ^ The total viewport content width.
                     -> Widget n
-horizontalScrollbar hsRenderer False vpWidth hOffset contentWidth =
-    horizontalScrollbar' hsRenderer vpWidth hOffset contentWidth
-horizontalScrollbar hsRenderer True vpWidth hOffset contentWidth =
-    hBox [ vLimit 1 $ withDefAttr scrollbarHandleAttr $ renderScrollbarHandleBefore hsRenderer
-         , horizontalScrollbar' hsRenderer vpWidth hOffset contentWidth
-         , vLimit 1 $ withDefAttr scrollbarHandleAttr $ renderScrollbarHandleAfter hsRenderer
+horizontalScrollbar hsRenderer n constr False vpWidth hOffset contentWidth =
+    horizontalScrollbar' hsRenderer n constr vpWidth hOffset contentWidth
+horizontalScrollbar hsRenderer n constr True vpWidth hOffset contentWidth =
+    hBox [ maybeClick n constr SBHandleBefore $
+           vLimit 1 $ withDefAttr scrollbarHandleAttr $ renderScrollbarHandleBefore hsRenderer
+         , horizontalScrollbar' hsRenderer n constr vpWidth hOffset contentWidth
+         , maybeClick n constr SBHandleAfter $
+           vLimit 1 $ withDefAttr scrollbarHandleAttr $ renderScrollbarHandleAfter hsRenderer
          ]
 
 horizontalScrollbar' :: ScrollbarRenderer n
                      -- ^ The renderer to use.
+                     -> n
+                     -- ^ The viewport name associated with this scroll
+                     -- bar.
+                     -> Maybe (ClickableScrollbarElement -> n -> n)
+                     -- ^ Constructor for clickable scroll bar element
+                     -- names.
                      -> Int
                      -- ^ The total viewport width in effect.
                      -> Int
@@ -1481,9 +1546,9 @@ horizontalScrollbar' :: ScrollbarRenderer n
                      -> Int
                      -- ^ The total viewport content width.
                      -> Widget n
-horizontalScrollbar' hsRenderer vpWidth _ 0 =
+horizontalScrollbar' hsRenderer _ _ vpWidth _ 0 =
     vLimit 1 $ hLimit vpWidth $ renderScrollbarTrough hsRenderer
-horizontalScrollbar' hsRenderer vpWidth hOffset contentWidth =
+horizontalScrollbar' hsRenderer n constr vpWidth hOffset contentWidth =
     Widget Greedy Fixed $ do
         c <- getContext
 
@@ -1511,11 +1576,14 @@ horizontalScrollbar' hsRenderer vpWidth hOffset contentWidth =
                                          (fromIntegral hOffset /
                                           fromIntegral contentWidth::Double)
 
-            sbLeft = withDefAttr scrollbarTroughAttr $ hLimit sbOffset $
+            sbLeft = maybeClick n constr SBTroughBefore $
+                     withDefAttr scrollbarTroughAttr $ hLimit sbOffset $
                      renderScrollbarTrough hsRenderer
-            sbRight = withDefAttr scrollbarTroughAttr $ hLimit (ctxWidth - (sbOffset + sbSize)) $
+            sbRight = maybeClick n constr SBTroughAfter $
+                      withDefAttr scrollbarTroughAttr $ hLimit (ctxWidth - (sbOffset + sbSize)) $
                       renderScrollbarTrough hsRenderer
-            sbMiddle = withDefAttr scrollbarAttr $ hLimit sbSize $ renderScrollbar hsRenderer
+            sbMiddle = maybeClick n constr SBBar $
+                       withDefAttr scrollbarAttr $ hLimit sbSize $ renderScrollbar hsRenderer
 
             sb = vLimit 1 $
                  if sbSize == ctxWidth

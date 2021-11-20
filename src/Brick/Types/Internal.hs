@@ -23,6 +23,7 @@ module Brick.Types.Internal
   , VScrollBarOrientation(..)
   , HScrollBarOrientation(..)
   , ScrollbarRenderer(..)
+  , ClickableScrollbarElement(..)
   , Context(..)
   , ctxAttrMapL
   , ctxAttrNameL
@@ -34,6 +35,8 @@ module Brick.Types.Internal
   , ctxHScrollBarRendererL
   , ctxVScrollBarShowHandlesL
   , ctxHScrollBarShowHandlesL
+  , ctxVScrollBarClickableConstrL
+  , ctxHScrollBarClickableConstrL
   , availWidthL
   , availHeightL
   , windowWidthL
@@ -350,6 +353,20 @@ data EventRO n = EventRO { eventViewportMap :: M.Map n Viewport
                          , oldState :: RenderState n
                          }
 
+-- | Clickable elements of a scroll bar.
+data ClickableScrollbarElement =
+    SBHandleBefore
+    -- ^ The handle at the beginning (left/top) of the scroll bar.
+    | SBHandleAfter
+    -- ^ The handle at the end (right/bottom) of the scroll bar.
+    | SBBar
+    -- ^ The scroll bar itself.
+    | SBTroughBefore
+    -- ^ The trough before the scroll bar.
+    | SBTroughAfter
+    -- ^ The trough after the scroll bar.
+    deriving (Eq, Show, Ord)
+
 -- | The rendering context. This tells widgets how to render: how much
 -- space they have in which to render, which attribute they should use
 -- to render, which bordering style should be used, and the attribute map
@@ -369,6 +386,8 @@ data Context n =
             , ctxHScrollBarRenderer :: Maybe (ScrollbarRenderer n)
             , ctxVScrollBarShowHandles :: Bool
             , ctxHScrollBarShowHandles :: Bool
+            , ctxVScrollBarClickableConstr :: Maybe (ClickableScrollbarElement -> n -> n)
+            , ctxHScrollBarClickableConstr :: Maybe (ClickableScrollbarElement -> n -> n)
             }
 
 suffixLenses ''RenderState

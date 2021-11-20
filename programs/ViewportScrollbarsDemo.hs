@@ -39,6 +39,8 @@ import Brick.Widgets.Core
   , withHScrollBarRenderer
   , withVScrollBarHandles
   , withHScrollBarHandles
+  , withClickableHScrollBars
+  , withClickableVScrollBars
   , ScrollbarRenderer(..)
   , scrollbarAttr
   , scrollbarHandleAttr
@@ -52,15 +54,22 @@ customScrollbars =
                       , renderScrollbarHandleAfter = str ">>"
                       }
 
-data Name = VP1 | VP2
+data Name = VP1 | VP2 | SBClick T.ClickableScrollbarElement Name
           deriving (Ord, Show, Eq)
 
-drawUi :: () -> [Widget Name]
-drawUi = const [ui]
+data St = St { lastClickedElement :: Maybe (T.ClickableScrollbarElement, Name) }
+
+drawUi :: St -> [Widget Name]
+drawUi st = [ui]
     where
-        ui = C.center $ hLimit 70 $ vLimit 21 pair
+        ui = C.center $ hLimit 70 $ vLimit 21 $
+             (vBox [ pair
+                   , C.hCenter (str "Last clicked scroll bar element:")
+                   , str $ show $ lastClickedElement st
+                   ])
         pair = hBox [ padRight (T.Pad 5) $
                       B.border $
+                      withClickableHScrollBars SBClick $
                       withHScrollBars OnBottom $
                       withHScrollBarRenderer customScrollbars $
                       withHScrollBarHandles $
@@ -69,6 +78,7 @@ drawUi = const [ui]
                             "This viewport uses a\n" <>
                             "custom scroll bar renderer!"
                     , B.border $
+                      withClickableVScrollBars SBClick $
                       withVScrollBars OnLeft $
                       withVScrollBarHandles $
                       viewport VP2 Both $
@@ -82,13 +92,35 @@ vp1Scroll = M.viewportScroll VP1
 vp2Scroll :: M.ViewportScroll Name
 vp2Scroll = M.viewportScroll VP2
 
-appEvent :: () -> T.BrickEvent Name e -> T.EventM Name (T.Next ())
-appEvent _ (T.VtyEvent (V.EvKey V.KRight []))  = M.hScrollBy vp1Scroll 1 >> M.continue ()
-appEvent _ (T.VtyEvent (V.EvKey V.KLeft []))   = M.hScrollBy vp1Scroll (-1) >> M.continue ()
-appEvent _ (T.VtyEvent (V.EvKey V.KDown []))   = M.vScrollBy vp2Scroll 1 >> M.continue ()
-appEvent _ (T.VtyEvent (V.EvKey V.KUp []))     = M.vScrollBy vp2Scroll (-1) >> M.continue ()
-appEvent _ (T.VtyEvent (V.EvKey V.KEsc []))    = M.halt ()
-appEvent _ _ = M.continue ()
+appEvent :: St -> T.BrickEvent Name e -> T.EventM Name (T.Next St)
+appEvent st (T.VtyEvent (V.EvKey V.KRight []))  = M.hScrollBy vp1Scroll 1 >> M.continue st
+appEvent st (T.VtyEvent (V.EvKey V.KLeft []))   = M.hScrollBy vp1Scroll (-1) >> M.continue st
+appEvent st (T.VtyEvent (V.EvKey V.KDown []))   = M.vScrollBy vp2Scroll 1 >> M.continue st
+appEvent st (T.VtyEvent (V.EvKey V.KUp []))     = M.vScrollBy vp2Scroll (-1) >> M.continue st
+appEvent st (T.VtyEvent (V.EvKey V.KEsc []))    = M.halt st
+appEvent st (T.MouseDown (SBClick el n) _ _ _) = do
+    case n of
+        VP1 -> do
+            let vp = M.viewportScroll VP1
+            case el of
+                T.SBHandleBefore -> M.hScrollBy vp (-1)
+                T.SBHandleAfter  -> M.hScrollBy vp 1
+                T.SBTroughBefore -> M.hScrollBy vp (-10)
+                T.SBTroughAfter  -> M.hScrollBy vp 10
+                T.SBBar          -> return ()
+        VP2 -> do
+            let vp = M.viewportScroll VP2
+            case el of
+                T.SBHandleBefore -> M.vScrollBy vp (-1)
+                T.SBHandleAfter  -> M.vScrollBy vp 1
+                T.SBTroughBefore -> M.vScrollBy vp (-10)
+                T.SBTroughAfter  -> M.vScrollBy vp 10
+                T.SBBar          -> return ()
+        _ ->
+            return ()
+
+    M.continue $ st { lastClickedElement = Just (el, n) }
+appEvent st _ = M.continue st
 
 theme :: AttrMap
 theme =
@@ -97,7 +129,7 @@ theme =
     , (scrollbarHandleAttr, fg V.brightYellow)
     ]
 
-app :: M.App () e Name
+app :: M.App St e Name
 app =
     M.App { M.appDraw = drawUi
           , M.appStartEvent = return
@@ -107,4 +139,11 @@ app =
           }
 
 main :: IO ()
-main = void $ M.defaultMain app ()
+main = do
+    let buildVty = do
+          v <- V.mkVty =<< V.standardIOConfig
+          V.setMode (V.outputIface v) V.Mouse True
+          return v
+
+    initialVty <- buildVty
+    void $ M.customMain initialVty buildVty Nothing app (St Nothing)

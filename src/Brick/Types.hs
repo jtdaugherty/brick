@@ -25,6 +25,7 @@ module Brick.Types
   , VScrollBarOrientation(..)
   , HScrollBarOrientation(..)
   , ScrollbarRenderer(..)
+  , ClickableScrollbarElement(..)
 
   -- * Event-handling types
   , EventM(..)
