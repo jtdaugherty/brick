@@ -2,6 +2,48 @@
 Brick changelog
 ---------------
 
+0.65
+----
+
+New features and API changes:
+ * Viewports got support for built-in scroll bar rendering. This
+   includes additions of types and functions to manage the feature
+   behavior. These changes enable viewports to automatically get
+   scroll bars drawn next to them (on any side) with customizable
+   attributes and drawings. As part of this change, a new demo program,
+   `ViewportScrollbarsDemo.hs`, was added to show off these new
+   features. Here are the new types and functions that got added (mostly
+   to `Brick.Widgets.Core`):
+   * `withVScrollBars` - enable display of vertical scroll bars
+   * `withHScrollBars` - enable display of horizontal scroll bars
+   * `withClickableVScrollBars` - enable mouse click reporting on
+     vertical scroll bar elements
+   * `withClickableHScrollBars` - enable mouse click reporting on
+     horizontal scroll bar elements
+   * `ClickableScrollbarElement` - the type of elements of a scroll bar
+     that can be clicked on and provided to the application
+   * `withVScrollBarHandles` - enable vertical scroll bar handle drawing
+   * `withHScrollBarHandles` - enable horizontal scroll bar handle
+     drawing
+   * `withVScrollBarRenderer` - customize the renderer used for vertical
+     scroll bars
+   * `withHScrollBarRenderer` - customize the renderer used for
+     horizontal scroll bars
+   * `ScrollbarRenderer(..)` - the type of scroll bar renderer
+     implementations
+   * `verticalScrollbarRenderer` - the default renderer for vertical
+     scrollbars, customizable with `withVScrollBarRenderer`
+   * `horizontalScrollbarRenderer` - the default renderer for horizontal
+     scrollbars, customizable with `withHScrollBarRenderer`
+   * `scrollbarAttr` - the base attribute of scroll bars
+   * `scrollbarTroughAttr` - the attribute of scroll bar troughs
+   * `scrollbarHandleAttr` - the attribute of scroll bar handles
+
+Package changes:
+ * Raised `base` bounds to allow building with GHC 9.2.1 (thanks Mario
+   Lang)
+ * Stopped supporting GHC 7.10.
+
 0.64.2
 ------
 
