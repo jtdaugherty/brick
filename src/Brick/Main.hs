@@ -396,7 +396,9 @@ applyInvalidations ns cache =
 -- viewports it has rendered in the most recent rendering. As a result,
 -- if you need to make viewport transformations before they are drawn
 -- for the first time, you may need to use 'viewportScroll' and its
--- associated functions without relying on this function.
+-- associated functions without relying on this function. Those
+-- functions queue up scrolling requests that can be made in advance of
+-- the next rendering to affect the viewport.
 lookupViewport :: (Ord n) => n -> EventM n (Maybe Viewport)
 lookupViewport n = EventM $ asks (M.lookup n . eventViewportMap)
 
