@@ -1245,6 +1245,13 @@ when you enable scrollbars, the content of your viewport will lose one
 column of available space if vertical scroll bars are enabled and one
 row of available space if horizontal scroll bars are enabled.
 
+Scroll bars can also be configured to draw "handles" with
+``withHScrollBarHandles`` and ``withVScrollBarHandles``.
+
+Lastly, scroll bars can be configured to report mouse events on
+each scroll bar element. To enable mouse click reporting, use
+``withClickableHScrollBars`` and ``withClickableVScrollBars``.
+
 For a demonstration of the scroll bar API in action, see the
 ``ViewportScrollbarsDemo.hs`` demonstration program.
 
