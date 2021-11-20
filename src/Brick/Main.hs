@@ -390,7 +390,13 @@ applyInvalidations ns cache =
 -- information from the most recent rendering. Returns 'Nothing' if
 -- no such state could be found, either because the name was invalid
 -- or because no rendering has occurred (e.g. in an 'appStartEvent'
--- handler).
+-- handler). An important consequence of this behavior is that if this
+-- function is called before a viewport is rendered for the first
+-- time, no state will be found because the renderer only knows about
+-- viewports it has rendered in the most recent rendering. As a result,
+-- if you need to make viewport transformations before they are drawn
+-- for the first time, you may need to use 'viewportScroll' and its
+-- associated functions without relying on this function.
 lookupViewport :: (Ord n) => n -> EventM n (Maybe Viewport)
 lookupViewport n = EventM $ asks (M.lookup n . eventViewportMap)
 
