@@ -1191,6 +1191,11 @@ horizontalScrollbarRenderer =
 -- used to display large contents for scrolling. This function is best
 -- used when the contents are not too large OR when the contents are
 -- large and render-cacheable.
+--
+-- Also, be aware that there is a rich API for accessing viewport
+-- information from within the 'EventM' monad; check the docs for
+-- @Brick.Main@ to learn more about ways to get information about
+-- viewports after they're drawn.
 viewport :: (Ord n, Show n)
          => n
          -- ^ The name of the viewport (must be unique and stable for
