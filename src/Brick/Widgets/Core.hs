@@ -1075,7 +1075,8 @@ withVScrollBars orientation w =
         withReaderT (ctxVScrollBarOrientationL .~ Just orientation) (render w)
 
 -- | Render vertical viewport scroll bars in the specified widget with
--- the specified renderer.
+-- the specified renderer. This is only needed if you want to override
+-- the use of the default renderer, 'verticalScrollbarRenderer'.
 withVScrollBarRenderer :: ScrollbarRenderer n -> Widget n -> Widget n
 withVScrollBarRenderer r w =
     Widget (hSize w) (vSize w) $
@@ -1097,7 +1098,8 @@ withHScrollBars orientation w =
         withReaderT (ctxHScrollBarOrientationL .~ Just orientation) (render w)
 
 -- | Render horizontal viewport scroll bars in the specified widget with
--- the specified renderer.
+-- the specified renderer. This is only needed if you want to override
+-- the use of the default renderer, 'horizontalScrollbarRenderer'.
 withHScrollBarRenderer :: ScrollbarRenderer n -> Widget n -> Widget n
 withHScrollBarRenderer r w =
     Widget (hSize w) (vSize w) $
@@ -1333,10 +1335,11 @@ scrollbarTroughAttr = scrollbarAttr <> "trough"
 -- | Build a vertical scroll bar using the specified render and
 -- settings.
 --
--- You probably don't want to use this directly; instead, use
--- @viewport@, @withVScrollBars@, and @withVScrollBarRenderer@. This is
--- exposed so that if you want to render a scroll bar of your own, you
--- can do so outside the @viewport@ context.
+-- You probably don't want to use this directly; instead,
+-- use @viewport@, @withVScrollBars@, and, if needed,
+-- @withVScrollBarRenderer@. This is exposed so that if you want to
+-- render a scroll bar of your own, you can do so outside the @viewport@
+-- context.
 verticalScrollbar :: ScrollbarRenderer n
                   -- ^ The renderer to use.
                   -> Int
@@ -1390,9 +1393,10 @@ verticalScrollbar vsRenderer vpHeight vOffset contentHeight =
 -- settings.
 --
 -- You probably don't want to use this directly; instead, use
--- @viewport@, @withHScrollBars@, and @withHScrollBarRenderer@. This is
--- exposed so that if you want to render a scroll bar of your own, you
--- can do so outside the @viewport@ context.
+-- @viewport@, @withHScrollBars@, and, if needed,
+-- @withHScrollBarRenderer@. This is exposed so that if you want to
+-- render a scroll bar of your own, you can do so outside the @viewport@
+-- context.
 horizontalScrollbar :: ScrollbarRenderer n
                     -- ^ The renderer to use.
                     -> Int
