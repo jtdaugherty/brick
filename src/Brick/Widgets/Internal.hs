@@ -45,6 +45,8 @@ renderFinal aMap layerRenders (w, h) chooseCursor rs =
                       , ctxVScrollBarRenderer = Nothing
                       , ctxHScrollBarOrientation = Nothing
                       , ctxHScrollBarRenderer = Nothing
+                      , ctxHScrollBarShowHandles = False
+                      , ctxVScrollBarShowHandles = False
                       }
         pic = V.picForLayers $ uncurry V.resize (w, h) <$> (^.imageL) <$> layerResults
 

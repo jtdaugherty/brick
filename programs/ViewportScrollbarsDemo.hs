@@ -37,15 +37,19 @@ import Brick.Widgets.Core
   , withVScrollBars
   , withHScrollBars
   , withHScrollBarRenderer
+  , withVScrollBarHandles
+  , withHScrollBarHandles
   , ScrollbarRenderer(..)
   , scrollbarAttr
-  , scrollbarTroughAttr
+  , scrollbarHandleAttr
   )
 
 customScrollbars :: ScrollbarRenderer n
 customScrollbars =
     ScrollbarRenderer { renderScrollbar = fill '^'
-                      , renderScrollbarTrough = fill '_'
+                      , renderScrollbarTrough = fill ' '
+                      , renderScrollbarHandleBefore = str "<<"
+                      , renderScrollbarHandleAfter = str ">>"
                       }
 
 data Name = VP1 | VP2
@@ -59,12 +63,14 @@ drawUi = const [ui]
                       B.border $
                       withHScrollBars OnBottom $
                       withHScrollBarRenderer customScrollbars $
+                      withHScrollBarHandles $
                       viewport VP1 Horizontal $
                       str $ "Press left and right arrow keys to scroll this viewport.\n" <>
                             "This viewport uses a\n" <>
                             "custom scroll bar renderer!"
                     , B.border $
                       withVScrollBars OnLeft $
+                      withVScrollBarHandles $
                       viewport VP2 Both $
                       vBox $ str "Press ctrl-arrow keys to scroll this viewport horizontally and vertically."
                       : (str <$> [ "Line " <> show i | i <- [2..55::Int] ])
@@ -88,7 +94,7 @@ theme :: AttrMap
 theme =
     attrMap V.defAttr $
     [ (scrollbarAttr,       fg V.white)
-    , (scrollbarTroughAttr, fg V.red)
+    , (scrollbarHandleAttr, fg V.brightYellow)
     ]
 
 app :: M.App () e Name

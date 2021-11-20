@@ -32,6 +32,8 @@ module Brick.Types.Internal
   , ctxVScrollBarRendererL
   , ctxHScrollBarOrientationL
   , ctxHScrollBarRendererL
+  , ctxVScrollBarShowHandlesL
+  , ctxHScrollBarShowHandlesL
   , availWidthL
   , availHeightL
   , windowWidthL
@@ -167,6 +169,17 @@ data ScrollbarRenderer n =
                       -- (the area to either side of the scroll bar
                       -- body). This should expand as described in the
                       -- documentation for the scroll bar field.
+                      , renderScrollbarHandleBefore :: Widget n
+                      -- ^ How to render the handle that appears at the
+                      -- top or left of the scrollbar. The result should
+                      -- be at most one row high for horizontal handles
+                      -- and one column wide for vertical handles.
+                      , renderScrollbarHandleAfter :: Widget n
+                      -- ^ How to render the handle that appears at
+                      -- the bottom or right of the scrollbar. The
+                      -- result should be at most one row high for
+                      -- horizontal handles and one column wide for
+                      -- vertical handles.
                       }
 
 data VisibilityRequest =
@@ -354,6 +367,8 @@ data Context n =
             , ctxVScrollBarRenderer :: Maybe (ScrollbarRenderer n)
             , ctxHScrollBarOrientation :: Maybe HScrollBarOrientation
             , ctxHScrollBarRenderer :: Maybe (ScrollbarRenderer n)
+            , ctxVScrollBarShowHandles :: Bool
+            , ctxHScrollBarShowHandles :: Bool
             }
 
 suffixLenses ''RenderState
