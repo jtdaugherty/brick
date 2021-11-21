@@ -24,7 +24,7 @@ reference in addition to the existing resources:
 1. [Demo programs](https://github.com/jtdaugherty/brick/tree/master/programs)
 (clone down to explore the code and run them locally)
 2. [User guide](https://github.com/jtdaugherty/brick/blob/master/docs/guide.rst)
-3. [Haddock docs](https://hackage.haskell.org/package/brick-0.18)
+3. [Haddock docs](https://hackage.haskell.org/package/brick)
 4. [Google group](https://groups.google.com/forum/#!forum/brick-users)
 
 ### The basic idea
