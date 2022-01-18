@@ -38,6 +38,8 @@ New features and API changes:
    * `scrollbarAttr` - the base attribute of scroll bars
    * `scrollbarTroughAttr` - the attribute of scroll bar troughs
    * `scrollbarHandleAttr` - the attribute of scroll bar handles
+ * The `Context` type got the `n` type argument that is used for
+   `Result`, `EventM`, etc.
 
 Package changes:
  * Raised `base` bounds to allow building with GHC 9.2.1 (thanks Mario
