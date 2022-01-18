@@ -13,6 +13,7 @@ module Brick.Main
   , continueWithoutRedraw
   , halt
   , suspendAndResume
+  , makeVisible
   , lookupViewport
   , lookupExtent
   , findClickedExtents
@@ -275,7 +276,7 @@ customMainWithVty initialVty buildVty mUserChan app initialAppState = do
                     newVty <- buildVty
                     run newVty (newRS { renderCache = mempty }) newAppState brickChan
 
-    let emptyES = ES [] mempty
+    let emptyES = ES [] mempty mempty
         emptyRS = RS M.empty mempty S.empty mempty mempty
         eventRO = EventRO M.empty initialVty mempty emptyRS
 
@@ -364,7 +365,7 @@ runVty vty readEvent app appState rs prevExtents draw = do
                 _ -> return (e, firstRS, exts)
         _ -> return (e, firstRS, exts)
 
-    let emptyES = ES [] mempty
+    let emptyES = ES [] mempty mempty
         eventRO = EventRO (viewportMap nextRS) vty nextExts nextRS
 
     (next, eState) <- runStateT (runReaderT (runEventM (appHandleEvent app appState e'))
@@ -579,3 +580,11 @@ halt = return . Halt
 -- to the user.
 suspendAndResume :: IO s -> EventM n (Next s)
 suspendAndResume = return . SuspendAndResume
+
+-- | Request that the specified UI element be made visible on the
+-- next rendering. This is provided to allow event handlers to make
+-- visibility requests in the same way that the 'visible' function does
+-- at rendering time.
+makeVisible :: (Ord n) => n -> EventM n ()
+makeVisible n = EventM $ do
+    lift $ modify (\s -> s { requestedVisibleNames = S.insert n $ requestedVisibleNames s })

@@ -222,6 +222,7 @@ data CacheInvalidateRequest n =
 
 data EventState n = ES { esScrollRequests :: [(n, ScrollRequest)]
                        , cacheInvalidateRequests :: S.Set (CacheInvalidateRequest n)
+                       , requestedVisibleNames :: S.Set n
                        }
 
 -- | An extent of a named area: its size, location, and origin.

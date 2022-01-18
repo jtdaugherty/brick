@@ -225,6 +225,12 @@ addDynBorderOffset off r = r & bordersL %~ BM.translate off
 
 -- | Render the specified widget and record its rendering extent using
 -- the specified name (see also 'lookupExtent').
+--
+-- This function is the counterpart to 'makeVisible'; any visibility
+-- requests made with 'makeVisible' must have a corresponding
+-- 'reportExtent' in order to work. The 'clickable' function will also
+-- work for this purpose to tell the renderer about the clickable
+-- region.
 reportExtent :: n -> Widget n -> Widget n
 reportExtent n p =
     Widget (hSize p) (vSize p) $ do
@@ -233,9 +239,19 @@ reportExtent n p =
             sz = ( result^.imageL.to V.imageWidth
                  , result^.imageL.to V.imageHeight
                  )
-        return $ result & extentsL %~ (ext:)
+        -- If the reported extent also has a visibility request
+        -- from EventM via makeVisible, add a visibility request to
+        -- the render state so this gets scrolled into view by any
+        -- containing viewport.
+        let addVisReq = if sz^._1 > 0 && sz^._2 > 0
+                        then visibilityRequestsL %~ (VR (Location (0, 0)) sz :)
+                        else id
+        return $ addVisReq $ result & extentsL %~ (ext:)
 
 -- | Request mouse click events on the specified widget.
+--
+-- Regions used with 'clickable' can be scrolled into view with
+-- 'makeVisible'.
 clickable :: n -> Widget n -> Widget n
 clickable n p =
     Widget (hSize p) (vSize p) $ do
