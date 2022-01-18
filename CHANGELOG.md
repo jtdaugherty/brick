@@ -2,6 +2,14 @@
 Brick changelog
 ---------------
 
+0.65.1
+------
+
+Bug fixes:
+ * `Brick.Widgets.Core.viewport`: fixed non-scroll
+   direction width/height in the presence of scroll bars (see
+   e41ad936ebe8b49e259a72ff7a34765d5a587aaa).
+
 0.65
 ----
 
