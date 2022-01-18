@@ -1375,7 +1375,6 @@ viewport vpname typ p =
                                   & extentsL .~ mempty
           _ -> render $ addVScrollbar
                       $ addHScrollbar
-                      $ cropToContext
                       $ vLimit (vpFinal^.vpSize._2)
                       $ hLimit (vpFinal^.vpSize._1)
                       $ padBottom Max
