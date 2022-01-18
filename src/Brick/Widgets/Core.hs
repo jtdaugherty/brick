@@ -1238,7 +1238,9 @@ viewport vpname typ p =
 
       -- Update the viewport size.
       let newVp = VP 0 0 newSize (0, 0)
-          newSize = (c^.availWidthL - vSBWidth, c^.availHeightL - hSBHeight)
+          newSize = (newWidth, newHeight)
+          newWidth = c^.availWidthL - vSBWidth
+          newHeight = c^.availHeightL - hSBHeight
           vSBWidth = maybe 0 (const 1) vsOrientation
           hSBHeight = maybe 0 (const 1) hsOrientation
           doInsert (Just vp) = Just $ vp & vpSize .~ newSize
@@ -1249,10 +1251,12 @@ viewport vpname typ p =
       -- Then render the viewport content widget with the rendering
       -- layout constraint released (but raise an exception if we are
       -- asked to render an infinitely-sized widget in the viewport's
-      -- scrolling dimension)
+      -- scrolling dimension). Also note that for viewports that
+      -- only scroll in one direction, we apply a constraint in the
+      -- non-scrolling direction in case a scroll bar is present.
       let release = case typ of
-            Vertical -> vRelease
-            Horizontal -> hRelease
+            Vertical -> vRelease . hLimit newWidth
+            Horizontal -> hRelease . vLimit newHeight
             Both -> vRelease >=> hRelease
           released = case release p of
             Just w -> w
