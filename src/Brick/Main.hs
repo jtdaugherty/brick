@@ -277,11 +277,11 @@ customMainWithVty initialVty buildVty mUserChan app initialAppState = do
                     run newVty (newRS { renderCache = mempty }) newAppState brickChan
 
     let emptyES = ES [] mempty mempty
-        emptyRS = RS M.empty mempty S.empty mempty mempty
+        emptyRS = RS M.empty mempty S.empty mempty mempty mempty
         eventRO = EventRO M.empty initialVty mempty emptyRS
 
     (st, eState) <- runStateT (runReaderT (runEventM (appStartEvent app initialAppState)) eventRO) emptyES
-    let initialRS = RS M.empty (esScrollRequests eState) S.empty mempty []
+    let initialRS = RS M.empty (esScrollRequests eState) S.empty mempty [] (requestedVisibleNames eState)
     brickChan <- newBChan 20
     run initialVty initialRS st brickChan
 
@@ -374,6 +374,7 @@ runVty vty readEvent app appState rs prevExtents draw = do
            , nextRS { rsScrollRequests = esScrollRequests eState
                     , renderCache = applyInvalidations (cacheInvalidateRequests eState) $
                                     renderCache nextRS
+                    , requestedVisibleNames_ = requestedVisibleNames eState
                     }
            , nextExts
            )

@@ -343,7 +343,7 @@ checkboxCustomField lb check rb stLens name label initialState =
                       , formFieldConcat = vBox
                       }
 
-renderCheckbox :: Char -> Char -> Char -> T.Text -> n -> Bool -> Bool -> Widget n
+renderCheckbox :: (Ord n) => Char -> Char -> Char -> T.Text -> n -> Bool -> Bool -> Widget n
 renderCheckbox lb check rb label n foc val =
     let addAttr = if foc then withDefAttr focusedFormInputAttr else id
         csr = if foc then putCursor n (Location (1,0)) else id
@@ -469,7 +469,7 @@ radioCustomField lb check rb stLens options initialState =
                       , formFieldConcat = vBox
                       }
 
-renderRadio :: (Eq a) => Char -> Char -> Char -> a -> n -> T.Text -> Bool -> a -> Widget n
+renderRadio :: (Eq a, Ord n) => Char -> Char -> Char -> a -> n -> T.Text -> Bool -> a -> Widget n
 renderRadio lb check rb val name label foc cur =
     let addAttr = if foc
                   then withDefAttr focusedFormInputAttr

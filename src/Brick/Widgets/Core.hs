@@ -231,7 +231,7 @@ addDynBorderOffset off r = r & bordersL %~ BM.translate off
 -- 'reportExtent' in order to work. The 'clickable' function will also
 -- work for this purpose to tell the renderer about the clickable
 -- region.
-reportExtent :: n -> Widget n -> Widget n
+reportExtent :: (Ord n) => n -> Widget n -> Widget n
 reportExtent n p =
     Widget (hSize p) (vSize p) $ do
         result <- render p
@@ -243,7 +243,8 @@ reportExtent n p =
         -- from EventM via makeVisible, add a visibility request to
         -- the render state so this gets scrolled into view by any
         -- containing viewport.
-        let addVisReq = if sz^._1 > 0 && sz^._2 > 0
+        vReqs <- use requestedVisibleNames_L
+        let addVisReq = if sz^._1 > 0 && sz^._2 > 0 && n `S.member` vReqs
                         then visibilityRequestsL %~ (VR (Location (0, 0)) sz :)
                         else id
         return $ addVisReq $ result & extentsL %~ (ext:)
@@ -252,7 +253,7 @@ reportExtent n p =
 --
 -- Regions used with 'clickable' can be scrolled into view with
 -- 'makeVisible'.
-clickable :: n -> Widget n -> Widget n
+clickable :: (Ord n) => n -> Widget n -> Widget n
 clickable n p =
     Widget (hSize p) (vSize p) $ do
         clickableNamesL %= (n:)
@@ -1416,7 +1417,8 @@ scrollbarTroughAttr = scrollbarAttr <> "trough"
 scrollbarHandleAttr :: AttrName
 scrollbarHandleAttr = scrollbarAttr <> "handle"
 
-maybeClick :: n
+maybeClick :: (Ord n)
+           => n
            -> Maybe (ClickableScrollbarElement -> n -> n)
            -> ClickableScrollbarElement
            -> Widget n
@@ -1432,7 +1434,8 @@ maybeClick n (Just f) el w = clickable (f el n) w
 -- @withVScrollBarRenderer@. This is exposed so that if you want to
 -- render a scroll bar of your own, you can do so outside the @viewport@
 -- context.
-verticalScrollbar :: ScrollbarRenderer n
+verticalScrollbar :: (Ord n)
+                  => ScrollbarRenderer n
                   -- ^ The renderer to use.
                   -> n
                   -- ^ The viewport name associated with this scroll
@@ -1458,7 +1461,8 @@ verticalScrollbar vsRenderer n constr True vpHeight vOffset contentHeight =
            hLimit 1 $ withDefAttr scrollbarHandleAttr $ renderScrollbarHandleAfter vsRenderer
          ]
 
-verticalScrollbar' :: ScrollbarRenderer n
+verticalScrollbar' :: (Ord n)
+                   => ScrollbarRenderer n
                    -- ^ The renderer to use.
                    -> n
                    -- ^ The viewport name associated with this scroll
@@ -1528,7 +1532,8 @@ verticalScrollbar' vsRenderer n constr vpHeight vOffset contentHeight =
 -- @withHScrollBarRenderer@. This is exposed so that if you want to
 -- render a scroll bar of your own, you can do so outside the @viewport@
 -- context.
-horizontalScrollbar :: ScrollbarRenderer n
+horizontalScrollbar :: (Ord n)
+                    => ScrollbarRenderer n
                     -- ^ The renderer to use.
                     -> n
                     -- ^ The viewport name associated with this scroll
@@ -1555,7 +1560,8 @@ horizontalScrollbar hsRenderer n constr True vpWidth hOffset contentWidth =
            vLimit 1 $ withDefAttr scrollbarHandleAttr $ renderScrollbarHandleAfter hsRenderer
          ]
 
-horizontalScrollbar' :: ScrollbarRenderer n
+horizontalScrollbar' :: (Ord n)
+                     => ScrollbarRenderer n
                      -- ^ The renderer to use.
                      -> n
                      -- ^ The viewport name associated with this scroll

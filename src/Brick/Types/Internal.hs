@@ -66,6 +66,7 @@ module Brick.Types.Internal
   , clickableNamesL
   , renderCacheL
   , observedNamesL
+  , requestedVisibleNames_L
   , vpSize
   , vpLeft
   , vpTop
@@ -138,6 +139,7 @@ data RenderState n =
        , observedNames :: !(S.Set n)
        , renderCache :: !(M.Map n ([n], Result n))
        , clickableNames :: ![n]
+       , requestedVisibleNames_ :: !(S.Set n)
        } deriving (Read, Show, Generic, NFData)
 
 -- | The type of the rendering monad. This monad is used by the
