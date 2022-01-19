@@ -6,17 +6,16 @@ Brick changelog
 ----
 
 New features:
- * Added `Brick.Main.makeVisible`, a function to requeste
-   visible regions from `EventM`. This, together with
-   `Brick.Widgets.Core.reportExtent`, can be used to request that a
-   viewport be scrolled to make a specified named region visible on
-   the next redraw. The region must be known to the renderer with
-   `reportExtent` (or something that calls it, like `clickable`). Due to
-   the `Ord` constraint on some of the API calls required to implement
-   this, an `Ord` constraint on the resource name type (`n`) got
-   propagated to various places in the API. But that shouldn't present
-   a problem since other fundamental API calls already required that
-   instance.
+ * Added `Brick.Main.makeVisible`, a function to request visible regions
+   from `EventM`. This, together with `Brick.Widgets.Core.reportExtent`,
+   can be used to request that a viewport be scrolled to make a
+   specified named region visible on the next redraw. The region must be
+   known to the renderer with `reportExtent` (or something that calls
+   it, like `clickable`). Due to the `Ord` constraint on some of the API
+   calls required to implement this, an `Ord` constraint on the resource
+   name type (`n`) got propagated to various places in the API. But that
+   shouldn't present a problem since other fundamental API calls already
+   required that instance.
 
 0.65.1
 ------
