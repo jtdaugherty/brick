@@ -1070,7 +1070,7 @@ cached n w =
             Nothing  -> do
                 wResult <- render w
                 clickables <- renderedClickables wResult
-                cacheUpdate n (clickables, wResult)
+                cacheUpdate n (clickables, wResult & visibilityRequestsL .~ mempty)
                 return wResult
     where
         -- Given the rendered result of a Widget, collect the list of "clickable" names
