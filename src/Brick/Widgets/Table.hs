@@ -108,26 +108,24 @@ data Table n =
 -- All rows must have the same number of cells. If not, this will raise
 -- a 'TableException'.
 table :: [[Widget n]] -> Table n
-table rows =
-    if not allFixed
-    then E.throw TEInvalidCellSizePolicy
-    else if not allSameLength
-         then E.throw TEUnequalRowSizes
-         else t
+table rows
+    | not allFixed = E.throw TEInvalidCellSizePolicy
+    | not allSameLength = E.throw TEUnequalRowSizes
+    | otherwise = Table
+      { columnAlignments = mempty
+      , rowAlignments = mempty
+      , tableRows = rows
+      , drawSurroundingBorder = True
+      , drawRowBorders = True
+      , drawColumnBorders = True
+      , defaultColumnAlignment = AlignLeft
+      , defaultRowAlignment = AlignTop
+      }
     where
         allSameLength = length (nub (length <$> rows)) <= 1
         allFixed = all fixedRow rows
         fixedRow = all fixedCell
         fixedCell w = hSize w == Fixed && vSize w == Fixed
-        t = Table { columnAlignments = mempty
-                  , rowAlignments = mempty
-                  , tableRows = rows
-                  , drawSurroundingBorder = True
-                  , drawRowBorders = True
-                  , drawColumnBorders = True
-                  , defaultColumnAlignment = AlignLeft
-                  , defaultRowAlignment = AlignTop
-                  }
 
 -- | Configure whether the table draws a border on its exterior.
 surroundingBorder :: Bool -> Table n -> Table n
