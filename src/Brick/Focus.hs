@@ -16,7 +16,7 @@ module Brick.Focus
 where
 
 import Lens.Micro ((^.))
-import Data.Maybe (listToMaybe)
+import Data.List (find)
 import qualified Data.CircularList as C
 
 import Brick.Types
@@ -107,8 +107,5 @@ focusRingCursor :: (Eq n)
                 -> Maybe (CursorLocation n)
                 -- ^ The cursor position, if any, that matches the
                 -- resource name currently focused by the 'FocusRing'.
-focusRingCursor getRing st ls =
-    listToMaybe $ filter isCurrent ls
-    where
-        isCurrent cl = cl^.cursorLocationNameL ==
-                       (focusGetCurrent $ getRing st)
+focusRingCursor getRing st = find $ \cl ->
+    cl^.cursorLocationNameL == focusGetCurrent (getRing st)
