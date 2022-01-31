@@ -2,6 +2,20 @@
 Brick changelog
 ---------------
 
+0.67
+----
+
+API changes:
+ * `Brick.Widgets.FileBrowser` now exports getters for all
+   `FileBrowser` fields. These getters are lens-like accessors
+   with the `G` suffix.
+ * `Brick.Widgets.FileBrowser` no longer exports the
+   `fileBrowserEntryFilterL` lens. The lens broke the API
+   because it allowed modification of internal state that could
+   lead to inconsistency in the UI. Users who needed to use
+   `fileBrowserEntryFilterL` before this change should use
+   `setFileBrowserEntryFilter` instead.
+
 0.66.1
 ------
 
