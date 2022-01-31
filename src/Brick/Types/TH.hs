@@ -11,7 +11,7 @@ import Lens.Micro ((&), (.~))
 import Lens.Micro.TH (DefName(..), LensRules, makeLensesWith, lensRules, lensField)
 
 -- | A template haskell function to build lenses for a record type. This
--- function differs from the 'Control.Lens.makeLenses' function in that
+-- function differs from the 'Lens.Micro.TH.makeLenses' function in that
 -- it does not require the record fields to be prefixed with underscores
 -- and it adds an "L" suffix to lens names to make it clear that they
 -- are lenses.
