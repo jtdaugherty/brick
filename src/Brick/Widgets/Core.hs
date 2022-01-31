@@ -1104,8 +1104,13 @@ withVScrollBars orientation w =
         withReaderT (ctxVScrollBarOrientationL .~ Just orientation) (render w)
 
 -- | Enable scroll bar handles on all vertical scroll bars in the
--- specified widget. This will only have an effect if 'withVScrollBars'
--- is also called.
+-- specified widget. Handles appear at the ends of the scroll bar,
+-- representing the "handles" that are typically clickable in
+-- graphical UIs to move the scroll bar incrementally. Vertical
+-- scroll bars are also clickable if mouse mode is enabled and if
+-- 'withClickableVScrollBars' is used.
+--
+-- This will only have an effect if 'withVScrollBars' is also called.
 withVScrollBarHandles :: Widget n -> Widget n
 withVScrollBarHandles w =
     Widget (hSize w) (vSize w) $
@@ -1156,9 +1161,14 @@ withClickableVScrollBars f w =
     Widget (hSize w) (vSize w) $
         withReaderT (ctxVScrollBarClickableConstrL .~ Just f) (render w)
 
--- | Enable scroll bar handles on all horizontal scroll bars in the
--- specified widget. This will only have an effect if 'withHScrollBars'
--- is also called.
+-- | Enable scroll bar handles on all horizontal scroll bars in
+-- the specified widget. Handles appear at the ends of the scroll
+-- bar, representing the "handles" that are typically clickable in
+-- graphical UIs to move the scroll bar incrementally. Horizontal
+-- scroll bars are also clickable if mouse mode is enabled and if
+-- 'withClickableHScrollBars' is used.
+--
+-- This will only have an effect if 'withHScrollBars' is also called.
 withHScrollBarHandles :: Widget n -> Widget n
 withHScrollBarHandles w =
     Widget (hSize w) (vSize w) $
