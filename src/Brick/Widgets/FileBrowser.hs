@@ -311,6 +311,12 @@ selectDirectories i =
 -- indicates no filtering, meaning all entries will be shown. 'Just'
 -- indicates a function that should return 'True' for entries that
 -- should be permitted to appear.
+--
+-- Note that this applies the filter after setting it by updating the
+-- listed entries to reflect the result of the filter. That is unlike
+-- setting the filter with the 'fileBrowserEntryFilterL' lens directly,
+-- which just sets the filter but does not (and cannot) update the
+-- listed entries.
 setFileBrowserEntryFilter :: Maybe (FileInfo -> Bool) -> FileBrowser n -> FileBrowser n
 setFileBrowserEntryFilter f b =
     applyFilterAndSearch $ b & fileBrowserEntryFilterL .~ f
