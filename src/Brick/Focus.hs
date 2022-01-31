@@ -64,7 +64,7 @@ withFocusRing :: (Eq n, Named a n)
 withFocusRing ring f a = f (focusGetCurrent ring == Just (getName a)) a
 
 -- | Get the currently-focused resource name from the ring. If the ring
--- is emtpy, return 'Nothing'.
+-- is empty, return 'Nothing'.
 focusGetCurrent :: FocusRing n -> Maybe n
 focusGetCurrent (FocusRing l) = C.focus l
 
