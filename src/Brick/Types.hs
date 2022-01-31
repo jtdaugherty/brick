@@ -72,6 +72,7 @@ module Brick.Types
 
   -- * Making lenses
   , suffixLenses
+  , suffixLensesWith
 
   -- * Dynamic borders
   , bordersL

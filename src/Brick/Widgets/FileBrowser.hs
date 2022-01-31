@@ -111,7 +111,6 @@ module Brick.Widgets.FileBrowser
   , fileExtensionMatch
 
   -- * Lenses
-  , fileBrowserEntryFilterL
   , fileBrowserSelectableL
   , fileInfoFilenameL
   , fileInfoSanitizedFilenameL
@@ -120,6 +119,17 @@ module Brick.Widgets.FileBrowser
   , fileInfoLinkTargetTypeL
   , fileStatusSizeL
   , fileStatusFileTypeL
+
+  -- * Getters
+  , fileBrowserEntryFilterG
+  , fileBrowserWorkingDirectoryG
+  , fileBrowserEntriesG
+  , fileBrowserLatestResultsG
+  , fileBrowserSelectedFilesG
+  , fileBrowserNameG
+  , fileBrowserSearchStringG
+  , fileBrowserExceptionG
+  , fileBrowserSelectableG
 
   -- * Miscellaneous
   , prettyFileSize
@@ -145,6 +155,7 @@ import Data.List (sortBy, isSuffixOf)
 import qualified Data.Set as Set
 import qualified Data.Vector as V
 import Lens.Micro
+import Lens.Micro.TH (lensRules, generateUpdateableOptics)
 import qualified Graphics.Vty as Vty
 import qualified System.Directory as D
 import qualified System.Posix.Files as U
@@ -238,6 +249,7 @@ data FileType =
     deriving (Read, Show, Eq)
 
 suffixLenses ''FileBrowser
+suffixLensesWith "G" (lensRules & generateUpdateableOptics .~ False) ''FileBrowser
 suffixLenses ''FileInfo
 suffixLenses ''FileStatus
 
