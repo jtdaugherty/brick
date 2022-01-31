@@ -912,10 +912,17 @@ forceAttr an p =
         c <- getContext
         withReaderT (ctxAttrMapL .~ (forceAttrMap (attrMapLookup an (c^.ctxAttrMapL)))) (render p)
 
--- | Override the lookup of 'targetName' to return the attribute value
--- associated with 'fromName' when rendering the specified widget.
--- See also 'mapAttrName'.
-overrideAttr :: AttrName -> AttrName -> Widget n -> Widget n
+-- | Override the lookup of a target attribute to return the attribute
+-- value associated with another attribute when rendering the specified
+-- widget. See also 'mapAttrName'.
+overrideAttr :: AttrName
+             -- ^ Target attribute to remap
+             -> AttrName
+             -- ^ Name of attribute whose value should be use to remap
+             -- the target attribute
+             -> Widget n
+             -- ^ Widget in which the remapping should take effect
+             -> Widget n
 overrideAttr targetName fromName =
     updateAttrMap (mapAttrName fromName targetName)
 
