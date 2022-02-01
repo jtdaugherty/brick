@@ -863,19 +863,18 @@ setAvailableSize (w, h) p =
 
 -- | When drawing the specified widget, set the current attribute used
 -- for drawing to the one with the specified name. Note that the widget
--- may use further calls to 'withAttr' to override this; if you really
--- want to prevent that, use 'forceAttr'. Attributes used this way still
--- get merged hierarchically and still fall back to the attribute map's
--- default attribute. If you want to change the default attribute, use
--- 'withDefAttr'.
+-- may call 'withAttr' itself, in which case those innermost calls take
+-- precendence over outermost ones. If you really want to override
+-- the attribute used to draw everything in the specified widget, use
+-- 'forceAttr' instead.
 withAttr :: AttrName -> Widget n -> Widget n
 withAttr an p =
     Widget (hSize p) (vSize p) $
       withReaderT (ctxAttrNameL .~ an) (render p)
 
--- | Update the attribute map while rendering the specified widget: set
--- its new default attribute to the one that we get by applying specified
--- function to the current default attribute.
+-- | Update the attribute map while rendering the specified widget:
+-- set its new default attribute to the one that we get by applying
+-- specified function to the attribute map's current default attribute.
 modifyDefAttr :: (V.Attr -> V.Attr) -> Widget n -> Widget n
 modifyDefAttr f p =
     Widget (hSize p) (vSize p) $ do
@@ -884,7 +883,7 @@ modifyDefAttr f p =
 
 -- | Update the attribute map while rendering the specified widget: set
 -- its new default attribute to the one that we get by looking up the
--- specified attribute name in the map.
+-- specified attribute name in the current attribute map.
 withDefAttr :: AttrName -> Widget n -> Widget n
 withDefAttr an p =
     Widget (hSize p) (vSize p) $ do
