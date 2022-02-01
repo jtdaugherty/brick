@@ -373,7 +373,7 @@ hyperlink :: T.Text -> Widget n -> Widget n
 hyperlink url p =
     Widget (hSize p) (vSize p) $ do
         c <- getContext
-        let attr = attrMapLookup (c^.ctxAttrNameL) (c^.ctxAttrMapL) `V.withURL` url
+        let attr = c^.attrL `V.withURL` url
         withReaderT (ctxAttrMapL %~ setDefaultAttr attr) (render p)
 
 -- | Pad the specified widget on the left. If max padding is used, this
