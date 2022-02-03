@@ -882,17 +882,47 @@ modifyDefAttr f p =
         c <- getContext
         withReaderT (ctxAttrMapL %~ (setDefaultAttr (f $ getDefaultAttr (c^.ctxAttrMapL)))) (render p)
 
--- | Update the attribute map while rendering the specified widget: set
--- its new default attribute to the one that we get by looking up the
--- specified attribute name in the current attribute map.
+-- | Update the attribute map used while rendering the specified
+-- widget (and any sub-widgets): set its new *default* attribute
+-- (i.e. the attribute components that will be applied if not
+-- overridden by any more specific attributes) to the one that we get
+-- by looking up the specified attribute name in the map.
+--
+-- For example:
+--
+-- @
+--    ...
+--    appAttrMap = attrMap (white `on` blue) [ ("highlight", fg yellow)
+--                                           , ("warning", bg magenta)
+--                                           , ("good", white `on` green) ]
+--    ...
+--
+--    renderA :: (String, String) -> [Widget n]
+--    renderA (a,b) = hBox [ withAttr "good" (str a)
+--                         , str " is "
+--                         , withAttr "highlight" (str b) ]
+--
+--    render1 = renderA ("Brick", "fun")
+--    render2 = withDefAttr "warning" render1
+-- @
+--
+-- In the above, render1 will show "Brick is fun" where the first word
+-- is white on a green background, the middle word is white on a blue
+-- background, and the last word is yellow on a blue background.
+-- However, render2 will show the first word in the same colors but
+-- the middle word will be shown in whatever the terminal's normal
+-- foreground is on a magenta background, and the third word will be
+-- yellow on a magenta background.
 withDefAttr :: AttrName -> Widget n -> Widget n
 withDefAttr an p =
     Widget (hSize p) (vSize p) $ do
         c <- getContext
         withReaderT (ctxAttrMapL %~ (setDefaultAttr (attrMapLookup an (c^.ctxAttrMapL)))) (render p)
 
--- | When rendering the specified widget, update the attribute map with
--- the specified transformation.
+-- | While rendering the specified widget, use a transformed version
+-- of the current attribute map. This is a very general function with
+-- broad capabilities: you probably want a more specific function such
+-- as 'withDefAttr' or 'withAttr'.
 updateAttrMap :: (AttrMap -> AttrMap) -> Widget n -> Widget n
 updateAttrMap f p =
     Widget (hSize p) (vSize p) $
