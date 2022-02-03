@@ -106,7 +106,7 @@ attrMap :: Attr
 attrMap theDefault pairs = AttrMap theDefault (M.fromList pairs)
 
 -- | Create an attribute map in which all lookups map to the same
--- attribute.
+-- attribute. This is functionally equivalent to @AttrMap attr []@.
 forceAttrMap :: Attr -> AttrMap
 forceAttrMap = ForceAttr
 
