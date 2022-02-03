@@ -861,12 +861,37 @@ setAvailableSize (w, h) p =
       withReaderT (\c -> c & availHeightL .~ h & availWidthL .~ w) $
         render $ cropToContext p
 
--- | When drawing the specified widget, set the current attribute used
--- for drawing to the one with the specified name. Note that the widget
--- may call 'withAttr' itself, in which case those innermost calls take
--- precendence over outermost ones. If you really want to override
--- the attribute used to draw everything in the specified widget, use
--- 'forceAttr' instead.
+-- | When drawing the specified widget, set the attribute used for
+-- drawing to the one with the specified name. Note that the widget
+-- may use further calls to 'withAttr' to change the active drawing
+-- attribute, so this only takes effect if nothing in the specified
+-- widget invokes 'withAttr'. If you want to prevent that, use
+-- 'forceAttr'. Attributes used this way still get merged hierarchically
+-- and still fall back to the attribute map's default attribute. If you
+-- want to change the default attribute, use 'withDefAttr'.
+--
+-- For example:
+--
+-- @
+--    appAttrMap = attrMap (white `on` blue) [ ("highlight", fg yellow)
+--                                           , ("warning", bg magenta)
+--                                           ]
+--
+--    renderA :: (String, String) -> [Widget n]
+--    renderA (a,b) = hBox [ str a
+--                         , str " is "
+--                         , withAttr "highlight" (str b)
+--                         ]
+--
+--    render1 = renderA ("Brick", "fun")
+--    render2 = withAttr "warning" render1
+-- @
+--
+-- In the example above, @render1@ will show @Brick is fun@ where the
+-- first two words are white on a blue background and the last word
+-- is yellow on a blue background. However, @render2@ will show the
+-- first two words in white on magenta although the last word is still
+-- rendered in yellow on blue.
 withAttr :: AttrName -> Widget n -> Widget n
 withAttr an p =
     Widget (hSize p) (vSize p) $
