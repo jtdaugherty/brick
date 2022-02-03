@@ -763,26 +763,70 @@ a background color of ``blue``:
                                , (specificAttr, fg white)
                                ]
 
-Functions ``Brick.Util.fg`` and ``Brick.Util.bg`` specify
-partial attributes, and map lookups start with the desired name
-(``general/specific`` in this case) and walk up the name hierarchy (to
-``general``), merging partial attribute settings as they go, letting
-already-specified attribute settings take precedence. Finally, any
-attribute settings not specified by map lookups fall back to the map's
-*default attribute*, specified above as ``Graphics.Vty.defAttr``. In
-this way, if you want everything in your application to have a ``blue``
-background color, you only need to specify it *once*: in the attribute
-map's default attribute. Any other attribute names can merely customize
-the foreground color.
+When drawing a widget, Brick keeps track of the current attribute it
+is using to draw to the screen. The attribute it tracks is specified
+by its *attribute name*, which is a hierarchical name referring to the
+attribute in the attribute map. In the example above, the map contains
+two attribute names: ``generalAttr`` and ``specificAttr``. Both names
+are made up of segments: ``general`` is the first segment for both
+names, and ``specific`` is the second segment for ``specificAttr``.
+This tells Brick that ``specificAttr`` is a more specialized version
+of ``generalAttr``. We'll see below how that affects the resulting
+attributes that Brick uses.
 
-In addition to using the attribute map provided by ``appAttrMap``,
-the map can be customized on a per-widget basis by using the attribute
-map combinators:
+When it comes to drawing something on the screen with either of these
+attributes, Brick looks up the desired attribute name in the map
+and uses the result to draw to the screen. In the example above,
+``withAttr`` is used to tell Brick that when drawing ``str "foobar"``,
+the attribute ``specificAttr`` should be used. Brick looks that name
+up in the attribute map and finds a match: an attribute with a white
+foreground color. However, what happens next is important: Brick then
+looks up the more general attribute name derived from ``specificAttr``,
+which it gets by removing the last segment in the name, ``specific``.
+The resulting name, ``general``, is then looked up. The new result is
+then *merged* with the initial lookup, yielding an attribute with a
+white foreground color and a blue background color. This happens because
+the ``specificAttr`` entry did not specify a background color. If it
+had, that would have been used instead. In this way, we can create
+inheritance relationships between attributes, much the same way CSS
+supports inheritance of styles based on rule specificity.
 
-* ``Brick.Widgets.Core.updateAttrMap``
-* ``Brick.Widgets.Core.forceAttr``
-* ``Brick.Widgets.Core.withDefAttr``
-* ``Brick.Widgets.Core.overrideAttr``
+Brick uses Vty's attribute type, ``Attr``, which has three components:
+foreground color, background color, and style. These three components
+can be independently specified to have an explicit value, and any
+component not explicitly specified can default to whatever the terminal
+is currently using. Vty styles can be combined together, e.g. underline
+and bold, so styles are cummulative.
+
+What if a widget attempts to draw with an attribute name that is not
+specified in the map at all? In that case, the attribute map's "default
+attribute" is used. In the example above, the default attribute for the
+map is Vty's ``defAttr`` value, which means that the terminal's default
+colors and style should be used. But that attribute can be customized
+as well, and any attribute map lookup results will get merged with the
+default attribute for the map. So, for example, if you'd like your
+entire application background to be blue unless otherwise specified, you
+could create an attribute map as follows:
+
+.. code:: haskell
+
+   let myMap = attrMap (bg blue) [ ... ]
+
+This way, we can avoid repeating the desired background color and all of
+the other map entries can just set foreground colors and styles where
+needed.
+
+In addition to using the attribute map provided by ``appAttrMap``, the
+map and attribute lookup behavior can be customized on a per-widget
+basis by using various functions from ``Brick.Widgets.Core``:
+
+* ``updateAttrMap`` -- allows transformations of the attribute map,
+* ``forceAttr`` -- forces all attribute lookups to map to the value of
+  the specified attribute name,
+* ``withDefAttr`` -- changes the default attribute for the attribute map
+  to the one with the specified name, and
+* ``overrideAttr`` -- creates attribute map lookup synonyms between
+  attribute names.
 
 Attribute Themes
 ================
