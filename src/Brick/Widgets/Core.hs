@@ -936,23 +936,59 @@ updateAttrMap f p =
 -- entry in the attribute map as would normally be the case. If you
 -- want to have more control over the resulting attribute, consider
 -- 'modifyDefAttr'.
+--
+-- For example:
+--
+-- @
+--    ...
+--    appAttrMap = attrMap (white `on` blue) [ ("highlight", fg yellow)
+--                                           , ("notice", fg red) ]
+--    ...
+--
+--    renderA :: (String, String) -> [Widget n]
+--    renderA (a,b) = hBox [ withAttr "highlight" (str a)
+--                         , str " is "
+--                         , withAttr "highlight" (str b)
+--                         ]
+--
+--    render1 = renderA ("Brick", "fun")
+--    render2 = forceAttr "notice" render1
+-- @
+--
+-- In the above, render1 will show "Brick is fun" where the first and
+-- last words are yellow on a blue background and the middle word is
+-- white on a blue background.  However, render2 will show all words
+-- in red on a blue background.  In both versions, the middle word
+-- will be in white on a blue background.
 forceAttr :: AttrName -> Widget n -> Widget n
 forceAttr an p =
     Widget (hSize p) (vSize p) $ do
         c <- getContext
         withReaderT (ctxAttrMapL .~ (forceAttrMap (attrMapLookup an (c^.ctxAttrMapL)))) (render p)
 
--- | Override the lookup of a target attribute to return the attribute
--- value associated with another attribute when rendering the specified
--- widget. See also 'mapAttrName'.
-overrideAttr :: AttrName
-             -- ^ Target attribute to remap
-             -> AttrName
-             -- ^ Name of attribute whose value should be use to remap
-             -- the target attribute
-             -> Widget n
-             -- ^ Widget in which the remapping should take effect
-             -> Widget n
+-- | Override the lookup of the attribute name 'targetName' to return
+-- the attribute value associated with 'fromName' when rendering the
+-- specified widget.
+--
+-- For example:
+--
+-- @
+--    appAttrMap = attrMap (white `on` blue) [ ("highlight", fg yellow)
+--                                           , ("notice", fg red)
+--                                           ]
+--
+--    renderA :: (String, String) -> [Widget n]
+--    renderA (a, b) = str a <+> str " is " <+> withAttr "highlight" (str b)
+--
+--    render1 = withAttr "notice" $ renderA ("Brick", "fun")
+--    render2 = overrideAttr "highlight" "notice" render1
+-- @
+--
+-- In the example above, @render1@ will show @Brick is fun@ where the
+-- first two words are red on a blue background, but @fun@ is yellow on
+-- a blue background. However, @render2@ will show all three words in
+-- red on a blue background.
+overrideAttr :: AttrName -> AttrName -> Widget n -> Widget n
 overrideAttr targetName fromName =
     updateAttrMap (mapAttrName fromName targetName)
 
