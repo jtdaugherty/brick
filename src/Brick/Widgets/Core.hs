@@ -872,9 +872,10 @@ withAttr an p =
     Widget (hSize p) (vSize p) $
       withReaderT (ctxAttrNameL .~ an) (render p)
 
--- | Update the attribute map while rendering the specified widget:
--- set its new default attribute to the one that we get by applying
--- specified function to the attribute map's current default attribute.
+-- | Update the attribute map while rendering the specified widget: set
+-- the map's default attribute to the one that we get by applying the
+-- specified function to the current map's default attribute. This is a
+-- variant of 'withDefAttr'; see the latter for more information.
 modifyDefAttr :: (V.Attr -> V.Attr) -> Widget n -> Widget n
 modifyDefAttr f p =
     Widget (hSize p) (vSize p) $ do
