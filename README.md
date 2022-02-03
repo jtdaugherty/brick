@@ -81,6 +81,7 @@ it, get in touch!
 | [`swarm`](https://github.com/byorgey/swarm/) | A 2D programming and resource gathering game |
 | [`hledger-ui`](https://github.com/simonmichael/hledger) | A terminal UI for the hledger accounting system. |
 | [`hledger-iadd`](http://github.com/rootzlevel/hledger-iadd) | An interactive terminal UI for adding hledger journal entries |
+| [`wordle`](https://github.com/ivanjermakov/wordle) | An implementation of the Wordle game |
 
 These third-party packages also extend `brick`:
 
