@@ -42,9 +42,6 @@
 ## [ListViDemo.hs](https://github.com/jtdaugherty/brick/blob/master/programs/ListViDemo.hs)
 ![list-vi demo](./programs-screenshots/brick-list-vi-demo.png)
 
-## [MarkupDemo.hs](https://github.com/jtdaugherty/brick/blob/master/programs/MarkupDemo.hs)
-![markup demo](./programs-screenshots/brick-markup-demo.png)
-
 ## [MouseDemo.hs](https://github.com/jtdaugherty/brick/blob/master/programs/MouseDemo.hs)
 ![mouse demo](./programs-screenshots/brick-mouse-demo.png)
 
