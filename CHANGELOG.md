@@ -2,6 +2,19 @@
 Brick changelog
 ---------------
 
+0.68
+----
+
+API changes:
+ * Removed the "markup" feature, which included `Data.Text.Markup`,
+   `Brick.Markup`, and `brick-markup-demo`. This feature never performed
+   well and was awkward to use. I considered it experimental from the
+   initial release of this library. Some recent incompatibilities with
+   Vty changes made me realize that it was time to finally get rid of
+   this. If this affects you, please let me know and I am happy to work
+   with you to figure out an alternative. Granted, anyone is welcome to
+   dig up the previous code and re-use it in their own projects!
+
 0.67
 ----
 
