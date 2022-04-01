@@ -99,25 +99,21 @@ cropExtents ctx es = catMaybes $ cropExtent <$> es
         --
         -- If its entirety is outside the context region, it is dropped.
         --
-        -- Otherwise its size and upper left corner are adjusted so that
-        -- they are contained within the context region.
+        -- Otherwise its size is adjusted so that it is contained within
+        -- the context region.
         cropExtent (Extent n (Location (c, r)) (w, h)) =
-            -- First, clamp the upper-left corner to at least (0, 0).
-            let c' = max c 0
-                r' = max r 0
-                -- Then, determine the new lower-right corner based on
-                -- the clamped corner.
-                endCol = c' + w
-                endRow = r' + h
+            -- Determine the new lower-right corner
+            let endCol = c + w
+                endRow = r + h
                 -- Then clamp the lower-right corner based on the
                 -- context
                 endCol' = min (ctx^.availWidthL) endCol
                 endRow' = min (ctx^.availHeightL) endRow
                 -- Then compute the new width and height from the
                 -- clamped lower-right corner.
-                w' = endCol' - c'
-                h' = endRow' - r'
-                e = Extent n (Location (c', r')) (w', h')
+                w' = endCol' - c
+                h' = endRow' - r
+                e = Extent n (Location (c, r)) (w', h')
             in if w' < 0 || h' < 0
                then Nothing
                else Just e
