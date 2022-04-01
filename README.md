@@ -82,6 +82,7 @@ it, get in touch!
 | [`hledger-ui`](https://github.com/simonmichael/hledger) | A terminal UI for the hledger accounting system. |
 | [`hledger-iadd`](http://github.com/rootzlevel/hledger-iadd) | An interactive terminal UI for adding hledger journal entries |
 | [`wordle`](https://github.com/ivanjermakov/wordle) | An implementation of the Wordle game |
+| [`kpxhs`](https://github.com/akazukin5151/kpxhs) | An interactive [Keepass](https://github.com/keepassxreboot/keepassxc/) database viewer |
 
 These third-party packages also extend `brick`:
 
