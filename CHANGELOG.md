@@ -2,6 +2,14 @@
 Brick changelog
 ---------------
 
+0.68.1
+------
+
+Bug fixes:
+ * Brick's internal book-keeping got a bug fix that caused mouse-click
+   coordinates to be wrong for clickable regions that were translated
+   partially off of the left or top edges of a rendered region.
+
 0.68
 ----
 
