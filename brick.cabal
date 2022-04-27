@@ -111,6 +111,9 @@ library
     Brick.Types.Internal
     Brick.Widgets.Internal
 
+  if os(windows)
+    build-depends: brick-is-not-supported-on-windows
+
   build-depends:       base >= 4.9.0.0 && < 4.17.0.0,
                        vty >= 5.33,
                        transformers,
