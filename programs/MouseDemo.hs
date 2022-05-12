@@ -77,11 +77,13 @@ infoLayer st = T.Widget T.Fixed T.Fixed $ do
     c <- T.getContext
     let h = c^.T.availHeightL
         msg = case st^.lastReportedClick of
-                Nothing -> "nothing"
-                Just (name, T.Location l) -> show name <> " at " <> show l
+                Nothing ->
+                    "Click and hold/drag to report a mouse click"
+                Just (name, T.Location l) ->
+                    "Mouse down at " <> show name <> " @ " <> show l
     T.render $ translateBy (T.Location (0, h-1)) $ clickable Info $
                withDefAttr "info" $
-               C.hCenter (str ("Last reported click: " <> msg))
+               C.hCenter $ str msg
 
 appEvent :: St -> T.BrickEvent Name e -> T.EventM Name (T.Next St)
 appEvent st (T.MouseDown n _ _ loc) = do
