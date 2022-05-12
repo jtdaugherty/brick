@@ -69,11 +69,7 @@ proseLayer st =
   B.border $
   C.hCenterLayer $
   vLimit 8 $
-  -- n.b. if clickable and viewport are inverted here, click event
-  -- coordinates will only identify the viewable range, not the actual
-  -- editor widget coordinates.
   viewport Prose Vertical $
-  clickable Prose $
   vBox $ map str $ lines (st^.prose)
 
 infoLayer :: St -> Widget Name
