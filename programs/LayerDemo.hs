@@ -12,48 +12,71 @@ import Brick.Types (locationRowL, locationColumnL, Widget)
 import qualified Brick.Main as M
 import qualified Brick.Widgets.Border as B
 import qualified Brick.Widgets.Center as C
+import Brick.Types
+  ( Location(..)
+  )
 import Brick.Widgets.Core
   ( translateBy
   , str
+  , relativeTo
+  , reportExtent
+  , withDefAttr
   )
+import Brick.Util (fg)
 import Brick.AttrMap
   ( attrMap
+  , AttrName
   )
 
 data St =
-    St { _topLayerLocation :: T.Location
+    St { _middleLayerLocation :: T.Location
        , _bottomLayerLocation :: T.Location
        }
 
 makeLenses ''St
 
-drawUi :: St -> [Widget ()]
+data Name =
+    MiddleLayerElement
+    deriving (Ord, Eq, Show)
+
+drawUi :: St -> [Widget Name]
 drawUi st =
     [ C.centerLayer $
       B.border $ str "This layer is centered but other\nlayers are placed underneath it."
-    , topLayer st
+    , arrowLayer
+    , middleLayer st
     , bottomLayer st
     ]
 
-topLayer :: St -> Widget ()
-topLayer st =
-    translateBy (st^.topLayerLocation) $
-    B.border $ str "Top layer\n(Arrow keys move)"
+arrowLayer :: Widget Name
+arrowLayer =
+    let msg = "Relatively\n" <>
+              "positioned\n" <>
+              "arrow---->"
+    in relativeTo MiddleLayerElement (Location (-10, -2)) $
+       withDefAttr arrowAttr $
+       str msg
 
-bottomLayer :: St -> Widget ()
+middleLayer :: St -> Widget Name
+middleLayer st =
+    translateBy (st^.middleLayerLocation) $
+    reportExtent MiddleLayerElement $
+    B.border $ str "Middle layer\n(Arrow keys move)"
+
+bottomLayer :: St -> Widget Name
 bottomLayer st =
     translateBy (st^.bottomLayerLocation) $
     B.border $ str "Bottom layer\n(Ctrl-arrow keys move)"
 
-appEvent :: St -> T.BrickEvent () e -> T.EventM () (T.Next St)
+appEvent :: St -> T.BrickEvent Name e -> T.EventM Name (T.Next St)
 appEvent st (T.VtyEvent (V.EvKey V.KDown []))  =
-    M.continue $ st & topLayerLocation.locationRowL %~ (+ 1)
+    M.continue $ st & middleLayerLocation.locationRowL %~ (+ 1)
 appEvent st (T.VtyEvent (V.EvKey V.KUp []))    =
-    M.continue $ st & topLayerLocation.locationRowL %~ (subtract 1)
+    M.continue $ st & middleLayerLocation.locationRowL %~ (subtract 1)
 appEvent st (T.VtyEvent (V.EvKey V.KRight [])) =
-    M.continue $ st & topLayerLocation.locationColumnL %~ (+ 1)
+    M.continue $ st & middleLayerLocation.locationColumnL %~ (+ 1)
 appEvent st (T.VtyEvent (V.EvKey V.KLeft []))  =
-    M.continue $ st & topLayerLocation.locationColumnL %~ (subtract 1)
+    M.continue $ st & middleLayerLocation.locationColumnL %~ (subtract 1)
 
 appEvent st (T.VtyEvent (V.EvKey V.KDown  [V.MCtrl])) =
     M.continue $ st & bottomLayerLocation.locationRowL %~ (+ 1)
@@ -67,14 +90,17 @@ appEvent st (T.VtyEvent (V.EvKey V.KLeft  [V.MCtrl])) =
 appEvent st (T.VtyEvent (V.EvKey V.KEsc [])) = M.halt st
 appEvent st _ = M.continue st
 
-app :: M.App St e ()
+arrowAttr :: AttrName
+arrowAttr = "attr"
+
+app :: M.App St e Name
 app =
     M.App { M.appDraw = drawUi
           , M.appStartEvent = return
           , M.appHandleEvent = appEvent
-          , M.appAttrMap = const $ attrMap V.defAttr []
+          , M.appAttrMap = const $ attrMap V.defAttr [(arrowAttr, fg V.cyan)]
           , M.appChooseCursor = M.neverShowCursor
           }
 
 main :: IO ()
-main = void $ M.defaultMain app $ St (T.Location (0, 0)) (T.Location (0, 0))
+main = void $ M.defaultMain app $ St (T.Location (20, 5)) (T.Location (0, 0))

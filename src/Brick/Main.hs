@@ -277,11 +277,18 @@ customMainWithVty initialVty buildVty mUserChan app initialAppState = do
                     run newVty (newRS { renderCache = mempty }) newAppState brickChan
 
     let emptyES = ES [] mempty mempty
-        emptyRS = RS M.empty mempty S.empty mempty mempty mempty
+        emptyRS = RS M.empty mempty S.empty mempty mempty mempty mempty
         eventRO = EventRO M.empty initialVty mempty emptyRS
 
     (st, eState) <- runStateT (runReaderT (runEventM (appStartEvent app initialAppState)) eventRO) emptyES
-    let initialRS = RS M.empty (esScrollRequests eState) S.empty mempty [] (requestedVisibleNames eState)
+    let initialRS = RS { viewportMap = M.empty
+                       , rsScrollRequests = esScrollRequests eState
+                       , observedNames = S.empty
+                       , renderCache = mempty
+                       , clickableNames = []
+                       , requestedVisibleNames_ = requestedVisibleNames eState
+                       , reportedExtents = mempty
+                       }
     brickChan <- newBChan 20
     run initialVty initialRS st brickChan
 
@@ -452,7 +459,7 @@ resetRenderState s =
     s & observedNamesL .~ S.empty
       & clickableNamesL .~ mempty
 
-renderApp :: Vty -> App s e n -> s -> RenderState n -> IO (RenderState n, [Extent n])
+renderApp :: (Ord n) => Vty -> App s e n -> s -> RenderState n -> IO (RenderState n, [Extent n])
 renderApp vty app appState rs = do
     sz <- displayBounds $ outputIface vty
     let (newRS, pic, theCursor, exts) = renderFinal (appAttrMap app appState)

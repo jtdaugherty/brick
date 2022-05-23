@@ -8,8 +8,11 @@ module Brick.Widgets.Internal
 where
 
 import Lens.Micro ((^.), (&), (%~))
+import Lens.Micro.Mtl ((%=))
+import Control.Monad (forM_)
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Reader
+import qualified Data.Map as M
 import Data.Maybe (catMaybes)
 import qualified Graphics.Vty as V
 
@@ -20,7 +23,8 @@ import Brick.Widgets.Border.Style
 import Brick.BorderMap (BorderMap)
 import qualified Brick.BorderMap as BM
 
-renderFinal :: AttrMap
+renderFinal :: (Ord n)
+            => AttrMap
             -> [Widget n]
             -> V.DisplayRegion
             -> ([CursorLocation n] -> Maybe (CursorLocation n))
@@ -31,7 +35,12 @@ renderFinal aMap layerRenders (w, h) chooseCursor rs =
     where
         (layerResults, !newRS) = flip runState rs $ sequence $
             (\p -> runReaderT p ctx) <$>
-            (render <$> cropToContext <$> layerRenders)
+            (\layerWidget -> do
+                result <- render $ cropToContext layerWidget
+                forM_ (result^.extentsL) $ \e ->
+                    reportedExtentsL %= M.insert (extentName e) e
+                return result
+                ) <$> reverse layerRenders
 
         ctx = Context { ctxAttrName = mempty
                       , availWidth = w
@@ -50,14 +59,16 @@ renderFinal aMap layerRenders (w, h) chooseCursor rs =
                       , ctxHScrollBarClickableConstr = Nothing
                       , ctxVScrollBarClickableConstr = Nothing
                       }
-        pic = V.picForLayers $ uncurry V.resize (w, h) <$> (^.imageL) <$> layerResults
+
+        layersTopmostFirst = reverse layerResults
+        pic = V.picForLayers $ uncurry V.resize (w, h) <$> (^.imageL) <$> layersTopmostFirst
 
         -- picWithBg is a workaround for runaway attributes.
         -- See https://github.com/coreyoconnor/vty/issues/95
         picWithBg = pic { V.picBackground = V.Background ' ' V.defAttr }
 
-        layerCursors = (^.cursorsL) <$> layerResults
-        layerExtents = reverse $ (^.extentsL) <$> layerResults
+        layerCursors = (^.cursorsL) <$> layersTopmostFirst
+        layerExtents = reverse $ (^.extentsL) <$> layersTopmostFirst
         theCursor = chooseCursor $ concat layerCursors
 
 -- | After rendering the specified widget, crop its result image to the

@@ -64,8 +64,9 @@ module Brick.Widgets.Core
   -- * Naming
   , Named(..)
 
-  -- * Translation
+  -- * Translation and positioning
   , translateBy
+  , relativeTo
 
   -- * Cropping
   , cropLeftBy
@@ -1029,6 +1030,20 @@ translateBy off p =
       result <- render p
       return $ addResultOffset off
              $ result & imageL %~ (V.translate (off^.locationColumnL) (off^.locationRowL))
+
+-- | Given a widget, translate it to position it relative to the
+-- upper-left coordinates of a reported extent with the specified
+-- positioning offset. This is useful for positioning something in a
+-- higher layer relative to a reported extent in a lower layer. If the
+-- specified name has no reported extent, this just draws the specified
+-- widget with no special positioning.
+relativeTo :: (Show n, Ord n) => n -> Location -> Widget n -> Widget n
+relativeTo n off w =
+    Widget (hSize w) (vSize w) $ do
+        mExt <- lookupReportedExtent n
+        case mExt of
+            Nothing -> render w
+            Just ext -> render $ translateBy (extentUpperLeft ext <> off) w
 
 -- | Crop the specified widget on the left by the specified number of
 -- columns. Defers to the cropped widget for growth policy.

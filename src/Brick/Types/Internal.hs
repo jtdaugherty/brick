@@ -59,11 +59,13 @@ module Brick.Types.Internal
   , BrickEvent(..)
   , RenderM
   , getContext
+  , lookupReportedExtent
   , Widget(..)
 
   , rsScrollRequestsL
   , viewportMapL
   , clickableNamesL
+  , reportedExtentsL
   , renderCacheL
   , observedNamesL
   , requestedVisibleNames_L
@@ -80,9 +82,11 @@ module Brick.Types.Internal
   )
 where
 
+import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.Reader
 import Control.Monad.Trans.State.Lazy
 import Lens.Micro (_1, _2, Lens')
+import Lens.Micro.Mtl (use)
 import Lens.Micro.TH (makeLenses)
 import qualified Data.Set as S
 import qualified Data.Map as M
@@ -140,6 +144,7 @@ data RenderState n =
        , renderCache :: !(M.Map n ([n], Result n))
        , clickableNames :: ![n]
        , requestedVisibleNames_ :: !(S.Set n)
+       , reportedExtents :: !(M.Map n (Extent n))
        } deriving (Read, Show, Generic, NFData)
 
 -- | The type of the rendering monad. This monad is used by the
@@ -401,3 +406,8 @@ suffixLenses ''DynBorder
 suffixLenses ''Result
 suffixLenses ''BorderSegment
 makeLenses ''Viewport
+
+lookupReportedExtent :: (Ord n) => n -> RenderM n (Maybe (Extent n))
+lookupReportedExtent n = do
+    m <- lift $ use reportedExtentsL
+    return $ M.lookup n m
