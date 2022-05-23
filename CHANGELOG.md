@@ -2,6 +2,16 @@
 Brick changelog
 ---------------
 
+0.69
+----
+
+New features:
+ * `Brick.Widgets.Core`: added `relativeTo` to support relative
+   positioning across layers. This allows elements in higher layers
+   to be positioned relative to elements in lower layers as long as
+   those elements have had their extents reported with `reportExtent` or
+   `clickable`.
+
 0.68.1
 ------
 
