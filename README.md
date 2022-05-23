@@ -84,6 +84,7 @@ it, get in touch!
 | [`wordle`](https://github.com/ivanjermakov/wordle) | An implementation of the Wordle game |
 | [`kpxhs`](https://github.com/akazukin5151/kpxhs) | An interactive [Keepass](https://github.com/keepassxreboot/keepassxc/) database viewer |
 | [`htyper`](https://github.com/Simon-Hostettler/htyper) | A typing speed test program |
+| [`ullekha`](https://github.com/ajithnn/ullekha) | An interactive terminal notes/todo app with file/redis persistence |
 
 These third-party packages also extend `brick`:
 
