@@ -1033,10 +1033,21 @@ translateBy off p =
 
 -- | Given a widget, translate it to position it relative to the
 -- upper-left coordinates of a reported extent with the specified
--- positioning offset. This is useful for positioning something in a
--- higher layer relative to a reported extent in a lower layer. If the
--- specified name has no reported extent, this just draws the specified
--- widget with no special positioning.
+-- positioning offset. If the specified name has no reported extent,
+-- this just draws the specified widget with no special positioning.
+--
+-- This is only useful for positioning something in a higher layer
+-- relative to a reported extent in a lower layer. Any other use is
+-- likely to result in the specified widget being rendered as-is with
+-- no translation. This is because this function relies on information
+-- about lower layer renderings in order to work; using it with a
+-- resource name that wasn't rendered in a lower layer will result in
+-- this being equivalent to @id@.
+--
+-- For example, if you have two layers @topLayer@ and @bottomLayer@,
+-- then a widget drawn in @bottomLayer@ with @reportExtent Foo@ can be
+-- used to relatively position a widget in @topLayer@ with @topLayer =
+-- relativeTo Foo ...@.
 relativeTo :: (Show n, Ord n) => n -> Location -> Widget n -> Widget n
 relativeTo n off w =
     Widget (hSize w) (vSize w) $ do
