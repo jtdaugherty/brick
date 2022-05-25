@@ -1048,7 +1048,7 @@ translateBy off p =
 -- then a widget drawn in @bottomLayer@ with @reportExtent Foo@ can be
 -- used to relatively position a widget in @topLayer@ with @topLayer =
 -- relativeTo Foo ...@.
-relativeTo :: (Show n, Ord n) => n -> Location -> Widget n -> Widget n
+relativeTo :: (Ord n) => n -> Location -> Widget n -> Widget n
 relativeTo n off w =
     Widget (hSize w) (vSize w) $ do
         mExt <- lookupReportedExtent n
