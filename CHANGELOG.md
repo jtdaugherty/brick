@@ -2,6 +2,14 @@
 Brick changelog
 ---------------
 
+0.69.1
+------
+
+Bug fixes:
+ * `table` can now deal properly with empty cells that are in left- and
+   top-aligned settings. Previously, empty cells in those settings would
+   break table rendering. (#369)
+
 0.69
 ----
 
