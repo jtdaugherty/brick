@@ -107,7 +107,9 @@ data Table n =
 -- 'TableException'.
 --
 -- All rows must have the same number of cells. If not, this will raise
--- a 'TableException'.
+-- a 'TableException'. In addition, all rows and columns must provide at
+-- least one non-empty cell respectively, or the final result may not
+-- look as desired.
 table :: [[Widget n]] -> Table n
 table rows =
     if not allFixed
