@@ -34,7 +34,8 @@ import Control.Monad (forM)
 import qualified Control.Exception as E
 import Data.List (transpose, intersperse, nub)
 import qualified Data.Map as M
-import Graphics.Vty (imageHeight, imageWidth)
+import Graphics.Vty (imageHeight, imageWidth, charFill)
+import Lens.Micro ((^.))
 
 import Brick.Types
 import Brick.Widgets.Core
@@ -204,6 +205,7 @@ renderTable t =
     joinBorders $
     (if drawSurroundingBorder t then border else id) $
     Widget Fixed Fixed $ do
+        ctx <- getContext
         let rows = tableRows t
         cellResults <- forM rows $ mapM render
         let rowHeights = rowHeight <$> cellResults
@@ -221,20 +223,25 @@ renderTable t =
                 Widget Fixed Fixed $ do
                     result <- render w
                     case align of
-                        AlignLeft -> return result
+                        AlignLeft -> render $ hLimit width $ padRight Max $ toW result
                         AlignCenter -> render $ hLimit width $ hCenter $ toW result
                         AlignRight -> render $
                                           padLeft (Pad (width - imageWidth (image result))) $
                                           toW result
             applyRowAlignment rHeight align result =
                 case align of
-                 AlignTop -> toW result
+                 AlignTop -> vLimit rHeight $ padBottom Max $ toW result
                  AlignMiddle -> vLimit rHeight $ vCenter $ toW result
                  AlignBottom -> vLimit rHeight $ padTop Max $ toW result
+            fixEmtpyCell w h result =
+                if imageWidth (image result) == 0 && imageHeight (image result) == 0
+                then result { image = charFill (ctx^.attrL) ' ' w h }
+                else result
             mkColumn (hAlign, width, colCells) = do
                 let paddedCells = flip map (zip3 allRowAligns rowHeights colCells) $ \(vAlign, rHeight, cell) ->
                         applyColAlignment hAlign width $
-                        applyRowAlignment rHeight vAlign cell
+                        applyRowAlignment rHeight vAlign $
+                        fixEmtpyCell width rHeight cell
                     maybeRowBorders = if drawRowBorders t
                                       then intersperse (hLimit width hBorder)
                                       else id
