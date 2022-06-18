@@ -338,7 +338,13 @@ data Result n =
            deriving (Show, Read, Generic, NFData)
 
 emptyResult :: Result n
-emptyResult = Result emptyImage [] [] [] BM.empty
+emptyResult =
+    Result { image = emptyImage
+           , cursors = []
+           , visibilityRequests = []
+           , extents = []
+           , borders = BM.empty
+           }
 
 -- | The type of events.
 data BrickEvent n e = VtyEvent Event
