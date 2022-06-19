@@ -107,9 +107,7 @@ data Table n =
 -- 'TableException'.
 --
 -- All rows must have the same number of cells. If not, this will raise
--- a 'TableException'. In addition, all rows and columns must provide at
--- least one non-empty cell respectively, or the final result may not
--- look as desired.
+-- a 'TableException'.
 table :: [[Widget n]] -> Table n
 table rows =
     if not allFixed
@@ -205,7 +203,6 @@ setDefaultRowAlignment a t =
 renderTable :: Table n -> Widget n
 renderTable t =
     joinBorders $
-    (if drawSurroundingBorder t then border else id) $
     Widget Fixed Fixed $ do
         ctx <- getContext
         let rows = tableRows t
@@ -220,7 +217,6 @@ renderTable t =
             colWidth = maximum . fmap (imageWidth . image)
             byColumn = transpose cellResults
             toW = Widget Fixed Fixed . return
-            totalHeight = sum rowHeights
             applyColAlignment align width w =
                 Widget Fixed Fixed $ do
                     result <- render w
@@ -249,11 +245,37 @@ renderTable t =
                                       else id
                 render $ vBox $ maybeRowBorders paddedCells
         columns <- mapM mkColumn $ zip3 allColAligns colWidths byColumn
-        let maybeColumnBorders =
-                if drawColumnBorders t
-                then let rowBorderHeight = if drawRowBorders t
-                                           then length rows - 1
-                                           else 0
-                     in intersperse (vLimit (totalHeight + rowBorderHeight) vBorder)
-                else id
-        render $ hBox $ maybeColumnBorders $ toW <$> columns
+
+        let tl = joinableBorder (Edges False True False True)
+            tr = joinableBorder (Edges False True True False)
+            bl = joinableBorder (Edges True False False True)
+            br = joinableBorder (Edges True False True False)
+            cross = joinableBorder (Edges True True True True)
+            leftT = joinableBorder (Edges True True False True)
+            rightT = joinableBorder (Edges True True True False)
+            topT = joinableBorder (Edges False True True True)
+            bottomT = joinableBorder (Edges True False True True)
+            vBorders = mkVBorder <$> rowHeights
+            hBorders = mkHBorder <$> colWidths
+            mkHBorder w = hLimit w hBorder
+            mkVBorder h = vLimit h vBorder
+            topBorder = hBox $ (if drawColumnBorders t then intersperse topT else id) hBorders
+            bottomBorder = hBox $ (if drawColumnBorders t then intersperse bottomT else id) hBorders
+            leftBorder = vBox $ tl : (if drawRowBorders t then intersperse leftT else id) vBorders <> [bl]
+            rightBorder = vBox $ tr : (if drawRowBorders t then intersperse rightT else id) vBorders <> [br]
+            maybeAddSurroundingBorder body =
+                if not $ drawSurroundingBorder t
+                then body
+                else leftBorder <+> (topBorder <=> body <=> bottomBorder) <+> rightBorder
+            maybeAddColumnBorders =
+                if not $ drawColumnBorders t
+                then id
+                else let maybeAddCrosses = if drawRowBorders t
+                                           then intersperse cross
+                                           else id
+                         columnBorder = vBox $ maybeAddCrosses vBorders
+                     in intersperse columnBorder
+
+        render $ maybeAddSurroundingBorder $
+                 hBox $
+                 maybeAddColumnBorders $ toW <$> columns
