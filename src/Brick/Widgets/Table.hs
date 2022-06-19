@@ -1,3 +1,4 @@
+{-# LANGUAGE MultiWayIf #-}
 -- | Support for basic table drawing.
 module Brick.Widgets.Table
   (
@@ -113,11 +114,9 @@ data Table n =
 -- a 'TableException'.
 table :: [[Widget n]] -> Table n
 table rows =
-    if not allFixed
-    then E.throw TEInvalidCellSizePolicy
-    else if not allSameLength
-         then E.throw TEUnequalRowSizes
-         else t
+    if | not allFixed      -> E.throw TEInvalidCellSizePolicy
+       | not allSameLength -> E.throw TEUnequalRowSizes
+       | otherwise         -> t
     where
         allSameLength = length (nub (length <$> rows)) <= 1
         allFixed = all fixedRow rows
