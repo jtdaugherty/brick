@@ -224,7 +224,8 @@ renderTable t =
         ctx <- getContext
         let rows = tableRows t
         cellResults <- forM rows $ mapM render
-        let rowHeights = rowHeight <$> cellResults
+        let maybeIntersperse f v = if f t then intersperse v else id
+            rowHeights = rowHeight <$> cellResults
             colWidths = colWidth <$> byColumn
             allRowAligns = (\i -> M.findWithDefault (defaultRowAlignment t) i (rowAlignments t)) <$>
                            [0..length rowHeights - 1]
@@ -257,9 +258,7 @@ renderTable t =
                         applyColAlignment hAlign width $
                         applyRowAlignment rHeight vAlign $
                         fixEmtpyCell width rHeight cell
-                    maybeRowBorders = if drawRowBorders t
-                                      then intersperse (hLimit width hBorder)
-                                      else id
+                    maybeRowBorders = maybeIntersperse drawRowBorders (hLimit width hBorder)
                 render $ vBox $ maybeRowBorders paddedCells
         columns <- mapM mkColumn $ zip3 allColAligns colWidths byColumn
 
@@ -276,10 +275,10 @@ renderTable t =
             hBorders = mkHBorder <$> colWidths
             mkHBorder w = hLimit w hBorder
             mkVBorder h = vLimit h vBorder
-            topBorder = hBox $ (if drawColumnBorders t then intersperse topT else id) hBorders
-            bottomBorder = hBox $ (if drawColumnBorders t then intersperse bottomT else id) hBorders
-            leftBorder = vBox $ tl : (if drawRowBorders t then intersperse leftT else id) vBorders <> [bl]
-            rightBorder = vBox $ tr : (if drawRowBorders t then intersperse rightT else id) vBorders <> [br]
+            topBorder = hBox $ maybeIntersperse drawColumnBorders topT hBorders
+            bottomBorder = hBox $ maybeIntersperse drawColumnBorders bottomT hBorders
+            leftBorder = vBox $ tl : maybeIntersperse drawRowBorders leftT vBorders <> [bl]
+            rightBorder = vBox $ tr : maybeIntersperse drawRowBorders rightT vBorders <> [br]
             maybeAddSurroundingBorder body =
                 if not $ drawSurroundingBorder t
                 then body
@@ -287,9 +286,7 @@ renderTable t =
             maybeAddColumnBorders =
                 if not $ drawColumnBorders t
                 then id
-                else let maybeAddCrosses = if drawRowBorders t
-                                           then intersperse cross
-                                           else id
+                else let maybeAddCrosses = maybeIntersperse drawRowBorders cross
                          columnBorder = vBox $ maybeAddCrosses vBorders
                      in intersperse columnBorder
 
