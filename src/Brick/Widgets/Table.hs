@@ -222,8 +222,8 @@ renderTable t =
     joinBorders $
     Widget Fixed Fixed $ do
         ctx <- getContext
-        let rows = tableRows t
-        cellResults <- forM rows $ mapM render
+        cellResults <- forM (tableRows t) $ mapM render
+
         let maybeIntersperse f v = if f t then intersperse v else id
             rowHeights = rowHeight <$> cellResults
             colWidths = colWidth <$> byColumn
@@ -235,61 +235,83 @@ renderTable t =
             colWidth = maximum . fmap (imageWidth . image)
             byColumn = transpose cellResults
             toW = Widget Fixed Fixed . return
-            applyColAlignment align width w =
-                Widget Fixed Fixed $ do
-                    result <- render w
-                    case align of
-                        AlignLeft -> render $ hLimit width $ padRight Max $ toW result
-                        AlignCenter -> render $ hLimit width $ hCenter $ toW result
-                        AlignRight -> render $
-                                          padLeft (Pad (width - imageWidth (image result))) $
-                                          toW result
-            applyRowAlignment rHeight align result =
-                case align of
-                 AlignTop -> vLimit rHeight $ padBottom Max $ toW result
-                 AlignMiddle -> vLimit rHeight $ vCenter $ toW result
-                 AlignBottom -> vLimit rHeight $ padTop Max $ toW result
-            fixEmtpyCell w h result =
+            fillEmptyCell w h result =
                 if imageWidth (image result) == 0 && imageHeight (image result) == 0
                 then result { image = charFill (ctx^.attrL) ' ' w h }
                 else result
-            mkColumn (hAlign, width, colCells) = do
+            mkColumn (hAlign, width, colCells) =
                 let paddedCells = flip map (zip3 allRowAligns rowHeights colCells) $ \(vAlign, rHeight, cell) ->
-                        applyColAlignment hAlign width $
+                        applyColAlignment width hAlign $
                         applyRowAlignment rHeight vAlign $
-                        fixEmtpyCell width rHeight cell
+                        toW $
+                        fillEmptyCell width rHeight cell
                     maybeRowBorders = maybeIntersperse drawRowBorders (hLimit width hBorder)
-                render $ vBox $ maybeRowBorders paddedCells
-        columns <- mapM mkColumn $ zip3 allColAligns colWidths byColumn
+                in vBox $ maybeRowBorders paddedCells
 
-        let tl = joinableBorder (Edges False True False True)
-            tr = joinableBorder (Edges False True True False)
-            bl = joinableBorder (Edges True False False True)
-            br = joinableBorder (Edges True False True False)
-            cross = joinableBorder (Edges True True True True)
-            leftT = joinableBorder (Edges True True False True)
-            rightT = joinableBorder (Edges True True True False)
-            topT = joinableBorder (Edges False True True True)
-            bottomT = joinableBorder (Edges True False True True)
             vBorders = mkVBorder <$> rowHeights
             hBorders = mkHBorder <$> colWidths
             mkHBorder w = hLimit w hBorder
             mkVBorder h = vLimit h vBorder
-            topBorder = hBox $ maybeIntersperse drawColumnBorders topT hBorders
-            bottomBorder = hBox $ maybeIntersperse drawColumnBorders bottomT hBorders
-            leftBorder = vBox $ tl : maybeIntersperse drawRowBorders leftT vBorders <> [bl]
-            rightBorder = vBox $ tr : maybeIntersperse drawRowBorders rightT vBorders <> [br]
-            maybeAddSurroundingBorder body =
-                if not $ drawSurroundingBorder t
-                then body
-                else leftBorder <+> (topBorder <=> body <=> bottomBorder) <+> rightBorder
-            maybeAddColumnBorders =
-                if not $ drawColumnBorders t
-                then id
-                else let maybeAddCrosses = maybeIntersperse drawRowBorders cross
-                         columnBorder = vBox $ maybeAddCrosses vBorders
-                     in intersperse columnBorder
+            topBorder =
+                hBox $ maybeIntersperse drawColumnBorders topT hBorders
+            bottomBorder =
+                hBox $ maybeIntersperse drawColumnBorders bottomT hBorders
+            leftBorder =
+                vBox $ topLeftCorner : maybeIntersperse drawRowBorders leftT vBorders <> [bottomLeftCorner]
+            rightBorder =
+                vBox $ topRightCorner : maybeIntersperse drawRowBorders rightT vBorders <> [bottomRightCorner]
 
-        render $ maybeAddSurroundingBorder $
-                 hBox $
-                 maybeAddColumnBorders $ toW <$> columns
+            maybeWrap check f =
+                if check t then f else id
+            addSurroundingBorder body =
+                leftBorder <+> (topBorder <=> body <=> bottomBorder) <+> rightBorder
+            addColumnBorders =
+                let maybeAddCrosses = maybeIntersperse drawRowBorders cross
+                    columnBorder = vBox $ maybeAddCrosses vBorders
+                in intersperse columnBorder
+
+        let columns = mkColumn <$> zip3 allColAligns colWidths byColumn
+            body = hBox $
+                   maybeWrap drawColumnBorders addColumnBorders columns
+        render $ maybeWrap drawSurroundingBorder addSurroundingBorder body
+
+topLeftCorner :: Widget n
+topLeftCorner = joinableBorder $ Edges False True False True
+
+topRightCorner :: Widget n
+topRightCorner = joinableBorder $ Edges False True True False
+
+bottomLeftCorner :: Widget n
+bottomLeftCorner = joinableBorder $ Edges True False False True
+
+bottomRightCorner :: Widget n
+bottomRightCorner = joinableBorder $ Edges True False True False
+
+cross :: Widget n
+cross = joinableBorder $ Edges True True True True
+
+leftT :: Widget n
+leftT = joinableBorder $ Edges True True False True
+
+rightT :: Widget n
+rightT = joinableBorder $ Edges True True True False
+
+topT :: Widget n
+topT = joinableBorder $ Edges False True True True
+
+bottomT :: Widget n
+bottomT = joinableBorder $ Edges True False True True
+
+applyColAlignment :: Int -> ColumnAlignment -> Widget n -> Widget n
+applyColAlignment width align w =
+    hLimit width $ case align of
+        AlignLeft   -> padRight Max w
+        AlignCenter -> hCenter w
+        AlignRight  -> padLeft Max w
+
+applyRowAlignment :: Int -> RowAlignment -> Widget n -> Widget n
+applyRowAlignment rHeight align w =
+    vLimit rHeight $ case align of
+        AlignTop    -> padBottom Max w
+        AlignMiddle -> vCenter w
+        AlignBottom -> padTop Max w
