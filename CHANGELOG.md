@@ -2,6 +2,18 @@
 Brick changelog
 ---------------
 
+0.70
+----
+
+Enhancements:
+ * The table widget now behaves much better when some or all cells are
+   empty.
+
+Bug fixes:
+ * BorderMaps got fixed to ensure that smart borders connect even in the
+   presence of empty widgets (#370). Thanks to Daniel Wagner for this
+   fix!
+
 0.69.1
 ------
 
