@@ -30,8 +30,9 @@
 -- button sequence).
 --
 -- To use a 'Form', you must include it within your application state
--- type. You can use 'formState' to access the underlying s whenever you
--- need it. See @programs/FormDemo.hs@ for a complete working example.
+-- type. You can use 'formState' to access the underlying state whenever
+-- you need it. See @programs/FormDemo.hs@ for a complete working
+-- example.
 --
 -- Also note that, by default, forms and their field inputs are
 -- concatenated together in a 'vBox'. This can be customized on a
