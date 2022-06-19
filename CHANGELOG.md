@@ -2,6 +2,12 @@
 Brick changelog
 ---------------
 
+0.70.1
+------
+
+Build fixes:
+ * Added a missing import for GHC 8.2.2.
+
 0.70
 ----
 
