@@ -1,5 +1,8 @@
 {-# LANGUAGE MultiWayIf #-}
--- | Support for basic table drawing.
+-- | This module provides a table widget that can draw other widgets
+-- in a table layout, draw borders between rows and columns, and allow
+-- configuration of row and column alignment. To get started, see
+-- 'table'.
 module Brick.Widgets.Table
   (
   -- * Types
@@ -46,7 +49,8 @@ import Brick.Widgets.Core
 import Brick.Widgets.Center
 import Brick.Widgets.Border
 
--- | Column alignment modes.
+-- | Column alignment modes. Use these modes with the alignment
+-- functions in this module to configure column alignment behavior.
 data ColumnAlignment =
     AlignLeft
     -- ^ Align all cells to the left.
@@ -56,7 +60,8 @@ data ColumnAlignment =
     -- ^ Align all cells to the right.
     deriving (Eq, Show, Read)
 
--- | Row alignment modes.
+-- | Row alignment modes. Use these modes with the alignment functions
+-- in this module to configure row alignment behavior.
 data RowAlignment =
     AlignTop
     -- ^ Align all cells to the top.
@@ -77,7 +82,8 @@ data TableException =
 
 instance E.Exception TableException where
 
--- | A table data structure.
+-- | A table data structure for widgets of type 'Widget' @n@. Create a
+-- table with 'table'.
 data Table n =
     Table { columnAlignments :: M.Map Int ColumnAlignment
           , rowAlignments :: M.Map Int RowAlignment
@@ -92,26 +98,29 @@ data Table n =
 -- | Construct a new table.
 --
 -- The argument is the list of rows, with each element of the argument
--- list being the columns of the respective row.
+-- list being the contents of the cells in in each column of the
+-- respective row.
 --
--- By default, all columns are left-aligned. Use the alignment functions
--- in this module to change that behavior.
+-- By default:
 --
--- By default, all rows are top-aligned. Use the alignment functions in
--- this module to change that behavior.
---
--- By default, the table will draw borders between columns, between
--- rows, and around the outside of the table. Border-drawing behavior
--- can be configured with the API in this module. Note that tables
--- always draw with 'joinBorders' enabled.
+-- * All columns are left-aligned. Use the alignment functions in this
+-- module to change that behavior.
+-- * All rows are top-aligned. Use the alignment functions in this
+-- module to change that behavior.
+-- * The table will draw borders between columns, between rows, and
+-- around the outside of the table. Border-drawing behavior can be
+-- configured with the API in this module. Note that tables always draw
+-- with 'joinBorders' enabled. If a cell's contents has smart borders
+-- but you don't want those borders to connect to the surrounding table
+-- borders, wrap the cell's contents with 'freezeBorders'.
 --
 -- All cells of all rows MUST use the 'Fixed' growth policy for both
--- horizontal and vertical growth. If the argument list contains
--- any cells that use the 'Greedy' policy, this will raise a
+-- horizontal and vertical growth. If the argument list contains any
+-- cells that use the 'Greedy' policy, this function will raise a
 -- 'TableException'.
 --
--- All rows must have the same number of cells. If not, this will raise
--- a 'TableException'.
+-- All rows MUST have the same number of cells. If not, this function
+-- will raise a 'TableException'.
 table :: [[Widget n]] -> Table n
 table rows =
     if | not allFixed      -> E.throw TEInvalidCellSizePolicy
@@ -148,43 +157,49 @@ columnBorders b t =
     t { drawColumnBorders = b }
 
 -- | Align the specified column to the right. The argument is the column
--- index, starting with zero.
+-- index, starting with zero. Silently does nothing if the index is out
+-- of range.
 alignRight :: Int -> Table n -> Table n
 alignRight = setColAlignment AlignRight
 
 -- | Align the specified column to the left. The argument is the column
--- index, starting with zero.
+-- index, starting with zero. Silently does nothing if the index is out
+-- of range.
 alignLeft :: Int -> Table n -> Table n
 alignLeft = setColAlignment AlignLeft
 
 -- | Align the specified column to center. The argument is the column
--- index, starting with zero.
+-- index, starting with zero. Silently does nothing if the index is out
+-- of range.
 alignCenter :: Int -> Table n -> Table n
 alignCenter = setColAlignment AlignCenter
 
 -- | Align the specified row to the top. The argument is the row index,
--- starting with zero.
+-- starting with zero. Silently does nothing if the index is out of
+-- range.
 alignTop :: Int -> Table n -> Table n
 alignTop = setRowAlignment AlignTop
 
 -- | Align the specified row to the middle. The argument is the row
--- index, starting with zero.
+-- index, starting with zero. Silently does nothing if the index is out
+-- of range.
 alignMiddle :: Int -> Table n -> Table n
 alignMiddle = setRowAlignment AlignMiddle
 
 -- | Align the specified row to bottom. The argument is the row index,
--- starting with zero.
+-- starting with zero. Silently does nothing if the index is out of
+-- range.
 alignBottom :: Int -> Table n -> Table n
 alignBottom = setRowAlignment AlignBottom
 
 -- | Set the alignment for the specified column index (starting at
--- zero).
+-- zero). Silently does nothing if the index is out of range.
 setColAlignment :: ColumnAlignment -> Int -> Table n -> Table n
 setColAlignment a col t =
     t { columnAlignments = M.insert col a (columnAlignments t) }
 
 -- | Set the alignment for the specified row index (starting at
--- zero).
+-- zero). Silently does nothing if the index is out of range.
 setRowAlignment :: RowAlignment -> Int -> Table n -> Table n
 setRowAlignment a row t =
     t { rowAlignments = M.insert row a (rowAlignments t) }
