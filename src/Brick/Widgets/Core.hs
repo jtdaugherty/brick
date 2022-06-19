@@ -194,7 +194,7 @@ separateBorders p = Widget (hSize p) (vSize p) $
 --
 -- Frozen borders cannot be thawed.
 freezeBorders :: Widget n -> Widget n
-freezeBorders p = Widget (hSize p) (vSize p) $ (bordersL .~ BM.empty) <$> render p
+freezeBorders p = Widget (hSize p) (vSize p) $ (bordersL %~ BM.clear) <$> render p
 
 -- | The empty widget.
 emptyWidget :: Widget n

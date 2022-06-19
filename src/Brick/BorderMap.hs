@@ -7,7 +7,7 @@ module Brick.BorderMap
     ( BorderMap
     , Edges(..)
     , eTopL, eBottomL, eRightL, eLeftL
-    , empty, emptyCoordinates, singleton
+    , empty, clear, emptyCoordinates, singleton
     , insertH, insertV, insert
     , unsafeUnion
     , coordinates, bounds
@@ -54,14 +54,23 @@ data BorderMap a = BorderMap
 emptyCoordinates :: Edges Int -> BorderMap a
 emptyCoordinates cs = BorderMap { _coordinates = cs, _values = pure IM.empty }
 
--- | An empty 'BorderMap' that only tracks the point (0,0).
+-- | An empty 'BorderMap' that tracks the same points as the input.
+clear :: BorderMap a -> BorderMap b
+clear = emptyCoordinates . coordinates
+
+-- | An empty 'BorderMap' that does not track any points.
 empty :: BorderMap a
-empty = emptyCoordinates (pure 0)
+empty = emptyCoordinates Edges
+    { eTop = 0
+    , eBottom = -1
+    , eLeft = 0
+    , eRight = -1
+    }
 
 -- | A 'BorderMap' that tracks only the given the point (and initially maps it
 -- to the given value).
 singleton :: Location -> a -> BorderMap a
-singleton l v = translate l . insert origin v $ empty
+singleton l v = translate l . insert origin v . emptyCoordinates $ pure 0
 
 {-# INLINE coordinates #-}
 -- | The positions of the edges of the rectangle whose border is retained in a
