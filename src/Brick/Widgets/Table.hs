@@ -101,6 +101,20 @@ data Table n =
 -- list being the contents of the cells in in each column of the
 -- respective row.
 --
+-- Each row's height is determined by the height of the tallest cell
+-- in that row, and each column's width is determined by the width of
+-- the widest cell in that column. This means that control over row
+-- and column dimensions is a matter of controlling the size of the
+-- individual cells, such as by wrapping cell contents in padding,
+-- 'fill' and 'hLimit' or 'vLimit', etc. This also means that it is not
+-- necessary to explicitly set the width of most table cells because
+-- the table will determine the per-row and per-column dimensions by
+-- looking at the largest cell contents. In particular, this means
+-- that the table's alignment logic only has an effect when a given
+-- cell's contents are smaller than the maximum for its row and column,
+-- thus giving the table some way to pad the contents to result in the
+-- desired alignment.
+--
 -- By default:
 --
 -- * All columns are left-aligned. Use the alignment functions in this
