@@ -97,9 +97,9 @@ data Table n =
 
 -- | Construct a new table.
 --
--- The argument is the list of rows, with each element of the argument
--- list being the contents of the cells in in each column of the
--- respective row.
+-- The argument is the list of rows with the topmost row first, with
+-- each element of the argument list being the contents of the cells in
+-- in each column of the respective row, with the leftmost cell first.
 --
 -- Each row's height is determined by the height of the tallest cell
 -- in that row, and each column's width is determined by the width of
