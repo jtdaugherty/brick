@@ -20,6 +20,7 @@ Example
 Here's an example interface (see `programs/ReadmeDemo.hs`):
 
 ```
+joinBorders $
 withBorderStyle unicode $
 borderWithLabel (str "Hello!") $
 (center (str "Left") <+> vBorder <+> center (str "Right"))
