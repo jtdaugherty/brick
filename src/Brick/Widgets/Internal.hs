@@ -4,6 +4,7 @@ module Brick.Widgets.Internal
   , cropToContext
   , cropResultToContext
   , renderDynBorder
+  , renderWidget
   )
 where
 
@@ -13,6 +14,7 @@ import Control.Monad (forM_)
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Reader
 import qualified Data.Map as M
+import qualified Data.Set as S
 import Data.Maybe (catMaybes)
 import qualified Graphics.Vty as V
 
@@ -154,3 +156,27 @@ renderDynBorder db = V.char (dbAttr db) $ getBorderChar $ dbStyle db
             Edges True  True  False True  -> bsIntersectL
             Edges True  True  True  False -> bsIntersectR
             Edges True  True  True  True  -> bsIntersectFull
+
+-- | This is a debug-only function to easily render a list of Widgets
+-- as a 'V.Picture'. You can use it with ghcid, or even for golden testing
+-- with 'Graphics.Vty.Output.Mock.mockTerminal'.
+renderWidget :: (Ord n) 
+            => AttrMap 
+            -> [Widget n] 
+            -> V.DisplayRegion 
+            -> ([CursorLocation n] -> Maybe (CursorLocation n)) 
+            -> (V.Picture, Maybe (CursorLocation n), [Extent n])
+renderWidget aMap layerRenders (w, h) chooseCursor =
+  (pic, mloc, exts)
+  where
+    initialRS =
+      RS
+        { viewportMap = M.empty,
+          rsScrollRequests = [],
+          observedNames = S.empty,
+          renderCache = mempty,
+          clickableNames = [],
+          requestedVisibleNames_ = S.empty,
+          reportedExtents = mempty
+        }
+    (_, pic, mloc, exts) = renderFinal aMap layerRenders (w, h) chooseCursor initialRS

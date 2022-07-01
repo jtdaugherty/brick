@@ -13,6 +13,7 @@ import qualified Data.IMap as IMap
 import qualified Data.IntMap as IntMap
 
 import qualified List
+import qualified Render
 
 instance Arbitrary v => Arbitrary (Run v) where
     arbitrary = liftA2 (\(Positive n) -> Run n) arbitrary arbitrary
@@ -111,5 +112,5 @@ return []
 
 main :: IO ()
 main =
-  (all id <$> sequenceA [$quickCheckAll, List.main])
+  (all id <$> sequenceA [$quickCheckAll, List.main, Render.main])
   >>= bool exitFailure exitSuccess
