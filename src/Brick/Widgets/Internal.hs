@@ -157,17 +157,40 @@ renderDynBorder db = V.char (dbAttr db) $ getBorderChar $ dbStyle db
             Edges True  True  True  False -> bsIntersectR
             Edges True  True  True  True  -> bsIntersectFull
 
--- | This is a debug-only function to easily render a list of Widgets
--- as a 'V.Picture'. You can use it with ghcid, or even for golden testing
--- with 'Graphics.Vty.Output.Mock.mockTerminal'.
+-- | This functions renders a list of 'Widget's as a 'V.Picture',
+-- bypassing the interactive components. It can be helpful in case
+-- you only need the output; still in general it's preferrable to use
+-- the main, interactive API. As of now, and before there's a proven use and need,
+-- this function is considered an exposed internal mechanism,
+-- doesn't promise to address all the corner cases and must be used with caution.
+--
+-- Consult [vty docs](https://hackage.haskell.org/package/vty-5.35.1/docs/Graphics-Vty-Output.html)
+-- on how to output the resulting 'V.Picture'.
+--
+-- An example function that renders a couple of Widgets and outputs the result on the screen:
+--
+-- @
+--      import qualified Graphics.Vty as V
+--
+--      renderDisplay :: Ord n => [Widget n] -> IO ()
+--      renderDisplay ws = do
+--        outp <- V.outputForConfig V.defaultConfig
+--        ctx <- V.displayContext outp region
+--        V.outputPicture ctx (renderToPicture ws)
+--
+--      myRender :: IO ()
+--      myRender = do
+--        renderDisplay @() [str "Why" <=> hBorder <=> str "Not?"]
+--        putStrLn "" -- this empty line makes sure the cursor assumes
+--                    -- the correct position after the output
+-- @
+--
+-- As a suggestion for usage, you can use it with `ghcid` to quickly iterate on how a Widget looks.
 renderWidget :: (Ord n) 
-            => AttrMap 
-            -> [Widget n] 
+            => [Widget n] 
             -> V.DisplayRegion 
-            -> ([CursorLocation n] -> Maybe (CursorLocation n)) 
-            -> (V.Picture, Maybe (CursorLocation n), [Extent n])
-renderWidget aMap layerRenders (w, h) chooseCursor =
-  (pic, mloc, exts)
+            -> V.Picture
+renderWidget layerRenders (w, h) = pic
   where
     initialRS =
       RS
@@ -179,4 +202,4 @@ renderWidget aMap layerRenders (w, h) chooseCursor =
           requestedVisibleNames_ = S.empty,
           reportedExtents = mempty
         }
-    (_, pic, mloc, exts) = renderFinal aMap layerRenders (w, h) chooseCursor initialRS
+    (_renderState, pic, _mloc, _exts) = renderFinal (attrMap V.defAttr []) layerRenders (w, h) (const Nothing) initialRS
