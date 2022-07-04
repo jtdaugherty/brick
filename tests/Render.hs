@@ -8,6 +8,7 @@ where
 import Brick
 import qualified Graphics.Vty as V
 import Brick.Widgets.Border (hBorder)
+import Control.Exception (try)
 
 region :: V.DisplayRegion
 region = (30, 10)
@@ -28,8 +29,11 @@ renderedMyWidget = "Picture ?? [VertJoin {partTop = VertJoin {partTop = HorizTex
 main :: IO Bool
 main =
   do 
-      renderDisplay [myWidget]
-      
+      result <- try (renderDisplay [myWidget]) :: IO (Either V.VtyConfigurationError ())
+      case result of
+        Left _ -> putStrLn "Terminal is not available"
+        Right () -> return ()
+
       print $ show $ renderWidget [myWidget] region
 
       return $
