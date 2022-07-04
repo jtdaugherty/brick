@@ -33,7 +33,12 @@ main = do
     case result of
         Left _ -> do
             putStrLn "Terminal is not available"
-            return False
+            -- Even though we could not actually run the test, we return
+            -- True here to prevent the absence of a terminal from
+            -- causing a test suite failure in an automated context.
+            -- This means that this test effectively doesn't get
+            -- considered at all in the automated context.
+            return True
         Right () -> do
             let matched = actualResult == expectedResult
                 actualResult = show (renderWidget Nothing [myWidget] region)
