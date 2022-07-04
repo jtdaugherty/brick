@@ -17,7 +17,7 @@ renderDisplay :: Ord n => [Widget n] -> IO ()
 renderDisplay ws = do
   outp <- V.outputForConfig V.defaultConfig
   ctx <- V.displayContext outp region
-  V.outputPicture ctx (renderWidget ws region)
+  V.outputPicture ctx (renderWidget Nothing ws region)
 
 myWidget :: Widget ()
 myWidget = str "Why" <=> hBorder <=> str "not?"
@@ -34,7 +34,7 @@ main =
         Left _ -> putStrLn "Terminal is not available"
         Right () -> return ()
 
-      print $ show $ renderWidget [myWidget] region
+      print $ show $ renderWidget Nothing [myWidget] region
 
       return $
-        show (renderWidget [myWidget] region) == renderedMyWidget
+        show (renderWidget Nothing [myWidget] region) == renderedMyWidget
