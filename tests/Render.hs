@@ -32,7 +32,7 @@ main = do
     result <- try (renderDisplay [myWidget]) :: IO (Either V.VtyConfigurationError ())
     case result of
         Left _ -> do
-            putStrLn "Terminal is not available"
+            putStrLn "Terminal is not available, skipping test"
             -- Even though we could not actually run the test, we return
             -- True here to prevent the absence of a terminal from
             -- causing a test suite failure in an automated context.
