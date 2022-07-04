@@ -158,48 +158,49 @@ renderDynBorder db = V.char (dbAttr db) $ getBorderChar $ dbStyle db
             Edges True  True  True  True  -> bsIntersectFull
 
 -- | This functions renders a list of 'Widget's as a 'V.Picture',
--- bypassing the interactive components. It can be helpful in case
--- you only need the output; still in general it's preferrable to use
--- the main, interactive API. As of now, and before there's a proven use and need,
--- this function is considered an exposed internal mechanism,
--- doesn't promise to address all the corner cases and must be used with caution.
+-- bypassing the interactive components. It can be helpful in case you
+-- only need the output; still in general it's preferrable to use the
+-- main, interactive API. As of now, and before there's a proven use
+-- and need, this function is considered an exposed internal mechanism,
+-- doesn't promise to address all the corner cases and must be used with
+-- caution.
 --
 -- Consult [vty docs](https://hackage.haskell.org/package/vty-5.35.1/docs/Graphics-Vty-Output.html)
 -- on how to output the resulting 'V.Picture'.
 --
--- An example function that renders a couple of Widgets and outputs the result on the screen:
+-- An example function that renders a couple of Widgets and outputs the
+-- result on the screen:
 --
 -- @
 --      import qualified Graphics.Vty as V
 --
 --      renderDisplay :: Ord n => [Widget n] -> IO ()
 --      renderDisplay ws = do
---        outp <- V.outputForConfig V.defaultConfig
---        ctx <- V.displayContext outp region
---        V.outputPicture ctx (renderToPicture ws)
+--          outp <- V.outputForConfig V.defaultConfig
+--          ctx <- V.displayContext outp region
+--          V.outputPicture ctx (renderToPicture ws)
 --
 --      myRender :: IO ()
 --      myRender = do
---        renderDisplay @() [str "Why" <=> hBorder <=> str "Not?"]
---        putStrLn "" -- this empty line makes sure the cursor assumes
---                    -- the correct position after the output
+--          renderDisplay @() [str "Why" <=> hBorder <=> str "Not?"]
+--          putStrLn "" -- this empty line makes sure the cursor assumes
+--                      -- the correct position after the output
 -- @
---
--- As a suggestion for usage, you can use it with `ghcid` to quickly iterate on how a Widget looks.
-renderWidget :: (Ord n) 
-            => [Widget n] 
-            -> V.DisplayRegion 
-            -> V.Picture
+renderWidget :: (Ord n)
+             => [Widget n]
+             -> V.DisplayRegion
+             -> V.Picture
 renderWidget layerRenders (w, h) = pic
-  where
-    initialRS =
-      RS
-        { viewportMap = M.empty,
-          rsScrollRequests = [],
-          observedNames = S.empty,
-          renderCache = mempty,
-          clickableNames = [],
-          requestedVisibleNames_ = S.empty,
-          reportedExtents = mempty
-        }
-    (_renderState, pic, _mloc, _exts) = renderFinal (attrMap V.defAttr []) layerRenders (w, h) (const Nothing) initialRS
+    where
+        initialRS = RS { viewportMap = M.empty
+                       , rsScrollRequests = []
+                       , observedNames = S.empty
+                       , renderCache = mempty
+                       , clickableNames = []
+                       , requestedVisibleNames_ = S.empty
+                       , reportedExtents = mempty
+                       }
+        (_, pic, _, _) = renderFinal (attrMap V.defAttr [])
+                                     layerRenders (w, h)
+                                     (const Nothing)
+                                     initialRS
