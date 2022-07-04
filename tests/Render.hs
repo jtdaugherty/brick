@@ -1,8 +1,7 @@
 {-# LANGUAGE TypeApplications #-}
 module Render
-  ( main,
+  ( main
   )
-
 where
 
 import Brick
