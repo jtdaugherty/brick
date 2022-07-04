@@ -13,6 +13,7 @@ import Lens.Micro.Mtl ((%=))
 import Control.Monad (forM_)
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Reader
+import Data.Maybe (fromMaybe)
 import qualified Data.Map as M
 import qualified Data.Set as S
 import Data.Maybe (catMaybes)
@@ -157,40 +158,27 @@ renderDynBorder db = V.char (dbAttr db) $ getBorderChar $ dbStyle db
             Edges True  True  True  False -> bsIntersectR
             Edges True  True  True  True  -> bsIntersectFull
 
--- | This functions renders a list of 'Widget's as a 'V.Picture',
--- bypassing the interactive components. It can be helpful in case you
--- only need the output; still in general it's preferrable to use the
--- main, interactive API. As of now, and before there's a proven use
--- and need, this function is considered an exposed internal mechanism,
--- doesn't promise to address all the corner cases and must be used with
--- caution.
+-- | This function provides a simplified interface to rendering a list
+-- of 'Widget's as a 'V.Picture' outside of the context of an 'App'.
+-- This can be useful in a testing setting but isn't intended to be used
+-- for normal application rendering. The API is deliberately narrower
+-- than the main interactive API and is not yet stable. Use at your own
+-- risk.
 --
--- Consult [vty docs](https://hackage.haskell.org/package/vty-5.35.1/docs/Graphics-Vty-Output.html)
--- on how to output the resulting 'V.Picture'.
---
--- An example function that renders a couple of Widgets and outputs the
--- result on the screen:
---
--- @
---      import qualified Graphics.Vty as V
---
---      renderDisplay :: Ord n => [Widget n] -> IO ()
---      renderDisplay ws = do
---          outp <- V.outputForConfig V.defaultConfig
---          ctx <- V.displayContext outp region
---          V.outputPicture ctx (renderToPicture ws)
---
---      myRender :: IO ()
---      myRender = do
---          renderDisplay @() [str "Why" <=> hBorder <=> str "Not?"]
---          putStrLn "" -- this empty line makes sure the cursor assumes
---                      -- the correct position after the output
--- @
+-- Consult the [Vty library documentation](https://hackage.haskell.org/package/vty)
+-- for details on how to output the resulting 'V.Picture'.
 renderWidget :: (Ord n)
-             => [Widget n]
+             => Maybe AttrMap
+             -- ^ Optional attribute map used to render. If omitted,
+             -- an empty attribute map with the terminal's default
+             -- attribute will be used.
+             -> [Widget n]
+             -- ^ The widget layers to render, topmost first.
              -> V.DisplayRegion
+             -- ^ The size of the display region in which to render the
+             -- layers.
              -> V.Picture
-renderWidget layerRenders (w, h) = pic
+renderWidget mAttrMap layerRenders region = pic
     where
         initialRS = RS { viewportMap = M.empty
                        , rsScrollRequests = []
@@ -200,7 +188,5 @@ renderWidget layerRenders (w, h) = pic
                        , requestedVisibleNames_ = S.empty
                        , reportedExtents = mempty
                        }
-        (_, pic, _, _) = renderFinal (attrMap V.defAttr [])
-                                     layerRenders (w, h)
-                                     (const Nothing)
-                                     initialRS
+        am = fromMaybe (attrMap V.defAttr []) mAttrMap
+        (_, pic, _, _) = renderFinal am layerRenders region (const Nothing) initialRS
