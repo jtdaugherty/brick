@@ -47,6 +47,7 @@ module Brick.Main
   , renderFinal
   , getRenderState
   , resetRenderState
+  , renderWidget
   )
 where
 
