@@ -5,6 +5,7 @@ module Render
 where
 
 import Brick
+import Control.Monad (when)
 import qualified Graphics.Vty as V
 import Brick.Widgets.Border (hBorder)
 import Control.Exception (try)
@@ -25,7 +26,7 @@ myWidget = str "Why" <=> hBorder <=> str "not?"
 -- Since you can't Read a Picture, we have to compare the result with
 -- the Shown one
 expectedResult :: String
-expectedResult = "Picture ?? [VertJoin {partTop = VertJoin {partTop = HorizText {attr = Attr {attrStyle = Default, attrForeColor = Default, attrBackColor = Default, attrURL = Default}, displayText = \"Why                           \", outputWidth = 30, charWidth = 30}, partBottom = VertJoin {partTop = HorizText {attr = Attr {attrStyle = Default, attrForeColor = Default, attrBackColor = Default, attrURL = Default}, displayText = \"\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\", outputWidth = 30, charWidth = 30}, partBottom = HorizText {attr = Attr {attrStyle = Default, attrForeColor = Default, attrBackColor = Default, attrURL = Default}, displayText = \"not?                          \", outputWidth = 30, charWidth = 30}, outputWidth = 30, outputHeight = 2}, outputWidth = 30, outputHeight = 3}, partBottom = BGFill {outputWidth = 30, outputHeight = 7}, outputWidth = 30, outputHeight = 10}] ??"
+expectedResult = "Picture {picCursor = NoCursor, picLayers = [VertJoin {partTop = VertJoin {partTop = HorizText {attr = Attr {attrStyle = Default, attrForeColor = Default, attrBackColor = Default, attrURL = Default}, displayText = \"Why                           \", outputWidth = 30, charWidth = 30}, partBottom = VertJoin {partTop = HorizText {attr = Attr {attrStyle = Default, attrForeColor = Default, attrBackColor = Default, attrURL = Default}, displayText = \"\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\\9472\", outputWidth = 30, charWidth = 30}, partBottom = HorizText {attr = Attr {attrStyle = Default, attrForeColor = Default, attrBackColor = Default, attrURL = Default}, displayText = \"not?                          \", outputWidth = 30, charWidth = 30}, outputWidth = 30, outputHeight = 2}, outputWidth = 30, outputHeight = 3}, partBottom = BGFill {outputWidth = 30, outputHeight = 7}, outputWidth = 30, outputHeight = 10}], picBackground = Background {backgroundChar = ' ', backgroundAttr = Attr {attrStyle = Default, attrForeColor = Default, attrBackColor = Default, attrURL = Default}}}"
 
 main :: IO Bool
 main = do
@@ -46,4 +47,12 @@ main = do
 
             putStrLn ""
             putStrLn $ "renderWidget test outcome: " <> msg
+
+            when (not matched) $ do
+                putStrLn "Expected result:"
+                putStrLn expectedResult
+
+                putStrLn "Actual result:"
+                putStrLn actualResult
+
             return matched
