@@ -2,6 +2,21 @@
 Brick changelog
 ---------------
 
+0.71
+----
+
+Package changes:
+ * Increased `vty` lower bound to `5.36`.
+
+API changes:
+ * Added `tests/Render.hs` to provide a simple test of
+   `Brick.Main.renderWidget` (thanks @valyagolev)
+ * Added `Brick.Main.renderWidget` to help in golden testing contexts
+   (thanks @valyagolev)
+
+Other changes:
+ * Various `table` documentation improvements.
+
 0.70.1
 ------
 
