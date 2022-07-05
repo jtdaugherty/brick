@@ -59,6 +59,7 @@ import Control.Monad.Trans.State
 import Control.Monad.Trans.Reader
 import Control.Concurrent (forkIO, killThread)
 import qualified Data.Foldable as F
+import Data.List (find)
 import Data.Maybe (listToMaybe)
 import qualified Data.Map as M
 import qualified Data.Set as S
@@ -309,9 +310,9 @@ runVty :: (Ord n)
        -> Bool
        -> IO (Next s, RenderState n, [Extent n])
 runVty vty readEvent app appState rs prevExtents draw = do
-    (firstRS, exts) <- case draw of
-        True -> renderApp vty app appState rs
-        False -> return (rs, prevExtents)
+    (firstRS, exts) <- if draw
+                       then renderApp vty app appState rs
+                       else return (rs, prevExtents)
 
     e <- readEvent
 
@@ -330,23 +331,23 @@ runVty vty readEvent app appState rs prevExtents draw = do
                     -- If the clicked extent was registered as
                     -- clickable, send a click event. Otherwise, just
                     -- send the raw mouse event
-                    case n `elem` firstRS^.clickableNamesL of
-                        True -> do
-                            let localCoords = Location (lc, lr)
-                                lc = c - ec
-                                lr = r - er
+                    if n `elem` firstRS^.clickableNamesL
+                    then do
+                        let localCoords = Location (lc, lr)
+                            lc = c - ec
+                            lr = r - er
 
-                                -- If the clicked extent was a viewport,
-                                -- adjust the local coordinates by
-                                -- adding the viewport upper-left corner
-                                -- offset.
-                                newCoords = case M.lookup n (viewportMap firstRS) of
-                                  Nothing -> localCoords
-                                  Just vp -> localCoords & _1 %~ (+ (vp^.vpLeft))
-                                                         & _2 %~ (+ (vp^.vpTop))
+                            -- If the clicked extent was a viewport,
+                            -- adjust the local coordinates by
+                            -- adding the viewport upper-left corner
+                            -- offset.
+                            newCoords = case M.lookup n (viewportMap firstRS) of
+                              Nothing -> localCoords
+                              Just vp -> localCoords & _1 %~ (+ (vp^.vpLeft))
+                                                     & _2 %~ (+ (vp^.vpTop))
 
-                            return (MouseDown n button mods newCoords, firstRS, exts)
-                        False -> return (e, firstRS, exts)
+                        return (MouseDown n button mods newCoords, firstRS, exts)
+                    else return (e, firstRS, exts)
                 _ -> return (e, firstRS, exts)
         VtyEvent (EvMouseUp c r button) -> do
             let matching = findClickedExtents_ (c, r) exts
@@ -355,21 +356,21 @@ runVty vty readEvent app appState rs prevExtents draw = do
                     -- If the clicked extent was registered as
                     -- clickable, send a click event. Otherwise, just
                     -- send the raw mouse event
-                    case n `elem` firstRS^.clickableNamesL of
-                        True -> do
-                            let localCoords = Location (lc, lr)
-                                lc = c - ec
-                                lr = r - er
-                                -- If the clicked extent was a viewport,
-                                -- adjust the local coordinates by
-                                -- adding the viewport upper-left corner
-                                -- offset.
-                                newCoords = case M.lookup n (viewportMap firstRS) of
-                                  Nothing -> localCoords
-                                  Just vp -> localCoords & _1 %~ (+ (vp^.vpLeft))
-                                                         & _2 %~ (+ (vp^.vpTop))
-                            return (MouseUp n button newCoords, firstRS, exts)
-                        False -> return (e, firstRS, exts)
+                    if n `elem` firstRS^.clickableNamesL
+                    then do
+                        let localCoords = Location (lc, lr)
+                            lc = c - ec
+                            lr = r - er
+                            -- If the clicked extent was a viewport,
+                            -- adjust the local coordinates by
+                            -- adding the viewport upper-left corner
+                            -- offset.
+                            newCoords = case M.lookup n (viewportMap firstRS) of
+                              Nothing -> localCoords
+                              Just vp -> localCoords & _1 %~ (+ (vp^.vpLeft))
+                                                     & _2 %~ (+ (vp^.vpTop))
+                        return (MouseUp n button newCoords, firstRS, exts)
+                    else return (e, firstRS, exts)
                 _ -> return (e, firstRS, exts)
         _ -> return (e, firstRS, exts)
 
@@ -422,7 +423,7 @@ clickedExtent (c, r) (Extent _ (Location (lc, lr)) (w, h)) =
 -- | Given a resource name, get the most recent rendering extent for the
 -- name (if any).
 lookupExtent :: (Eq n) => n -> EventM n (Maybe (Extent n))
-lookupExtent n = EventM $ asks (listToMaybe . filter f . latestExtents)
+lookupExtent n = EventM $ asks (find f . latestExtents)
     where
         f (Extent n' _ _) = n == n'
 
@@ -500,7 +501,7 @@ showFirstCursor = const listToMaybe
 showCursorNamed :: (Eq n) => n -> [CursorLocation n] -> Maybe (CursorLocation n)
 showCursorNamed name locs =
     let matches l = l^.cursorLocationNameL == Just name
-    in listToMaybe $ filter matches locs
+    in find matches locs
 
 -- | A viewport scrolling handle for managing the scroll state of
 -- viewports.
