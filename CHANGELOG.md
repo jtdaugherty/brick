@@ -2,6 +2,13 @@
 Brick changelog
 ---------------
 
+0.71.1
+------
+
+Bug fixes:
+ * Fixed an issue where `tests/Render.hs` did not gracefully exit in the
+   presence of an unknown terminal.
+
 0.71
 ----
 
