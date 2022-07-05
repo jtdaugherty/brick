@@ -12,7 +12,7 @@ import Data.Monoid
 #endif
 import qualified Graphics.Vty as V
 import Brick.Widgets.Border (hBorder)
-import Control.Exception (try)
+import Control.Exception (SomeException, try)
 
 region :: V.DisplayRegion
 region = (30, 10)
@@ -34,7 +34,7 @@ expectedResult = "Picture {picCursor = NoCursor, picLayers = [VertJoin {partTop 
 
 main :: IO Bool
 main = do
-    result <- try (renderDisplay [myWidget]) :: IO (Either V.VtyConfigurationError ())
+    result <- try (renderDisplay [myWidget]) :: IO (Either SomeException ())
     case result of
         Left _ -> do
             putStrLn "Terminal is not available, skipping test"
