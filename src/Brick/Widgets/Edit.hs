@@ -25,6 +25,7 @@ module Brick.Widgets.Edit
   , editorText
   -- * Reading editor contents
   , getEditContents
+  , getCursorPosition
   -- * Handling events
   , handleEditorEvent
   -- * Editing text
@@ -192,6 +193,10 @@ editFocusedAttr = editAttr <> "focused"
 -- | Get the contents of the editor.
 getEditContents :: Monoid t => Editor t n -> [t]
 getEditContents e = Z.getText $ e^.editContentsL
+
+-- | Get the cursor position of the editor (row, column)
+getCursorPosition :: Editor t n -> (Int, Int)
+getCursorPosition e = Z.cursorPosition $ e^.editContentsL
 
 -- | Turn an editor state value into a widget. This uses the editor's
 -- name for its scrollable viewport handle and the name is also used to
