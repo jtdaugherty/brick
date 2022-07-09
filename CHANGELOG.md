@@ -21,9 +21,6 @@ Bug fixes:
  * Fixed an issue where `tests/Render.hs` did not gracefully exit in the
    presence of an unknown terminal.
 
-API changes:
- * Added `Brick.Widgets.Edit.getCursorPosition` helper function.
-
 0.71
 ----
 
