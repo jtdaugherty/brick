@@ -2,6 +2,18 @@
 Brick changelog
 ---------------
 
+0.72
+----
+
+Package changes:
+ * Increased lower bound on `text-zipper` to `0.12`.
+
+API changes:
+ * `handleEditorEvent` now takes a `BrickEvent` rather than just a Vty
+   `Event`.
+ * Brick editors now handle mouse clicks to change their cursor
+   positions.
+
 0.71.1
 ------
 
