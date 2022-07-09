@@ -125,7 +125,7 @@ handleEditorEvent e ed = return $ applyEdit f ed
               VtyEvent ev ->
                   handleVtyEvent ev
               MouseDown n _ _ (Location pos) | n == getName ed ->
-                  Z.moveCursor (swap pos)
+                  Z.moveCursorClosest (swap pos)
               _ -> id
         handleVtyEvent ev = case ev of
             EvPaste bs -> case decodeUtf8 bs of
