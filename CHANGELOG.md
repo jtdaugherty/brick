@@ -2,6 +2,13 @@
 Brick changelog
 ---------------
 
+0.73
+----
+
+API changes:
+ * Added `Brick.Widgets.Edit.getCursorPosition` (thanks
+   @TristanCacqueray)
+
 0.72
 ----
 
