@@ -53,6 +53,7 @@ import qualified Data.Text.Encoding as T
 import qualified Data.Text.Zipper as Z hiding ( textZipper )
 import qualified Data.Text.Zipper.Generic as Z
 import qualified Data.Text.Zipper.Generic.Words as Z
+import Data.Tuple (swap)
 
 import Brick.Types
 import Brick.Widgets.Core
@@ -114,14 +115,17 @@ instance DecodeUtf8 T.Text where
 instance DecodeUtf8 String where
     decodeUtf8 bs = T.unpack <$> decodeUtf8 bs
 
-handleEditorEvent :: (DecodeUtf8 t, Eq t, Z.GenericTextZipper t)
+handleEditorEvent :: (Eq n, DecodeUtf8 t, Eq t, Z.GenericTextZipper t)
                   => BrickEvent n e
                   -> Editor t n
                   -> EventM n (Editor t n)
 handleEditorEvent e ed = return $ applyEdit f ed
     where
         f = case e of
-              VtyEvent ev -> handleVtyEvent ev
+              VtyEvent ev ->
+                  handleVtyEvent ev
+              MouseDown n _ _ (Location pos) | n == getName ed ->
+                  Z.moveCursor (swap pos)
               _ -> id
         handleVtyEvent ev = case ev of
             EvPaste bs -> case decodeUtf8 bs of

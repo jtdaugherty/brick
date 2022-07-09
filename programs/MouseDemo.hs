@@ -3,7 +3,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Main where
 
-import Lens.Micro ((^.), (&), (.~), (%~))
+import Lens.Micro ((^.), (&), (.~))
 import Lens.Micro.TH (makeLenses)
 import Control.Monad (void)
 #if !(MIN_VERSION_base(4,11,0))
@@ -20,8 +20,6 @@ import qualified Brick.Widgets.Edit as E
 import qualified Brick.Widgets.Center as C
 import qualified Brick.Widgets.Border as B
 import Brick.Widgets.Core
-import Data.Text.Zipper (moveCursor)
-import Data.Tuple (swap)
 
 data Name = Info | Button1 | Button2 | Button3 | Prose | TextBox
           deriving (Show, Ord, Eq)
@@ -86,10 +84,11 @@ infoLayer st = T.Widget T.Fixed T.Fixed $ do
                C.hCenter $ str msg
 
 appEvent :: St -> T.BrickEvent Name e -> T.EventM Name (T.Next St)
-appEvent st (T.MouseDown n _ _ loc) = do
-    let T.Location pos = loc
-    M.continue $ st & lastReportedClick .~ Just (n, loc)
-                    & edit %~ E.applyEdit (if n == TextBox then moveCursor (swap pos) else id)
+appEvent st ev@(T.MouseDown n _ _ loc) =
+    M.continue =<< T.handleEventLensed (st & lastReportedClick .~ Just (n, loc))
+                                       edit
+                                       E.handleEditorEvent
+                                       ev
 appEvent st (T.MouseUp {}) = M.continue $ st & lastReportedClick .~ Nothing
 appEvent st (T.VtyEvent (V.EvMouseUp {})) = M.continue $ st & lastReportedClick .~ Nothing
 appEvent st (T.VtyEvent (V.EvKey V.KUp [V.MCtrl])) = M.vScrollBy (M.viewportScroll Prose) (-1) >> M.continue st
