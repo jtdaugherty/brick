@@ -522,15 +522,13 @@ editField stLens n limit ini val renderText wrapEditor initialState =
                      then id
                      else Z.moveCursor pos
         initialText = ini $ initialState ^. stLens
-        handleEvent (VtyEvent e) ed = handleEditorEvent e ed
-        handleEvent _ ed = return ed
 
     in FormFieldState { formFieldState = initVal
                       , formFields = [ FormField n
                                                  (val . getEditContents)
                                                  True
                                                  (\b e -> wrapEditor $ renderEditor renderText b e)
-                                                 handleEvent
+                                                 handleEditorEvent
                                      ]
                       , formFieldLens = stLens
                       , formFieldUpdate = \newVal e ->

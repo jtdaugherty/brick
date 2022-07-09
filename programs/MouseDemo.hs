@@ -95,8 +95,7 @@ appEvent st (T.VtyEvent (V.EvMouseUp {})) = M.continue $ st & lastReportedClick 
 appEvent st (T.VtyEvent (V.EvKey V.KUp [V.MCtrl])) = M.vScrollBy (M.viewportScroll Prose) (-1) >> M.continue st
 appEvent st (T.VtyEvent (V.EvKey V.KDown [V.MCtrl])) = M.vScrollBy (M.viewportScroll Prose) 1 >> M.continue st
 appEvent st (T.VtyEvent (V.EvKey V.KEsc [])) = M.halt st
-appEvent st (T.VtyEvent ev) = M.continue =<< T.handleEventLensed st edit E.handleEditorEvent ev
-appEvent st _ = M.continue st
+appEvent st ev = M.continue =<< T.handleEventLensed st edit E.handleEditorEvent ev
 
 aMap :: AttrMap
 aMap = attrMap V.defAttr

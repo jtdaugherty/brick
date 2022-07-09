@@ -48,17 +48,17 @@ drawUI st = [ui]
             str "Press Tab to switch between editors, Esc to quit."
 
 appEvent :: St -> T.BrickEvent Name e -> T.EventM Name (T.Next St)
-appEvent st (T.VtyEvent ev) =
-    case ev of
-        V.EvKey V.KEsc [] -> M.halt st
-        V.EvKey (V.KChar '\t') [] -> M.continue $ st & focusRing %~ F.focusNext
-        V.EvKey V.KBackTab [] -> M.continue $ st & focusRing %~ F.focusPrev
-
-        _ -> M.continue =<< case F.focusGetCurrent (st^.focusRing) of
-               Just Edit1 -> T.handleEventLensed st edit1 E.handleEditorEvent ev
-               Just Edit2 -> T.handleEventLensed st edit2 E.handleEditorEvent ev
-               Nothing -> return st
-appEvent st _ = M.continue st
+appEvent st (T.VtyEvent (V.EvKey V.KEsc [])) =
+    M.halt st
+appEvent st (T.VtyEvent (V.EvKey (V.KChar '\t') [])) =
+    M.continue $ st & focusRing %~ F.focusNext
+appEvent st (T.VtyEvent (V.EvKey V.KBackTab [])) =
+    M.continue $ st & focusRing %~ F.focusPrev
+appEvent st ev =
+    M.continue =<< case F.focusGetCurrent (st^.focusRing) of
+      Just Edit1 -> T.handleEventLensed st edit1 E.handleEditorEvent ev
+      Just Edit2 -> T.handleEventLensed st edit2 E.handleEditorEvent ev
+      Nothing -> return st
 
 initialState :: St
 initialState =
