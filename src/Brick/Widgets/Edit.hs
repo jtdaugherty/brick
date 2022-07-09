@@ -203,7 +203,7 @@ editFocusedAttr = editAttr <> "focused"
 getEditContents :: Monoid t => Editor t n -> [t]
 getEditContents e = Z.getText $ e^.editContentsL
 
--- | Get the cursor position of the editor (row, column)
+-- | Get the cursor position of the editor (row, column).
 getCursorPosition :: Editor t n -> (Int, Int)
 getCursorPosition e = Z.cursorPosition $ e^.editContentsL
 
