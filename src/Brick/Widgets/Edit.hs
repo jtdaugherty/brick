@@ -62,6 +62,7 @@ import Brick.AttrMap
 
 -- | Editor state.  Editors support the following events by default:
 --
+-- * Mouse clicks: change cursor position
 -- * Meta-<: go to beginning of file
 -- * Meta->: go to end of file
 -- * Ctrl-a, Home: go to beginning of line
