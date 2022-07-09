@@ -118,8 +118,9 @@ handleEditorEvent :: (DecodeUtf8 t, Eq t, Z.GenericTextZipper t)
                   => Event
                   -> Editor t n
                   -> EventM n (Editor t n)
-handleEditorEvent e ed =
-    let f = case e of
+handleEditorEvent e ed = return $ applyEdit f ed
+    where
+        f = case e of
               EvPaste bs -> case decodeUtf8 bs of
                   Left _ -> id
                   Right t -> Z.insertMany t
@@ -147,7 +148,6 @@ handleEditorEvent e ed =
               EvKey (KChar '<') [MMeta] -> Z.gotoBOF
               EvKey (KChar '>') [MMeta] -> Z.gotoEOF
               _ -> id
-    in return $ applyEdit f ed
 
 -- | Construct an editor over 'Text' values
 editorText :: n
