@@ -166,4 +166,3 @@ data KeyEventHandler e m =
         , kehEventTrigger :: EventTrigger e
         -- ^ The trigger for the handler.
         }
-
