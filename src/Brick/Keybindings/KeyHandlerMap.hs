@@ -112,7 +112,7 @@ keyHandlersFromConfig kc eh =
         bindings = case kehEventTrigger eh of
             Static binding -> [binding]
             ByEvent ev     -> allBindingsFor ev
-    in [ KH eh b | b <- bindings ]
+    in [ KH { khHandler = eh, khKey = b } | b <- bindings ]
 
 mkHandler :: T.Text -> m () -> Handler m
 mkHandler msg action =
