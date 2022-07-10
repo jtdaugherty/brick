@@ -106,14 +106,13 @@ keyHandlersFromConfig :: (Ord e)
                       -> KeyEventHandler e m
                       -> [KeyHandler e m]
 keyHandlersFromConfig kc eh =
-    case kehEventTrigger eh of
-        Static binding ->
-            [ KH eh binding ]
-        ByEvent ev ->
-            [ KH eh b | b <- allBindings ]
-            where allBindings | Just (BindingList ks) <- lookupKeyConfigBindings kc ev = ks
-                              | Just Unbound <- lookupKeyConfigBindings kc ev = []
-                              | otherwise = allDefaultBindings kc ev
+    let allBindingsFor ev | Just (BindingList ks) <- lookupKeyConfigBindings kc ev = ks
+                          | Just Unbound <- lookupKeyConfigBindings kc ev = []
+                          | otherwise = allDefaultBindings kc ev
+        bindings = case kehEventTrigger eh of
+            Static binding -> [binding]
+            ByEvent ev     -> allBindingsFor ev
+    in [ KH eh b | b <- bindings ]
 
 mkHandler :: T.Text -> m () -> Handler m
 mkHandler msg action =
