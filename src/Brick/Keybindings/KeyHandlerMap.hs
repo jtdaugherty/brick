@@ -13,10 +13,6 @@ module Brick.Keybindings.KeyHandlerMap
   )
 where
 
-import Brick
-import Data.Maybe (fromJust)
-
-import qualified Data.Bimap as B
 import qualified Data.Map.Strict as M
 import qualified Data.Text as T
 import qualified Graphics.Vty as Vty
