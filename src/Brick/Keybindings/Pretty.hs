@@ -88,7 +88,8 @@ mkKeybindEventHelp kc h =
   let trig = kehEventTrigger h
       unbound = [Comment "(unbound)"]
       (label, evText) = case trig of
-          Static binding -> (Comment "(non-customizable key)", [Verbatim $ ppBinding binding])
+          ByKey binding ->
+              (Comment "(non-customizable key)", [Verbatim $ ppBinding binding])
           ByEvent ev ->
               let name = fromJust $ keyEventName (keyConfigEvents kc) ev
               in case lookupKeyConfigBindings kc ev of

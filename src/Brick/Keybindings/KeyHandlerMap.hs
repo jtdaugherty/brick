@@ -110,8 +110,8 @@ keyHandlersFromConfig kc eh =
                           | Just Unbound <- lookupKeyConfigBindings kc ev = []
                           | otherwise = allDefaultBindings kc ev
         bindings = case kehEventTrigger eh of
-            Static binding -> [binding]
-            ByEvent ev     -> allBindingsFor ev
+            ByKey binding -> [binding]
+            ByEvent ev    -> allBindingsFor ev
     in [ KH { khHandler = eh, khKey = b } | b <- bindings ]
 
 mkHandler :: T.Text -> m () -> Handler m
@@ -144,12 +144,12 @@ onKey :: (ToBinding a)
       -> KeyEventHandler e m
 onKey b msg action =
     KEH { kehHandler = mkHandler msg action
-        , kehEventTrigger = Static $ toBinding b
+        , kehEventTrigger = ByKey $ toBinding b
         }
 
 -- | A trigger for an event handler.
 data EventTrigger e =
-    Static Binding
+    ByKey Binding
     -- ^ The key event is always triggered by a specific key.
     | ByEvent e
     -- ^ The trigger is an abstract key event.
