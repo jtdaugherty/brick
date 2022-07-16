@@ -53,10 +53,8 @@ where
 
 import qualified Control.Exception as E
 import Lens.Micro ((^.), (&), (.~), (%~), _1, _2)
-import Control.Monad (forever)
-import Control.Monad.Trans.Class (lift)
-import Control.Monad.Trans.State
-import Control.Monad.Trans.Reader
+import Control.Monad.State
+import Control.Monad.Reader
 import Control.Concurrent (forkIO, killThread)
 import qualified Data.Foldable as F
 import Data.List (find)
@@ -110,13 +108,13 @@ data App s e n =
         -- is that many widgets may request a cursor placement but your
         -- application state is what you probably want to use to decide
         -- which one wins.
-        , appHandleEvent :: s -> BrickEvent n e -> EventM n (Next s)
+        , appHandleEvent :: BrickEvent n e -> EventM n s ()
         -- ^ This function takes the current application state and an
         -- event and returns an action to be taken and a corresponding
         -- transformed application state. Possible options are
         -- 'continue', 'continueWithoutRedraw', 'suspendAndResume', and
         -- 'halt'.
-        , appStartEvent :: s -> EventM n s
+        , appStartEvent :: EventM n s ()
         -- ^ This function gets called once just prior to the first
         -- drawing of your application. Here is where you can make
         -- initial scrolling requests, for example.
@@ -159,7 +157,7 @@ simpleApp :: Widget n -> App s e n
 simpleApp w =
     App { appDraw = const [w]
         , appHandleEvent = resizeOrQuit
-        , appStartEvent = return
+        , appStartEvent = return ()
         , appAttrMap = const $ attrMap defAttr []
         , appChooseCursor = neverShowCursor
         }
@@ -169,9 +167,9 @@ simpleApp w =
 -- a halt. This is a convenience function useful as an 'appHandleEvent'
 -- value for simple applications using the 'Event' type that do not need
 -- to get more sophisticated user input.
-resizeOrQuit :: s -> BrickEvent n e -> EventM n (Next s)
-resizeOrQuit s (VtyEvent (EvResize _ _)) = continue s
-resizeOrQuit s _ = halt s
+resizeOrQuit :: BrickEvent n e -> EventM n s ()
+resizeOrQuit (VtyEvent (EvResize _ _)) = continue
+resizeOrQuit _ = halt
 
 data InternalNext n a = InternalSuspendAndResume (RenderState n) (IO a)
                       | InternalHalt a
@@ -196,17 +194,17 @@ runWithVty vty brickChan mUserChan app initialRS initialSt = do
           let nextRS = if draw
                        then resetRenderState rs
                        else rs
-          (result, newRS, newExtents) <- runVty vty readEvent app st nextRS es draw
+          (nextSt, result, newRS, newExtents) <- runVty vty readEvent app st nextRS es draw
           case result of
               SuspendAndResume act -> do
                   killThread pid
                   return $ InternalSuspendAndResume newRS act
-              Halt s -> do
+              Halt -> do
                   killThread pid
-                  return $ InternalHalt s
-              Continue s -> runInner newRS newExtents True s
-              ContinueWithoutRedraw s ->
-                  runInner newRS newExtents False s
+                  return $ InternalHalt nextSt
+              Continue -> runInner newRS newExtents True nextSt
+              ContinueWithoutRedraw ->
+                  runInner newRS newExtents False nextSt
     runInner initialRS mempty True initialSt
 
 -- | The custom event loop entry point to use when the simpler ones
@@ -278,11 +276,11 @@ customMainWithVty initialVty buildVty mUserChan app initialAppState = do
                     newVty <- buildVty
                     run newVty (newRS { renderCache = mempty }) newAppState brickChan
 
-    let emptyES = ES [] mempty mempty
+    let emptyES = ES [] mempty mempty initialAppState Continue
         emptyRS = RS M.empty mempty S.empty mempty mempty mempty mempty
         eventRO = EventRO M.empty initialVty mempty emptyRS
 
-    (st, eState) <- runStateT (runReaderT (runEventM (appStartEvent app initialAppState)) eventRO) emptyES
+    ((), eState) <- runStateT (runReaderT (runEventM (appStartEvent app)) eventRO) emptyES
     let initialRS = RS { viewportMap = M.empty
                        , rsScrollRequests = esScrollRequests eState
                        , observedNames = S.empty
@@ -292,7 +290,7 @@ customMainWithVty initialVty buildVty mUserChan app initialAppState = do
                        , reportedExtents = mempty
                        }
     brickChan <- newBChan 20
-    run initialVty initialRS st brickChan
+    run initialVty initialRS (applicationState eState) brickChan
 
 supplyVtyEvents :: Vty -> BChan (BrickEvent n e) -> IO ()
 supplyVtyEvents vty chan =
@@ -308,7 +306,7 @@ runVty :: (Ord n)
        -> RenderState n
        -> [Extent n]
        -> Bool
-       -> IO (Next s, RenderState n, [Extent n])
+       -> IO (s, NextAction s, RenderState n, [Extent n])
 runVty vty readEvent app appState rs prevExtents draw = do
     (firstRS, exts) <- if draw
                        then renderApp vty app appState rs
@@ -374,12 +372,13 @@ runVty vty readEvent app appState rs prevExtents draw = do
                 _ -> return (e, firstRS, exts)
         _ -> return (e, firstRS, exts)
 
-    let emptyES = ES [] mempty mempty
+    let emptyES = ES [] mempty mempty appState Continue
         eventRO = EventRO (viewportMap nextRS) vty nextExts nextRS
 
-    (next, eState) <- runStateT (runReaderT (runEventM (appHandleEvent app appState e'))
+    ((), eState) <- runStateT (runReaderT (runEventM (appHandleEvent app e'))
                                 eventRO) emptyES
-    return ( next
+    return ( applicationState eState
+           , nextAction eState
            , nextRS { rsScrollRequests = esScrollRequests eState
                     , renderCache = applyInvalidations (cacheInvalidateRequests eState) $
                                     renderCache nextRS
@@ -410,7 +409,7 @@ applyInvalidations ns cache =
 -- associated functions without relying on this function. Those
 -- functions queue up scrolling requests that can be made in advance of
 -- the next rendering to affect the viewport.
-lookupViewport :: (Ord n) => n -> EventM n (Maybe Viewport)
+lookupViewport :: (Ord n) => n -> EventM n s (Maybe Viewport)
 lookupViewport n = EventM $ asks (M.lookup n . eventViewportMap)
 
 -- | Did the specified mouse coordinates (column, row) intersect the
@@ -422,7 +421,7 @@ clickedExtent (c, r) (Extent _ (Location (lc, lr)) (w, h)) =
 
 -- | Given a resource name, get the most recent rendering extent for the
 -- name (if any).
-lookupExtent :: (Eq n) => n -> EventM n (Maybe (Extent n))
+lookupExtent :: (Eq n) => n -> EventM n s (Maybe (Extent n))
 lookupExtent n = EventM $ asks (find f . latestExtents)
     where
         f (Extent n' _ _) = n == n'
@@ -432,28 +431,28 @@ lookupExtent n = EventM $ asks (find f . latestExtents)
 -- the list is the most specific extent and the last extent is the most
 -- generic (top-level). So if two extents A and B both intersected the
 -- mouse click but A contains B, then they would be returned [B, A].
-findClickedExtents :: (Int, Int) -> EventM n [Extent n]
+findClickedExtents :: (Int, Int) -> EventM n s [Extent n]
 findClickedExtents pos = EventM $ asks (findClickedExtents_ pos . latestExtents)
 
 findClickedExtents_ :: (Int, Int) -> [Extent n] -> [Extent n]
 findClickedExtents_ pos = reverse . filter (clickedExtent pos)
 
 -- | Get the Vty handle currently in use.
-getVtyHandle :: EventM n Vty
+getVtyHandle :: EventM n s Vty
 getVtyHandle = EventM $ asks eventVtyHandle
 
 -- | Invalidate the rendering cache entry with the specified resource
 -- name.
-invalidateCacheEntry :: (Ord n) => n -> EventM n ()
+invalidateCacheEntry :: (Ord n) => n -> EventM n s ()
 invalidateCacheEntry n = EventM $ do
     lift $ modify (\s -> s { cacheInvalidateRequests = S.insert (InvalidateSingle n) $ cacheInvalidateRequests s })
 
 -- | Invalidate the entire rendering cache.
-invalidateCache :: (Ord n) => EventM n ()
+invalidateCache :: (Ord n) => EventM n s ()
 invalidateCache = EventM $ do
     lift $ modify (\s -> s { cacheInvalidateRequests = S.insert InvalidateEntire $ cacheInvalidateRequests s })
 
-getRenderState :: EventM n (RenderState n)
+getRenderState :: EventM n s (RenderState n)
 getRenderState = EventM $ asks oldState
 
 resetRenderState :: RenderState n -> RenderState n
@@ -505,45 +504,45 @@ showCursorNamed name locs =
 
 -- | A viewport scrolling handle for managing the scroll state of
 -- viewports.
-data ViewportScroll n =
+data ViewportScroll n s =
     ViewportScroll { viewportName :: n
                    -- ^ The name of the viewport to be controlled by
                    -- this scrolling handle.
-                   , hScrollPage :: Direction -> EventM n ()
+                   , hScrollPage :: Direction -> EventM n s ()
                    -- ^ Scroll the viewport horizontally by one page in
                    -- the specified direction.
-                   , hScrollBy :: Int -> EventM n ()
+                   , hScrollBy :: Int -> EventM n s ()
                    -- ^ Scroll the viewport horizontally by the
                    -- specified number of rows or columns depending on
                    -- the orientation of the viewport.
-                   , hScrollToBeginning :: EventM n ()
+                   , hScrollToBeginning :: EventM n s ()
                    -- ^ Scroll horizontally to the beginning of the
                    -- viewport.
-                   , hScrollToEnd :: EventM n ()
+                   , hScrollToEnd :: EventM n s ()
                    -- ^ Scroll horizontally to the end of the viewport.
-                   , vScrollPage :: Direction -> EventM n ()
+                   , vScrollPage :: Direction -> EventM n s ()
                    -- ^ Scroll the viewport vertically by one page in
                    -- the specified direction.
-                   , vScrollBy :: Int -> EventM n ()
+                   , vScrollBy :: Int -> EventM n s ()
                    -- ^ Scroll the viewport vertically by the specified
                    -- number of rows or columns depending on the
                    -- orientation of the viewport.
-                   , vScrollToBeginning :: EventM n ()
+                   , vScrollToBeginning :: EventM n s ()
                    -- ^ Scroll vertically to the beginning of the viewport.
-                   , vScrollToEnd :: EventM n ()
+                   , vScrollToEnd :: EventM n s ()
                    -- ^ Scroll vertically to the end of the viewport.
-                   , setTop :: Int -> EventM n ()
+                   , setTop :: Int -> EventM n s ()
                    -- ^ Set the top row offset of the viewport.
-                   , setLeft :: Int -> EventM n ()
+                   , setLeft :: Int -> EventM n s ()
                    -- ^ Set the left column offset of the viewport.
                    }
 
-addScrollRequest :: (n, ScrollRequest) -> EventM n ()
+addScrollRequest :: (n, ScrollRequest) -> EventM n s ()
 addScrollRequest req = EventM $ do
     lift $ modify (\s -> s { esScrollRequests = req : esScrollRequests s })
 
 -- | Build a viewport scroller for the viewport with the specified name.
-viewportScroll :: n -> ViewportScroll n
+viewportScroll :: n -> ViewportScroll n s
 viewportScroll n =
     ViewportScroll { viewportName       = n
                    , hScrollPage        = \dir -> addScrollRequest (n, HScrollPage dir)
@@ -560,8 +559,9 @@ viewportScroll n =
 
 -- | Continue running the event loop with the specified application
 -- state.
-continue :: s -> EventM n (Next s)
-continue = return . Continue
+continue :: EventM n s ()
+continue =
+    EventM $ lift $ modify $ \es -> es { nextAction = Continue }
 
 -- | Continue running the event loop with the specified application
 -- state without redrawing the screen. This is faster than 'continue'
@@ -571,13 +571,15 @@ continue = return . Continue
 -- 'continue'. This function is for cases where you know that you did
 -- something that won't have an impact on the screen state and you want
 -- to save on redraw cost.
-continueWithoutRedraw :: s -> EventM n (Next s)
-continueWithoutRedraw = return . ContinueWithoutRedraw
+continueWithoutRedraw :: EventM n s ()
+continueWithoutRedraw =
+    EventM $ lift $ modify $ \es -> es { nextAction = ContinueWithoutRedraw }
 
 -- | Halt the event loop and return the specified application state as
 -- the final state value.
-halt :: s -> EventM n (Next s)
-halt = return . Halt
+halt :: EventM n s ()
+halt =
+    EventM $ lift $ modify $ \es -> es { nextAction = Halt }
 
 -- | Suspend the event loop, save the terminal state, and run the
 -- specified action. When it returns an application state value, restore
@@ -588,13 +590,14 @@ halt = return . Halt
 -- when Brick resumes execution and are not preserved in the final
 -- terminal input state after the Brick application returns the terminal
 -- to the user.
-suspendAndResume :: IO s -> EventM n (Next s)
-suspendAndResume = return . SuspendAndResume
+suspendAndResume :: IO s -> EventM n s ()
+suspendAndResume act =
+    EventM $ lift $ modify $ \es -> es { nextAction = SuspendAndResume act }
 
 -- | Request that the specified UI element be made visible on the
 -- next rendering. This is provided to allow event handlers to make
 -- visibility requests in the same way that the 'visible' function does
 -- at rendering time.
-makeVisible :: (Ord n) => n -> EventM n ()
+makeVisible :: (Ord n) => n -> EventM n s ()
 makeVisible n = EventM $ do
     lift $ modify (\s -> s { requestedVisibleNames = S.insert n $ requestedVisibleNames s })

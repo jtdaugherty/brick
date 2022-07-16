@@ -37,6 +37,7 @@ module Brick.Widgets.Dialog
 where
 
 import Lens.Micro
+import Control.Monad.State (modify)
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid
 #endif
@@ -72,9 +73,9 @@ data Dialog a =
 
 suffixLenses ''Dialog
 
-handleDialogEvent :: Event -> Dialog a -> EventM n (Dialog a)
-handleDialogEvent ev d =
-    return $ case ev of
+handleDialogEvent :: Event -> EventM n (Dialog a) ()
+handleDialogEvent ev = do
+    modify $ \d -> case ev of
         EvKey (KChar '\t') [] -> nextButtonBy 1 True d
         EvKey KBackTab [] -> nextButtonBy (-1) True d
         EvKey KRight [] -> nextButtonBy 1 False d

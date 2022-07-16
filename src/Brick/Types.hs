@@ -2,6 +2,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Brick.Types
   ( -- * The Widget type
@@ -29,7 +31,6 @@ module Brick.Types
 
   -- * Event-handling types
   , EventM(..)
-  , Next
   , BrickEvent(..)
   , handleEventLensed
 
@@ -99,10 +100,9 @@ import Control.Monad.Catch (MonadThrow, MonadCatch, MonadMask)
 #if !MIN_VERSION_base(4,13,0)
 import Control.Monad.Fail (MonadFail)
 #endif
-import Control.Monad.Trans.State.Lazy
-import Control.Monad.Trans.Reader
+import Control.Monad.State.Lazy
+import Control.Monad.Reader
 import Graphics.Vty (Attr)
-import Control.Monad.IO.Class
 
 import Brick.Types.TH
 import Brick.Types.Internal
@@ -119,29 +119,39 @@ data Padding = Pad Int
 -- obtains the target value of the specified lens, invokes 'handleEvent'
 -- on it, and stores the resulting transformed value back in the state
 -- using the lens.
-handleEventLensed :: a
-                  -- ^ The state value.
-                  -> Lens' a b
+handleEventLensed :: Lens' s a
                   -- ^ The lens to use to extract and store the target
                   -- of the event.
-                  -> (e -> b -> EventM n b)
+                  -> (e -> EventM n a ())
                   -- ^ The event handler.
                   -> e
                   -- ^ The event to handle.
-                  -> EventM n a
-handleEventLensed v target handleEvent ev = do
-    newB <- handleEvent ev (v^.target)
-    return $ v & target .~ newB
+                  -> EventM n s ()
+handleEventLensed target handleEvent ev = do
+    ro <- EventM ask
+    s <- EventM $ lift get
+    let stInner = ES { applicationState = (applicationState s)^.target
+                     , nextAction = Continue
+                     , esScrollRequests = esScrollRequests s
+                     , cacheInvalidateRequests = cacheInvalidateRequests s
+                     , requestedVisibleNames = requestedVisibleNames s
+                     }
+    ((), stInnerFinal) <- liftIO $ runStateT (runReaderT (runEventM (handleEvent ev)) ro) stInner
+    EventM $ lift $ put $ s { applicationState = applicationState s & target .~ applicationState stInnerFinal }
 
 -- | The monad in which event handlers run. Although it may be tempting
 -- to dig into the reader value yourself, just use
 -- 'Brick.Main.lookupViewport'.
-newtype EventM n a =
-    EventM { runEventM :: ReaderT (EventRO n) (StateT (EventState n) IO) a
+newtype EventM n s a =
+    EventM { runEventM :: ReaderT (EventRO n) (StateT (EventState n s) IO) a
            }
            deriving ( Functor, Applicative, Monad, MonadIO
                     , MonadThrow, MonadCatch, MonadMask, MonadFail
                     )
+
+instance MonadState s (EventM n s) where
+    get = EventM $ lift $ gets applicationState
+    put s = EventM $ lift $ modify $ \es -> es { applicationState = s }
 
 -- | The rendering context's current drawing attribute.
 attrL :: forall r n. Getting r (Context n) Attr

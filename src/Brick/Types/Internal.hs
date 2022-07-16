@@ -46,7 +46,7 @@ module Brick.Types.Internal
 
   , EventState(..)
   , EventRO(..)
-  , Next(..)
+  , NextAction(..)
   , Result(..)
   , Extent(..)
   , Edges(..)
@@ -82,9 +82,8 @@ module Brick.Types.Internal
   )
 where
 
-import Control.Monad.Trans.Class (lift)
-import Control.Monad.Trans.Reader
-import Control.Monad.Trans.State.Lazy
+import Control.Monad.Reader
+import Control.Monad.State.Lazy
 import Lens.Micro (_1, _2, Lens')
 import Lens.Micro.Mtl (use)
 import Lens.Micro.TH (makeLenses)
@@ -227,10 +226,13 @@ data CacheInvalidateRequest n =
     | InvalidateEntire
     deriving (Ord, Eq)
 
-data EventState n = ES { esScrollRequests :: [(n, ScrollRequest)]
-                       , cacheInvalidateRequests :: S.Set (CacheInvalidateRequest n)
-                       , requestedVisibleNames :: S.Set n
-                       }
+data EventState n s =
+    ES { esScrollRequests :: [(n, ScrollRequest)]
+       , cacheInvalidateRequests :: S.Set (CacheInvalidateRequest n)
+       , requestedVisibleNames :: S.Set n
+       , applicationState :: s
+       , nextAction :: NextAction s
+       }
 
 -- | An extent of a named area: its size, location, and origin.
 data Extent n = Extent { extentName      :: n
@@ -240,11 +242,12 @@ data Extent n = Extent { extentName      :: n
                        deriving (Show, Read, Generic, NFData)
 
 -- | The type of actions to take upon completion of an event handler.
-data Next a = Continue a
-            | ContinueWithoutRedraw a
-            | SuspendAndResume (IO a)
-            | Halt a
-            deriving Functor
+data NextAction s =
+    Continue
+    | ContinueWithoutRedraw
+    | SuspendAndResume (IO s)
+    | Halt
+    deriving Functor
 
 -- | Scrolling direction.
 data Direction = Up

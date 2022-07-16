@@ -10,9 +10,8 @@ where
 
 import Lens.Micro ((^.), (&), (%~))
 import Lens.Micro.Mtl ((%=))
-import Control.Monad (forM_)
-import Control.Monad.Trans.State.Lazy
-import Control.Monad.Trans.Reader
+import Control.Monad.State.Lazy
+import Control.Monad.Reader
 import Data.Maybe (fromMaybe)
 import qualified Data.Map as M
 import qualified Data.Set as S

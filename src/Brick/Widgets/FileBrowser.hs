@@ -143,6 +143,7 @@ where
 import qualified Control.Exception as E
 import Control.Monad (forM)
 import Control.Monad.IO.Class (liftIO)
+import Control.Monad.State (get, modify)
 import Data.Char (toLower, isPrint)
 import Data.Maybe (fromMaybe, isJust, fromJust)
 import qualified Data.Foldable as F
@@ -155,6 +156,7 @@ import Data.List (sortBy, isSuffixOf)
 import qualified Data.Set as Set
 import qualified Data.Vector as V
 import Lens.Micro
+import Lens.Micro.Mtl ((%=))
 import Lens.Micro.TH (lensRules, generateUpdateableOptics)
 import qualified Graphics.Vty as Vty
 import qualified System.Directory as D
@@ -593,126 +595,120 @@ fileBrowserCursor b = snd <$> listSelectedElement (b^.fileBrowserEntriesL)
 -- * @Esc@, @Ctrl-C@: cancel search mode
 -- * Text input: update search string
 
-actionFileBrowserBeginSearch :: FileBrowser n -> EventM n (FileBrowser n)
-actionFileBrowserBeginSearch b =
-    return $ updateFileBrowserSearch (const $ Just "") b
+actionFileBrowserBeginSearch :: EventM n (FileBrowser n) ()
+actionFileBrowserBeginSearch =
+    modify $ updateFileBrowserSearch (const $ Just "")
 
-actionFileBrowserSelectEnter :: FileBrowser n -> EventM n (FileBrowser n)
-actionFileBrowserSelectEnter b =
-    maybeSelectCurrentEntry b
+actionFileBrowserSelectEnter :: EventM n (FileBrowser n) ()
+actionFileBrowserSelectEnter =
+    maybeSelectCurrentEntry
 
-actionFileBrowserSelectCurrent :: FileBrowser n -> EventM n (FileBrowser n)
-actionFileBrowserSelectCurrent b =
-    selectCurrentEntry b
+actionFileBrowserSelectCurrent :: EventM n (FileBrowser n) ()
+actionFileBrowserSelectCurrent =
+    selectCurrentEntry
 
-actionFileBrowserListPageUp :: Ord n => FileBrowser n -> EventM n (FileBrowser n)
-actionFileBrowserListPageUp b = do
-    let old = b ^. fileBrowserEntriesL
-    new <- listMovePageUp old
-    return $ b & fileBrowserEntriesL .~ new
+actionFileBrowserListPageUp :: Ord n => EventM n (FileBrowser n) ()
+actionFileBrowserListPageUp =
+    handleEventLensed fileBrowserEntriesL listMovePageUp
 
-actionFileBrowserListPageDown :: Ord n => FileBrowser n -> EventM n (FileBrowser n)
-actionFileBrowserListPageDown b = do
-    let old = b ^. fileBrowserEntriesL
-    new <- listMovePageDown old
-    return $ b & fileBrowserEntriesL .~ new
+actionFileBrowserListPageDown :: Ord n => EventM n (FileBrowser n) ()
+actionFileBrowserListPageDown =
+    handleEventLensed fileBrowserEntriesL listMovePageDown
 
-actionFileBrowserListHalfPageUp :: Ord n => FileBrowser n -> EventM n (FileBrowser n)
-actionFileBrowserListHalfPageUp b = do
-    let old = b ^. fileBrowserEntriesL
-    new <- listMoveByPages (-0.5::Double) old
-    return $ b & fileBrowserEntriesL .~ new
+actionFileBrowserListHalfPageUp :: Ord n => EventM n (FileBrowser n) ()
+actionFileBrowserListHalfPageUp b =
+    handleEventLensed fileBrowserEntriesL (listMoveByPages (-0.5::Double))
 
-actionFileBrowserListHalfPageDown :: Ord n => FileBrowser n -> EventM n (FileBrowser n)
-actionFileBrowserListHalfPageDown b = do
-    let old = b ^. fileBrowserEntriesL
-    new <- listMoveByPages (0.5::Double) old
-    return $ b & fileBrowserEntriesL .~ new
+actionFileBrowserListHalfPageDown :: Ord n => EventM n (FileBrowser n) ()
+actionFileBrowserListHalfPageDown =
+    handleEventLensed fileBrowserEntriesL (listMoveByPages (0.5::Double))
 
-actionFileBrowserListTop :: Ord n => FileBrowser n -> EventM n (FileBrowser n)
-actionFileBrowserListTop b =
-    return $ b & fileBrowserEntriesL %~ listMoveTo 0
+actionFileBrowserListTop :: Ord n => EventM n (FileBrowser n) ()
+actionFileBrowserListTop =
+    fileBrowserEntriesL %= listMoveTo 0
 
-actionFileBrowserListBottom :: Ord n => FileBrowser n -> EventM n (FileBrowser n)
-actionFileBrowserListBottom b = do
+actionFileBrowserListBottom :: Ord n => EventM n (FileBrowser n) ()
+actionFileBrowserListBottom = do
+    b <- get
     let sz = length (listElements $ b^.fileBrowserEntriesL)
-    return $ b & fileBrowserEntriesL %~ listMoveTo (sz - 1)
+    fileBrowserEntriesL %= listMoveTo (sz - 1)
 
-actionFileBrowserListNext :: Ord n => FileBrowser n -> EventM n (FileBrowser n)
-actionFileBrowserListNext b =
-    return $ b & fileBrowserEntriesL %~ listMoveBy 1
+actionFileBrowserListNext :: Ord n => EventM n (FileBrowser n) ()
+actionFileBrowserListNext =
+    fileBrowserEntriesL %= listMoveBy 1
 
-actionFileBrowserListPrev :: Ord n => FileBrowser n -> EventM n (FileBrowser n)
-actionFileBrowserListPrev b =
-    return $ b & fileBrowserEntriesL %~ listMoveBy (-1)
+actionFileBrowserListPrev :: Ord n => EventM n (FileBrowser n) ()
+actionFileBrowserListPrev =
+    fileBrowserEntriesL %= listMoveBy (-1)
 
-handleFileBrowserEvent :: (Ord n) => Vty.Event -> FileBrowser n -> EventM n (FileBrowser n)
-handleFileBrowserEvent e b =
+handleFileBrowserEvent :: (Ord n) => Vty.Event -> EventM n (FileBrowser n) ()
+handleFileBrowserEvent e = do
+    b <- get
     if fileBrowserIsSearching b
-    then handleFileBrowserEventSearching e b
-    else handleFileBrowserEventNormal e b
+        then handleFileBrowserEventSearching e
+        else handleFileBrowserEventNormal e
 
 safeInit :: T.Text -> T.Text
 safeInit t | T.length t == 0 = t
            | otherwise = T.init t
 
-handleFileBrowserEventSearching :: (Ord n) => Vty.Event -> FileBrowser n -> EventM n (FileBrowser n)
-handleFileBrowserEventSearching e b =
+handleFileBrowserEventSearching :: (Ord n) => Vty.Event -> EventM n (FileBrowser n) ()
+handleFileBrowserEventSearching e =
     case e of
         Vty.EvKey (Vty.KChar 'c') [Vty.MCtrl] ->
-            return $ updateFileBrowserSearch (const Nothing) b
+            return $ updateFileBrowserSearch (const Nothing)
         Vty.EvKey Vty.KEsc [] ->
-            return $ updateFileBrowserSearch (const Nothing) b
+            return $ updateFileBrowserSearch (const Nothing)
         Vty.EvKey Vty.KBS [] ->
-            return $ updateFileBrowserSearch (fmap safeInit) b
+            return $ updateFileBrowserSearch (fmap safeInit)
         Vty.EvKey Vty.KEnter [] ->
             updateFileBrowserSearch (const Nothing) <$>
-                maybeSelectCurrentEntry b
+                maybeSelectCurrentEntry
         Vty.EvKey (Vty.KChar c) [] ->
-            return $ updateFileBrowserSearch (fmap (flip T.snoc c)) b
+            modify $ updateFileBrowserSearch (fmap (flip T.snoc c))
         _ ->
-            handleFileBrowserEventCommon e b
+            handleFileBrowserEventCommon e
 
-handleFileBrowserEventNormal :: (Ord n) => Vty.Event -> FileBrowser n -> EventM n (FileBrowser n)
-handleFileBrowserEventNormal e b =
+handleFileBrowserEventNormal :: (Ord n) => Vty.Event -> EventM n (FileBrowser n) ()
+handleFileBrowserEventNormal e =
     case e of
         Vty.EvKey (Vty.KChar '/') [] ->
             -- Begin file search
-            actionFileBrowserBeginSearch b
+            actionFileBrowserBeginSearch
         Vty.EvKey Vty.KEnter [] ->
             -- Select file or enter directory
-            actionFileBrowserSelectEnter b
+            actionFileBrowserSelectEnter
         Vty.EvKey (Vty.KChar ' ') [] ->
             -- Select entry
-            actionFileBrowserSelectCurrent b
+            actionFileBrowserSelectCurrent
         _ ->
-            handleFileBrowserEventCommon e b
+            handleFileBrowserEventCommon e
 
-handleFileBrowserEventCommon :: (Ord n) => Vty.Event -> FileBrowser n -> EventM n (FileBrowser n)
-handleFileBrowserEventCommon e b =
+handleFileBrowserEventCommon :: (Ord n) => Vty.Event -> EventM n (FileBrowser n) ()
+handleFileBrowserEventCommon e =
     case e of
         Vty.EvKey (Vty.KChar 'b') [Vty.MCtrl] ->
-            actionFileBrowserListPageUp b
+            actionFileBrowserListPageUp
         Vty.EvKey (Vty.KChar 'f') [Vty.MCtrl] ->
-            actionFileBrowserListPageDown b
+            actionFileBrowserListPageDown
         Vty.EvKey (Vty.KChar 'd') [Vty.MCtrl] ->
-            actionFileBrowserListHalfPageDown b
+            actionFileBrowserListHalfPageDown
         Vty.EvKey (Vty.KChar 'u') [Vty.MCtrl] ->
-            actionFileBrowserListHalfPageUp b
+            actionFileBrowserListHalfPageUp
         Vty.EvKey (Vty.KChar 'g') [] ->
-            actionFileBrowserListTop b
+            actionFileBrowserListTop
         Vty.EvKey (Vty.KChar 'G') [] ->
-            actionFileBrowserListBottom b
+            actionFileBrowserListBottom
         Vty.EvKey (Vty.KChar 'j') [] ->
-            actionFileBrowserListNext b
+            actionFileBrowserListNext
         Vty.EvKey (Vty.KChar 'k') [] ->
-            actionFileBrowserListPrev b
+            actionFileBrowserListPrev
         Vty.EvKey (Vty.KChar 'n') [Vty.MCtrl] ->
-            actionFileBrowserListNext b
+            actionFileBrowserListNext
         Vty.EvKey (Vty.KChar 'p') [Vty.MCtrl] ->
-            actionFileBrowserListPrev b
+            actionFileBrowserListPrev
         _ ->
-            handleEventLensed b fileBrowserEntriesL handleListEvent e
+            handleEventLensed fileBrowserEntriesL handleListEvent e
 
 -- | If the browser's current entry is selectable according to
 -- @fileBrowserSelectable@, add it to the selection set and return.
@@ -720,13 +716,14 @@ handleFileBrowserEventCommon e b =
 -- directory, set the browser's current path to the selected directory.
 --
 -- Otherwise, return the browser state unchanged.
-maybeSelectCurrentEntry :: FileBrowser n -> EventM n (FileBrowser n)
-maybeSelectCurrentEntry b =
+maybeSelectCurrentEntry :: EventM n (FileBrowser n) ()
+maybeSelectCurrentEntry = do
+    b <- get
     case fileBrowserCursor b of
-        Nothing -> return b
+        Nothing -> return ()
         Just entry ->
             if fileBrowserSelectable b entry
-            then return $ b & fileBrowserSelectedFilesL %~ Set.insert (fileInfoFilename entry)
+            then fileBrowserSelectedFilesL %= Set.insert (fileInfoFilename entry)
             else case fileInfoFileType entry of
                 Just Directory ->
                     liftIO $ setWorkingDirectory (fileInfoFilePath entry) b
@@ -735,15 +732,16 @@ maybeSelectCurrentEntry b =
                         Just Directory -> do
                             liftIO $ setWorkingDirectory (fileInfoFilePath entry) b
                         _ ->
-                            return b
+                            return ()
                 _ ->
-                    return b
+                    return ()
 
-selectCurrentEntry :: FileBrowser n -> EventM n (FileBrowser n)
-selectCurrentEntry b =
+selectCurrentEntry :: EventM n (FileBrowser n) ()
+selectCurrentEntry = do
+    b <- get
     case fileBrowserCursor b of
-        Nothing -> return b
-        Just e -> return $ b & fileBrowserSelectedFilesL %~ Set.insert (fileInfoFilename e)
+        Nothing -> return ()
+        Just e -> fileBrowserSelectedFilesL %= Set.insert (fileInfoFilename e)
 
 -- | Render a file browser. This renders a list of entries in the
 -- working directory, a cursor to select from among the entries, a

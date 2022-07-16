@@ -113,7 +113,6 @@ library
 
   build-depends:       base >= 4.9.0.0 && < 4.17.0.0,
                        vty >= 5.36,
-                       transformers,
                        data-clist >= 0.1,
                        directory >= 1.2.5.0,
                        dlist,
@@ -123,6 +122,7 @@ library
                        microlens >= 0.3.0.0,
                        microlens-th,
                        microlens-mtl,
+                       mtl,
                        config-ini,
                        vector,
                        contravariant,

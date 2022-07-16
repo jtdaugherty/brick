@@ -79,7 +79,7 @@ import Prelude hiding (reverse, splitAt)
 
 import Control.Applicative ((<|>))
 import Data.Foldable (find, toList)
-import Control.Monad.Trans.State (evalState, get, put)
+import Control.Monad.State (evalState, modify, get, put)
 
 import Lens.Micro ((^.), (^?), (&), (.~), (%~), _2, _head, set)
 import Data.Functor (($>))
@@ -193,17 +193,16 @@ instance Reversible Seq.Seq where
 -- * Go to last element (End)
 handleListEvent :: (Foldable t, Splittable t, Ord n)
                 => Event
-                -> GenericList n t e
-                -> EventM n (GenericList n t e)
-handleListEvent e theList =
+                -> EventM n (GenericList n t e) ()
+handleListEvent e =
     case e of
-        EvKey KUp [] -> return $ listMoveUp theList
-        EvKey KDown [] -> return $ listMoveDown theList
-        EvKey KHome [] -> return $ listMoveToBeginning theList
-        EvKey KEnd [] -> return $ listMoveToEnd theList
-        EvKey KPageDown [] -> listMovePageDown theList
-        EvKey KPageUp [] -> listMovePageUp theList
-        _ -> return theList
+        EvKey KUp [] -> modify listMoveUp
+        EvKey KDown [] -> modify listMoveDown
+        EvKey KHome [] -> modify listMoveToBeginning
+        EvKey KEnd [] -> modify listMoveToEnd
+        EvKey KPageDown [] -> listMovePageDown
+        EvKey KPageUp [] -> listMovePageUp
+        _ -> return ()
 
 -- | Enable list movement with the vi keys with a fallback handler if
 -- none match. Use 'handleListEventVi' 'handleListEvent' in place of
@@ -219,23 +218,22 @@ handleListEvent e theList =
 -- * Go to first element (g)
 -- * Go to last element (G)
 handleListEventVi :: (Foldable t, Splittable t, Ord n)
-                  => (Event -> GenericList n t e -> EventM n (GenericList n t e))
+                  => (Event -> EventM n (GenericList n t e) ())
                   -- ^ Fallback event handler to use if none of the vi keys
                   -- match.
                   -> Event
-                  -> GenericList n t e
-                  -> EventM n (GenericList n t e)
-handleListEventVi fallback e theList =
+                  -> EventM n (GenericList n t e) ()
+handleListEventVi fallback e =
     case e of
-        EvKey (KChar 'k') [] -> return $ listMoveUp theList
-        EvKey (KChar 'j') [] -> return $ listMoveDown theList
-        EvKey (KChar 'g') [] -> return $ listMoveToBeginning theList
-        EvKey (KChar 'G') [] -> return $ listMoveToEnd theList
-        EvKey (KChar 'f') [MCtrl] -> listMovePageDown theList
-        EvKey (KChar 'b') [MCtrl] -> listMovePageUp theList
-        EvKey (KChar 'd') [MCtrl] -> listMoveByPages (0.5::Double) theList
-        EvKey (KChar 'u') [MCtrl] -> listMoveByPages (-0.5::Double) theList
-        _ -> fallback e theList
+        EvKey (KChar 'k') []      -> modify listMoveUp
+        EvKey (KChar 'j') []      -> modify listMoveDown
+        EvKey (KChar 'g') []      -> modify listMoveToBeginning
+        EvKey (KChar 'G') []      -> modify listMoveToEnd
+        EvKey (KChar 'f') [MCtrl] -> listMovePageDown
+        EvKey (KChar 'b') [MCtrl] -> listMovePageUp
+        EvKey (KChar 'd') [MCtrl] -> listMoveByPages (0.5::Double)
+        EvKey (KChar 'u') [MCtrl] -> listMoveByPages (-0.5::Double)
+        _                         -> fallback e
 
 -- | Move the list selection to the first element in the list.
 listMoveToBeginning :: (Foldable t, Splittable t)
@@ -474,8 +472,7 @@ listMoveUp = listMoveBy (-1)
 
 -- | Move the list selected index up by one page.
 listMovePageUp :: (Foldable t, Splittable t, Ord n)
-               => GenericList n t e
-               -> EventM n (GenericList n t e)
+               => EventM n (GenericList n t e) ()
 listMovePageUp = listMoveByPages (-1::Double)
 
 -- | Move the list selected index down by one. (Moves the cursor down,
@@ -487,23 +484,22 @@ listMoveDown = listMoveBy 1
 
 -- | Move the list selected index down by one page.
 listMovePageDown :: (Foldable t, Splittable t, Ord n)
-                 => GenericList n t e
-                 -> EventM n (GenericList n t e)
+                 => EventM n (GenericList n t e) ()
 listMovePageDown = listMoveByPages (1::Double)
 
 -- | Move the list selected index by some (fractional) number of pages.
 listMoveByPages :: (Foldable t, Splittable t, Ord n, RealFrac m)
                 => m
-                -> GenericList n t e
-                -> EventM n (GenericList n t e)
-listMoveByPages pages theList = do
+                -> EventM n (GenericList n t e) ()
+listMoveByPages pages = do
+    theList <- get
     v <- lookupViewport (theList^.listNameL)
     case v of
-        Nothing -> return theList
+        Nothing -> return ()
         Just vp -> do
             let nElems = round $ pages * fromIntegral (vp^.vpSize._2) /
                                  fromIntegral (theList^.listItemHeightL)
-            return $ listMoveBy nElems theList
+            modify $ listMoveBy nElems
 
 -- | Move the list selected index.
 --
