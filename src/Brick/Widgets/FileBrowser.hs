@@ -143,7 +143,7 @@ where
 import qualified Control.Exception as E
 import Control.Monad (forM)
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad.State (get, modify)
+import Control.Monad.State (put, get, modify)
 import Data.Char (toLower, isPrint)
 import Data.Maybe (fromMaybe, isJust, fromJust)
 import qualified Data.Foldable as F
@@ -358,10 +358,10 @@ setWorkingDirectory path b = do
             Left (_::E.IOException) -> entries
             Right parent -> parent : entries
 
-    let b' = setEntries allEntries b
-    return $ b' & fileBrowserWorkingDirectoryL .~ path
-                & fileBrowserExceptionL .~ exc
-                & fileBrowserSelectedFilesL .~ mempty
+    return $ (setEntries allEntries b)
+                 & fileBrowserWorkingDirectoryL .~ path
+                 & fileBrowserExceptionL .~ exc
+                 & fileBrowserSelectedFilesL .~ mempty
 
 parentOf :: FilePath -> IO FileInfo
 parentOf path = getFileInfo ".." $ FP.takeDirectory path
@@ -609,19 +609,19 @@ actionFileBrowserSelectCurrent =
 
 actionFileBrowserListPageUp :: Ord n => EventM n (FileBrowser n) ()
 actionFileBrowserListPageUp =
-    handleEventLensed fileBrowserEntriesL listMovePageUp
+    updateWithLens fileBrowserEntriesL listMovePageUp
 
 actionFileBrowserListPageDown :: Ord n => EventM n (FileBrowser n) ()
 actionFileBrowserListPageDown =
-    handleEventLensed fileBrowserEntriesL listMovePageDown
+    updateWithLens fileBrowserEntriesL listMovePageDown
 
 actionFileBrowserListHalfPageUp :: Ord n => EventM n (FileBrowser n) ()
-actionFileBrowserListHalfPageUp b =
-    handleEventLensed fileBrowserEntriesL (listMoveByPages (-0.5::Double))
+actionFileBrowserListHalfPageUp =
+    updateWithLens fileBrowserEntriesL (listMoveByPages (-0.5::Double))
 
 actionFileBrowserListHalfPageDown :: Ord n => EventM n (FileBrowser n) ()
 actionFileBrowserListHalfPageDown =
-    handleEventLensed fileBrowserEntriesL (listMoveByPages (0.5::Double))
+    updateWithLens fileBrowserEntriesL (listMoveByPages (0.5::Double))
 
 actionFileBrowserListTop :: Ord n => EventM n (FileBrowser n) ()
 actionFileBrowserListTop =
@@ -656,14 +656,14 @@ handleFileBrowserEventSearching :: (Ord n) => Vty.Event -> EventM n (FileBrowser
 handleFileBrowserEventSearching e =
     case e of
         Vty.EvKey (Vty.KChar 'c') [Vty.MCtrl] ->
-            return $ updateFileBrowserSearch (const Nothing)
+            modify $ updateFileBrowserSearch (const Nothing)
         Vty.EvKey Vty.KEsc [] ->
-            return $ updateFileBrowserSearch (const Nothing)
+            modify $ updateFileBrowserSearch (const Nothing)
         Vty.EvKey Vty.KBS [] ->
-            return $ updateFileBrowserSearch (fmap safeInit)
-        Vty.EvKey Vty.KEnter [] ->
-            updateFileBrowserSearch (const Nothing) <$>
-                maybeSelectCurrentEntry
+            modify $ updateFileBrowserSearch (fmap safeInit)
+        Vty.EvKey Vty.KEnter [] -> do
+            maybeSelectCurrentEntry
+            modify $ updateFileBrowserSearch (const Nothing)
         Vty.EvKey (Vty.KChar c) [] ->
             modify $ updateFileBrowserSearch (fmap (flip T.snoc c))
         _ ->
@@ -726,11 +726,11 @@ maybeSelectCurrentEntry = do
             then fileBrowserSelectedFilesL %= Set.insert (fileInfoFilename entry)
             else case fileInfoFileType entry of
                 Just Directory ->
-                    liftIO $ setWorkingDirectory (fileInfoFilePath entry) b
+                    put =<< (liftIO $ setWorkingDirectory (fileInfoFilePath entry) b)
                 Just SymbolicLink ->
                     case fileInfoLinkTargetType entry of
-                        Just Directory -> do
-                            liftIO $ setWorkingDirectory (fileInfoFilePath entry) b
+                        Just Directory ->
+                            put =<< (liftIO $ setWorkingDirectory (fileInfoFilePath entry) b)
                         _ ->
                             return ()
                 _ ->

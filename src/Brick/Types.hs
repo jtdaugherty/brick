@@ -33,6 +33,7 @@ module Brick.Types
   , EventM(..)
   , BrickEvent(..)
   , handleEventLensed
+  , updateWithLens
 
   -- * Rendering infrastructure
   , RenderM
@@ -127,7 +128,16 @@ handleEventLensed :: Lens' s a
                   -> e
                   -- ^ The event to handle.
                   -> EventM n s ()
-handleEventLensed target handleEvent ev = do
+handleEventLensed target handleEvent ev =
+    updateWithLens target (handleEvent ev)
+
+updateWithLens :: Lens' s a
+               -- ^ The lens to use to extract and store the state
+               -- mutated by the action.
+               -> EventM n a ()
+               -- ^ The action to run.
+               -> EventM n s ()
+updateWithLens target act = do
     ro <- EventM ask
     s <- EventM $ lift get
     let stInner = ES { applicationState = (applicationState s)^.target
@@ -136,7 +146,7 @@ handleEventLensed target handleEvent ev = do
                      , cacheInvalidateRequests = cacheInvalidateRequests s
                      , requestedVisibleNames = requestedVisibleNames s
                      }
-    ((), stInnerFinal) <- liftIO $ runStateT (runReaderT (runEventM (handleEvent ev)) ro) stInner
+    ((), stInnerFinal) <- liftIO $ runStateT (runReaderT (runEventM act) ro) stInner
     EventM $ lift $ put $ s { applicationState = applicationState s & target .~ applicationState stInnerFinal }
 
 -- | The monad in which event handlers run. Although it may be tempting
