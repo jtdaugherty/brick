@@ -608,19 +608,19 @@ actionFileBrowserSelectCurrent =
 
 actionFileBrowserListPageUp :: Ord n => EventM n (FileBrowser n) ()
 actionFileBrowserListPageUp =
-    updateWithLens fileBrowserEntriesL listMovePageUp
+    withLens fileBrowserEntriesL listMovePageUp
 
 actionFileBrowserListPageDown :: Ord n => EventM n (FileBrowser n) ()
 actionFileBrowserListPageDown =
-    updateWithLens fileBrowserEntriesL listMovePageDown
+    withLens fileBrowserEntriesL listMovePageDown
 
 actionFileBrowserListHalfPageUp :: Ord n => EventM n (FileBrowser n) ()
 actionFileBrowserListHalfPageUp =
-    updateWithLens fileBrowserEntriesL (listMoveByPages (-0.5::Double))
+    withLens fileBrowserEntriesL (listMoveByPages (-0.5::Double))
 
 actionFileBrowserListHalfPageDown :: Ord n => EventM n (FileBrowser n) ()
 actionFileBrowserListHalfPageDown =
-    updateWithLens fileBrowserEntriesL (listMoveByPages (0.5::Double))
+    withLens fileBrowserEntriesL (listMoveByPages (0.5::Double))
 
 actionFileBrowserListTop :: Ord n => EventM n (FileBrowser n) ()
 actionFileBrowserListTop =
@@ -707,7 +707,7 @@ handleFileBrowserEventCommon e =
         Vty.EvKey (Vty.KChar 'p') [Vty.MCtrl] ->
             actionFileBrowserListPrev
         _ ->
-            handleEventLensed fileBrowserEntriesL handleListEvent e
+            withLens fileBrowserEntriesL $ handleListEvent e
 
 -- | If the browser's current entry is selectable according to
 -- @fileBrowserSelectable@, add it to the selection set and return.

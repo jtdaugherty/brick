@@ -839,7 +839,7 @@ handleFormFieldEvent n ev = do
                         findField (field:rest) =
                             case field of
                                 FormField n' validate _ _ handleFunc | n == n' -> do
-                                    nextSt <- runEventMWithState st (handleFunc ev)
+                                    (nextSt, ()) <- nestEventM st (handleFunc ev)
                                     -- If the new state validates, go ahead and update
                                     -- the form state with it.
                                     case validate nextSt of

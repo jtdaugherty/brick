@@ -32,9 +32,8 @@ module Brick.Types
   -- * Event-handling types
   , EventM(..)
   , BrickEvent(..)
-  , handleEventLensed
-  , updateWithLens
-  , runEventMWithState
+  , withLens
+  , nestEventM
 
   -- * Rendering infrastructure
   , RenderM
@@ -123,29 +122,13 @@ data Padding = Pad Int
              | Max
              -- ^ Pad up to the number of available rows or columns.
 
--- | A convenience function for handling events intended for values
--- that are targets of lenses in your application state. This function
--- obtains the target value of the specified lens, invokes 'handleEvent'
--- on it, and stores the resulting transformed value back in the state
--- using the lens.
-handleEventLensed :: Lens' s a
-                  -- ^ The lens to use to extract and store the target
-                  -- of the event.
-                  -> (e -> EventM n a ())
-                  -- ^ The event handler.
-                  -> e
-                  -- ^ The event to handle.
-                  -> EventM n s ()
-handleEventLensed target handleEvent ev =
-    updateWithLens target (handleEvent ev)
-
-runEventMWithState :: a
-                   -- ^ The lens to use to extract and store the state
-                   -- mutated by the action.
-                   -> EventM n a ()
-                   -- ^ The action to run.
-                   -> EventM n s a
-runEventMWithState s' act = do
+nestEventM :: a
+           -- ^ The lens to use to extract and store the state mutated
+           -- by the action.
+           -> EventM n a b
+           -- ^ The action to run.
+           -> EventM n s (a, b)
+nestEventM s' act = do
     ro <- EventM ask
     s <- EventM $ lift get
     let stInner = ES { applicationState = s'
@@ -154,7 +137,7 @@ runEventMWithState s' act = do
                      , cacheInvalidateRequests = cacheInvalidateRequests s
                      , requestedVisibleNames = requestedVisibleNames s
                      }
-    ((), stInnerFinal) <- liftIO $ runStateT (runReaderT (runEventM act) ro) stInner
+    (actResult, stInnerFinal) <- liftIO $ runStateT (runReaderT (runEventM act) ro) stInner
 
     (nextAct, finalSt) <- case nextAction stInnerFinal of
         Continue ->
@@ -172,18 +155,19 @@ runEventMWithState s' act = do
                                        , cacheInvalidateRequests = cacheInvalidateRequests stInnerFinal
                                        , requestedVisibleNames = requestedVisibleNames stInnerFinal
                                        }
-    return finalSt
+    return (finalSt, actResult)
 
-updateWithLens :: Lens' s a
-               -- ^ The lens to use to extract and store the state
-               -- mutated by the action.
-               -> EventM n a ()
-               -- ^ The action to run.
-               -> EventM n s ()
-updateWithLens target act = do
+withLens :: Lens' s a
+         -- ^ The lens to use to extract and store the state
+         -- mutated by the action.
+         -> EventM n a b
+         -- ^ The action to run, scoped over some state to manage.
+         -> EventM n s b
+withLens target act = do
     val <- use target
-    val' <- runEventMWithState val act
+    (val', result) <- nestEventM val act
     target .= val'
+    return result
 
 -- | The monad in which event handlers run. Although it may be tempting
 -- to dig into the reader value yourself, just use
