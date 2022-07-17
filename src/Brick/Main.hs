@@ -1,4 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE RankNTypes #-}
 module Brick.Main
   ( App(..)
   , defaultMain
@@ -503,36 +504,36 @@ showCursorNamed name locs =
 
 -- | A viewport scrolling handle for managing the scroll state of
 -- viewports.
-data ViewportScroll n s =
+data ViewportScroll n =
     ViewportScroll { viewportName :: n
                    -- ^ The name of the viewport to be controlled by
                    -- this scrolling handle.
-                   , hScrollPage :: Direction -> EventM n s ()
+                   , hScrollPage :: forall s. Direction -> EventM n s ()
                    -- ^ Scroll the viewport horizontally by one page in
                    -- the specified direction.
-                   , hScrollBy :: Int -> EventM n s ()
+                   , hScrollBy :: forall s. Int -> EventM n s ()
                    -- ^ Scroll the viewport horizontally by the
                    -- specified number of rows or columns depending on
                    -- the orientation of the viewport.
-                   , hScrollToBeginning :: EventM n s ()
+                   , hScrollToBeginning :: forall s. EventM n s ()
                    -- ^ Scroll horizontally to the beginning of the
                    -- viewport.
-                   , hScrollToEnd :: EventM n s ()
+                   , hScrollToEnd :: forall s. EventM n s ()
                    -- ^ Scroll horizontally to the end of the viewport.
-                   , vScrollPage :: Direction -> EventM n s ()
+                   , vScrollPage :: forall s. Direction -> EventM n s ()
                    -- ^ Scroll the viewport vertically by one page in
                    -- the specified direction.
-                   , vScrollBy :: Int -> EventM n s ()
+                   , vScrollBy :: forall s. Int -> EventM n s ()
                    -- ^ Scroll the viewport vertically by the specified
                    -- number of rows or columns depending on the
                    -- orientation of the viewport.
-                   , vScrollToBeginning :: EventM n s ()
+                   , vScrollToBeginning :: forall s. EventM n s ()
                    -- ^ Scroll vertically to the beginning of the viewport.
-                   , vScrollToEnd :: EventM n s ()
+                   , vScrollToEnd :: forall s. EventM n s ()
                    -- ^ Scroll vertically to the end of the viewport.
-                   , setTop :: Int -> EventM n s ()
+                   , setTop :: forall s. Int -> EventM n s ()
                    -- ^ Set the top row offset of the viewport.
-                   , setLeft :: Int -> EventM n s ()
+                   , setLeft :: forall s. Int -> EventM n s ()
                    -- ^ Set the left column offset of the viewport.
                    }
 
@@ -541,7 +542,7 @@ addScrollRequest req = EventM $ do
     lift $ modify (\s -> s { esScrollRequests = req : esScrollRequests s })
 
 -- | Build a viewport scroller for the viewport with the specified name.
-viewportScroll :: n -> ViewportScroll n s
+viewportScroll :: n -> ViewportScroll n
 viewportScroll n =
     ViewportScroll { viewportName       = n
                    , hScrollPage        = \dir -> addScrollRequest (n, HScrollPage dir)

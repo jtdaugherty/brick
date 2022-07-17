@@ -91,10 +91,10 @@ drawUi st = [ui]
                       : (str <$> [ "Line " <> show i | i <- [2..55::Int] ])
                     ]
 
-vp1Scroll :: M.ViewportScroll Name s
+vp1Scroll :: M.ViewportScroll Name
 vp1Scroll = M.viewportScroll VP1
 
-vp2Scroll :: M.ViewportScroll Name s
+vp2Scroll :: M.ViewportScroll Name
 vp2Scroll = M.viewportScroll VP2
 
 appEvent :: T.BrickEvent Name e -> T.EventM Name St ()

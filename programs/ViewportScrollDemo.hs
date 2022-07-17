@@ -50,13 +50,13 @@ drawUi = const [ui]
                       str "Press left and right arrow keys to scroll this viewport."
                     ]
 
-vp1Scroll :: M.ViewportScroll Name s
+vp1Scroll :: M.ViewportScroll Name
 vp1Scroll = M.viewportScroll VP1
 
-vp2Scroll :: M.ViewportScroll Name s
+vp2Scroll :: M.ViewportScroll Name
 vp2Scroll = M.viewportScroll VP2
 
-vp3Scroll :: M.ViewportScroll Name s
+vp3Scroll :: M.ViewportScroll Name
 vp3Scroll = M.viewportScroll VP3
 
 appEvent :: T.BrickEvent Name e -> T.EventM Name () ()
