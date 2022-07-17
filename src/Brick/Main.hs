@@ -53,7 +53,7 @@ where
 
 import qualified Control.Exception as E
 import Lens.Micro ((^.), (&), (.~), (%~), _1, _2)
-import Control.Monad.State
+import Control.Monad.State.Strict
 import Control.Monad.Reader
 import Control.Concurrent (forkIO, killThread)
 import qualified Data.Foldable as F

@@ -10,7 +10,7 @@ where
 
 import Lens.Micro ((^.), (&), (%~))
 import Lens.Micro.Mtl ((%=))
-import Control.Monad.State.Lazy
+import Control.Monad.State.Strict
 import Control.Monad.Reader
 import Data.Maybe (fromMaybe)
 import qualified Data.Map as M

@@ -83,7 +83,7 @@ module Brick.Types.Internal
 where
 
 import Control.Monad.Reader
-import Control.Monad.State.Lazy
+import Control.Monad.State.Strict
 import Lens.Micro (_1, _2, Lens')
 import Lens.Micro.Mtl (use)
 import Lens.Micro.TH (makeLenses)
