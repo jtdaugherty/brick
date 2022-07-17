@@ -227,11 +227,11 @@ data CacheInvalidateRequest n =
     deriving (Ord, Eq)
 
 data EventState n s =
-    ES { esScrollRequests :: [(n, ScrollRequest)]
-       , cacheInvalidateRequests :: S.Set (CacheInvalidateRequest n)
-       , requestedVisibleNames :: S.Set n
-       , applicationState :: s
-       , nextAction :: NextAction s
+    ES { esScrollRequests :: ![(n, ScrollRequest)]
+       , cacheInvalidateRequests :: !(S.Set (CacheInvalidateRequest n))
+       , requestedVisibleNames :: !(S.Set n)
+       , applicationState :: !s
+       , nextAction :: !(NextAction s)
        }
 
 -- | An extent of a named area: its size, location, and origin.
