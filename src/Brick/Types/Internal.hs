@@ -213,13 +213,14 @@ data Viewport =
 
 -- | The type of viewports that indicates the direction(s) in which a
 -- viewport is scrollable.
-data ViewportType = Vertical
-                  -- ^ Viewports of this type are scrollable only vertically.
-                  | Horizontal
-                  -- ^ Viewports of this type are scrollable only horizontally.
-                  | Both
-                  -- ^ Viewports of this type are scrollable vertically and horizontally.
-                  deriving (Show, Eq)
+data ViewportType =
+    Vertical
+    -- ^ Viewports of this type are scrollable only vertically.
+    | Horizontal
+    -- ^ Viewports of this type are scrollable only horizontally.
+    | Both
+    -- ^ Viewports of this type are scrollable vertically and horizontally.
+    deriving (Show, Eq)
 
 data CacheInvalidateRequest n =
     InvalidateSingle n
