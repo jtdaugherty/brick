@@ -79,7 +79,7 @@ import Prelude hiding (reverse, splitAt)
 
 import Control.Applicative ((<|>))
 import Data.Foldable (find, toList)
-import Control.Monad.State (evalState, modify, get, put)
+import Control.Monad.State (evalState)
 
 import Lens.Micro ((^.), (^?), (&), (.~), (%~), _2, _head, set)
 import Data.Functor (($>))

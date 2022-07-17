@@ -48,8 +48,6 @@ import Data.Monoid
 import Lens.Micro
 import Graphics.Vty (Event(..), Key(..), Modifier(..))
 
-import Control.Monad.State (get, put)
-
 import qualified Data.ByteString as BS
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T

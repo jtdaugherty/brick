@@ -93,6 +93,12 @@ module Brick.Types
 
   -- * Renderer internals (for benchmarking)
   , RenderState
+
+  -- * Re-exports for convenience
+  , get
+  , gets
+  , put
+  , modify
   )
 where
 

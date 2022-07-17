@@ -203,7 +203,6 @@ executable brick-form-demo
                        text,
                        microlens,
                        microlens-th,
-                       mtl,
                        vty
 
 executable brick-text-wrap-demo

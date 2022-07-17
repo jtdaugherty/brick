@@ -86,7 +86,6 @@ module Brick.Forms
   )
 where
 
-import Control.Monad.State (gets, get, put, modify)
 import Graphics.Vty hiding (showCursor)
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid

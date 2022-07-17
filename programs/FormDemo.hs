@@ -3,7 +3,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-import Control.Monad.State (gets, modify)
 import qualified Data.Text as T
 import Lens.Micro ((^.))
 import Lens.Micro.TH

@@ -37,7 +37,6 @@ module Brick.Widgets.Dialog
 where
 
 import Lens.Micro
-import Control.Monad.State (modify)
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid
 #endif

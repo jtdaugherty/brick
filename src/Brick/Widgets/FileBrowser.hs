@@ -143,7 +143,6 @@ where
 import qualified Control.Exception as E
 import Control.Monad (forM)
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad.State (put, get, modify)
 import Data.Char (toLower, isPrint)
 import Data.Maybe (fromMaybe, isJust, fromJust)
 import qualified Data.Foldable as F
