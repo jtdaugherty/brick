@@ -34,6 +34,7 @@ module Brick.Types
   , BrickEvent(..)
   , handleEventLensed
   , updateWithLens
+  , runEventMWithState
 
   -- * Rendering infrastructure
   , RenderM
@@ -97,6 +98,7 @@ where
 
 import Lens.Micro (_1, _2, to, (^.), (&), (.~), Lens')
 import Lens.Micro.Type (Getting)
+import Lens.Micro.Mtl ((.=), use)
 import Control.Monad.Catch (MonadThrow, MonadCatch, MonadMask)
 #if !MIN_VERSION_base(4,13,0)
 import Control.Monad.Fail (MonadFail)
@@ -131,6 +133,41 @@ handleEventLensed :: Lens' s a
 handleEventLensed target handleEvent ev =
     updateWithLens target (handleEvent ev)
 
+runEventMWithState :: a
+                   -- ^ The lens to use to extract and store the state
+                   -- mutated by the action.
+                   -> EventM n a ()
+                   -- ^ The action to run.
+                   -> EventM n s a
+runEventMWithState s' act = do
+    ro <- EventM ask
+    s <- EventM $ lift get
+    let stInner = ES { applicationState = s'
+                     , nextAction = Continue
+                     , esScrollRequests = esScrollRequests s
+                     , cacheInvalidateRequests = cacheInvalidateRequests s
+                     , requestedVisibleNames = requestedVisibleNames s
+                     }
+    ((), stInnerFinal) <- liftIO $ runStateT (runReaderT (runEventM act) ro) stInner
+
+    (nextAct, finalSt) <- case nextAction stInnerFinal of
+        Continue ->
+            return (Continue, applicationState stInnerFinal)
+        ContinueWithoutRedraw ->
+            return (ContinueWithoutRedraw, applicationState stInnerFinal)
+        Halt ->
+            return (Halt, applicationState stInnerFinal)
+        SuspendAndResume act' -> do
+            s'' <- liftIO act'
+            return (Continue, s'')
+
+    EventM $ lift $ modify $ \st -> st { nextAction = nextAct
+                                       , esScrollRequests = esScrollRequests stInnerFinal
+                                       , cacheInvalidateRequests = cacheInvalidateRequests stInnerFinal
+                                       , requestedVisibleNames = requestedVisibleNames stInnerFinal
+                                       }
+    return finalSt
+
 updateWithLens :: Lens' s a
                -- ^ The lens to use to extract and store the state
                -- mutated by the action.
@@ -138,16 +175,9 @@ updateWithLens :: Lens' s a
                -- ^ The action to run.
                -> EventM n s ()
 updateWithLens target act = do
-    ro <- EventM ask
-    s <- EventM $ lift get
-    let stInner = ES { applicationState = (applicationState s)^.target
-                     , nextAction = Continue
-                     , esScrollRequests = esScrollRequests s
-                     , cacheInvalidateRequests = cacheInvalidateRequests s
-                     , requestedVisibleNames = requestedVisibleNames s
-                     }
-    ((), stInnerFinal) <- liftIO $ runStateT (runReaderT (runEventM act) ro) stInner
-    EventM $ lift $ put $ s { applicationState = applicationState s & target .~ applicationState stInnerFinal }
+    val <- use target
+    val' <- runEventMWithState val act
+    target .= val'
 
 -- | The monad in which event handlers run. Although it may be tempting
 -- to dig into the reader value yourself, just use

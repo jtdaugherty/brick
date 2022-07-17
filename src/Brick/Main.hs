@@ -9,7 +9,6 @@ module Brick.Main
   , simpleApp
 
   -- * Event handler functions
-  , continue
   , continueWithoutRedraw
   , halt
   , suspendAndResume
@@ -168,7 +167,7 @@ simpleApp w =
 -- value for simple applications using the 'Event' type that do not need
 -- to get more sophisticated user input.
 resizeOrQuit :: BrickEvent n e -> EventM n s ()
-resizeOrQuit (VtyEvent (EvResize _ _)) = continue
+resizeOrQuit (VtyEvent (EvResize _ _)) = return ()
 resizeOrQuit _ = halt
 
 data InternalNext n a = InternalSuspendAndResume (RenderState n) (IO a)
@@ -556,12 +555,6 @@ viewportScroll n =
                    , setTop             = \i ->   addScrollRequest (n, SetTop i)
                    , setLeft            = \i ->   addScrollRequest (n, SetLeft i)
                    }
-
--- | Continue running the event loop with the specified application
--- state.
-continue :: EventM n s ()
-continue =
-    EventM $ lift $ modify $ \es -> es { nextAction = Continue }
 
 -- | Continue running the event loop with the specified application
 -- state without redrawing the screen. This is faster than 'continue'
