@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Main where
 
 #if !(MIN_VERSION_base(4,11,0))
@@ -7,12 +8,22 @@ import Data.Monoid ((<>))
 import qualified Data.Text as T
 import Control.Monad (void)
 import Control.Concurrent
+import Lens.Micro.TH
+import Lens.Micro.Mtl
 import System.Random
 
 import Brick
 import Brick.BChan
 import Brick.Widgets.Border
 import qualified Graphics.Vty as V
+
+data AppState =
+    AppState { _textAreaHeight :: Int
+             , _textAreaWidth :: Int
+             , _textAreaContents :: [T.Text]
+             }
+
+makeLenses ''AppState
 
 draw :: AppState -> Widget n
 draw st =
@@ -22,18 +33,18 @@ header :: AppState -> Widget n
 header st =
     padBottom (Pad 1) $
     hBox [ padRight (Pad 7) $
-           (str $ "Max width: " <> show (textAreaWidth st)) <=>
+           (str $ "Max width: " <> show (_textAreaWidth st)) <=>
            (str "Left(-)/Right(+)")
-         , (str $ "Max height: " <> show (textAreaHeight st)) <=>
+         , (str $ "Max height: " <> show (_textAreaHeight st)) <=>
            (str "Down(-)/Up(+)")
          ]
 
 box :: AppState -> Widget n
 box st =
     border $
-    hLimit (textAreaWidth st) $
-    vLimit (textAreaHeight st) $
-    (renderBottomUp (txtWrap <$> textAreaContents st))
+    hLimit (_textAreaWidth st) $
+    vLimit (_textAreaHeight st) $
+    (renderBottomUp (txtWrap <$> _textAreaContents st))
 
 -- | Given a list of widgets, draw them bottom-up in a vertical
 -- arrangement, i.e., the first widget in this list will appear at the
@@ -69,30 +80,24 @@ textLines =
     , "cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
     ]
 
-handleEvent :: AppState -> BrickEvent n CustomEvent -> EventM n (Next AppState)
-handleEvent s (AppEvent (NewLine l)) =
-    continue $ s { textAreaContents = l : textAreaContents s }
-handleEvent s (VtyEvent (V.EvKey V.KUp [])) =
-    continue $ s { textAreaHeight = textAreaHeight s + 1 }
-handleEvent s (VtyEvent (V.EvKey V.KDown [])) =
-    continue $ s { textAreaHeight = max 0 $ textAreaHeight s - 1 }
-handleEvent s (VtyEvent (V.EvKey V.KRight [])) =
-    continue $ s { textAreaWidth = textAreaWidth s + 1 }
-handleEvent s (VtyEvent (V.EvKey V.KLeft [])) =
-    continue $ s { textAreaWidth = max 0 $ textAreaWidth s - 1 }
-handleEvent s (VtyEvent (V.EvKey V.KEsc [])) =
-    halt s
-handleEvent s _ =
-    continue s
+handleEvent :: BrickEvent n CustomEvent -> EventM n AppState ()
+handleEvent (AppEvent (NewLine l)) =
+    textAreaContents %= (l :)
+handleEvent (VtyEvent (V.EvKey V.KUp [])) =
+    textAreaHeight %= (+ 1)
+handleEvent (VtyEvent (V.EvKey V.KDown [])) =
+    textAreaHeight %= max 0 . subtract 1
+handleEvent (VtyEvent (V.EvKey V.KRight [])) =
+    textAreaWidth %= (+ 1)
+handleEvent (VtyEvent (V.EvKey V.KLeft [])) =
+    textAreaWidth %= max 0 . subtract 1
+handleEvent (VtyEvent (V.EvKey V.KEsc [])) =
+    halt
+handleEvent _ =
+    return ()
 
 data CustomEvent =
     NewLine T.Text
-
-data AppState =
-    AppState { textAreaHeight :: Int
-             , textAreaWidth :: Int
-             , textAreaContents :: [T.Text]
-             }
 
 app :: App AppState CustomEvent ()
 app =
@@ -100,14 +105,14 @@ app =
         , appChooseCursor = neverShowCursor
         , appHandleEvent = handleEvent
         , appAttrMap = const $ attrMap V.defAttr []
-        , appStartEvent = return
+        , appStartEvent = return ()
         }
 
 initialState :: AppState
 initialState =
-    AppState { textAreaHeight = 20
-             , textAreaWidth = 40
-             , textAreaContents = []
+    AppState { _textAreaHeight = 20
+             , _textAreaWidth = 40
+             , _textAreaContents = []
              }
 
 -- | Run forever, generating new lines of text for the application

@@ -3,6 +3,7 @@
 module Main where
 
 import Control.Monad (void)
+import Control.Monad.State (modify)
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid ((<>))
 #endif
@@ -57,11 +58,11 @@ drawUi i = [ui]
              , str "'Esc' to quit."
              ]
 
-appEvent :: Int -> BrickEvent Name e -> T.EventM Name (T.Next Int)
-appEvent i (VtyEvent (V.EvKey (V.KChar '+') [])) = M.continue $ i + 1
-appEvent i (VtyEvent (V.EvKey (V.KChar 'i') [])) = M.invalidateCacheEntry ExpensiveWidget >> M.continue i
-appEvent i (VtyEvent (V.EvKey V.KEsc [])) = M.halt i
-appEvent i _ = M.continue i
+appEvent :: BrickEvent Name e -> T.EventM Name Int ()
+appEvent (VtyEvent (V.EvKey (V.KChar '+') [])) = modify (+ 1)
+appEvent (VtyEvent (V.EvKey (V.KChar 'i') [])) = M.invalidateCacheEntry ExpensiveWidget
+appEvent (VtyEvent (V.EvKey V.KEsc [])) = M.halt
+appEvent _ = return ()
 
 emphAttr :: AttrName
 emphAttr = "emphasis"
@@ -69,7 +70,7 @@ emphAttr = "emphasis"
 app :: M.App Int e Name
 app =
     M.App { M.appDraw = drawUi
-          , M.appStartEvent = return
+          , M.appStartEvent = return ()
           , M.appHandleEvent = appEvent
           , M.appAttrMap = const $ attrMap V.defAttr [(emphAttr, V.white `on` V.blue)]
           , M.appChooseCursor = M.neverShowCursor

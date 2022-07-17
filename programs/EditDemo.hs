@@ -5,6 +5,7 @@ module Main where
 
 import Lens.Micro
 import Lens.Micro.TH
+import Lens.Micro.Mtl
 import qualified Graphics.Vty as V
 
 import qualified Brick.Main as M
@@ -47,18 +48,19 @@ drawUI st = [ui]
             str " " <=>
             str "Press Tab to switch between editors, Esc to quit."
 
-appEvent :: St -> T.BrickEvent Name e -> T.EventM Name (T.Next St)
-appEvent st (T.VtyEvent (V.EvKey V.KEsc [])) =
-    M.halt st
-appEvent st (T.VtyEvent (V.EvKey (V.KChar '\t') [])) =
-    M.continue $ st & focusRing %~ F.focusNext
-appEvent st (T.VtyEvent (V.EvKey V.KBackTab [])) =
-    M.continue $ st & focusRing %~ F.focusPrev
-appEvent st ev =
-    M.continue =<< case F.focusGetCurrent (st^.focusRing) of
-      Just Edit1 -> T.handleEventLensed st edit1 E.handleEditorEvent ev
-      Just Edit2 -> T.handleEventLensed st edit2 E.handleEditorEvent ev
-      Nothing -> return st
+appEvent :: T.BrickEvent Name e -> T.EventM Name St ()
+appEvent (T.VtyEvent (V.EvKey V.KEsc [])) =
+    M.halt
+appEvent (T.VtyEvent (V.EvKey (V.KChar '\t') [])) =
+    focusRing %= F.focusNext
+appEvent (T.VtyEvent (V.EvKey V.KBackTab [])) =
+    focusRing %= F.focusPrev
+appEvent ev = do
+    r <- use focusRing
+    case F.focusGetCurrent r of
+      Just Edit1 -> T.handleEventLensed edit1 E.handleEditorEvent ev
+      Just Edit2 -> T.handleEventLensed edit2 E.handleEditorEvent ev
+      Nothing -> return ()
 
 initialState :: St
 initialState =
@@ -80,7 +82,7 @@ theApp =
     M.App { M.appDraw = drawUI
           , M.appChooseCursor = appCursor
           , M.appHandleEvent = appEvent
-          , M.appStartEvent = return
+          , M.appStartEvent = return ()
           , M.appAttrMap = const theMap
           }
 

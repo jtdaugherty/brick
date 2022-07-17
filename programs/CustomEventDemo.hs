@@ -3,8 +3,9 @@
 {-# LANGUAGE CPP #-}
 module Main where
 
-import Lens.Micro ((^.), (&), (.~), (%~))
+import Lens.Micro ((^.))
 import Lens.Micro.TH (makeLenses)
+import Lens.Micro.Mtl
 import Control.Monad (void, forever)
 import Control.Concurrent (threadDelay, forkIO)
 #if !(MIN_VERSION_base(4,11,0))
@@ -17,7 +18,6 @@ import Brick.Main
   ( App(..)
   , showFirstCursor
   , customMain
-  , continue
   , halt
   )
 import Brick.AttrMap
@@ -25,7 +25,6 @@ import Brick.AttrMap
   )
 import Brick.Types
   ( Widget
-  , Next
   , EventM
   , BrickEvent(..)
   )
@@ -50,14 +49,15 @@ drawUI st = [a]
             <=>
             (str $ "Counter value is: " <> (show $ st^.stCounter))
 
-appEvent :: St -> BrickEvent () CustomEvent -> EventM () (Next St)
-appEvent st e =
+appEvent :: BrickEvent () CustomEvent -> EventM () St ()
+appEvent e =
     case e of
-        VtyEvent (V.EvKey V.KEsc []) -> halt st
-        VtyEvent _ -> continue $ st & stLastBrickEvent .~ (Just e)
-        AppEvent Counter -> continue $ st & stCounter %~ (+1)
-                                          & stLastBrickEvent .~ (Just e)
-        _ -> continue st
+        VtyEvent (V.EvKey V.KEsc []) -> halt
+        VtyEvent _ -> stLastBrickEvent .= (Just e)
+        AppEvent Counter -> do
+            stCounter %= (+1)
+            stLastBrickEvent .= (Just e)
+        _ -> return ()
 
 initialState :: St
 initialState =
@@ -70,7 +70,7 @@ theApp =
     App { appDraw = drawUI
         , appChooseCursor = showFirstCursor
         , appHandleEvent = appEvent
-        , appStartEvent = return
+        , appStartEvent = return ()
         , appAttrMap = const $ attrMap V.defAttr []
         }
 

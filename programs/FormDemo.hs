@@ -3,6 +3,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
+import Control.Monad.State (gets, modify)
 import qualified Data.Text as T
 import Lens.Micro ((^.))
 import Lens.Micro.TH
@@ -112,22 +113,24 @@ draw f = [C.vCenter $ C.hCenter form <=> C.hCenter help]
 app :: App (Form UserInfo e Name) e Name
 app =
     App { appDraw = draw
-        , appHandleEvent = \s ev ->
+        , appHandleEvent = \ev -> do
+            f <- gets formFocus
             case ev of
-                VtyEvent (V.EvResize {})     -> continue s
-                VtyEvent (V.EvKey V.KEsc [])   -> halt s
+                VtyEvent (V.EvResize {}) -> return ()
+                VtyEvent (V.EvKey V.KEsc []) -> halt
                 -- Enter quits only when we aren't in the multi-line editor.
                 VtyEvent (V.EvKey V.KEnter [])
-                    | focusGetCurrent (formFocus s) /= Just AddressField -> halt s
+                    | focusGetCurrent f /= Just AddressField -> halt
                 _ -> do
-                    s' <- handleFormEvent ev s
+                    handleFormEvent ev
 
                     -- Example of external validation:
                     -- Require age field to contain a value that is at least 18.
-                    continue $ setFieldValid ((formState s')^.age >= 18) AgeField s'
+                    st <- gets formState
+                    modify $ setFieldValid (st^.age >= 18) AgeField
 
         , appChooseCursor = focusRingCursor formFocus
-        , appStartEvent = return
+        , appStartEvent = return ()
         , appAttrMap = const theMap
         }
 

@@ -6,8 +6,9 @@ module Main where
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid ((<>))
 #endif
-import Lens.Micro ((^.), (&), (%~))
+import Lens.Micro ((^.))
 import Lens.Micro.TH (makeLenses)
+import Lens.Micro.Mtl
 import Control.Monad (void)
 import qualified Graphics.Vty as V
 
@@ -72,27 +73,27 @@ bottomLayer st =
     translateBy (st^.bottomLayerLocation) $
     B.border $ str "Bottom layer\n(Ctrl-arrow keys move)"
 
-appEvent :: St -> T.BrickEvent Name e -> T.EventM Name (T.Next St)
-appEvent st (T.VtyEvent (V.EvKey V.KDown []))  =
-    M.continue $ st & middleLayerLocation.locationRowL %~ (+ 1)
-appEvent st (T.VtyEvent (V.EvKey V.KUp []))    =
-    M.continue $ st & middleLayerLocation.locationRowL %~ (subtract 1)
-appEvent st (T.VtyEvent (V.EvKey V.KRight [])) =
-    M.continue $ st & middleLayerLocation.locationColumnL %~ (+ 1)
-appEvent st (T.VtyEvent (V.EvKey V.KLeft []))  =
-    M.continue $ st & middleLayerLocation.locationColumnL %~ (subtract 1)
+appEvent :: T.BrickEvent Name e -> T.EventM Name St ()
+appEvent (T.VtyEvent (V.EvKey V.KDown []))  =
+    middleLayerLocation.locationRowL %= (+ 1)
+appEvent (T.VtyEvent (V.EvKey V.KUp []))    =
+    middleLayerLocation.locationRowL %= (subtract 1)
+appEvent (T.VtyEvent (V.EvKey V.KRight [])) =
+    middleLayerLocation.locationColumnL %= (+ 1)
+appEvent (T.VtyEvent (V.EvKey V.KLeft []))  =
+    middleLayerLocation.locationColumnL %= (subtract 1)
 
-appEvent st (T.VtyEvent (V.EvKey V.KDown  [V.MCtrl])) =
-    M.continue $ st & bottomLayerLocation.locationRowL %~ (+ 1)
-appEvent st (T.VtyEvent (V.EvKey V.KUp    [V.MCtrl])) =
-    M.continue $ st & bottomLayerLocation.locationRowL %~ (subtract 1)
-appEvent st (T.VtyEvent (V.EvKey V.KRight [V.MCtrl])) =
-    M.continue $ st & bottomLayerLocation.locationColumnL %~ (+ 1)
-appEvent st (T.VtyEvent (V.EvKey V.KLeft  [V.MCtrl])) =
-    M.continue $ st & bottomLayerLocation.locationColumnL %~ (subtract 1)
+appEvent (T.VtyEvent (V.EvKey V.KDown  [V.MCtrl])) =
+    bottomLayerLocation.locationRowL %= (+ 1)
+appEvent (T.VtyEvent (V.EvKey V.KUp    [V.MCtrl])) =
+    bottomLayerLocation.locationRowL %= (subtract 1)
+appEvent (T.VtyEvent (V.EvKey V.KRight [V.MCtrl])) =
+    bottomLayerLocation.locationColumnL %= (+ 1)
+appEvent (T.VtyEvent (V.EvKey V.KLeft  [V.MCtrl])) =
+    bottomLayerLocation.locationColumnL %= (subtract 1)
 
-appEvent st (T.VtyEvent (V.EvKey V.KEsc [])) = M.halt st
-appEvent st _ = M.continue st
+appEvent (T.VtyEvent (V.EvKey V.KEsc [])) = M.halt
+appEvent _ = return ()
 
 arrowAttr :: AttrName
 arrowAttr = "attr"
@@ -100,7 +101,7 @@ arrowAttr = "attr"
 app :: M.App St e Name
 app =
     M.App { M.appDraw = drawUi
-          , M.appStartEvent = return
+          , M.appStartEvent = return ()
           , M.appHandleEvent = appEvent
           , M.appAttrMap = const $ attrMap V.defAttr [(arrowAttr, fg V.cyan)]
           , M.appChooseCursor = M.neverShowCursor

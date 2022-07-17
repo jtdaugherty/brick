@@ -49,7 +49,7 @@ app :: App () e ()
 app =
     App { appDraw = const [ui]
         , appHandleEvent = resizeOrQuit
-        , appStartEvent = return
+        , appStartEvent = return ()
         , appAttrMap = const $ attrMap V.defAttr []
         , appChooseCursor = neverShowCursor
         }

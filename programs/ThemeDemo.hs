@@ -2,6 +2,7 @@
 module Main where
 
 import Control.Monad (void)
+import Control.Monad.State (put)
 import Graphics.Vty
   ( white, blue, green, yellow, black, magenta
   , Event(EvKey)
@@ -18,7 +19,6 @@ import Brick.Types
   ( Widget
   , BrickEvent(VtyEvent)
   , EventM
-  , Next
   )
 import Brick.Widgets.Center
   ( hCenter
@@ -58,18 +58,18 @@ theme2 =
              [ (keybindingAttr, fg yellow)
              ]
 
-appEvent :: Int -> BrickEvent () e -> EventM () (Next Int)
-appEvent _ (VtyEvent (EvKey (KChar '1') [])) = continue 1
-appEvent _ (VtyEvent (EvKey (KChar '2') [])) = continue 2
-appEvent s (VtyEvent (EvKey (KChar 'q') [])) = halt s
-appEvent s (VtyEvent (EvKey KEsc [])) = halt s
-appEvent s _ = continue s
+appEvent :: BrickEvent () e -> EventM () Int ()
+appEvent (VtyEvent (EvKey (KChar '1') [])) = put 1
+appEvent (VtyEvent (EvKey (KChar '2') [])) = put 2
+appEvent (VtyEvent (EvKey (KChar 'q') [])) = halt
+appEvent (VtyEvent (EvKey KEsc [])) = halt
+appEvent _ = return ()
 
 app :: App Int e ()
 app =
     App { appDraw = const [ui]
         , appHandleEvent = appEvent
-        , appStartEvent = return
+        , appStartEvent = return ()
         , appAttrMap = \s ->
             -- Note that in practice this is not ideal: we don't want
             -- to build an attribute from a theme every time this is

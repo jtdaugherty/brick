@@ -6,6 +6,7 @@ module Main where
 import Control.Monad (void)
 import Lens.Micro
 import Lens.Micro.TH
+import Lens.Micro.Mtl
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid
 #endif
@@ -93,26 +94,26 @@ drawUi st = [ui]
                                    else id
                       return $ mkItem $ str $ "Item " <> show i <> " "
 
-vp1Scroll :: M.ViewportScroll Name
+vp1Scroll :: M.ViewportScroll Name s
 vp1Scroll = M.viewportScroll VP1
 
-vp2Scroll :: M.ViewportScroll Name
+vp2Scroll :: M.ViewportScroll Name s
 vp2Scroll = M.viewportScroll VP2
 
-vp3Scroll :: M.ViewportScroll Name
+vp3Scroll :: M.ViewportScroll Name s
 vp3Scroll = M.viewportScroll VP3
 
-appEvent :: St -> T.BrickEvent Name e -> T.EventM Name (T.Next St)
-appEvent st (T.VtyEvent (V.EvKey V.KDown  [V.MCtrl])) = M.continue $ st & vp3Index._1 %~ min (vp3Size^._1) . (+ 1)
-appEvent st (T.VtyEvent (V.EvKey V.KUp    [V.MCtrl])) = M.continue $ st & vp3Index._1 %~ max 1 . subtract 1
-appEvent st (T.VtyEvent (V.EvKey V.KRight [V.MCtrl])) = M.continue $ st & vp3Index._2 %~ min (vp3Size^._1) . (+ 1)
-appEvent st (T.VtyEvent (V.EvKey V.KLeft  [V.MCtrl])) = M.continue $ st & vp3Index._2 %~ max 1 .  subtract 1
-appEvent st (T.VtyEvent (V.EvKey V.KDown []))         = M.continue $ st & vp1Index %~ min vp1Size . (+ 1)
-appEvent st (T.VtyEvent (V.EvKey V.KUp []))           = M.continue $ st & vp1Index %~ max 1 . subtract 1
-appEvent st (T.VtyEvent (V.EvKey V.KRight []))        = M.continue $ st & vp2Index %~ min vp2Size . (+ 1)
-appEvent st (T.VtyEvent (V.EvKey V.KLeft []))         = M.continue $ st & vp2Index %~ max 1 . subtract 1
-appEvent st (T.VtyEvent (V.EvKey V.KEsc [])) = M.halt st
-appEvent st _ = M.continue st
+appEvent :: T.BrickEvent Name e -> T.EventM Name St ()
+appEvent (T.VtyEvent (V.EvKey V.KDown  [V.MCtrl])) = vp3Index._1 %= min (vp3Size^._1) . (+ 1)
+appEvent (T.VtyEvent (V.EvKey V.KUp    [V.MCtrl])) = vp3Index._1 %= max 1 . subtract 1
+appEvent (T.VtyEvent (V.EvKey V.KRight [V.MCtrl])) = vp3Index._2 %= min (vp3Size^._1) . (+ 1)
+appEvent (T.VtyEvent (V.EvKey V.KLeft  [V.MCtrl])) = vp3Index._2 %= max 1 .  subtract 1
+appEvent (T.VtyEvent (V.EvKey V.KDown []))         = vp1Index %= min vp1Size . (+ 1)
+appEvent (T.VtyEvent (V.EvKey V.KUp []))           = vp1Index %= max 1 . subtract 1
+appEvent (T.VtyEvent (V.EvKey V.KRight []))        = vp2Index %= min vp2Size . (+ 1)
+appEvent (T.VtyEvent (V.EvKey V.KLeft []))         = vp2Index %= max 1 . subtract 1
+appEvent (T.VtyEvent (V.EvKey V.KEsc [])) = M.halt
+appEvent _ = return ()
 
 theMap :: AttrMap
 theMap = attrMap V.defAttr
@@ -122,7 +123,7 @@ theMap = attrMap V.defAttr
 app :: M.App St e Name
 app =
     M.App { M.appDraw = drawUi
-          , M.appStartEvent = return
+          , M.appStartEvent = return ()
           , M.appHandleEvent = appEvent
           , M.appAttrMap = const theMap
           , M.appChooseCursor = M.neverShowCursor
