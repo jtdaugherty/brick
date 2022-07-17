@@ -236,9 +236,9 @@ data EventState n s =
        }
 
 -- | An extent of a named area: its size, location, and origin.
-data Extent n = Extent { extentName      :: n
-                       , extentUpperLeft :: Location
-                       , extentSize      :: (Int, Int)
+data Extent n = Extent { extentName      :: !n
+                       , extentUpperLeft :: !Location
+                       , extentSize      :: !(Int, Int)
                        }
                        deriving (Show, Read, Generic, NFData)
 
@@ -314,15 +314,15 @@ data DynBorder = DynBorder
 -- result provides the image, cursor positions, and visibility requests
 -- that resulted from the rendering process.
 data Result n =
-    Result { image :: Image
+    Result { image :: !Image
            -- ^ The final rendered image for a widget
-           , cursors :: [CursorLocation n]
+           , cursors :: ![CursorLocation n]
            -- ^ The list of reported cursor positions for the
            -- application to choose from
-           , visibilityRequests :: [VisibilityRequest]
+           , visibilityRequests :: ![VisibilityRequest]
            -- ^ The list of visibility requests made by widgets rendered
            -- while rendering this one (used by viewports)
-           , extents :: [Extent n]
+           , extents :: ![Extent n]
            -- Programmer's note: we don't try to maintain the invariant that
            -- the size of the borders closely matches the size of the 'image'
            -- field. Most widgets don't need to care about borders, and so they
@@ -335,7 +335,7 @@ data Result n =
            -- If you're writing a widget, this should make it easier for you to
            -- do so; but beware this lack of invariant if you are consuming
            -- widgets.
-           , borders :: BorderMap DynBorder
+           , borders :: !(BorderMap DynBorder)
            -- ^ Places where we may rewrite the edge of the image when
            -- placing this widget next to another one.
            }
