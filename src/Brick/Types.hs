@@ -102,7 +102,7 @@ module Brick.Types
   )
 where
 
-import Lens.Micro (_1, _2, to, (^.), (&), (.~), Lens')
+import Lens.Micro (_1, _2, to, (^.), Lens')
 import Lens.Micro.Type (Getting)
 import Lens.Micro.Mtl ((.=), use)
 import Control.Monad.Catch (MonadThrow, MonadCatch, MonadMask)
