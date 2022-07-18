@@ -119,6 +119,9 @@ data Padding = Pad Int
              | Max
              -- ^ Pad up to the number of available rows or columns.
 
+-- | Given a state value and an 'EventM' that mutates that state, run
+-- the specified action and return both the resulting modified state and
+-- the result of the action itself.
 nestEventM :: a
            -- ^ The lens to use to extract and store the state mutated
            -- by the action.
@@ -154,6 +157,8 @@ nestEventM s' act = do
                                        }
     return (finalSt, actResult)
 
+-- | Given a lens into a field of the current state, focus mutations on
+-- the state field itself.
 withLens :: Lens' s a
          -- ^ The lens to use to extract and store the state
          -- mutated by the action.
