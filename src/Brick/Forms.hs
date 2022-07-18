@@ -141,9 +141,7 @@ data FormField a b e n =
               -- whether the field is currently focused, followed by the
               -- field state.
               , formFieldHandleEvent :: BrickEvent n e -> EventM n b ()
-              -- ^ An event handler for this field. This receives the
-              -- event and the field state and returns a new field
-              -- state.
+              -- ^ An event handler for this field.
               }
 
 -- | A form field state accompanied by the fields that manipulate that
@@ -733,8 +731,8 @@ renderFormFieldState fr (FormFieldState st _ _ fields helper concatFields) =
             in maybeInvalid (renderField foc st) : renderFields fs
     in helper $ concatFields $ renderFields fields
 
--- | Dispatch an event to the appropriate form field and return a new
--- form. This handles the following events in this order:
+-- | Dispatch an event to the currently focused form field. This handles
+-- the following events in this order:
 --
 -- * On @Tab@ keypresses, this changes the focus to the next field in
 --   the form.
