@@ -79,7 +79,7 @@ import Graphics.Vty
 import Graphics.Vty.Attributes (defAttr)
 
 import Brick.BChan (BChan, newBChan, readBChan, readBChan2, writeBChan)
-import Brick.Types (EventM(..))
+import Brick.Types.EventM
 import Brick.Types.Internal
 import Brick.Widgets.Internal
 import Brick.AttrMap

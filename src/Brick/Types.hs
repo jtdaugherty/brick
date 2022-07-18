@@ -1,9 +1,6 @@
 -- | Basic types used by this library.
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Brick.Types
   ( -- * The Widget type
@@ -30,7 +27,7 @@ module Brick.Types
   , ClickableScrollbarElement(..)
 
   -- * Event-handling types
-  , EventM(..)
+  , EventM
   , BrickEvent(..)
   , withLens
   , nestEventM
@@ -104,7 +101,6 @@ where
 import Lens.Micro (_1, _2, to, (^.), Lens')
 import Lens.Micro.Type (Getting)
 import Lens.Micro.Mtl ((.=), use)
-import Control.Monad.Catch (MonadThrow, MonadCatch, MonadMask)
 #if !MIN_VERSION_base(4,13,0)
 import Control.Monad.Fail (MonadFail)
 #endif
@@ -114,6 +110,7 @@ import Graphics.Vty (Attr)
 
 import Brick.Types.TH
 import Brick.Types.Internal
+import Brick.Types.EventM
 import Brick.AttrMap (AttrName, attrMapLookup)
 
 -- | The type of padding.
@@ -168,20 +165,6 @@ withLens target act = do
     (val', result) <- nestEventM val act
     target .= val'
     return result
-
--- | The monad in which event handlers run. Although it may be tempting
--- to dig into the reader value yourself, just use
--- 'Brick.Main.lookupViewport'.
-newtype EventM n s a =
-    EventM { runEventM :: ReaderT (EventRO n) (StateT (EventState n s) IO) a
-           }
-           deriving ( Functor, Applicative, Monad, MonadIO
-                    , MonadThrow, MonadCatch, MonadMask, MonadFail
-                    )
-
-instance MonadState s (EventM n s) where
-    get = EventM $ lift $ gets applicationState
-    put s = EventM $ lift $ modify $ \es -> es { applicationState = s }
 
 -- | The rendering context's current drawing attribute.
 attrL :: forall r n. Getting r (Context n) Attr

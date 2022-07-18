@@ -108,6 +108,7 @@ library
   other-modules:
     Brick.Types.Common
     Brick.Types.TH
+    Brick.Types.EventM
     Brick.Types.Internal
     Brick.Widgets.Internal
 
