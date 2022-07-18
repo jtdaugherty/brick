@@ -25,4 +25,3 @@ newtype EventM n s a =
 instance MonadState s (EventM n s) where
     get = EventM $ lift $ gets applicationState
     put s = EventM $ lift $ modify $ \es -> es { applicationState = s }
-
