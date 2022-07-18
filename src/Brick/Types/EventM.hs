@@ -12,9 +12,7 @@ import Control.Monad.State.Strict
 
 import Brick.Types.Internal
 
--- | The monad in which event handlers run. Although it may be tempting
--- to dig into the reader value yourself, just use
--- 'Brick.Main.lookupViewport'.
+-- | The monad in which event handlers run.
 newtype EventM n s a =
     EventM { runEventM :: ReaderT (EventRO n) (StateT (EventState n s) IO) a
            }
