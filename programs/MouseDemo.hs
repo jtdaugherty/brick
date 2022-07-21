@@ -88,12 +88,18 @@ appEvent :: T.BrickEvent Name e -> T.EventM Name St ()
 appEvent ev@(T.MouseDown n _ _ loc) = do
     lastReportedClick .= Just (n, loc)
     T.withLens edit $ E.handleEditorEvent ev
-appEvent (T.MouseUp {}) = lastReportedClick .= Nothing
-appEvent (T.VtyEvent (V.EvMouseUp {})) = lastReportedClick .= Nothing
-appEvent (T.VtyEvent (V.EvKey V.KUp [V.MCtrl])) = M.vScrollBy (M.viewportScroll Prose) (-1)
-appEvent (T.VtyEvent (V.EvKey V.KDown [V.MCtrl])) = M.vScrollBy (M.viewportScroll Prose) 1
-appEvent (T.VtyEvent (V.EvKey V.KEsc [])) = M.halt
-appEvent ev = T.withLens edit $ E.handleEditorEvent ev
+appEvent (T.MouseUp {}) =
+    lastReportedClick .= Nothing
+appEvent (T.VtyEvent (V.EvMouseUp {})) =
+    lastReportedClick .= Nothing
+appEvent (T.VtyEvent (V.EvKey V.KUp [V.MCtrl])) =
+    M.vScrollBy (M.viewportScroll Prose) (-1)
+appEvent (T.VtyEvent (V.EvKey V.KDown [V.MCtrl])) =
+    M.vScrollBy (M.viewportScroll Prose) 1
+appEvent (T.VtyEvent (V.EvKey V.KEsc [])) =
+    M.halt
+appEvent ev =
+    T.withLens edit $ E.handleEditorEvent ev
 
 aMap :: AttrMap
 aMap = attrMap V.defAttr
