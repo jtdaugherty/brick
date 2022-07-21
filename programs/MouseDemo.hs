@@ -7,6 +7,7 @@ import Lens.Micro ((^.))
 import Lens.Micro.TH (makeLenses)
 import Lens.Micro.Mtl
 import Control.Monad (void)
+import Control.Monad.Trans (liftIO)
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid ((<>))
 #endif
@@ -113,7 +114,9 @@ aMap = attrMap V.defAttr
 app :: M.App St e Name
 app =
     M.App { M.appDraw = drawUi
-          , M.appStartEvent = return ()
+          , M.appStartEvent = do
+              vty <- M.getVtyHandle
+              liftIO $ V.setMode (V.outputIface vty) V.Mouse True
           , M.appHandleEvent = appEvent
           , M.appAttrMap = const aMap
           , M.appChooseCursor = M.showFirstCursor
@@ -121,13 +124,7 @@ app =
 
 main :: IO ()
 main = do
-    let buildVty = do
-          v <- V.mkVty =<< V.standardIOConfig
-          V.setMode (V.outputIface v) V.Mouse True
-          return v
-
-    initialVty <- buildVty
-    void $ M.customMain initialVty buildVty Nothing app $ St [] Nothing
+    void $ M.defaultMain app $ St [] Nothing
            (unlines [ "Try clicking on various UI elements."
                     , "Observe that the click coordinates identify the"
                     , "underlying widget coordinates."
