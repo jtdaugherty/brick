@@ -123,8 +123,7 @@ data Padding = Pad Int
 -- the specified action and return both the resulting modified state and
 -- the result of the action itself.
 nestEventM :: a
-           -- ^ The lens to use to extract and store the state mutated
-           -- by the action.
+           -- ^ The initial state to use in the nested action.
            -> EventM n a b
            -- ^ The action to run.
            -> EventM n s (a, b)
