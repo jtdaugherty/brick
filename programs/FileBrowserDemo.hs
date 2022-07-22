@@ -28,6 +28,7 @@ import Brick.Widgets.Core
   ( vBox, (<=>), padTop
   , hLimit, vLimit, txt
   , withDefAttr, emptyWidget
+  , Padding(..)
   )
 import qualified Brick.Widgets.FileBrowser as FB
 import qualified Brick.AttrMap as A
@@ -45,7 +46,7 @@ drawUI b = [center $ ui <=> help]
              hLimit 50 $
              borderWithLabel (txt "Choose a file") $
              FB.renderFileBrowser True b
-        help = padTop (T.Pad 1) $
+        help = padTop (Pad 1) $
                vBox [ case FB.fileBrowserException b of
                           Nothing -> emptyWidget
                           Just e -> hCenter $ withDefAttr errorAttr $

@@ -17,7 +17,8 @@ import Brick.Types
   , BrickEvent(..)
   )
 import Brick.Widgets.Core
-  ( vBox
+  ( Padding(..)
+  , vBox
   , padTopBottom
   , withDefAttr
   , cached
@@ -51,7 +52,7 @@ drawUi i = [ui]
              , padTopBottom 1 $
                cached ExpensiveWidget $
                withDefAttr emphAttr $ str $ "This widget is cached (state = " <> show i <> ")"
-             , padBottom (T.Pad 1) $
+             , padBottom (Pad 1) $
                withDefAttr emphAttr $ str $ "This widget is not cached (state = " <> show i <> ")"
              , hCenter $ str "Press 'i' to invalidate the cache,"
              , str "'+' to change the state value, and"

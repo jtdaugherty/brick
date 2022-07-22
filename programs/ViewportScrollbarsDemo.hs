@@ -29,7 +29,8 @@ import Brick.AttrMap
   , attrMap
   )
 import Brick.Widgets.Core
-  ( hLimit
+  ( Padding(..)
+  , hLimit
   , vLimit
   , padRight
   , hBox
@@ -72,7 +73,7 @@ drawUi st = [ui]
                    , C.hCenter (str "Last clicked scroll bar element:")
                    , str $ show $ _lastClickedElement st
                    ])
-        pair = hBox [ padRight (T.Pad 5) $
+        pair = hBox [ padRight (Pad 5) $
                       B.border $
                       withClickableHScrollBars SBClick $
                       withHScrollBars OnBottom $

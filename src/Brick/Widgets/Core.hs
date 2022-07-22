@@ -22,6 +22,7 @@ module Brick.Widgets.Core
   , hyperlink
 
   -- * Padding
+  , Padding(..)
   , padLeft
   , padRight
   , padTop
@@ -374,6 +375,12 @@ hyperlink url p =
         c <- getContext
         let attr = (c^.attrL) `V.withURL` url
         withReaderT (ctxAttrMapL %~ setDefaultAttr attr) (render p)
+
+-- | The type of padding.
+data Padding = Pad Int
+             -- ^ Pad by the specified number of rows or columns.
+             | Max
+             -- ^ Pad up to the number of available rows or columns.
 
 -- | Pad the specified widget on the left. If max padding is used, this
 -- grows greedily horizontally; otherwise it defers to the padded
