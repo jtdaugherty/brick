@@ -26,7 +26,7 @@ module Brick.Types
   , ScrollbarRenderer(..)
   , ClickableScrollbarElement(..)
 
-  -- * Event-handling types
+  -- * Event-handling types and functions
   , EventM
   , BrickEvent(..)
   , withLens
