@@ -30,7 +30,9 @@ module Brick.Types
   , EventM
   , BrickEvent(..)
   , withLens
+  , withFirst
   , nestEventM
+  , nestEventM'
 
   -- * Rendering infrastructure
   , RenderM
@@ -98,9 +100,9 @@ module Brick.Types
   )
 where
 
-import Lens.Micro (_1, _2, to, (^.), Lens')
+import Lens.Micro (_1, _2, to, (^.), Lens', Traversal')
 import Lens.Micro.Type (Getting)
-import Lens.Micro.Mtl ((.=), use)
+import Lens.Micro.Mtl ((.=), (<~), preuse, use)
 #if !MIN_VERSION_base(4,13,0)
 import Control.Monad.Fail (MonadFail)
 #endif
@@ -118,6 +120,16 @@ data Padding = Pad Int
              -- ^ Pad by the specified number of rows or columns.
              | Max
              -- ^ Pad up to the number of available rows or columns.
+
+-- | Given a state value and an 'EventM' that mutates that state, run
+-- the specified action and return resulting modified state.
+nestEventM' :: a
+            -- ^ The lens to use to extract and store the state mutated
+            -- by the action.
+            -> EventM n a b
+            -- ^ The action to run.
+            -> EventM n s a
+nestEventM' s act = fst <$> nestEventM s act
 
 -- | Given a state value and an 'EventM' that mutates that state, run
 -- the specified action and return both the resulting modified state and
@@ -170,6 +182,21 @@ withLens target act = do
     (val', result) <- nestEventM val act
     target .= val'
     return result
+
+-- | Given a traversal into the current state, focus mutations on the
+-- first target of the traversal. If the traversal has no targets, this
+-- silently does nothing.
+withFirst :: Traversal' s a
+          -- ^ The traversal to target the state to be modified.
+          -> EventM n a ()
+          -- ^ The action to run, scoped over the first target of the
+          -- traversal.
+          -> EventM n s ()
+withFirst target act = do
+    mVal <- preuse target
+    case mVal of
+        Nothing -> return ()
+        Just val -> target <~ nestEventM' val act
 
 -- | The rendering context's current drawing attribute.
 attrL :: forall r n. Getting r (Context n) Attr
