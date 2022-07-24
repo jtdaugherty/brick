@@ -86,7 +86,6 @@ module Brick.Types
 
   -- * Miscellaneous
   , Size(..)
-  , Padding(..)
   , Direction(..)
 
   -- * Renderer internals (for benchmarking)
@@ -115,12 +114,6 @@ import Brick.Types.Internal
 import Brick.Types.EventM
 import Brick.AttrMap (AttrName, attrMapLookup)
 
--- | The type of padding.
-data Padding = Pad Int
-             -- ^ Pad by the specified number of rows or columns.
-             | Max
-             -- ^ Pad up to the number of available rows or columns.
-
 -- | Given a state value and an 'EventM' that mutates that state, run
 -- the specified action and return resulting modified state.
 nestEventM' :: a
@@ -135,8 +128,7 @@ nestEventM' s act = fst <$> nestEventM s act
 -- the specified action and return both the resulting modified state and
 -- the result of the action itself.
 nestEventM :: a
-           -- ^ The lens to use to extract and store the state mutated
-           -- by the action.
+           -- ^ The initial state to use in the nested action.
            -> EventM n a b
            -- ^ The action to run.
            -> EventM n s (a, b)
