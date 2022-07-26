@@ -117,8 +117,7 @@ import Brick.AttrMap (AttrName, attrMapLookup)
 -- | Given a state value and an 'EventM' that mutates that state, run
 -- the specified action and return resulting modified state.
 nestEventM' :: a
-            -- ^ The lens to use to extract and store the state mutated
-            -- by the action.
+           -- ^ The initial state to use in the nested action.
             -> EventM n a b
             -- ^ The action to run.
             -> EventM n s a
