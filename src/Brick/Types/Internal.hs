@@ -45,6 +45,7 @@ module Brick.Types.Internal
   , Size(..)
 
   , EventState(..)
+  , VtyContext(..)
   , EventRO(..)
   , NextAction(..)
   , Result(..)
@@ -82,6 +83,7 @@ module Brick.Types.Internal
   )
 where
 
+import Control.Concurrent (ThreadId)
 import Control.Monad.Reader
 import Control.Monad.State.Strict
 import Lens.Micro (_1, _2, Lens')
@@ -232,8 +234,16 @@ data EventState n s =
        , cacheInvalidateRequests :: !(S.Set (CacheInvalidateRequest n))
        , requestedVisibleNames :: !(S.Set n)
        , applicationState :: !s
-       , nextAction :: !(NextAction s)
+       , nextAction :: !NextAction
+       , vtyContext :: VtyContext
        }
+
+data VtyContext =
+    VtyContext { vtyContextBuilder :: IO Vty
+               , vtyContextHandle :: Vty
+               , vtyContextThread :: ThreadId
+               , vtyContextPutEvent :: Event -> IO ()
+               }
 
 -- | An extent of a named area: its size, location, and origin.
 data Extent n = Extent { extentName      :: !n
@@ -243,12 +253,10 @@ data Extent n = Extent { extentName      :: !n
                        deriving (Show, Read, Generic, NFData)
 
 -- | The type of actions to take upon completion of an event handler.
-data NextAction s =
+data NextAction =
     Continue
     | ContinueWithoutRedraw
-    | SuspendAndResume (IO s)
     | Halt
-    deriving Functor
 
 -- | Scrolling direction.
 data Direction = Up
@@ -366,7 +374,6 @@ data BrickEvent n e = VtyEvent Event
                     deriving (Show, Eq, Ord)
 
 data EventRO n = EventRO { eventViewportMap :: M.Map n Viewport
-                         , eventVtyHandle :: Vty
                          , latestExtents :: [Extent n]
                          , oldState :: RenderState n
                          }

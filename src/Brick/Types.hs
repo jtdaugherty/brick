@@ -134,31 +134,23 @@ nestEventM :: a
 nestEventM s' act = do
     ro <- EventM ask
     s <- EventM $ lift get
+    vtyCtx <- getVtyContext
     let stInner = ES { applicationState = s'
                      , nextAction = Continue
                      , esScrollRequests = esScrollRequests s
                      , cacheInvalidateRequests = cacheInvalidateRequests s
                      , requestedVisibleNames = requestedVisibleNames s
+                     , vtyContext = vtyCtx
                      }
     (actResult, stInnerFinal) <- liftIO $ runStateT (runReaderT (runEventM act) ro) stInner
 
-    (nextAct, finalSt) <- case nextAction stInnerFinal of
-        Continue ->
-            return (Continue, applicationState stInnerFinal)
-        ContinueWithoutRedraw ->
-            return (ContinueWithoutRedraw, applicationState stInnerFinal)
-        Halt ->
-            return (Halt, applicationState stInnerFinal)
-        SuspendAndResume act' -> do
-            s'' <- liftIO act'
-            return (Continue, s'')
-
-    EventM $ lift $ modify $ \st -> st { nextAction = nextAct
+    EventM $ lift $ modify $ \st -> st { nextAction = nextAction stInnerFinal
                                        , esScrollRequests = esScrollRequests stInnerFinal
                                        , cacheInvalidateRequests = cacheInvalidateRequests stInnerFinal
                                        , requestedVisibleNames = requestedVisibleNames stInnerFinal
+                                       , vtyContext = vtyContext stInnerFinal
                                        }
-    return (finalSt, actResult)
+    return (applicationState stInnerFinal, actResult)
 
 -- | Given a lens into a field of the current state, focus mutations on
 -- the state field itself.
