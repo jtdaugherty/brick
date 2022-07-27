@@ -29,8 +29,6 @@ module Brick.Types
   -- * Event-handling types and functions
   , EventM
   , BrickEvent(..)
-  , withLens
-  , withFirst
   , nestEventM
   , nestEventM'
 
@@ -96,12 +94,13 @@ module Brick.Types
   , gets
   , put
   , modify
+  , zoom
   )
 where
 
-import Lens.Micro (_1, _2, to, (^.), Lens', Traversal')
+import Lens.Micro (_1, _2, to, (^.))
 import Lens.Micro.Type (Getting)
-import Lens.Micro.Mtl ((.=), (<~), preuse, use)
+import Lens.Micro.Mtl (zoom)
 #if !MIN_VERSION_base(4,13,0)
 import Control.Monad.Fail (MonadFail)
 #endif
@@ -133,53 +132,24 @@ nestEventM :: a
            -> EventM n s (a, b)
 nestEventM s' act = do
     ro <- EventM ask
-    s <- EventM $ lift get
+    es <- EventM $ lift $ lift get
     vtyCtx <- getVtyContext
-    let stInner = ES { applicationState = s'
-                     , nextAction = Continue
-                     , esScrollRequests = esScrollRequests s
-                     , cacheInvalidateRequests = cacheInvalidateRequests s
-                     , requestedVisibleNames = requestedVisibleNames s
+    let stInner = ES { nextAction = Continue
+                     , esScrollRequests = esScrollRequests es
+                     , cacheInvalidateRequests = cacheInvalidateRequests es
+                     , requestedVisibleNames = requestedVisibleNames es
                      , vtyContext = vtyCtx
                      }
-    (actResult, stInnerFinal) <- liftIO $ runStateT (runReaderT (runEventM act) ro) stInner
+    ((actResult, newSt), stInnerFinal) <- liftIO $ runStateT (runStateT (runReaderT (runEventM act) ro) s') stInner
 
-    EventM $ lift $ modify $ \st -> st { nextAction = nextAction stInnerFinal
-                                       , esScrollRequests = esScrollRequests stInnerFinal
-                                       , cacheInvalidateRequests = cacheInvalidateRequests stInnerFinal
-                                       , requestedVisibleNames = requestedVisibleNames stInnerFinal
-                                       , vtyContext = vtyContext stInnerFinal
-                                       }
-    return (applicationState stInnerFinal, actResult)
-
--- | Given a lens into a field of the current state, focus mutations on
--- the state field itself.
-withLens :: Lens' s a
-         -- ^ The lens to use to extract and store the state
-         -- mutated by the action.
-         -> EventM n a b
-         -- ^ The action to run, scoped over some state to manage.
-         -> EventM n s b
-withLens target act = do
-    val <- use target
-    (val', result) <- nestEventM val act
-    target .= val'
-    return result
-
--- | Given a traversal into the current state, focus mutations on the
--- first target of the traversal. If the traversal has no targets, this
--- silently does nothing.
-withFirst :: Traversal' s a
-          -- ^ The traversal to target the state to be modified.
-          -> EventM n a ()
-          -- ^ The action to run, scoped over the first target of the
-          -- traversal.
-          -> EventM n s ()
-withFirst target act = do
-    mVal <- preuse target
-    case mVal of
-        Nothing -> return ()
-        Just val -> target <~ nestEventM' val act
+    EventM $ lift $ lift $ modify $
+        \st -> st { nextAction = nextAction stInnerFinal
+                  , esScrollRequests = esScrollRequests stInnerFinal
+                  , cacheInvalidateRequests = cacheInvalidateRequests stInnerFinal
+                  , requestedVisibleNames = requestedVisibleNames stInnerFinal
+                  , vtyContext = vtyContext stInnerFinal
+                  }
+    return (newSt, actResult)
 
 -- | The rendering context's current drawing attribute.
 attrL :: forall r n. Getting r (Context n) Attr

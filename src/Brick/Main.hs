@@ -266,14 +266,13 @@ customMainWithVty initialVty buildVty mUserChan app initialAppState = do
     let emptyES = ES { esScrollRequests = []
                      , cacheInvalidateRequests = mempty
                      , requestedVisibleNames = mempty
-                     , applicationState = initialAppState
                      , nextAction = Continue
                      , vtyContext = vtyCtx
                      }
         emptyRS = RS M.empty mempty S.empty mempty mempty mempty mempty
         eventRO = EventRO M.empty mempty emptyRS
 
-    ((), eState) <- runStateT (runReaderT (runEventM (appStartEvent app)) eventRO) emptyES
+    (((), appState), eState) <- runStateT (runStateT (runReaderT (runEventM (appStartEvent app)) eventRO) initialAppState) emptyES
     let initialRS = RS { viewportMap = M.empty
                        , rsScrollRequests = esScrollRequests eState
                        , observedNames = S.empty
@@ -283,7 +282,7 @@ customMainWithVty initialVty buildVty mUserChan app initialAppState = do
                        , reportedExtents = mempty
                        }
 
-    (s, ctx) <- runWithVty vtyCtx brickChan mUserChan app initialRS (applicationState eState)
+    (s, ctx) <- runWithVty vtyCtx brickChan mUserChan app initialRS appState
                 `E.catch` (\(e::E.SomeException) -> shutdownVtyContext vtyCtx >> E.throw e)
 
     -- Shut down the context's event thread but do NOT shut down Vty
@@ -395,12 +394,12 @@ runVty vtyCtx readEvent app appState rs prevExtents draw = do
                 _ -> return (e, firstRS, exts)
         _ -> return (e, firstRS, exts)
 
-    let emptyES = ES [] mempty mempty appState Continue vtyCtx
+    let emptyES = ES [] mempty mempty Continue vtyCtx
         eventRO = EventRO (viewportMap nextRS) nextExts nextRS
 
-    ((), eState) <- runStateT (runReaderT (runEventM (appHandleEvent app e'))
-                                eventRO) emptyES
-    return ( applicationState eState
+    (((), newAppState), eState) <- runStateT (runStateT (runReaderT (runEventM (appHandleEvent app e'))
+                                eventRO) appState) emptyES
+    return ( newAppState
            , nextAction eState
            , nextRS { rsScrollRequests = esScrollRequests eState
                     , renderCache = applyInvalidations (cacheInvalidateRequests eState) $
@@ -467,18 +466,18 @@ getVtyHandle = vtyContextHandle <$> getVtyContext
 
 setVtyContext :: VtyContext -> EventM n s ()
 setVtyContext ctx =
-    EventM $ lift $ modify $ \s -> s { vtyContext = ctx }
+    EventM $ lift $ lift $ modify $ \s -> s { vtyContext = ctx }
 
 -- | Invalidate the rendering cache entry with the specified resource
 -- name.
 invalidateCacheEntry :: (Ord n) => n -> EventM n s ()
 invalidateCacheEntry n = EventM $ do
-    lift $ modify (\s -> s { cacheInvalidateRequests = S.insert (InvalidateSingle n) $ cacheInvalidateRequests s })
+    lift $ lift $ modify (\s -> s { cacheInvalidateRequests = S.insert (InvalidateSingle n) $ cacheInvalidateRequests s })
 
 -- | Invalidate the entire rendering cache.
 invalidateCache :: (Ord n) => EventM n s ()
 invalidateCache = EventM $ do
-    lift $ modify (\s -> s { cacheInvalidateRequests = S.insert InvalidateEntire $ cacheInvalidateRequests s })
+    lift $ lift $ modify (\s -> s { cacheInvalidateRequests = S.insert InvalidateEntire $ cacheInvalidateRequests s })
 
 getRenderState :: EventM n s (RenderState n)
 getRenderState = EventM $ asks oldState
@@ -567,7 +566,7 @@ data ViewportScroll n =
 
 addScrollRequest :: (n, ScrollRequest) -> EventM n s ()
 addScrollRequest req = EventM $ do
-    lift $ modify (\s -> s { esScrollRequests = req : esScrollRequests s })
+    lift $ lift $ modify (\s -> s { esScrollRequests = req : esScrollRequests s })
 
 -- | Build a viewport scroller for the viewport with the specified name.
 viewportScroll :: n -> ViewportScroll n
@@ -595,13 +594,13 @@ viewportScroll n =
 -- to save on redraw cost.
 continueWithoutRedraw :: EventM n s ()
 continueWithoutRedraw =
-    EventM $ lift $ modify $ \es -> es { nextAction = ContinueWithoutRedraw }
+    EventM $ lift $ lift $ modify $ \es -> es { nextAction = ContinueWithoutRedraw }
 
 -- | Halt the event loop and return the specified application state as
 -- the final state value.
 halt :: EventM n s ()
 halt =
-    EventM $ lift $ modify $ \es -> es { nextAction = Halt }
+    EventM $ lift $ lift $ modify $ \es -> es { nextAction = Halt }
 
 -- | Suspend the event loop, save the terminal state, and run the
 -- specified action. When it returns an application state value, restore
@@ -640,4 +639,4 @@ suspendAndResume' act = do
 -- at rendering time.
 makeVisible :: (Ord n) => n -> EventM n s ()
 makeVisible n = EventM $ do
-    lift $ modify (\s -> s { requestedVisibleNames = S.insert n $ requestedVisibleNames s })
+    lift $ lift $ modify (\s -> s { requestedVisibleNames = S.insert n $ requestedVisibleNames s })

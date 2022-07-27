@@ -229,11 +229,10 @@ data CacheInvalidateRequest n =
     | InvalidateEntire
     deriving (Ord, Eq)
 
-data EventState n s =
+data EventState n =
     ES { esScrollRequests :: ![(n, ScrollRequest)]
        , cacheInvalidateRequests :: !(S.Set (CacheInvalidateRequest n))
        , requestedVisibleNames :: !(S.Set n)
-       , applicationState :: !s
        , nextAction :: !NextAction
        , vtyContext :: VtyContext
        }

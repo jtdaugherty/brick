@@ -58,8 +58,8 @@ appEvent (T.VtyEvent (V.EvKey V.KBackTab [])) =
 appEvent ev = do
     r <- use focusRing
     case F.focusGetCurrent r of
-      Just Edit1 -> T.withLens edit1 $ E.handleEditorEvent ev
-      Just Edit2 -> T.withLens edit2 $ E.handleEditorEvent ev
+      Just Edit1 -> zoom edit1 $ E.handleEditorEvent ev
+      Just Edit2 -> zoom edit2 $ E.handleEditorEvent ev
       Nothing -> return ()
 
 initialState :: St
