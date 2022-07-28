@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
@@ -17,7 +18,9 @@ import qualified Data.List
 import Data.Maybe (isNothing)
 import Data.Monoid (Endo(..))
 import Data.Proxy
+#if !(MIN_VERSION_base(4,11,0))
 import Data.Semigroup (Semigroup((<>)))
+#endif
 
 import qualified Data.Sequence as Seq
 import qualified Data.Vector as V
