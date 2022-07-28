@@ -921,14 +921,16 @@ with ``Brick.Themes.saveCustomizations``.
 Wide Character Support and the TextWidth class
 ==============================================
 
-Brick supports rendering wide characters in all widgets, and the brick
-editor supports entering and editing wide characters. Wide characters
-are those such as many Asian characters and emoji that need more than
-a single terminal column to be displayed. Brick relies on
-`vty's multi-column character support`_ to determine the column width of
-each character rendered, but this requires some additional
-configuration.  Read the details there to configure the correct widths
-for your terminal.
+Brick attempts to support rendering wide characters in all widgets,
+and the brick editor supports entering and editing wide characters.
+Wide characters are those such as many Asian characters and emoji
+that need more than a single terminal column to be displayed.
+
+Unfortunatley, there is not a fully correct solution to determining
+the character width that the user's terminal will use for a given
+character. The current recommendation is to avoid use of wide characters
+due to these issues. If you still must use them, you can read `vty`_'s
+documentation for options that will affect character width calculations.
 
 As a result of supporting wide characters, it is important to know that
 computing the length of a string to determine its screen width will
@@ -1923,7 +1925,6 @@ or ``mapAttrNames`` to convert its custom names to the names that the
 sub-widget uses for rendering its output.
 
 .. _vty: https://github.com/jtdaugherty/vty
-.. _vty's multi-column character support: https://github.com/jtdaugherty/vty#multi-column-character-support
 .. _Hackage: http://hackage.haskell.org/
 .. _microlens: http://hackage.haskell.org/package/microlens
 .. _bracketed paste mode: https://cirw.in/blog/bracketed-paste
