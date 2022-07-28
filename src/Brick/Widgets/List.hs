@@ -605,7 +605,7 @@ listFindBy test l =
 
 -- | Traversal that targets the selected element, if any.
 --
--- Complexity: depends on usage as well as container type
+-- Complexity: depends on usage as well as the list's container type.
 --
 -- @
 -- listSelectedElementL for 'List': O(1) -- preview, fold
@@ -613,20 +613,17 @@ listFindBy test l =
 -- listSelectedElementL for 'Seq.Seq': O(log(min(i, n - i)))  -- all operations
 -- @
 --
-listSelectedElementL
-  :: (Splittable t, Traversable t, Semigroup (t e))
-  => Traversal' (GenericList n t e) e
+listSelectedElementL :: (Splittable t, Traversable t, Semigroup (t e))
+                     => Traversal' (GenericList n t e) e
 listSelectedElementL f l =
-  case l ^. listSelectedL of
-    Nothing -> pure l
-    Just i -> listElementsL go l
-      where
-      go l' =
-        let
-          (left, rest) = splitAt i l'
-          -- middle contains the target element (if any)
-          (middle, right) = splitAt 1 rest
-        in fmap (\m -> left <> m <> right) (traverse f middle)
+    case l ^. listSelectedL of
+        Nothing -> pure l
+        Just i -> listElementsL go l
+            where
+                go l' = let (left, rest) = splitAt i l'
+                            -- middle contains the target element (if any)
+                            (middle, right) = splitAt 1 rest
+                        in (\m -> left <> m <> right) <$> (traverse f middle)
 
 -- | Return a list's selected element, if any.
 --
