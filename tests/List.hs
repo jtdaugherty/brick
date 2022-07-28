@@ -356,7 +356,7 @@ prop_reverseAppend_Seq l1 l2 =
 -- whole container to be evaluated.
 --
 newtype L a = L [a]
-  deriving (Functor, Foldable, Traversable)
+  deriving (Functor, Foldable, Traversable, Semigroup)
 
 instance Splittable L where
   splitAt i (L xs) = over both L (Data.List.splitAt i xs)
@@ -382,6 +382,22 @@ prop_findByLazy =
   in
     l' ^. listSelectedL == Just 1
     && l'' ^. listSelectedL == Just 3
+
+prop_listSelectedElement_lazy :: Bool
+prop_listSelectedElement_lazy =
+  let
+    v = L (1:2:3:4:undefined) :: L Int
+    l = list () v 1 & listSelectedL .~ Just 3
+  in
+    listSelectedElement l == Just (3, 4)
+
+prop_listSelectedElementL_lazy :: Bool
+prop_listSelectedElementL_lazy =
+  let
+    v = L (1:2:3:4:undefined) :: L Int
+    l = list () v 1 & listSelectedL .~ Just 3
+  in
+    over listSelectedElementL (*2) l ^? listSelectedElementL == Just 8
 
 
 return []
