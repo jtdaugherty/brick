@@ -15,15 +15,16 @@ module Brick.Keybindings.KeyConfig
   , shift
 
   -- * Querying KeyConfigs
-  , getFirstDefaultBinding
+  , firstDefaultBinding
   , firstActiveBinding
   , allDefaultBindings
+  , allActiveBindings
   )
 where
 
-import Control.Applicative ((<|>))
+import Data.List (nub)
 import qualified Data.Map.Strict as M
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, listToMaybe)
 import qualified Graphics.Vty as Vty
 
 import Brick.Keybindings.KeyEvents
@@ -74,8 +75,8 @@ newKeyConfig evs bindings defaults =
 lookupKeyConfigBindings :: (Ord e) => KeyConfig e -> e -> Maybe BindingState
 lookupKeyConfigBindings kc e = M.lookup e $ keyConfigBindingMap kc
 
-getFirstDefaultBinding :: (Show e, Ord e) => KeyConfig e -> e -> Maybe Binding
-getFirstDefaultBinding kc ev = do
+firstDefaultBinding :: (Show e, Ord e) => KeyConfig e -> e -> Maybe Binding
+firstDefaultBinding kc ev = do
     bs <- M.lookup ev (keyConfigDefaultBindings kc)
     case bs of
         (b:_) -> Just b
@@ -86,14 +87,15 @@ allDefaultBindings kc ev =
     fromMaybe [] $ M.lookup ev (keyConfigDefaultBindings kc)
 
 firstActiveBinding :: (Show e, Ord e) => KeyConfig e -> e -> Maybe Binding
-firstActiveBinding kc ev = foundBinding <|> defaultBinding
+firstActiveBinding kc ev = listToMaybe $ allActiveBindings kc ev
+
+allActiveBindings :: (Show e, Ord e) => KeyConfig e -> e -> [Binding]
+allActiveBindings kc ev = nub $ foundBindings <> defaultBindings
     where
-        defaultBinding = getFirstDefaultBinding kc ev
-        foundBinding = do
-            bState <- lookupKeyConfigBindings kc ev
-            case bState of
-                BindingList (b:_) -> Just b
-                _ -> Nothing
+        defaultBindings = allDefaultBindings kc ev
+        foundBindings = case lookupKeyConfigBindings kc ev of
+            Just (BindingList bs) -> bs
+            _ -> []
 
 -- | The class of types that can be converted into 'Binding's.
 --
