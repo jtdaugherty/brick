@@ -765,10 +765,10 @@ handleFormEvent (VtyEvent (EvKey KBackTab [])) =
     formFocusL %= focusPrev
 handleFormEvent e@(MouseDown n _ _ _) = do
     formFocusL %= focusSetCurrent n
-    handleFormFieldEvent n e
+    handleFormFieldEvent e n
 handleFormEvent e@(MouseUp n _ _) = do
     formFocusL %= focusSetCurrent n
-    handleFormFieldEvent n e
+    handleFormFieldEvent e n
 handleFormEvent e@(VtyEvent (EvKey KUp [])) =
     withFocusAndGrouping e $ \n grp ->
         formFocusL %= focusSetCurrent (entryBefore grp n)
@@ -824,12 +824,11 @@ withFocus act = do
         Just n -> act n
 
 forwardToCurrent :: (Eq n) => BrickEvent n e -> EventM n (Form s e n) ()
-forwardToCurrent e =
-    withFocus $ \n -> do
-        handleFormFieldEvent n e
+forwardToCurrent =
+    withFocus . handleFormFieldEvent
 
-handleFormFieldEvent :: (Eq n) => n -> BrickEvent n e -> EventM n (Form s e n) ()
-handleFormFieldEvent n ev = do
+handleFormFieldEvent :: (Eq n) => BrickEvent n e -> n -> EventM n (Form s e n) ()
+handleFormFieldEvent ev n = do
     let findFieldState _ [] = return ()
         findFieldState prev (e:es) =
             case e of
