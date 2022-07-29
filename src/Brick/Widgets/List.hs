@@ -37,6 +37,7 @@ module Brick.Widgets.List
   , listSelectedL
   , listNameL
   , listItemHeightL
+  , listSelectedElementL
 
   -- * Accessors
   , listElements
@@ -81,7 +82,7 @@ import Control.Applicative ((<|>))
 import Data.Foldable (find, toList)
 import Control.Monad.State (evalState)
 
-import Lens.Micro ((^.), (^?), (&), (.~), (%~), _2, _head, set)
+import Lens.Micro (Traversal', (^.), (^?), (&), (.~), (%~), _2, _head, set)
 import Data.Functor (($>))
 import Data.List.NonEmpty (NonEmpty((:|)))
 import Data.Maybe (fromMaybe)
@@ -597,6 +598,28 @@ listFindBy test l =
         headResult = find (test . snd) . zip [0..] . toList $ h
         result = tailResult <|> headResult
     in maybe id (set listSelectedL . Just . fst) result l
+
+-- | Traversal that targets the selected element, if any.
+--
+-- Complexity: depends on usage as well as the list's container type.
+--
+-- @
+-- listSelectedElementL for 'List': O(1) -- preview, fold
+--                                O(n) -- set, modify, traverse
+-- listSelectedElementL for 'Seq.Seq': O(log(min(i, n - i)))  -- all operations
+-- @
+--
+listSelectedElementL :: (Splittable t, Traversable t, Semigroup (t e))
+                     => Traversal' (GenericList n t e) e
+listSelectedElementL f l =
+    case l ^. listSelectedL of
+        Nothing -> pure l
+        Just i -> listElementsL go l
+            where
+                go l' = let (left, rest) = splitAt i l'
+                            -- middle contains the target element (if any)
+                            (middle, right) = splitAt 1 rest
+                        in (\m -> left <> m <> right) <$> (traverse f middle)
 
 -- | Return a list's selected element, if any.
 --
