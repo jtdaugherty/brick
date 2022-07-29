@@ -82,7 +82,7 @@ import Control.Applicative ((<|>))
 import Data.Foldable (find, toList)
 import Control.Monad.State (evalState)
 
-import Lens.Micro (Traversal', (^.), (^?), (&), (.~), (%~), _2, _head, set)
+import Lens.Micro (Traversal', (^.), (^?), (&), (.~), (%~), _2, set)
 import Data.Functor (($>))
 import Data.List.NonEmpty (NonEmpty((:|)))
 import Data.Maybe (fromMaybe)
@@ -631,13 +631,11 @@ listSelectedElementL f l =
 -- listSelectedElement for 'List': O(1)
 -- listSelectedElement for 'Seq.Seq': O(log(min(i, n - i)))
 -- @
-listSelectedElement :: (Splittable t, Foldable t)
+listSelectedElement :: (Splittable t, Traversable t, Semigroup (t e))
                     => GenericList n t e
                     -> Maybe (Int, e)
-listSelectedElement l = do
-    sel <- l^.listSelectedL
-    let (_, xs) = splitAt sel (l ^. listElementsL)
-    (sel,) <$> toList xs ^? _head
+listSelectedElement l =
+    (,) <$> l^.listSelectedL <*> l^?listSelectedElementL
 
 -- | Remove all elements from the list and clear the selection.
 --
@@ -666,11 +664,16 @@ listReverse l =
 --
 -- Complexity: same as 'traverse' for the container type (typically
 -- /O(n)/).
-listModify :: (Traversable t)
+--
+-- Complexity: same as 'listSelectedElementL' for the list's container type.
+--
+-- @
+-- listModify for 'List': O(n)
+-- listModify for 'Seq.Seq': O(log(min(i, n - i)))
+-- @
+--
+listModify :: (Traversable t, Splittable t, Semigroup (t e))
            => (e -> e)
            -> GenericList n t e
            -> GenericList n t e
-listModify f l =
-    case l ^. listSelectedL of
-        Nothing -> l
-        Just j -> l & listElementsL %~ imap (\i e -> if i == j then f e else e)
+listModify f = listSelectedElementL %~ f
