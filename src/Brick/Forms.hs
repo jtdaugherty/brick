@@ -4,6 +4,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# OPTIONS_GHC -fno-warn-unused-binds #-}
 -- | Note - this API is designed to support a narrow (but common!) set
 -- of use cases. If you find that you need more customization than this
 -- offers, then you will need to consider building your own layout and
