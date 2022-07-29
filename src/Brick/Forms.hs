@@ -482,10 +482,11 @@ renderRadio lb check rb val name label foc cur =
         csr = if foc then putCursor name (Location (1,0)) else id
     in clickable name $
        addAttr $ csr $
-       hBox [ txt $ T.singleton lb
-            , txt $ if isSet then T.singleton check else " "
-            , txt $ T.singleton rb <> " " <> label
-            ]
+       txt $ T.concat $
+       [ T.singleton lb
+       , if isSet then T.singleton check else " "
+       , T.singleton rb <> " " <> label
+       ]
 
 -- | A form field for using an editor to edit the text representation of
 -- a value. The other editing fields in this module are special cases of
