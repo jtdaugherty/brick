@@ -781,7 +781,8 @@ handleFormEvent e@(VtyEvent (EvKey KLeft [])) =
 handleFormEvent e@(VtyEvent (EvKey KRight [])) =
     withFocusAndGrouping e $ \n grp ->
         formFocusL %= focusSetCurrent (entryAfter grp n)
-handleFormEvent e = forwardToCurrent e
+handleFormEvent e =
+    forwardToCurrent e
 
 getFocusGrouping :: (Eq n) => Form s e n -> n -> Maybe [n]
 getFocusGrouping f n = findGroup (formFieldStates f)
