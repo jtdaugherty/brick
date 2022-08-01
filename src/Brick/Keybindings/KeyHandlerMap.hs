@@ -1,15 +1,21 @@
 module Brick.Keybindings.KeyHandlerMap
   ( KeyHandlerMap
   , mkKeybindings
-  , lookupVtyEvent
+  , handleKeyboardEvent
+
+  -- * Handlers and triggers
   , Handler(..)
   , KeyHandler(..)
   , KeyEventHandler(..)
   , EventTrigger(..)
+
+  -- * Building handlers
   , onEvent
   , onKey
+
+  -- * Misc
   , keyHandlerMapToList
-  , handleKeyboardEvent
+  , lookupVtyEvent
   )
 where
 
@@ -43,9 +49,9 @@ data Handler m =
 data KeyHandler e m =
     KeyHandler { khHandler :: KeyEventHandler e m
                -- ^ The handler to invoke. Note that this maintains
-               -- the original key abstract key event handler; this
-               -- allows us to obtain the original 'EventTrigger' for
-               -- the 'KeyEventHandler' upon which this 'KeyHandler'
+               -- the original abstract key event handler; this allows
+               -- us to obtain the original 'EventTrigger' for the
+               -- 'KeyEventHandler' upon which this 'KeyHandler'
                -- is built. This can be important for keybinding
                -- consistency checks or collision checks as well as help
                -- text generation.
@@ -54,15 +60,23 @@ data KeyHandler e m =
                -- handler.
                }
 
--- | Find a key handler that matches a Vty Event, if any.
+-- | Find the key handler that matches a Vty 'Vty.Event', if any.
+--
+-- This works by looking up an event handler whose binding is the key
+-- specified in the 'Vty.Event' based on the 'KeyConfig' that was used
+-- to build the 'KeyHandlerMap'.
+--
+-- Ordinarily you will not need to use this function; use
+-- 'handleKeyboardEvent' instead. This is provided for more direct
+-- access to the 'KeyHandlerMap' internals.
 lookupVtyEvent :: Vty.Event -> KeyHandlerMap e m -> Maybe (KeyHandler e m)
 lookupVtyEvent (Vty.EvKey k mods) (KeyHandlerMap m) = M.lookup (Binding k mods) m
 lookupVtyEvent _ _ = Nothing
 
--- | Handle a keyboard event by looking it up in a map of bindings and
--- invoking the matching binding's handler. Return True if the key event
--- was handled with a matching binding; False if no matching binding was
--- found (the fallback case).
+-- | Handle a keyboard event by looking it up in the 'KeyHandlerMap'
+-- and invoking the matching binding's handler if one is found. Return
+-- @True@ if the a matching handler was found and run; return @False@ if
+-- no matching binding was found.
 handleKeyboardEvent :: (Monad m)
                     => KeyHandlerMap e m
                     -- ^ The handler map to query for a handler for this
@@ -77,19 +91,25 @@ handleKeyboardEvent handlerMap e = do
 
 -- | Build a 'KeyHandlerMap'.
 --
--- This works by taking a list of abstract key event handlers and
--- building a map of event handlers based on specific Vty keys, using
--- the provided 'KeyConfig' to map between abstract key events and Vty
--- keys.
+-- This works by taking a list of abstract 'KeyEventHandler's and
+-- building a 'KeyHandlerMap' of event handlers based on specific Vty
+-- keys using the provided 'KeyConfig' to map between abstract key
+-- events of type @e@ and Vty keys. Event handlers triggered by an event
+-- @e@ are set up to be triggered by either the customized bindings for
+-- @e@ in the 'KeyConfig', no bindings at all if the 'KeyConfig' has
+-- marked @e@ as 'Unbound', or the default bindings for @e@ otherwise.
 --
--- Once you have a 'KeyHandlerMap', you can dispatch a key event to it
--- and invoke the corresponding handler with 'handleKeyboardEvent'.
+-- Once you have a 'KeyHandlerMap', you can dispatch an input key
+-- event to it and invoke the corresponding handler (if any) with
+-- 'handleKeyboardEvent'.
 mkKeybindings :: (Ord e)
               => [KeyEventHandler e m]
               -> KeyConfig e
               -> KeyHandlerMap e m
 mkKeybindings ks conf = KeyHandlerMap $ M.fromList $ buildKeyHandlerMapPairs ks conf
 
+-- | Convert a key handler map to a list of pairs of bindings and their
+-- handlers.
 keyHandlerMapToList :: KeyHandlerMap e m
                     -> [(Binding, KeyHandler e m)]
 keyHandlerMapToList (KeyHandlerMap m) = M.toList m
