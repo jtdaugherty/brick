@@ -1,11 +1,11 @@
 module Brick.Keybindings.KeyConfig
   ( KeyConfig(keyConfigEvents)
-  , Binding(..)
   , BindingState(..)
   , newKeyConfig
   , lookupKeyConfigBindings
 
   -- * Specifying bindings
+  , Binding(..)
   , ToBinding(..)
   , key
   , fn
@@ -29,20 +29,48 @@ import qualified Graphics.Vty as Vty
 
 import Brick.Keybindings.KeyEvents
 
+-- | A key binding.
+--
+-- The easiest way to express 'Binding's is to use the helper functions
+-- in this module that work with instances of 'ToBinding', e.g.
+--
+-- @
+-- let ctrlB = 'ctrl' \'b\'
+--     shiftX = 'shift' \'x\'
+--     ctrlMetaK = 'ctrl' $ 'meta' \'k\'
+--     -- Or with Vty keys directly:
+--     ctrlDown = 'ctrl' 'Graphics.Vty.Input.KDown'
+-- @
 data Binding =
     Binding { kbKey :: Vty.Key
+            -- ^ The key itself.
             , kbMods :: [Vty.Modifier]
+            -- ^ The list of modifiers. Order is not significant.
             } deriving (Eq, Show, Ord)
 
+-- | An explicit configuration of key bindings for a key event.
 data BindingState =
     BindingList [Binding]
+    -- ^ Bind the event to the specified list of bindings.
     | Unbound
+    -- ^ Disable all bindings for the event, including default bindings.
     deriving (Show, Eq, Ord)
 
 -- | A configuration of custom key bindings. A 'KeyConfig' stores
 -- everything needed to resolve a key event into one or more key
 -- bindings. Make a 'KeyConfig' with 'newKeyConfig', then use it to
 -- dispatch to 'KeyEventHandler's with 'mkKeybindings'.
+--
+-- Make a new 'KeyConfig' with 'newKeyConfig'.
+--
+-- A 'KeyConfig' stores:
+--
+-- * A collection of named key events, mapping the event type @e@ to
+--   'Text' labels.
+-- * A list of default key bindings for each event @e@.
+-- * An optional customized binding list for each event, setting the
+--   event to either 'Unbound' or providing explicit overridden bindings
+--   with 'BindingList'.
 data KeyConfig e =
     KeyConfig { keyConfigBindingMap :: M.Map e BindingState
               -- ^ The map of custom bindings for events with custom
@@ -74,9 +102,14 @@ newKeyConfig evs bindings defaults =
               , keyConfigDefaultBindings = M.fromList defaults
               }
 
+-- | Look up the binding state for the specified event. This returns
+-- 'Nothing' when the event has no explicitly configured custom
+-- 'BindingState'.
 lookupKeyConfigBindings :: (Ord e) => KeyConfig e -> e -> Maybe BindingState
 lookupKeyConfigBindings kc e = M.lookup e $ keyConfigBindingMap kc
 
+-- | A convenience function to return the first result of
+-- 'allDefaultBindings', if any.
 firstDefaultBinding :: (Show e, Ord e) => KeyConfig e -> e -> Maybe Binding
 firstDefaultBinding kc ev = do
     bs <- M.lookup ev (keyConfigDefaultBindings kc)
@@ -84,10 +117,15 @@ firstDefaultBinding kc ev = do
         (b:_) -> Just b
         _ -> Nothing
 
+-- | Returns the list of default bindings for the specified event,
+-- irrespective of whether the event has been explicitly configured with
+-- other bindings or set to 'Unbound'.
 allDefaultBindings :: (Ord e) => KeyConfig e -> e -> [Binding]
 allDefaultBindings kc ev =
     fromMaybe [] $ M.lookup ev (keyConfigDefaultBindings kc)
 
+-- | A convenience function to return the first result of
+-- 'allActiveBindings', if any.
 firstActiveBinding :: (Show e, Ord e) => KeyConfig e -> e -> Maybe Binding
 firstActiveBinding kc ev = listToMaybe $ allActiveBindings kc ev
 
