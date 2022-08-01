@@ -22,7 +22,7 @@ import qualified Graphics.Vty as Vty
 
 import Brick.Keybindings.KeyEvents
 import Brick.Keybindings.KeyConfig
-import Brick.Keybindings.KeyHandlerMap
+import Brick.Keybindings.KeyDispatcher
 
 data TextHunk = Verbatim T.Text
               | Comment T.Text

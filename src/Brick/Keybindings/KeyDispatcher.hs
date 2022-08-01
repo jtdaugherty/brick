@@ -1,5 +1,5 @@
-module Brick.Keybindings.KeyHandlerMap
-  ( KeyHandlerMap
+module Brick.Keybindings.KeyDispatcher
+  ( KeyDispatcher
   , mkKeybindings
   , handleKeyboardEvent
 
@@ -14,7 +14,7 @@ module Brick.Keybindings.KeyHandlerMap
   , onKey
 
   -- * Misc
-  , keyHandlerMapToList
+  , keyDispatcherToList
   , lookupVtyEvent
   )
 where
@@ -27,7 +27,7 @@ import Brick.Keybindings.KeyConfig
 
 -- | A set of handlers for specific keys whose handlers run in the monad
 -- @m@.
-newtype KeyHandlerMap e m = KeyHandlerMap (M.Map Binding (KeyHandler e m))
+newtype KeyDispatcher e m = KeyDispatcher (M.Map Binding (KeyHandler e m))
 
 -- | An 'Handler' represents a handler implementation to be invoked in
 -- response to some event that runs in the monad @m@.
@@ -64,61 +64,60 @@ data KeyHandler e m =
 --
 -- This works by looking up an event handler whose binding is the key
 -- specified in the 'Vty.Event' based on the 'KeyConfig' that was used
--- to build the 'KeyHandlerMap'.
+-- to build the 'KeyDispatcher'.
 --
 -- Ordinarily you will not need to use this function; use
 -- 'handleKeyboardEvent' instead. This is provided for more direct
--- access to the 'KeyHandlerMap' internals.
-lookupVtyEvent :: Vty.Event -> KeyHandlerMap e m -> Maybe (KeyHandler e m)
-lookupVtyEvent (Vty.EvKey k mods) (KeyHandlerMap m) = M.lookup (Binding k mods) m
+-- access to the 'KeyDispatcher' internals.
+lookupVtyEvent :: Vty.Event -> KeyDispatcher e m -> Maybe (KeyHandler e m)
+lookupVtyEvent (Vty.EvKey k mods) (KeyDispatcher m) = M.lookup (Binding k mods) m
 lookupVtyEvent _ _ = Nothing
 
--- | Handle a keyboard event by looking it up in the 'KeyHandlerMap'
+-- | Handle a keyboard event by looking it up in the 'KeyDispatcher'
 -- and invoking the matching binding's handler if one is found. Return
 -- @True@ if the a matching handler was found and run; return @False@ if
 -- no matching binding was found.
 handleKeyboardEvent :: (Monad m)
-                    => KeyHandlerMap e m
-                    -- ^ The handler map to query for a handler for this
-                    -- event.
+                    => KeyDispatcher e m
+                    -- ^ The dispatcher to use for this event.
                     -> Vty.Event
                     -- ^ The event to handle.
                     -> m Bool
-handleKeyboardEvent handlerMap e = do
-    case lookupVtyEvent e handlerMap of
+handleKeyboardEvent d e = do
+    case lookupVtyEvent e d of
         Just kh -> (handlerAction $ kehHandler $ khHandler kh) >> return True
         Nothing -> return False
 
--- | Build a 'KeyHandlerMap'.
+-- | Build a 'KeyDispatcher'.
 --
 -- This works by taking a list of abstract 'KeyEventHandler's and
--- building a 'KeyHandlerMap' of event handlers based on specific Vty
+-- building a 'KeyDispatcher' of event handlers based on specific Vty
 -- keys using the provided 'KeyConfig' to map between abstract key
 -- events of type @e@ and Vty keys. Event handlers triggered by an event
 -- @e@ are set up to be triggered by either the customized bindings for
 -- @e@ in the 'KeyConfig', no bindings at all if the 'KeyConfig' has
 -- marked @e@ as 'Unbound', or the default bindings for @e@ otherwise.
 --
--- Once you have a 'KeyHandlerMap', you can dispatch an input key
+-- Once you have a 'KeyDispatcher', you can dispatch an input key
 -- event to it and invoke the corresponding handler (if any) with
 -- 'handleKeyboardEvent'.
 mkKeybindings :: (Ord e)
               => [KeyEventHandler e m]
               -> KeyConfig e
-              -> KeyHandlerMap e m
-mkKeybindings ks conf = KeyHandlerMap $ M.fromList $ buildKeyHandlerMapPairs ks conf
+              -> KeyDispatcher e m
+mkKeybindings ks conf = KeyDispatcher $ M.fromList $ buildKeyDispatcherPairs ks conf
 
--- | Convert a key handler map to a list of pairs of bindings and their
+-- | Convert a key dispatcher to a list of pairs of bindings and their
 -- handlers.
-keyHandlerMapToList :: KeyHandlerMap e m
+keyDispatcherToList :: KeyDispatcher e m
                     -> [(Binding, KeyHandler e m)]
-keyHandlerMapToList (KeyHandlerMap m) = M.toList m
+keyDispatcherToList (KeyDispatcher m) = M.toList m
 
-buildKeyHandlerMapPairs :: (Ord e)
+buildKeyDispatcherPairs :: (Ord e)
                         => [KeyEventHandler e m]
                         -> KeyConfig e
                         -> [(Binding, KeyHandler e m)]
-buildKeyHandlerMapPairs ks conf = pairs
+buildKeyDispatcherPairs ks conf = pairs
     where
         pairs = mkPair <$> handlers
         mkPair h = (khBinding h, h)

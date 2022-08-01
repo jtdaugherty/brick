@@ -91,7 +91,7 @@ library
     Brick.Keybindings
     Brick.Keybindings.KeyConfig
     Brick.Keybindings.KeyEvents
-    Brick.Keybindings.KeyHandlerMap
+    Brick.Keybindings.KeyDispatcher
     Brick.Keybindings.Parse
     Brick.Keybindings.Pretty
     Brick.Focus
