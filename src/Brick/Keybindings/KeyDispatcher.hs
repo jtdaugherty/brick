@@ -17,13 +17,13 @@
 --   monad @m@ of your choosing, using constructors 'onKey' and
 --   'onEvent'.
 -- * Use the created 'KeyConfig' and handlers to create a
---   'KeyDispatcher' with 'mkKeybindings'.
+--   'KeyDispatcher' with 'keyDispatcher'.
 -- * As user input events arrive, dispatch them to the appropriate
 --   handler using 'handleKeyboardEvent'.
 module Brick.Keybindings.KeyDispatcher
   ( -- * Key dispatching
     KeyDispatcher
-  , mkKeybindings
+  , keyDispatcher
   , handleKeyboardEvent
 
   -- * Building handlers
@@ -111,7 +111,8 @@ handleKeyboardEvent d e = do
         Just kh -> (handlerAction $ kehHandler $ khHandler kh) >> return True
         Nothing -> return False
 
--- | Build a 'KeyDispatcher'.
+-- | Build a 'KeyDispatcher' to dispatch keys to handle events of type
+-- @e@ using actions in a Monad @m@.
 --
 -- This works by taking a list of abstract 'KeyEventHandler's and
 -- building a 'KeyDispatcher' of event handlers based on specific Vty
@@ -124,11 +125,11 @@ handleKeyboardEvent d e = do
 -- Once you have a 'KeyDispatcher', you can dispatch an input key
 -- event to it and invoke the corresponding handler (if any) with
 -- 'handleKeyboardEvent'.
-mkKeybindings :: (Ord e)
+keyDispatcher :: (Ord e)
               => KeyConfig e
               -> [KeyEventHandler e m]
               -> KeyDispatcher e m
-mkKeybindings conf ks = KeyDispatcher $ M.fromList $ buildKeyDispatcherPairs ks conf
+keyDispatcher conf ks = KeyDispatcher $ M.fromList $ buildKeyDispatcherPairs ks conf
 
 -- | Convert a key dispatcher to a list of pairs of bindings and their
 -- handlers.
