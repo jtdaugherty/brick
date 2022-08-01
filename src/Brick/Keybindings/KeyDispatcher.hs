@@ -125,10 +125,10 @@ handleKeyboardEvent d e = do
 -- event to it and invoke the corresponding handler (if any) with
 -- 'handleKeyboardEvent'.
 mkKeybindings :: (Ord e)
-              => [KeyEventHandler e m]
-              -> KeyConfig e
+              => KeyConfig e
+              -> [KeyEventHandler e m]
               -> KeyDispatcher e m
-mkKeybindings ks conf = KeyDispatcher $ M.fromList $ buildKeyDispatcherPairs ks conf
+mkKeybindings conf ks = KeyDispatcher $ M.fromList $ buildKeyDispatcherPairs ks conf
 
 -- | Convert a key dispatcher to a list of pairs of bindings and their
 -- handlers.
