@@ -121,7 +121,7 @@ mkKeybindEventHelp kc h =
                                    then Verbatim <$> ppBinding <$> bs
                                    else unbound
                       in (Verbatim name, result)
-  in (label, ehDescription $ kehHandler h, evText)
+  in (label, handlerDescription $ kehHandler h, evText)
 
 -- | Build a 'Widget' displaying key binding information for a single
 -- related group of event handlers.

@@ -19,37 +19,40 @@ import qualified Graphics.Vty as Vty
 
 import Brick.Keybindings.KeyConfig
 
--- | A set of handlers for specific keys with handlers that run in the
--- monad @m@.
+-- | A set of handlers for specific keys whose handlers run in the monad
+-- @m@.
 newtype KeyHandlerMap e m = KeyHandlerMap (M.Map Binding (KeyHandler e m))
 
 -- | An 'Handler' represents a handler implementation to be invoked in
--- response to some event.
+-- response to some event that runs in the monad @m@.
 --
 -- In general, you should never need to make one of these manually.
--- Instead, use 'onEvent' and 'onKey'.
+-- Instead, use 'onEvent' and 'onKey'. This type's internals are exposed
+-- for easy inspection, not construction.
 data Handler m =
-    EH { ehDescription :: T.Text
-       -- ^ The description of this handler's behavior.
-       , ehAction :: m ()
-       -- ^ The action to take when this handler is invoked.
-       }
+    Handler { handlerDescription :: T.Text
+            -- ^ The description of this handler's behavior.
+            , handlerAction :: m ()
+            -- ^ The action to take when this handler is invoked.
+            }
 
 -- | A handler for a specific key.
 --
 -- In general, you should never need to create one of these. The
 -- internals are exposed to make inspection easy.
 data KeyHandler e m =
-    KH { khHandler :: KeyEventHandler e m
-       -- ^ The handler to invoke. Note that this maintains the original
-       -- key abstract key event handler; this allows us to obtain
-       -- the original 'EventTrigger' for the 'KeyEventHandler' upon
-       -- which this 'KeyHandler' is built. This can be important for
-       -- keybinding consistency checks or collision checks as well as
-       -- help text generation.
-       , khKey :: Binding
-       -- ^ The specific key that should trigger this handler.
-       }
+    KeyHandler { khHandler :: KeyEventHandler e m
+               -- ^ The handler to invoke. Note that this maintains
+               -- the original key abstract key event handler; this
+               -- allows us to obtain the original 'EventTrigger' for
+               -- the 'KeyEventHandler' upon which this 'KeyHandler'
+               -- is built. This can be important for keybinding
+               -- consistency checks or collision checks as well as help
+               -- text generation.
+               , khBinding :: Binding
+               -- ^ The specific key binding that should trigger this
+               -- handler.
+               }
 
 -- | Find a key handler that matches a Vty Event, if any.
 lookupVtyEvent :: Vty.Event -> KeyHandlerMap e m -> Maybe (KeyHandler e m)
@@ -69,7 +72,7 @@ handleKeyboardEvent :: (Monad m)
                     -> m Bool
 handleKeyboardEvent handlerMap e = do
     case lookupVtyEvent e handlerMap of
-        Just kh -> (ehAction $ kehHandler $ khHandler kh) >> return True
+        Just kh -> (handlerAction $ kehHandler $ khHandler kh) >> return True
         Nothing -> return False
 
 -- | Build a 'KeyHandlerMap'.
@@ -98,7 +101,7 @@ buildKeyHandlerMapPairs :: (Ord e)
 buildKeyHandlerMapPairs ks conf = pairs
     where
         pairs = mkPair <$> handlers
-        mkPair h = (khKey h, h)
+        mkPair h = (khBinding h, h)
         handlers = concat $ keyHandlersFromConfig conf <$> ks
 
 keyHandlersFromConfig :: (Ord e)
@@ -112,13 +115,13 @@ keyHandlersFromConfig kc eh =
         bindings = case kehEventTrigger eh of
             ByKey binding -> [binding]
             ByEvent ev    -> allBindingsFor ev
-    in [ KH { khHandler = eh, khKey = b } | b <- bindings ]
+    in [ KeyHandler { khHandler = eh, khBinding = b } | b <- bindings ]
 
 mkHandler :: T.Text -> m () -> Handler m
 mkHandler msg action =
-    EH { ehDescription = msg
-       , ehAction = action
-       }
+    Handler { handlerDescription = msg
+            , handlerAction = action
+            }
 
 -- | Specify a handler for the specified key event.
 onEvent :: e
@@ -129,9 +132,9 @@ onEvent :: e
         -- ^ The handler to invoke.
         -> KeyEventHandler e m
 onEvent ev msg action =
-    KEH { kehHandler = mkHandler msg action
-        , kehEventTrigger = ByEvent ev
-        }
+    KeyEventHandler { kehHandler = mkHandler msg action
+                    , kehEventTrigger = ByEvent ev
+                    }
 
 -- | Specify a handler for the specified key.
 onKey :: (ToBinding a)
@@ -143,9 +146,9 @@ onKey :: (ToBinding a)
       -- ^ The handler to invoke.
       -> KeyEventHandler e m
 onKey b msg action =
-    KEH { kehHandler = mkHandler msg action
-        , kehEventTrigger = ByKey $ toBinding b
-        }
+    KeyEventHandler { kehHandler = mkHandler msg action
+                    , kehEventTrigger = ByKey $ toBinding b
+                    }
 
 -- | A trigger for an event handler.
 data EventTrigger e =
@@ -160,8 +163,8 @@ data EventTrigger e =
 -- In general, you should never need to create these manually. Instead,
 -- use 'onEvent' and 'onKey'.
 data KeyEventHandler e m =
-    KEH { kehHandler :: Handler m
-        -- ^ The handler to invoke.
-        , kehEventTrigger :: EventTrigger e
-        -- ^ The trigger for the handler.
-        }
+    KeyEventHandler { kehHandler :: Handler m
+                    -- ^ The handler to invoke.
+                    , kehEventTrigger :: EventTrigger e
+                    -- ^ The trigger for the handler.
+                    }
