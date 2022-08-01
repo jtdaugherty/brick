@@ -1,5 +1,12 @@
+-- | This module provides 'KeyConfig' and associated functions. A
+-- 'KeyConfig' is the basis for the custom keybinding system in this
+-- library.
+--
+-- To get started, see 'newKeyConfig'. Once a 'KeyConfig' has been
+-- constructed, see 'Brick.Keybindings.KeyHandlerMap.mkKeybindings'.
 module Brick.Keybindings.KeyConfig
-  ( KeyConfig(keyConfigEvents)
+  ( KeyConfig
+  , keyConfigEvents
   , BindingState(..)
   , newKeyConfig
   , lookupKeyConfigBindings
@@ -72,13 +79,13 @@ data BindingState =
 data KeyConfig e =
     KeyConfig { keyConfigBindingMap :: M.Map e BindingState
               -- ^ The map of custom bindings for events with custom
-              -- bindings
+              -- bindings.
               , keyConfigEvents :: KeyEvents e
               -- ^ The base mapping of events and their names that is
-              -- used in this configuration
+              -- used in this configuration.
               , keyConfigDefaultBindings :: M.Map e [Binding]
               -- ^ A mapping of events and their default key bindings,
-              -- if any
+              -- if any.
               }
               deriving (Show, Eq)
 
