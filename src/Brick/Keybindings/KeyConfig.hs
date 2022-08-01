@@ -91,17 +91,17 @@ data KeyConfig e =
 
 newKeyConfig :: (Ord e)
              => KeyEvents e
-             -- ^ The base mapping of key events to use
+             -- ^ The base mapping of key events and names to use.
+             -> [(e, [Binding])]
+             -- ^ Default bindings by key event, such as from a
+             -- configuration file or embedded code
              -> [(e, BindingState)]
              -- ^ Custom bindings by key event, such as from a
              -- configuration file. Explicitly setting an event to
              -- 'Unbound' here has the effect of disabling its default
              -- bindings.
-             -> [(e, [Binding])]
-             -- ^ Default bindings by key event, such as from a
-             -- configuration file or embedded code
              -> KeyConfig e
-newKeyConfig evs bindings defaults =
+newKeyConfig evs defaults bindings =
     KeyConfig { keyConfigBindingMap = M.fromList bindings
               , keyConfigEvents = evs
               , keyConfigDefaultBindings = M.fromList defaults
