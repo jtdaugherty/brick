@@ -19,12 +19,12 @@
 -- * Use the created 'KeyConfig' and handlers to create a
 --   'KeyDispatcher' with 'keyDispatcher'.
 -- * As user input events arrive, dispatch them to the appropriate
---   handler using 'handleKeyboardEvent'.
+--   handler using 'handleKey'.
 module Brick.Keybindings.KeyDispatcher
   ( -- * Key dispatching
     KeyDispatcher
   , keyDispatcher
-  , handleKeyboardEvent
+  , handleKey
 
   -- * Building handlers
   , onEvent
@@ -83,31 +83,32 @@ data KeyHandler e m =
                -- handler.
                }
 
--- | Find the key handler that matches a Vty 'Vty.Event', if any.
+-- | Find the key handler that matches a Vty key event, if any.
 --
--- This works by looking up an event handler whose binding is the key
--- specified in the 'Vty.Event' based on the 'KeyConfig' that was used
--- to build the 'KeyDispatcher'.
+-- This works by looking up an event handler whose binding is the
+-- specified key and modifiers based on the 'KeyConfig' that was used to
+-- build the 'KeyDispatcher'.
 --
--- Ordinarily you will not need to use this function; use
--- 'handleKeyboardEvent' instead. This is provided for more direct
--- access to the 'KeyDispatcher' internals.
-lookupVtyEvent :: Vty.Event -> KeyDispatcher e m -> Maybe (KeyHandler e m)
-lookupVtyEvent (Vty.EvKey k mods) (KeyDispatcher m) = M.lookup (Binding k mods) m
-lookupVtyEvent _ _ = Nothing
+-- Ordinarily you will not need to use this function; use 'handleKey'
+-- instead. This is provided for more direct access to the
+-- 'KeyDispatcher' internals.
+lookupVtyEvent :: Vty.Key -> [Vty.Modifier] -> KeyDispatcher e m -> Maybe (KeyHandler e m)
+lookupVtyEvent k mods (KeyDispatcher m) = M.lookup (Binding k mods) m
 
 -- | Handle a keyboard event by looking it up in the 'KeyDispatcher'
 -- and invoking the matching binding's handler if one is found. Return
 -- @True@ if the a matching handler was found and run; return @False@ if
 -- no matching binding was found.
-handleKeyboardEvent :: (Monad m)
-                    => KeyDispatcher e m
-                    -- ^ The dispatcher to use for this event.
-                    -> Vty.Event
-                    -- ^ The event to handle.
-                    -> m Bool
-handleKeyboardEvent d e = do
-    case lookupVtyEvent e d of
+handleKey :: (Monad m)
+          => KeyDispatcher e m
+          -- ^ The dispatcher to use.
+          -> Vty.Key
+          -- ^ The key to handle.
+          -> [Vty.Modifier]
+          -- ^ The modifiers for the key, if any.
+          -> m Bool
+handleKey d k mods = do
+    case lookupVtyEvent k mods d of
         Just kh -> (handlerAction $ kehHandler $ khHandler kh) >> return True
         Nothing -> return False
 
@@ -122,9 +123,8 @@ handleKeyboardEvent d e = do
 -- @e@ in the 'KeyConfig', no bindings at all if the 'KeyConfig' has
 -- marked @e@ as 'Unbound', or the default bindings for @e@ otherwise.
 --
--- Once you have a 'KeyDispatcher', you can dispatch an input key
--- event to it and invoke the corresponding handler (if any) with
--- 'handleKeyboardEvent'.
+-- Once you have a 'KeyDispatcher', you can dispatch an input key event
+-- to it and invoke the corresponding handler (if any) with 'handleKey'.
 keyDispatcher :: (Ord e)
               => KeyConfig e
               -> [KeyEventHandler e m]
