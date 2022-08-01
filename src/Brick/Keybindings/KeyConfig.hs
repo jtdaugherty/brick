@@ -94,7 +94,7 @@ newKeyConfig :: (Ord e)
              -- ^ The base mapping of key events and names to use.
              -> [(e, [Binding])]
              -- ^ Default bindings by key event, such as from a
-             -- configuration file or embedded code
+             -- configuration file or embedded code.
              -> [(e, BindingState)]
              -- ^ Custom bindings by key event, such as from a
              -- configuration file. Explicitly setting an event to
