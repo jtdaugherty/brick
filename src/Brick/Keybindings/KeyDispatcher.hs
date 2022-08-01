@@ -1,17 +1,18 @@
 module Brick.Keybindings.KeyDispatcher
-  ( KeyDispatcher
+  ( -- * Key dispatching
+    KeyDispatcher
   , mkKeybindings
   , handleKeyboardEvent
+
+  -- * Building handlers
+  , onEvent
+  , onKey
 
   -- * Handlers and triggers
   , Handler(..)
   , KeyHandler(..)
   , KeyEventHandler(..)
   , EventTrigger(..)
-
-  -- * Building handlers
-  , onEvent
-  , onKey
 
   -- * Misc
   , keyDispatcherToList
