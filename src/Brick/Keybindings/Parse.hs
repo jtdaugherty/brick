@@ -1,4 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
+-- | This module provides key binding string parsing functions for use
+-- in e.g. reading key bindings from configuration files.
 module Brick.Keybindings.Parse
   ( parseBinding
   , parseBindingList
@@ -11,12 +13,61 @@ import Text.Read (readMaybe)
 
 import Brick.Keybindings.KeyConfig
 
+-- | Parse a key binding list into a 'BindingState'.
+--
+-- A key binding list either the string @"unbound"@ or is a
+-- comma-separated list of 'Binding's parsed with 'parseBinding'.
 parseBindingList :: T.Text -> Either String BindingState
 parseBindingList t =
     if T.toLower t == "unbound"
     then return Unbound
-    else BindingList <$> mapM (parseBinding . T.strip) (T.splitOn "," t)
+    else BindingList <$> mapM (parseBinding . T.strip) (T.splitOn "," $ T.strip t)
 
+-- | Parse a key binding string. Key binding strings specify zero or
+-- more modifier keys and a base key, separated by hyphens.
+--
+-- @
+-- (modifier "-")* key
+-- @
+--
+-- e.g. @c-down@, @backspace@, @ctrl-shift-f1@.
+--
+-- where each @modifier@ is parsed case-insensitively as follows:
+--
+-- * @"s", "shift"@: 'Vty.MShift'
+-- * @"m", "meta"@: 'Vty.MMeta'
+-- * @"a", "alt"@: 'Vty.MAlt'
+-- * @"c", "ctrl", "control"@: 'Vty.MCtrl'
+--
+-- and @key@ is parsed case-insensitively as follows:
+--
+-- * "f1", "f2", ...: 'Vty.KFun'
+-- * "esc": 'Vty.KEsc'
+-- * "backspace": 'Vty.KBS'
+-- * "enter": 'Vty.KEnter'
+-- * "left": 'Vty.KLeft'
+-- * "right": 'Vty.KRight'
+-- * "up": 'Vty.KUp'
+-- * "down": 'Vty.KDown'
+-- * "upleft": 'Vty.KUpLeft'
+-- * "upright": 'Vty.KUpRight'
+-- * "downleft": 'Vty.KDownLeft'
+-- * "downright": 'Vty.KDownRight'
+-- * "center": 'Vty.KCenter'
+-- * "backtab": 'Vty.KBackTab'
+-- * "printscreen": 'Vty.KPrtScr'
+-- * "pause": 'Vty.KPause'
+-- * "insert": 'Vty.KIns'
+-- * "home": 'Vty.KHome'
+-- * "pgup": 'Vty.KPageUp'
+-- * "del": 'Vty.KDel'
+-- * "end": 'Vty.KEnd'
+-- * "pgdown": 'Vty.KPageDown'
+-- * "begin": 'Vty.KBegin'
+-- * "menu": 'Vty.KMenu'
+-- * "space": @' '@
+-- * "tab": @'\\t'@
+-- * Otherwise, 'Vty.KChar'
 parseBinding :: T.Text -> Either String Binding
 parseBinding s = go (T.splitOn "-" $ T.toLower s) []
   where go [k] mods = do
