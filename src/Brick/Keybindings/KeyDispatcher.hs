@@ -1,3 +1,25 @@
+-- | This is the entry point into the keybinding infrastructure in
+-- this library. Note that usage of this API is not required to create
+-- working Brick applications; this API is provided for applications
+-- that need to support custom keybindings that are less tightly coupled
+-- to application behavior.
+--
+-- The workflow for this API is as follows:
+--
+-- * Create a data type @e@ with a constructor for each abstract
+--   application event that you want to trigger with an input key.
+-- * To each event @e@, assign a unique user-readable name (such as a
+--   name you could imagine using in a configuration file to refer to
+--   the event) and a list of default key bindings and use the resulting
+--   data to create a 'KeyConfig'.
+-- * Implement application event handlers that will be run in response
+--   to either specific hard-coded keys or events @e@, both in some
+--   monad @m@ of your choosing, using constructors 'onKey' and
+--   'onEvent'.
+-- * Use the created 'KeyConfig' and handlers to create a
+--   'KeyDispatcher' with 'mkKeybindings'.
+-- * As user input events arrive, dispatch them to the appropriate
+--   handler using 'handleKeyboardEvent'.
 module Brick.Keybindings.KeyDispatcher
   ( -- * Key dispatching
     KeyDispatcher
