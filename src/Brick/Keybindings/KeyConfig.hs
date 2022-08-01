@@ -140,7 +140,7 @@ allActiveBindings kc ev = nub foundBindings
             Just Unbound -> []
             Nothing -> defaultBindings
 
--- | The class of types that can be converted into 'Binding's.
+-- | The class of types that can form the basis of 'Binding's.
 --
 -- This is provided to make it easy to write and modify bindings in less
 -- verbose ways.
