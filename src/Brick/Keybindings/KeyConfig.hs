@@ -61,7 +61,9 @@ newKeyConfig :: (Ord e)
              -- ^ The base mapping of key events to use
              -> [(e, BindingState)]
              -- ^ Custom bindings by key event, such as from a
-             -- configuration file
+             -- configuration file. Explicitly setting an event to
+             -- 'Unbound' here has the effect of disabling its default
+             -- bindings.
              -> [(e, [Binding])]
              -- ^ Default bindings by key event, such as from a
              -- configuration file or embedded code
@@ -89,13 +91,18 @@ allDefaultBindings kc ev =
 firstActiveBinding :: (Show e, Ord e) => KeyConfig e -> e -> Maybe Binding
 firstActiveBinding kc ev = listToMaybe $ allActiveBindings kc ev
 
+-- | Return all active key bindings for the specified event. This
+-- returns customized bindings if any have been set in the 'KeyConfig',
+-- no bindings if the event has been explicitly set to 'Unbound', or the
+-- default bindings if the event is absent from the customized bindings.
 allActiveBindings :: (Show e, Ord e) => KeyConfig e -> e -> [Binding]
-allActiveBindings kc ev = nub $ foundBindings <> defaultBindings
+allActiveBindings kc ev = nub foundBindings
     where
         defaultBindings = allDefaultBindings kc ev
         foundBindings = case lookupKeyConfigBindings kc ev of
             Just (BindingList bs) -> bs
-            _ -> []
+            Just Unbound -> []
+            Nothing -> defaultBindings
 
 -- | The class of types that can be converted into 'Binding's.
 --
