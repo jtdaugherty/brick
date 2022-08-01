@@ -1,3 +1,9 @@
+-- | The re-exporting catch-all module for the customizable keybindings
+-- API.
+--
+-- To get started using this API, see the documentation in
+-- @KeyDispatcher@ as well as the User Guide section on customizable
+-- keybindings.
 module Brick.Keybindings
   ( module Brick.Keybindings.KeyEvents
   , module Brick.Keybindings.KeyConfig
