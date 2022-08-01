@@ -74,7 +74,8 @@ data BindingState =
 --
 -- * A collection of named key events, mapping the event type @e@ to
 --   'Text' labels.
--- * A list of default key bindings for each event @e@.
+-- * For each event @e@, optionally store a list of default key bindings
+--   for that event.
 -- * An optional customized binding list for each event, setting the
 --   event to either 'Unbound' or providing explicit overridden bindings
 --   with 'BindingList'.
@@ -99,12 +100,13 @@ newKeyConfig :: (Ord e)
              -- ^ The base mapping of key events and names to use.
              -> [(e, [Binding])]
              -- ^ Default bindings by key event, such as from a
-             -- configuration file or embedded code.
+             -- configuration file or embedded code. Optional on a
+             -- per-event basis.
              -> [(e, BindingState)]
              -- ^ Custom bindings by key event, such as from a
              -- configuration file. Explicitly setting an event to
              -- 'Unbound' here has the effect of disabling its default
-             -- bindings.
+             -- bindings. Optional on a per-event basis.
              -> KeyConfig e
 newKeyConfig evs defaults bindings =
     KeyConfig { keyConfigBindingMap = M.fromList bindings
