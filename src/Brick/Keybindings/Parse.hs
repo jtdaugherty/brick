@@ -113,8 +113,8 @@ parseBinding s = go (T.splitOn "-" $ T.toLower s) []
         pKey "space"     = return (Vty.KChar ' ')
         pKey "tab"       = return (Vty.KChar '\t')
         pKey t
-          | Just (c, "") <- T.uncons t =
-              return (Vty.KChar c)
+          | T.length t == 1 =
+              return (Vty.KChar $ T.last s)
           | Just n <- T.stripPrefix "f" t =
               case readMaybe (T.unpack n) of
                   Nothing -> Left ("Unknown keybinding: " ++ show t)
