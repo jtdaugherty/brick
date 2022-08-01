@@ -7,9 +7,7 @@ module Brick.Keybindings.KeyConfig
   -- * Specifying bindings
   , Binding(..)
   , ToBinding(..)
-  , key
   , fn
-  , char
   , meta
   , ctrl
   , shift
@@ -159,32 +157,22 @@ instance ToBinding Char where
 instance ToBinding Binding where
     toBinding = id
 
+addModifier :: (ToBinding a) => Vty.Modifier -> a -> Binding
+addModifier m val =
+    let b = toBinding val
+    in b { kbMods = nub $ m : kbMods b }
+
 -- | Add Meta to a binding.
 meta :: (ToBinding a) => a -> Binding
-meta val =
-    let binding = toBinding val
-    in binding { kbMods = Vty.MMeta : kbMods binding }
+meta = addModifier Vty.MMeta
 
 -- | Add Ctrl to a binding.
 ctrl :: (ToBinding a) => a -> Binding
-ctrl val =
-    let binding = toBinding val
-    in binding { kbMods = Vty.MCtrl : kbMods binding }
+ctrl = addModifier Vty.MCtrl
 
 -- | Add Shift to a binding.
 shift :: (ToBinding a) => a -> Binding
-shift val =
-    let binding = toBinding val
-    in binding { kbMods = Vty.MShift : kbMods binding }
-
--- | Make a binding from any Vty key.
-key :: Vty.Key -> Binding
-key = toBinding
-
--- | Make a binding from any character (subject to what the keyboard can
--- actually produce).
-char :: Char -> Binding
-char = toBinding
+shift = addModifier Vty.MShift
 
 -- | Function key binding.
 fn :: Int -> Binding
