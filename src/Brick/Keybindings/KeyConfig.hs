@@ -6,10 +6,8 @@
 -- constructed, see 'Brick.Keybindings.KeyHandlerMap.mkKeybindings'.
 module Brick.Keybindings.KeyConfig
   ( KeyConfig
-  , keyConfigEvents
-  , BindingState(..)
   , newKeyConfig
-  , lookupKeyConfigBindings
+  , BindingState(..)
 
   -- * Specifying bindings
   , Binding(..)
@@ -24,6 +22,10 @@ module Brick.Keybindings.KeyConfig
   , firstActiveBinding
   , allDefaultBindings
   , allActiveBindings
+
+  -- * Misc
+  , keyConfigEvents
+  , lookupKeyConfigBindings
   )
 where
 
@@ -89,6 +91,9 @@ data KeyConfig e =
               }
               deriving (Show, Eq)
 
+-- | Build a 'KeyConfig' with the specified 'KeyEvents' event-to-name
+-- mapping, list of default bindings by event, and list of custom
+-- bindings by event.
 newKeyConfig :: (Ord e)
              => KeyEvents e
              -- ^ The base mapping of key events and names to use.
