@@ -1,4 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
+-- | This module provides functions for pretty-printing key bindings
+-- and for generating Markdown, plain text, and Brick displays of event
+-- handler's key binding configurations.
 module Brick.Keybindings.Pretty
   ( keybindingTextTable
   , keybindingMarkdownTable
@@ -24,7 +27,14 @@ import Brick.Keybindings.KeyHandlerMap
 data TextHunk = Verbatim T.Text
               | Comment T.Text
 
-keybindingMarkdownTable :: (Ord e) => KeyConfig e -> [(T.Text, [KeyEventHandler e m])] -> T.Text
+-- | Generate a Markdown document of sections indicating the key binding
+-- state for each event handler.
+keybindingMarkdownTable :: (Ord e)
+                        => KeyConfig e
+                        -- ^ The key binding configuration in use.
+                        -> [(T.Text, [KeyEventHandler e m])]
+                        -- ^ Key event handlers by named section.
+                        -> T.Text
 keybindingMarkdownTable kc sections = title <> keybindSectionStrings
     where title = "# Keybindings\n"
           keybindSectionStrings = T.concat $ sectionText <$> sections
@@ -34,7 +44,14 @@ keybindingMarkdownTable kc sections = title <> keybindSectionStrings
               "\n| Keybinding | Event Name | Description |" <>
               "\n| ---------- | ---------- | ----------- |"
 
-keybindingTextTable :: (Ord e) => KeyConfig e -> [(T.Text, [KeyEventHandler e m])] -> T.Text
+-- | Generate a plain text document of sections indicating the key
+-- binding state for each event handler.
+keybindingTextTable :: (Ord e)
+                    => KeyConfig e
+                    -- ^ The key binding configuration in use.
+                    -> [(T.Text, [KeyEventHandler e m])]
+                    -- ^ Key event handlers by named section.
+                    -> T.Text
 keybindingTextTable kc sections = title <> keybindSectionStrings
     where title = "Keybindings\n===========\n"
           keybindSectionStrings = T.concat $ sectionText <$> sections
@@ -106,12 +123,19 @@ mkKeybindEventHelp kc h =
                       in (Verbatim name, result)
   in (label, ehDescription $ kehHandler h, evText)
 
+-- | Build a 'Widget' displaying key binding information for a single
+-- related group of event handlers.
 keybindingHelpWidget :: (Ord e)
                      => KeyConfig e
+                     -- ^ The key binding configuration in use.
                      -> (T.Text -> Widget n)
+                     -- ^ A function to render a section heading.
                      -> (T.Text, [KeyEventHandler e m])
+                     -- ^ The name of the section and the list of the
+                     -- event handlers.
                      -> Widget n
-keybindingHelpWidget kc = mkKeybindEventSectionHelp kc keybindEventHelpWidget vBox
+keybindingHelpWidget kc =
+    mkKeybindEventSectionHelp kc keybindEventHelpWidget vBox
 
 keybindEventHelpWidget :: (TextHunk, T.Text, [TextHunk]) -> Widget n
 keybindEventHelpWidget (evName, desc, evs) =
@@ -126,16 +150,23 @@ keybindEventHelpWidget (evName, desc, evs) =
             , label <+> txt (" = " <> evText)
             ]
 
+-- | Pretty-print a 'Binding' in the same format that is parsed by
+-- 'Brick.Keybindings.Parse.parseBinding'.
 ppBinding :: Binding -> T.Text
 ppBinding (Binding k mods) =
     T.intercalate "-" $ (ppModifier <$> mods) <> [ppKey k]
 
+-- | Pretty-print a 'Binding' in the same format that is parsed by
+-- 'Brick.Keybindings.Parse.parseBinding'; if no binding is given,
+-- produce a message indicating no binding.
 ppMaybeBinding :: Maybe Binding -> T.Text
 ppMaybeBinding Nothing =
     "(no binding)"
 ppMaybeBinding (Just b) =
     ppBinding b
 
+-- | Pretty-print a 'Vty.Key' in the same format that is parsed by
+-- 'Brick.Keybindings.Parse.parseBinding'.
 ppKey :: Vty.Key -> T.Text
 ppKey (Vty.KChar c)   = ppChar c
 ppKey (Vty.KFun n)    = "F" <> (T.pack $ show n)
@@ -163,11 +194,15 @@ ppKey Vty.KIns        = "Insert"
 ppKey Vty.KBegin      = "Begin"
 ppKey Vty.KMenu       = "Menu"
 
+-- | Pretty-print a character in the same format that is parsed by
+-- 'Brick.Keybindings.Parse.parseBinding'.
 ppChar :: Char -> T.Text
 ppChar '\t' = "Tab"
 ppChar ' '  = "Space"
 ppChar c    = T.singleton c
 
+-- | Pretty-print a 'Vty.Modifier' in the same format that is parsed by
+-- 'Brick.Keybindings.Parse.parseBinding'.
 ppModifier :: Vty.Modifier -> T.Text
 ppModifier Vty.MMeta  = "M"
 ppModifier Vty.MAlt   = "A"
