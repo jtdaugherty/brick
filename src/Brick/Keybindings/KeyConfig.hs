@@ -161,20 +161,20 @@ allActiveBindings kc ev = nub foundBindings
 -- verbose ways.
 class ToBinding a where
     -- | Binding constructor.
-    toBinding :: a -> Binding
+    bind :: a -> Binding
 
 instance ToBinding Vty.Key where
-    toBinding k = Binding { kbMods = [], kbKey = k }
+    bind k = Binding { kbMods = [], kbKey = k }
 
 instance ToBinding Char where
-    toBinding = toBinding . Vty.KChar
+    bind = bind . Vty.KChar
 
 instance ToBinding Binding where
-    toBinding = id
+    bind = id
 
 addModifier :: (ToBinding a) => Vty.Modifier -> a -> Binding
 addModifier m val =
-    let b = toBinding val
+    let b = bind val
     in b { kbMods = nub $ m : kbMods b }
 
 -- | Add Meta to a binding.
@@ -191,4 +191,4 @@ shift = addModifier Vty.MShift
 
 -- | Function key binding.
 fn :: Int -> Binding
-fn = toBinding . Vty.KFun
+fn = bind . Vty.KFun

@@ -190,7 +190,7 @@ onKey :: (ToBinding a)
       -> KeyEventHandler e m
 onKey b msg action =
     KeyEventHandler { kehHandler = mkHandler msg action
-                    , kehEventTrigger = ByKey $ toBinding b
+                    , kehEventTrigger = ByKey $ bind b
                     }
 
 -- | A trigger for an event handler.
