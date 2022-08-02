@@ -140,6 +140,10 @@ parseBinding s = go (T.splitOn "-" $ T.toLower s) []
 --
 -- where the event name must be a valid event name in the specified
 -- 'KeyEvents' and each binding is valid as parsed by 'parseBinding'.
+--
+-- Returns @Nothing@ if the named section was not found; otherwise
+-- returns a (possibly empty) list of binding states for each event in
+-- @evs@.
 keybindingsFromIni :: KeyEvents e
                    -- ^ The key event name mapping to use to parse the
                    -- configuration data.
