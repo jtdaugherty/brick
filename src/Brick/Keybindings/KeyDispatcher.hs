@@ -10,8 +10,11 @@
 --   application event that you want to trigger with an input key.
 -- * To each event @e@, assign a unique user-readable name (such as a
 --   name you could imagine using in a configuration file to refer to
---   the event) and a list of default key bindings and use the resulting
---   data to create a 'KeyConfig'.
+--   the event) and a list of default key bindings.
+-- * Use the resulting data to create a 'KeyConfig' with 'newKeyConfig'.
+--   If desired, provide custom keybindings to 'newKeyConfig' from
+--   within the program or load them from an INI file with routines like
+--   'Brick.Keybindings.Parse.keybindingsFromFile'.
 -- * Implement application event handlers that will be run in response
 --   to either specific hard-coded keys or events @e@, both in some
 --   monad @m@ of your choosing, using constructors 'onKey' and
