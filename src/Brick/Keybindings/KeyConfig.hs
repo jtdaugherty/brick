@@ -3,7 +3,7 @@
 -- library.
 --
 -- To get started, see 'newKeyConfig'. Once a 'KeyConfig' has been
--- constructed, see 'Brick.Keybindings.KeyHandlerMap.mkKeybindings'.
+-- constructed, see 'Brick.Keybindings.KeyHandlerMap.keyDispatcher'.
 module Brick.Keybindings.KeyConfig
   ( KeyConfig
   , newKeyConfig
@@ -63,10 +63,11 @@ data BindingState =
     -- ^ Disable all bindings for the event, including default bindings.
     deriving (Show, Eq, Ord)
 
--- | A configuration of custom key bindings. A 'KeyConfig' stores
--- everything needed to resolve a key event into one or more key
--- bindings. Make a 'KeyConfig' with 'newKeyConfig', then use it to
--- dispatch to 'KeyEventHandler's with 'mkKeybindings'.
+-- | A configuration of custom key bindings. A 'KeyConfig'
+-- stores everything needed to resolve a key event into one or
+-- more key bindings. Make a 'KeyConfig' with 'newKeyConfig',
+-- then use it to dispatch to 'KeyEventHandler's with
+-- 'Brick.Keybindings.KeyHandlerMap.keyDispatcher'.
 --
 -- Make a new 'KeyConfig' with 'newKeyConfig'.
 --
