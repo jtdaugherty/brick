@@ -1,16 +1,26 @@
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE OverloadedStrings #-}
 -- | This module provides key binding string parsing functions for use
 -- in e.g. reading key bindings from configuration files.
 module Brick.Keybindings.Parse
   ( parseBinding
   , parseBindingList
+
+  , keybindingsFromIni
+  , keybindingsFromFile
+  , keybindingIniParser
   )
 where
 
+import Control.Monad (forM)
+import Data.Maybe (catMaybes)
 import qualified Data.Text as T
+import qualified Data.Text.IO as T
 import qualified Graphics.Vty as Vty
 import Text.Read (readMaybe)
+import qualified Data.Ini.Config as Ini
 
+import Brick.Keybindings.KeyEvents
 import Brick.Keybindings.KeyConfig
 
 -- | Parse a key binding list into a 'BindingState'.
@@ -120,3 +130,46 @@ parseBinding s = go (T.splitOn "-" $ T.toLower s) []
                   Nothing -> Left ("Unknown keybinding: " ++ show t)
                   Just i -> return (Vty.KFun i)
           | otherwise = Left ("Unknown keybinding: " ++ show t)
+
+-- | Parse custom key bindings from the specified INI file using the
+-- provided event name mapping.
+--
+-- Each line in the specified section can take the form
+--
+-- > <event-name> = <"unbound"|[binding,...]>
+--
+-- where the event name must be a valid event name in the specified
+-- 'KeyEvents' and each binding is valid as parsed by 'parseBinding'.
+keybindingsFromIni :: KeyEvents e
+                   -- ^ The key event name mapping to use to parse the
+                   -- configuration data.
+                   -> T.Text
+                   -- ^ The name of the INI configuration section to
+                   -- read.
+                   -> T.Text
+                   -- ^ The text of the INI document to read.
+                   -> Either String (Maybe [(e, BindingState)])
+keybindingsFromIni evs section doc =
+    Ini.parseIniFile doc (keybindingIniParser evs section)
+
+-- | Parse custom key binidngs from the specified INI file path. See
+-- 'keybindingsFromIni' for details.
+keybindingsFromFile :: KeyEvents e
+                    -- ^ The key event name mapping to use to parse the
+                    -- configuration data.
+                    -> T.Text
+                    -- ^ The name of the INI configuration section to
+                    -- read.
+                    -> FilePath
+                    -- ^ The path to the INI file to read.
+                    -> IO (Either String (Maybe [(e, BindingState)]))
+keybindingsFromFile evs section path =
+    keybindingsFromIni evs section <$> T.readFile path
+
+-- | The low-level INI parser for custom key bindings used by this
+-- module, exported for applications that use the @config-ini@ package.
+keybindingIniParser :: KeyEvents e -> T.Text -> Ini.IniParser (Maybe [(e, BindingState)])
+keybindingIniParser evs section =
+    Ini.sectionMb section $ do
+        fmap catMaybes $ forM (keyEventsList evs) $ \(name, e) -> do
+            fmap (e,) <$> Ini.fieldMbOf name parseBindingList
