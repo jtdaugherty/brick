@@ -9,6 +9,7 @@ module Brick.Keybindings
   , module Brick.Keybindings.KeyConfig
   , module Brick.Keybindings.KeyDispatcher
   , module Brick.Keybindings.Pretty
+  , module Brick.Keybindings.Parse
   )
 where
 
@@ -16,3 +17,4 @@ import Brick.Keybindings.KeyEvents
 import Brick.Keybindings.KeyConfig
 import Brick.Keybindings.KeyDispatcher
 import Brick.Keybindings.Pretty
+import Brick.Keybindings.Parse
