@@ -69,10 +69,12 @@ handlers =
     , K.onEvent DecrementEvent "Decrement the counter" $
           counter %= subtract 1
 
-    -- This handler is always triggered by a specific key and thus
-    -- cannot be rebound to another key.
+    -- These handlers are always triggered by specific keys and thus
+    -- cannot be rebound.
     , K.onKey (K.bind '\t') "Increment the counter by 10" $
           counter %= (+ 10)
+    , K.onKey (K.bind V.KBackTab) "Decrement the counter by 10" $
+          counter %= subtract 10
     ]
 
 appEvent :: T.BrickEvent () e -> T.EventM () St ()
