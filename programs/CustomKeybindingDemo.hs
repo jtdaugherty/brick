@@ -57,7 +57,7 @@ data St =
 
 makeLenses ''St
 
--- | Event handlers for the our KeyEvents.
+-- | Key event handlers for our application.
 handlers :: [K.KeyEventHandler KeyEvent (T.EventM () St)]
 handlers =
     -- The first three handlers are triggered by keys mapped to events,
