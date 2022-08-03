@@ -31,7 +31,7 @@ data KeyEvent = QuitEvent
 -- | The mapping of key events to their configuration field names.
 allKeyEvents :: K.KeyEvents KeyEvent
 allKeyEvents =
-    K.keyEvents [ ("quit", QuitEvent)
+    K.keyEvents [ ("quit",      QuitEvent)
                 , ("increment", IncrementEvent)
                 , ("decrement", DecrementEvent)
                 ]
@@ -39,7 +39,7 @@ allKeyEvents =
 -- | Default key bindings for each abstract key event.
 defaultBindings :: [(KeyEvent, [K.Binding])]
 defaultBindings =
-    [ (QuitEvent, [K.ctrl 'q', K.bind V.KEsc])
+    [ (QuitEvent,      [K.ctrl 'q', K.bind V.KEsc])
     , (IncrementEvent, [K.bind '+'])
     , (DecrementEvent, [K.bind '-'])
     ]
