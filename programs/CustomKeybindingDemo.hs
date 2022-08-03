@@ -71,7 +71,8 @@ handlers =
 appEvent :: T.BrickEvent () e -> T.EventM () St ()
 appEvent (T.VtyEvent (V.EvKey k mods)) = do
     -- Dispatch the key to the event handler to which the key is mapped,
-    -- if any.
+    -- if any. Also record in lastKeyHandled whether the dispatcher
+    -- found a matching handler.
     kc <- use keyConfig
     let d = K.keyDispatcher kc handlers
     lastKey .= Just (k, mods)
