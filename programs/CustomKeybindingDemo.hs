@@ -90,9 +90,7 @@ appEvent _ =
 drawUi :: St -> [Widget ()]
 drawUi st = [body]
     where
-        binding = do
-            (k, mods) <- st^.lastKey
-            return $ K.binding k mods
+        binding = uncurry K.binding <$> st^.lastKey
         keybindingHelp = K.keybindingHelpWidget (st^.keyConfig) handlers
         status = hLimit 40 $
                  padRight Max $
