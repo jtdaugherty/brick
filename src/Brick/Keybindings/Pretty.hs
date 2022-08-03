@@ -146,7 +146,7 @@ keybindEventHelpWidget (evName, desc, evs) =
             Comment s -> txt $ "; " <> s
             Verbatim s -> txt s -- TODO: was: emph $ txt s
     in padBottom (Pad 1) $
-       vBox [ txtWrap ("; " <> desc)
+       vBox [ txt desc
             , label <+> txt (" = " <> evText)
             ]
 
