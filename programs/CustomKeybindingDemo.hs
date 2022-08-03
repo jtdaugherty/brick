@@ -22,11 +22,13 @@ import qualified Brick.Widgets.Border as B
 import qualified Brick.Widgets.Center as C
 import Brick.Widgets.Core
 
+-- | The abstract key events for the application.
 data KeyEvent = QuitEvent
               | IncrementEvent
               | DecrementEvent
               deriving (Ord, Eq, Show)
 
+-- | The mapping of key events to their configuration field names.
 allKeyEvents :: K.KeyEvents KeyEvent
 allKeyEvents =
     K.keyEvents [ ("quit", QuitEvent)
@@ -34,6 +36,7 @@ allKeyEvents =
                 , ("decrement", DecrementEvent)
                 ]
 
+-- | Default key bindings for each abstract key event.
 defaultBindings :: [(KeyEvent, [K.Binding])]
 defaultBindings =
     [ (QuitEvent, [K.ctrl 'q', K.bind V.KEsc])
@@ -43,13 +46,18 @@ defaultBindings =
 
 data St =
     St { _keyConfig :: K.KeyConfig KeyEvent
+       -- ^ The key config to use.
        , _lastKey :: Maybe (V.Key, [V.Modifier])
+       -- ^ The last key that was pressed.
        , _lastKeyHandled :: Bool
+       -- ^ Whether the last key was handled by a handler.
        , _counter :: Int
+       -- ^ The counter value to manipulate in the handlers.
        }
 
 makeLenses ''St
 
+-- | Event handlers for the our KeyEvents.
 handlers :: [K.KeyEventHandler KeyEvent (T.EventM () St)]
 handlers =
     [ K.onEvent QuitEvent "Quit the program"
@@ -62,6 +70,8 @@ handlers =
 
 appEvent :: T.BrickEvent () e -> T.EventM () St ()
 appEvent (T.VtyEvent (V.EvKey k mods)) = do
+    -- Dispatch the key to the event handler to which the key is mapped,
+    -- if any.
     kc <- use keyConfig
     let d = K.keyDispatcher kc handlers
     lastKey .= Just (k, mods)
@@ -99,7 +109,10 @@ app =
 
 main :: IO ()
 main = do
+    -- Create a key config that has no customized bindings overriding
+    -- the default ones.
     let kc = K.newKeyConfig allKeyEvents defaultBindings []
+
     void $ M.defaultMain app $ St { _keyConfig = kc
                                   , _lastKey = Nothing
                                   , _lastKeyHandled = False
