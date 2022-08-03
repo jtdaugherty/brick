@@ -17,6 +17,9 @@ where
 import Brick
 import Data.List (sort)
 import Data.Maybe (fromJust)
+#if !(MIN_VERSION_base(4,11,0))
+import Data.Monoid ((<>))
+#endif
 import qualified Data.Set as S
 import qualified Data.Text as T
 import qualified Graphics.Vty as Vty
