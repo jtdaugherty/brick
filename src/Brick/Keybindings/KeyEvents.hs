@@ -28,8 +28,15 @@ data KeyEvents e = KeyEvents (B.Bimap T.Text e)
 
 -- | Build a new 'KeyEvents' map from the specified list of events and
 -- names.
+--
+-- Calls 'error' if any events have the same name (ignoring case) or if
+-- multiple names map to the same event.
 keyEvents :: (Ord e) => [(T.Text, e)] -> KeyEvents e
-keyEvents pairs = KeyEvents $ B.fromList pairs
+keyEvents pairs =
+    let m = B.fromList [(T.strip $ T.toLower n, e) | (n, e) <- pairs]
+    in if B.size m /= length pairs
+       then error "keyEvents: input list contains duplicates by name or by event value"
+       else KeyEvents $ B.fromList pairs
 
 -- | Convert the 'KeyEvents' to a list.
 keyEventsList :: KeyEvents e -> [(T.Text, e)]
