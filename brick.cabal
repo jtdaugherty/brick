@@ -143,6 +143,22 @@ library
                        bytestring,
                        word-wrap >= 0.2
 
+executable brick-custom-keybinding-demo
+  if !flag(demos)
+    Buildable: False
+  hs-source-dirs:      programs
+  ghc-options:         -threaded -Wall -Wcompat -O2
+  default-language:    Haskell2010
+  default-extensions:  CPP
+  main-is:             CustomKeybindingDemo.hs
+  build-depends:       base,
+                       brick,
+                       text,
+                       vty,
+                       microlens,
+                       microlens-mtl,
+                       microlens-th
+
 executable brick-table-demo
   if !flag(demos)
     Buildable: False
