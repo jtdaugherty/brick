@@ -27,7 +27,7 @@ data KeyEvents e = KeyEvents (B.Bimap T.Text e)
                  deriving (Eq, Show)
 
 -- | Build a new 'KeyEvents' map from the specified list of events and
--- names.
+-- names. Key event names are stored in lowercase.
 --
 -- Calls 'error' if any events have the same name (ignoring case) or if
 -- multiple names map to the same event.
