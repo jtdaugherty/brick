@@ -144,7 +144,7 @@ keybindEventHelpWidget (evName, desc, evs) =
         getText (Comment s) = s
         getText (Verbatim s) = s
         label = case evName of
-            Comment s -> txt $ "; " <> s
+            Comment s -> txt s -- TODO: was "; " <> s
             Verbatim s -> txt s -- TODO: was: emph $ txt s
     in padBottom (Pad 1) $
        vBox [ txt desc
