@@ -60,8 +60,9 @@ makeLenses ''St
 -- | Key event handlers for our application.
 handlers :: [K.KeyEventHandler KeyEvent (T.EventM () St)]
 handlers =
-    -- The first three handlers are triggered by keys mapped to events,
-    -- thus decoupling the configured key bindings from these handlers.
+    -- The first three handlers are triggered by keys mapped to abstract
+    -- events, thus decoupling the configured key bindings from these
+    -- handlers.
     [ K.onEvent QuitEvent "Quit the program"
           M.halt
     , K.onEvent IncrementEvent "Increment the counter" $
