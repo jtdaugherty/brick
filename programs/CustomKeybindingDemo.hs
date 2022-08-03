@@ -7,6 +7,7 @@ import Lens.Micro ((^.))
 import Lens.Micro.TH (makeLenses)
 import Lens.Micro.Mtl ((<~), (.=), (%=), use)
 import Control.Monad (void)
+import qualified Data.Text.IO as Text
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid ((<>))
 #endif
@@ -76,7 +77,7 @@ drawUi st = [body]
             return $ K.Binding { K.kbKey = k
                                , K.kbMods = mods
                                }
-        keybindingHelp = K.keybindingHelpWidget (st^.keyConfig) txt ("Keybinding Help", handlers)
+        keybindingHelp = K.keybindingHelpWidget (st^.keyConfig) handlers
         status = hLimit 40 $
                  padRight Max $
                  vBox [ txt $ "Last key:         " <> K.ppMaybeBinding binding
@@ -85,7 +86,7 @@ drawUi st = [body]
                       ]
         body = C.center $
                (padRight (Pad 7) $ B.borderWithLabel (txt "Status") status) <+>
-               B.border keybindingHelp
+               B.borderWithLabel (txt "Keybinding Help") keybindingHelp
 
 app :: M.App St e ()
 app =
@@ -104,3 +105,11 @@ main = do
                                   , _lastKeyHandled = False
                                   , _counter = 0
                                   }
+
+    let sections = [("Main", handlers)]
+
+    putStrLn "Generated plain text help:"
+    Text.putStrLn $ K.keybindingTextTable kc sections
+
+    putStrLn "Generated Markdown help:"
+    Text.putStrLn $ K.keybindingMarkdownTable kc sections

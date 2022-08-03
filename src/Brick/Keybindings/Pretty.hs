@@ -38,11 +38,13 @@ keybindingMarkdownTable :: (Ord e)
 keybindingMarkdownTable kc sections = title <> keybindSectionStrings
     where title = "# Keybindings\n"
           keybindSectionStrings = T.concat $ sectionText <$> sections
-          sectionText = mkKeybindEventSectionHelp kc keybindEventHelpMarkdown T.unlines mkHeading
+          sectionText (heading, handlers) =
+              mkHeading heading <>
+              mkKeybindEventSectionHelp kc keybindEventHelpMarkdown T.unlines handlers
           mkHeading n =
               "\n# " <> n <>
               "\n| Keybinding | Event Name | Description |" <>
-              "\n| ---------- | ---------- | ----------- |"
+              "\n| ---------- | ---------- | ----------- |\n"
 
 -- | Generate a plain text document of sections indicating the key
 -- binding state for each event handler.
@@ -55,12 +57,15 @@ keybindingTextTable :: (Ord e)
 keybindingTextTable kc sections = title <> keybindSectionStrings
     where title = "Keybindings\n===========\n"
           keybindSectionStrings = T.concat $ sectionText <$> sections
-          sectionText = mkKeybindEventSectionHelp kc (keybindEventHelpText keybindingWidth eventNameWidth) T.unlines mkHeading
+          sectionText (heading, handlers) =
+              mkHeading heading <>
+              mkKeybindEventSectionHelp kc (keybindEventHelpText keybindingWidth eventNameWidth) T.unlines handlers
           keybindingWidth = 15
           eventNameWidth = 30
           mkHeading n =
               "\n" <> n <>
-              "\n" <> (T.replicate (T.length n) "=")
+              "\n" <> (T.replicate (T.length n) "=") <>
+              "\n"
 
 keybindEventHelpText :: Int -> Int -> (TextHunk, T.Text, [TextHunk]) -> T.Text
 keybindEventHelpText width eventNameWidth (evName, desc, evs) =
@@ -77,12 +82,10 @@ mkKeybindEventSectionHelp :: (Ord e)
                           => KeyConfig e
                           -> ((TextHunk, T.Text, [TextHunk]) -> a)
                           -> ([a] -> a)
-                          -> (T.Text -> a)
-                          -> (T.Text, [KeyEventHandler e m])
+                          -> [KeyEventHandler e m]
                           -> a
-mkKeybindEventSectionHelp kc mkKeybindHelpFunc vertCat mkHeading (sectionName, kbs) =
-  vertCat $ (mkHeading sectionName) :
-            (mkKeybindHelpFunc <$> (mkKeybindEventHelp kc <$> kbs))
+mkKeybindEventSectionHelp kc mkKeybindHelpFunc vertCat kbs =
+  vertCat $ mkKeybindHelpFunc <$> (mkKeybindEventHelp kc <$> kbs)
 
 keybindEventHelpMarkdown :: (TextHunk, T.Text, [TextHunk]) -> T.Text
 keybindEventHelpMarkdown (evName, desc, evs) =
@@ -128,11 +131,9 @@ mkKeybindEventHelp kc h =
 keybindingHelpWidget :: (Ord e)
                      => KeyConfig e
                      -- ^ The key binding configuration in use.
-                     -> (T.Text -> Widget n)
-                     -- ^ A function to render a section heading.
-                     -> (T.Text, [KeyEventHandler e m])
-                     -- ^ The name of the section and the list of the
-                     -- event handlers.
+                     -> [KeyEventHandler e m]
+                     -- ^ The list of the event handlers to include in
+                     -- the help display.
                      -> Widget n
 keybindingHelpWidget kc =
     mkKeybindEventSectionHelp kc keybindEventHelpWidget vBox
