@@ -11,6 +11,9 @@ module Brick.Types.EventM
 where
 
 import Control.Monad.Catch (MonadThrow, MonadCatch, MonadMask)
+#if !MIN_VERSION_base(4,13,0)
+import Control.Monad.Fail (MonadFail)
+#endif
 import Control.Monad.Reader
 import Control.Monad.State.Strict
 import Lens.Micro.Mtl
