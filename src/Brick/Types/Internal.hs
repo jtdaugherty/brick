@@ -45,8 +45,9 @@ module Brick.Types.Internal
   , Size(..)
 
   , EventState(..)
+  , VtyContext(..)
   , EventRO(..)
-  , Next(..)
+  , NextAction(..)
   , Result(..)
   , Extent(..)
   , Edges(..)
@@ -82,9 +83,9 @@ module Brick.Types.Internal
   )
 where
 
-import Control.Monad.Trans.Class (lift)
-import Control.Monad.Trans.Reader
-import Control.Monad.Trans.State.Lazy
+import Control.Concurrent (ThreadId)
+import Control.Monad.Reader
+import Control.Monad.State.Strict
 import Lens.Micro (_1, _2, Lens')
 import Lens.Micro.Mtl (use)
 import Lens.Micro.TH (makeLenses)
@@ -214,37 +215,47 @@ data Viewport =
 
 -- | The type of viewports that indicates the direction(s) in which a
 -- viewport is scrollable.
-data ViewportType = Vertical
-                  -- ^ Viewports of this type are scrollable only vertically.
-                  | Horizontal
-                  -- ^ Viewports of this type are scrollable only horizontally.
-                  | Both
-                  -- ^ Viewports of this type are scrollable vertically and horizontally.
-                  deriving (Show, Eq)
+data ViewportType =
+    Vertical
+    -- ^ Viewports of this type are scrollable only vertically.
+    | Horizontal
+    -- ^ Viewports of this type are scrollable only horizontally.
+    | Both
+    -- ^ Viewports of this type are scrollable vertically and horizontally.
+    deriving (Show, Eq)
 
 data CacheInvalidateRequest n =
     InvalidateSingle n
     | InvalidateEntire
     deriving (Ord, Eq)
 
-data EventState n = ES { esScrollRequests :: [(n, ScrollRequest)]
-                       , cacheInvalidateRequests :: S.Set (CacheInvalidateRequest n)
-                       , requestedVisibleNames :: S.Set n
-                       }
+data EventState n =
+    ES { esScrollRequests :: ![(n, ScrollRequest)]
+       , cacheInvalidateRequests :: !(S.Set (CacheInvalidateRequest n))
+       , requestedVisibleNames :: !(S.Set n)
+       , nextAction :: !NextAction
+       , vtyContext :: VtyContext
+       }
+
+data VtyContext =
+    VtyContext { vtyContextBuilder :: IO Vty
+               , vtyContextHandle :: Vty
+               , vtyContextThread :: ThreadId
+               , vtyContextPutEvent :: Event -> IO ()
+               }
 
 -- | An extent of a named area: its size, location, and origin.
-data Extent n = Extent { extentName      :: n
-                       , extentUpperLeft :: Location
-                       , extentSize      :: (Int, Int)
+data Extent n = Extent { extentName      :: !n
+                       , extentUpperLeft :: !Location
+                       , extentSize      :: !(Int, Int)
                        }
                        deriving (Show, Read, Generic, NFData)
 
 -- | The type of actions to take upon completion of an event handler.
-data Next a = Continue a
-            | ContinueWithoutRedraw a
-            | SuspendAndResume (IO a)
-            | Halt a
-            deriving Functor
+data NextAction =
+    Continue
+    | ContinueWithoutRedraw
+    | Halt
 
 -- | Scrolling direction.
 data Direction = Up
@@ -310,15 +321,15 @@ data DynBorder = DynBorder
 -- result provides the image, cursor positions, and visibility requests
 -- that resulted from the rendering process.
 data Result n =
-    Result { image :: Image
+    Result { image :: !Image
            -- ^ The final rendered image for a widget
-           , cursors :: [CursorLocation n]
+           , cursors :: ![CursorLocation n]
            -- ^ The list of reported cursor positions for the
            -- application to choose from
-           , visibilityRequests :: [VisibilityRequest]
+           , visibilityRequests :: ![VisibilityRequest]
            -- ^ The list of visibility requests made by widgets rendered
            -- while rendering this one (used by viewports)
-           , extents :: [Extent n]
+           , extents :: ![Extent n]
            -- Programmer's note: we don't try to maintain the invariant that
            -- the size of the borders closely matches the size of the 'image'
            -- field. Most widgets don't need to care about borders, and so they
@@ -331,7 +342,7 @@ data Result n =
            -- If you're writing a widget, this should make it easier for you to
            -- do so; but beware this lack of invariant if you are consuming
            -- widgets.
-           , borders :: BorderMap DynBorder
+           , borders :: !(BorderMap DynBorder)
            -- ^ Places where we may rewrite the edge of the image when
            -- placing this widget next to another one.
            }
@@ -362,7 +373,6 @@ data BrickEvent n e = VtyEvent Event
                     deriving (Show, Eq, Ord)
 
 data EventRO n = EventRO { eventViewportMap :: M.Map n Viewport
-                         , eventVtyHandle :: Vty
                          , latestExtents :: [Extent n]
                          , oldState :: RenderState n
                          }

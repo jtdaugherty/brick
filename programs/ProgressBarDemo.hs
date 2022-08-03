@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Main where
 
 import Control.Monad (void)
@@ -7,6 +8,8 @@ import Control.Monad (void)
 import Data.Monoid
 #endif
 import qualified Graphics.Vty as V
+import Lens.Micro.Mtl
+import Lens.Micro.TH
 
 import qualified Brick.AttrMap as A
 import qualified Brick.Main as M
@@ -23,7 +26,9 @@ import Brick.Widgets.Core
   )
 import Brick.Util (fg, bg, on, clamp)
 
-data MyAppState n = MyAppState { x, y, z :: Float }
+data MyAppState n = MyAppState { _x, _y, _z :: Float }
+
+makeLenses ''MyAppState
 
 drawUI :: MyAppState () -> [Widget ()]
 drawUI p = [ui]
@@ -33,16 +38,16 @@ drawUI p = [ui]
              (A.mapAttrNames [ (xDoneAttr, P.progressCompleteAttr)
                              , (xToDoAttr, P.progressIncompleteAttr)
                              ]
-             ) $ bar $ x p
+             ) $ bar $ _x p
       -- or use individual mapAttrName calls
       yBar = updateAttrMap
              (A.mapAttrName yDoneAttr P.progressCompleteAttr .
               A.mapAttrName yToDoAttr P.progressIncompleteAttr) $
-             bar $ y p
+             bar $ _y p
       -- or use overrideAttr calls
       zBar = overrideAttr P.progressCompleteAttr zDoneAttr $
              overrideAttr P.progressIncompleteAttr zToDoAttr $
-             bar $ z p
+             bar $ _z p
       lbl c = Just $ show $ fromEnum $ c * 100
       bar v = P.progressBar (lbl v) v
       ui = (str "X: " <+> xBar) <=>
@@ -51,16 +56,16 @@ drawUI p = [ui]
            str "" <=>
            str "Hit 'x', 'y', or 'z' to advance progress, or 'q' to quit"
 
-appEvent :: MyAppState () -> T.BrickEvent () e -> T.EventM () (T.Next (MyAppState ()))
-appEvent p (T.VtyEvent e) =
+appEvent :: T.BrickEvent () e -> T.EventM () (MyAppState ()) ()
+appEvent (T.VtyEvent e) =
     let valid = clamp (0.0 :: Float) 1.0
     in case e of
-         V.EvKey (V.KChar 'x') [] -> M.continue $ p { x = valid $ x p + 0.05 }
-         V.EvKey (V.KChar 'y') [] -> M.continue $ p { y = valid $ y p + 0.03 }
-         V.EvKey (V.KChar 'z') [] -> M.continue $ p { z = valid $ z p + 0.02 }
-         V.EvKey (V.KChar 'q') [] -> M.halt p
-         _ -> M.continue p
-appEvent p _ = M.continue p
+         V.EvKey (V.KChar 'x') [] -> x %= valid . (+ 0.05)
+         V.EvKey (V.KChar 'y') [] -> y %= valid . (+ 0.03)
+         V.EvKey (V.KChar 'z') [] -> z %= valid . (+ 0.02)
+         V.EvKey (V.KChar 'q') [] -> M.halt
+         _ -> return ()
+appEvent _ = return ()
 
 initialState :: MyAppState ()
 initialState = MyAppState 0.25 0.18 0.63
@@ -96,7 +101,7 @@ theApp =
     M.App { M.appDraw = drawUI
           , M.appChooseCursor = M.showFirstCursor
           , M.appHandleEvent = appEvent
-          , M.appStartEvent = return
+          , M.appStartEvent = return ()
           , M.appAttrMap = const theMap
           }
 

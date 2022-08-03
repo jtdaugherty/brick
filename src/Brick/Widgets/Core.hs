@@ -22,6 +22,7 @@ module Brick.Widgets.Core
   , hyperlink
 
   -- * Padding
+  , Padding(..)
   , padLeft
   , padRight
   , padTop
@@ -121,10 +122,8 @@ import Data.Monoid ((<>))
 
 import Lens.Micro ((^.), (.~), (&), (%~), to, _1, _2, each, to, Lens')
 import Lens.Micro.Mtl (use, (%=))
-import Control.Monad ((>=>),when)
-import Control.Monad.Trans.State.Lazy
-import Control.Monad.Trans.Reader
-import Control.Monad.Trans.Class (lift)
+import Control.Monad.State.Strict
+import Control.Monad.Reader
 import qualified Data.Foldable as F
 import qualified Data.Text as T
 import qualified Data.DList as DL
@@ -376,6 +375,12 @@ hyperlink url p =
         c <- getContext
         let attr = (c^.attrL) `V.withURL` url
         withReaderT (ctxAttrMapL %~ setDefaultAttr attr) (render p)
+
+-- | The type of padding.
+data Padding = Pad Int
+             -- ^ Pad by the specified number of rows or columns.
+             | Max
+             -- ^ Pad up to the number of available rows or columns.
 
 -- | Pad the specified widget on the left. If max padding is used, this
 -- grows greedily horizontally; otherwise it defers to the padded

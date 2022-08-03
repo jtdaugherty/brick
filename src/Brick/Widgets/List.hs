@@ -37,6 +37,7 @@ module Brick.Widgets.List
   , listSelectedL
   , listNameL
   , listItemHeightL
+  , listSelectedElementL
 
   -- * Accessors
   , listElements
@@ -79,9 +80,9 @@ import Prelude hiding (reverse, splitAt)
 
 import Control.Applicative ((<|>))
 import Data.Foldable (find, toList)
-import Control.Monad.Trans.State (evalState, get, put)
+import Control.Monad.State (evalState)
 
-import Lens.Micro ((^.), (^?), (&), (.~), (%~), _2, _head, set)
+import Lens.Micro (Traversal', (^.), (^?), (&), (.~), (%~), _2, set)
 import Data.Functor (($>))
 import Data.List.NonEmpty (NonEmpty((:|)))
 import Data.Maybe (fromMaybe)
@@ -193,17 +194,16 @@ instance Reversible Seq.Seq where
 -- * Go to last element (End)
 handleListEvent :: (Foldable t, Splittable t, Ord n)
                 => Event
-                -> GenericList n t e
-                -> EventM n (GenericList n t e)
-handleListEvent e theList =
+                -> EventM n (GenericList n t e) ()
+handleListEvent e =
     case e of
-        EvKey KUp [] -> return $ listMoveUp theList
-        EvKey KDown [] -> return $ listMoveDown theList
-        EvKey KHome [] -> return $ listMoveToBeginning theList
-        EvKey KEnd [] -> return $ listMoveToEnd theList
-        EvKey KPageDown [] -> listMovePageDown theList
-        EvKey KPageUp [] -> listMovePageUp theList
-        _ -> return theList
+        EvKey KUp [] -> modify listMoveUp
+        EvKey KDown [] -> modify listMoveDown
+        EvKey KHome [] -> modify listMoveToBeginning
+        EvKey KEnd [] -> modify listMoveToEnd
+        EvKey KPageDown [] -> listMovePageDown
+        EvKey KPageUp [] -> listMovePageUp
+        _ -> return ()
 
 -- | Enable list movement with the vi keys with a fallback handler if
 -- none match. Use 'handleListEventVi' 'handleListEvent' in place of
@@ -219,23 +219,22 @@ handleListEvent e theList =
 -- * Go to first element (g)
 -- * Go to last element (G)
 handleListEventVi :: (Foldable t, Splittable t, Ord n)
-                  => (Event -> GenericList n t e -> EventM n (GenericList n t e))
+                  => (Event -> EventM n (GenericList n t e) ())
                   -- ^ Fallback event handler to use if none of the vi keys
                   -- match.
                   -> Event
-                  -> GenericList n t e
-                  -> EventM n (GenericList n t e)
-handleListEventVi fallback e theList =
+                  -> EventM n (GenericList n t e) ()
+handleListEventVi fallback e =
     case e of
-        EvKey (KChar 'k') [] -> return $ listMoveUp theList
-        EvKey (KChar 'j') [] -> return $ listMoveDown theList
-        EvKey (KChar 'g') [] -> return $ listMoveToBeginning theList
-        EvKey (KChar 'G') [] -> return $ listMoveToEnd theList
-        EvKey (KChar 'f') [MCtrl] -> listMovePageDown theList
-        EvKey (KChar 'b') [MCtrl] -> listMovePageUp theList
-        EvKey (KChar 'd') [MCtrl] -> listMoveByPages (0.5::Double) theList
-        EvKey (KChar 'u') [MCtrl] -> listMoveByPages (-0.5::Double) theList
-        _ -> fallback e theList
+        EvKey (KChar 'k') []      -> modify listMoveUp
+        EvKey (KChar 'j') []      -> modify listMoveDown
+        EvKey (KChar 'g') []      -> modify listMoveToBeginning
+        EvKey (KChar 'G') []      -> modify listMoveToEnd
+        EvKey (KChar 'f') [MCtrl] -> listMovePageDown
+        EvKey (KChar 'b') [MCtrl] -> listMovePageUp
+        EvKey (KChar 'd') [MCtrl] -> listMoveByPages (0.5::Double)
+        EvKey (KChar 'u') [MCtrl] -> listMoveByPages (-0.5::Double)
+        _                         -> fallback e
 
 -- | Move the list selection to the first element in the list.
 listMoveToBeginning :: (Foldable t, Splittable t)
@@ -474,8 +473,7 @@ listMoveUp = listMoveBy (-1)
 
 -- | Move the list selected index up by one page.
 listMovePageUp :: (Foldable t, Splittable t, Ord n)
-               => GenericList n t e
-               -> EventM n (GenericList n t e)
+               => EventM n (GenericList n t e) ()
 listMovePageUp = listMoveByPages (-1::Double)
 
 -- | Move the list selected index down by one. (Moves the cursor down,
@@ -487,23 +485,22 @@ listMoveDown = listMoveBy 1
 
 -- | Move the list selected index down by one page.
 listMovePageDown :: (Foldable t, Splittable t, Ord n)
-                 => GenericList n t e
-                 -> EventM n (GenericList n t e)
+                 => EventM n (GenericList n t e) ()
 listMovePageDown = listMoveByPages (1::Double)
 
 -- | Move the list selected index by some (fractional) number of pages.
 listMoveByPages :: (Foldable t, Splittable t, Ord n, RealFrac m)
                 => m
-                -> GenericList n t e
-                -> EventM n (GenericList n t e)
-listMoveByPages pages theList = do
+                -> EventM n (GenericList n t e) ()
+listMoveByPages pages = do
+    theList <- get
     v <- lookupViewport (theList^.listNameL)
     case v of
-        Nothing -> return theList
+        Nothing -> return ()
         Just vp -> do
             let nElems = round $ pages * fromIntegral (vp^.vpSize._2) /
                                  fromIntegral (theList^.listItemHeightL)
-            return $ listMoveBy nElems theList
+            modify $ listMoveBy nElems
 
 -- | Move the list selected index.
 --
@@ -602,6 +599,28 @@ listFindBy test l =
         result = tailResult <|> headResult
     in maybe id (set listSelectedL . Just . fst) result l
 
+-- | Traversal that targets the selected element, if any.
+--
+-- Complexity: depends on usage as well as the list's container type.
+--
+-- @
+-- listSelectedElementL for 'List': O(1) -- preview, fold
+--                                O(n) -- set, modify, traverse
+-- listSelectedElementL for 'Seq.Seq': O(log(min(i, n - i)))  -- all operations
+-- @
+--
+listSelectedElementL :: (Splittable t, Traversable t, Semigroup (t e))
+                     => Traversal' (GenericList n t e) e
+listSelectedElementL f l =
+    case l ^. listSelectedL of
+        Nothing -> pure l
+        Just i -> listElementsL go l
+            where
+                go l' = let (left, rest) = splitAt i l'
+                            -- middle contains the target element (if any)
+                            (middle, right) = splitAt 1 rest
+                        in (\m -> left <> m <> right) <$> (traverse f middle)
+
 -- | Return a list's selected element, if any.
 --
 -- Only evaluates as much of the container as needed.
@@ -612,13 +631,11 @@ listFindBy test l =
 -- listSelectedElement for 'List': O(1)
 -- listSelectedElement for 'Seq.Seq': O(log(min(i, n - i)))
 -- @
-listSelectedElement :: (Splittable t, Foldable t)
+listSelectedElement :: (Splittable t, Traversable t, Semigroup (t e))
                     => GenericList n t e
                     -> Maybe (Int, e)
-listSelectedElement l = do
-    sel <- l^.listSelectedL
-    let (_, xs) = splitAt sel (l ^. listElementsL)
-    (sel,) <$> toList xs ^? _head
+listSelectedElement l =
+    (,) <$> l^.listSelectedL <*> l^?listSelectedElementL
 
 -- | Remove all elements from the list and clear the selection.
 --
@@ -647,11 +664,16 @@ listReverse l =
 --
 -- Complexity: same as 'traverse' for the container type (typically
 -- /O(n)/).
-listModify :: (Traversable t)
+--
+-- Complexity: same as 'listSelectedElementL' for the list's container type.
+--
+-- @
+-- listModify for 'List': O(n)
+-- listModify for 'Seq.Seq': O(log(min(i, n - i)))
+-- @
+--
+listModify :: (Traversable t, Splittable t, Semigroup (t e))
            => (e -> e)
            -> GenericList n t e
            -> GenericList n t e
-listModify f l =
-    case l ^. listSelectedL of
-        Nothing -> l
-        Just j -> l & listElementsL %~ imap (\i e -> if i == j then f e else e)
+listModify f = listSelectedElementL %~ f

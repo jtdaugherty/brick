@@ -4,7 +4,6 @@ module Main where
 import Brick.Main (App(..), neverShowCursor, resizeOrQuit, defaultMain)
 import Brick.Types
   ( Widget
-  , Padding(..)
   )
 import Brick.Widgets.Core
   ( vBox
@@ -20,6 +19,7 @@ import Brick.Widgets.Core
   , cropRightTo
   , cropTopTo
   , cropBottomTo
+  , Padding(..)
   )
 import Brick.Widgets.Border (border)
 import Brick.AttrMap (attrMap)
@@ -52,7 +52,7 @@ app :: App () e ()
 app =
     App { appDraw = const [ui]
         , appHandleEvent = resizeOrQuit
-        , appStartEvent = return
+        , appStartEvent = return ()
         , appAttrMap = const $ attrMap V.defAttr []
         , appChooseCursor = neverShowCursor
         }

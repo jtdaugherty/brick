@@ -921,12 +921,16 @@ with ``Brick.Themes.saveCustomizations``.
 Wide Character Support and the TextWidth class
 ==============================================
 
-Brick supports rendering wide characters in all widgets, and the brick
-editor supports entering and editing wide characters. Wide characters
-are those such as many Asian characters and emoji that need more than
-a single terminal column to be displayed. Brick relies on Vty's use of
-the `utf8proc`_ library to determine the column width of each character
-rendered.
+Brick attempts to support rendering wide characters in all widgets,
+and the brick editor supports entering and editing wide characters.
+Wide characters are those such as many Asian characters and emoji
+that need more than a single terminal column to be displayed.
+
+Unfortunatley, there is not a fully correct solution to determining
+the character width that the user's terminal will use for a given
+character. The current recommendation is to avoid use of wide characters
+due to these issues. If you still must use them, you can read `vty`_'s
+documentation for options that will affect character width calculations.
 
 As a result of supporting wide characters, it is important to know that
 computing the length of a string to determine its screen width will
@@ -945,8 +949,8 @@ will not be counted properly. In order to get this right, use the
 
    let width = Brick.Widgets.Core.textWidth t
 
-The ``TextWidth`` type class uses Vty's character width routine (and
-thus ``utf8proc``) to compute the correct width. If you need to compute
+The ``TextWidth`` type class uses Vty's character width routine
+to compute the correct width. If you need to compute
 the width of a single character, use ``Graphics.Text.wcwidth``.
 
 Extents
@@ -1924,4 +1928,3 @@ sub-widget uses for rendering its output.
 .. _Hackage: http://hackage.haskell.org/
 .. _microlens: http://hackage.haskell.org/package/microlens
 .. _bracketed paste mode: https://cirw.in/blog/bracketed-paste
-.. _utf8proc: http://julialang.org/utf8proc/

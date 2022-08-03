@@ -8,6 +8,7 @@ import Data.Monoid
 #endif
 import qualified Graphics.Vty as V
 
+import Control.Monad.State (get)
 import qualified Data.Text as Text
 import qualified Brick.Main as M
 import qualified Brick.Widgets.List as L
@@ -27,6 +28,7 @@ import Brick.Widgets.Core
   ( vBox, (<=>), padTop
   , hLimit, vLimit, txt
   , withDefAttr, emptyWidget
+  , Padding(..)
   )
 import qualified Brick.Widgets.FileBrowser as FB
 import qualified Brick.AttrMap as A
@@ -44,7 +46,7 @@ drawUI b = [center $ ui <=> help]
              hLimit 50 $
              borderWithLabel (txt "Choose a file") $
              FB.renderFileBrowser True b
-        help = padTop (T.Pad 1) $
+        help = padTop (Pad 1) $
                vBox [ case FB.fileBrowserException b of
                           Nothing -> emptyWidget
                           Just e -> hCenter $ withDefAttr errorAttr $
@@ -55,22 +57,24 @@ drawUI b = [center $ ui <=> help]
                     , hCenter $ txt "Esc: quit"
                     ]
 
-appEvent :: FB.FileBrowser Name -> BrickEvent Name e -> T.EventM Name (T.Next (FB.FileBrowser Name))
-appEvent b (VtyEvent ev) =
+appEvent :: BrickEvent Name e -> T.EventM Name (FB.FileBrowser Name) ()
+appEvent (VtyEvent ev) = do
+    b <- get
     case ev of
         V.EvKey V.KEsc [] | not (FB.fileBrowserIsSearching b) ->
-            M.halt b
+            M.halt
         _ -> do
-            b' <- FB.handleFileBrowserEvent ev b
+            FB.handleFileBrowserEvent ev
             -- If the browser has a selected file after handling the
             -- event (because the user pressed Enter), shut down.
             case ev of
-                V.EvKey V.KEnter [] ->
+                V.EvKey V.KEnter [] -> do
+                    b' <- get
                     case FB.fileBrowserSelection b' of
-                        [] -> M.continue b'
-                        _ -> M.halt b'
-                _ -> M.continue b'
-appEvent b _ = M.continue b
+                        [] -> return ()
+                        _ -> M.halt
+                _ -> return ()
+appEvent _ = return ()
 
 errorAttr :: AttrName
 errorAttr = "error"
@@ -95,7 +99,7 @@ theApp =
     M.App { M.appDraw = drawUI
           , M.appChooseCursor = M.showFirstCursor
           , M.appHandleEvent = appEvent
-          , M.appStartEvent = return
+          , M.appStartEvent = return ()
           , M.appAttrMap = const theMap
           }
 

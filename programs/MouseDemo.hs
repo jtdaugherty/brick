@@ -3,9 +3,11 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Main where
 
-import Lens.Micro ((^.), (&), (.~))
+import Lens.Micro ((^.))
 import Lens.Micro.TH (makeLenses)
+import Lens.Micro.Mtl
 import Control.Monad (void)
+import Control.Monad.Trans (liftIO)
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid ((<>))
 #endif
@@ -43,7 +45,7 @@ drawUi st =
 buttonLayer :: St -> Widget Name
 buttonLayer st =
     C.vCenterLayer $
-      C.hCenterLayer (padBottom (T.Pad 1) $ str "Click a button:") <=>
+      C.hCenterLayer (padBottom (Pad 1) $ str "Click a button:") <=>
       C.hCenterLayer (hBox $ padLeftRight 1 <$> buttons) <=>
       C.hCenterLayer (padTopBottom 1 $ str "Or enter text and then click in this editor:") <=>
       C.hCenterLayer (vLimit 3 $ hLimit 50 $ E.renderEditor (str . unlines) True (st^.edit))
@@ -83,18 +85,22 @@ infoLayer st = T.Widget T.Fixed T.Fixed $ do
                withDefAttr "info" $
                C.hCenter $ str msg
 
-appEvent :: St -> T.BrickEvent Name e -> T.EventM Name (T.Next St)
-appEvent st ev@(T.MouseDown n _ _ loc) =
-    M.continue =<< T.handleEventLensed (st & lastReportedClick .~ Just (n, loc))
-                                       edit
-                                       E.handleEditorEvent
-                                       ev
-appEvent st (T.MouseUp {}) = M.continue $ st & lastReportedClick .~ Nothing
-appEvent st (T.VtyEvent (V.EvMouseUp {})) = M.continue $ st & lastReportedClick .~ Nothing
-appEvent st (T.VtyEvent (V.EvKey V.KUp [V.MCtrl])) = M.vScrollBy (M.viewportScroll Prose) (-1) >> M.continue st
-appEvent st (T.VtyEvent (V.EvKey V.KDown [V.MCtrl])) = M.vScrollBy (M.viewportScroll Prose) 1 >> M.continue st
-appEvent st (T.VtyEvent (V.EvKey V.KEsc [])) = M.halt st
-appEvent st ev = M.continue =<< T.handleEventLensed st edit E.handleEditorEvent ev
+appEvent :: T.BrickEvent Name e -> T.EventM Name St ()
+appEvent ev@(T.MouseDown n _ _ loc) = do
+    lastReportedClick .= Just (n, loc)
+    zoom edit $ E.handleEditorEvent ev
+appEvent (T.MouseUp {}) =
+    lastReportedClick .= Nothing
+appEvent (T.VtyEvent (V.EvMouseUp {})) =
+    lastReportedClick .= Nothing
+appEvent (T.VtyEvent (V.EvKey V.KUp [V.MCtrl])) =
+    M.vScrollBy (M.viewportScroll Prose) (-1)
+appEvent (T.VtyEvent (V.EvKey V.KDown [V.MCtrl])) =
+    M.vScrollBy (M.viewportScroll Prose) 1
+appEvent (T.VtyEvent (V.EvKey V.KEsc [])) =
+    M.halt
+appEvent ev =
+    zoom edit $ E.handleEditorEvent ev
 
 aMap :: AttrMap
 aMap = attrMap V.defAttr
@@ -108,7 +114,9 @@ aMap = attrMap V.defAttr
 app :: M.App St e Name
 app =
     M.App { M.appDraw = drawUi
-          , M.appStartEvent = return
+          , M.appStartEvent = do
+              vty <- M.getVtyHandle
+              liftIO $ V.setMode (V.outputIface vty) V.Mouse True
           , M.appHandleEvent = appEvent
           , M.appAttrMap = const aMap
           , M.appChooseCursor = M.showFirstCursor
@@ -116,13 +124,7 @@ app =
 
 main :: IO ()
 main = do
-    let buildVty = do
-          v <- V.mkVty =<< V.standardIOConfig
-          V.setMode (V.outputIface v) V.Mouse True
-          return v
-
-    initialVty <- buildVty
-    void $ M.customMain initialVty buildVty Nothing app $ St [] Nothing
+    void $ M.defaultMain app $ St [] Nothing
            (unlines [ "Try clicking on various UI elements."
                     , "Observe that the click coordinates identify the"
                     , "underlying widget coordinates."

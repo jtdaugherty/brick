@@ -119,11 +119,10 @@ instance DecodeUtf8 String where
 
 handleEditorEvent :: (Eq n, DecodeUtf8 t, Eq t, Z.GenericTextZipper t)
                   => BrickEvent n e
-                  -> Editor t n
-                  -> EventM n (Editor t n)
-handleEditorEvent e ed = return $ applyEdit f ed
-    where
-        f = case e of
+                  -> EventM n (Editor t n) ()
+handleEditorEvent e = do
+    ed <- get
+    let f = case e of
               VtyEvent ev ->
                   handleVtyEvent ev
               MouseDown n _ _ (Location pos) | n == getName ed ->
@@ -157,6 +156,7 @@ handleEditorEvent e ed = return $ applyEdit f ed
             EvKey (KChar '<') [MMeta] -> Z.gotoBOF
             EvKey (KChar '>') [MMeta] -> Z.gotoEOF
             _ -> id
+    put $ applyEdit f ed
 
 -- | Construct an editor over 'Text' values
 editorText :: n

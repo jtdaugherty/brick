@@ -1,7 +1,10 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Main where
 
+import Lens.Micro.TH
+import Lens.Micro.Mtl
 import Control.Monad (void)
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid ((<>))
@@ -26,7 +29,8 @@ import Brick.AttrMap
   , attrMap
   )
 import Brick.Widgets.Core
-  ( hLimit
+  ( Padding(..)
+  , hLimit
   , vLimit
   , padRight
   , hBox
@@ -57,7 +61,9 @@ customScrollbars =
 data Name = VP1 | VP2 | SBClick T.ClickableScrollbarElement Name
           deriving (Ord, Show, Eq)
 
-data St = St { lastClickedElement :: Maybe (T.ClickableScrollbarElement, Name) }
+data St = St { _lastClickedElement :: Maybe (T.ClickableScrollbarElement, Name) }
+
+makeLenses ''St
 
 drawUi :: St -> [Widget Name]
 drawUi st = [ui]
@@ -65,9 +71,9 @@ drawUi st = [ui]
         ui = C.center $ hLimit 70 $ vLimit 21 $
              (vBox [ pair
                    , C.hCenter (str "Last clicked scroll bar element:")
-                   , str $ show $ lastClickedElement st
+                   , str $ show $ _lastClickedElement st
                    ])
-        pair = hBox [ padRight (T.Pad 5) $
+        pair = hBox [ padRight (Pad 5) $
                       B.border $
                       withClickableHScrollBars SBClick $
                       withHScrollBars OnBottom $
@@ -92,13 +98,13 @@ vp1Scroll = M.viewportScroll VP1
 vp2Scroll :: M.ViewportScroll Name
 vp2Scroll = M.viewportScroll VP2
 
-appEvent :: St -> T.BrickEvent Name e -> T.EventM Name (T.Next St)
-appEvent st (T.VtyEvent (V.EvKey V.KRight []))  = M.hScrollBy vp1Scroll 1 >> M.continue st
-appEvent st (T.VtyEvent (V.EvKey V.KLeft []))   = M.hScrollBy vp1Scroll (-1) >> M.continue st
-appEvent st (T.VtyEvent (V.EvKey V.KDown []))   = M.vScrollBy vp2Scroll 1 >> M.continue st
-appEvent st (T.VtyEvent (V.EvKey V.KUp []))     = M.vScrollBy vp2Scroll (-1) >> M.continue st
-appEvent st (T.VtyEvent (V.EvKey V.KEsc []))    = M.halt st
-appEvent st (T.MouseDown (SBClick el n) _ _ _) = do
+appEvent :: T.BrickEvent Name e -> T.EventM Name St ()
+appEvent (T.VtyEvent (V.EvKey V.KRight []))  = M.hScrollBy vp1Scroll 1
+appEvent (T.VtyEvent (V.EvKey V.KLeft []))   = M.hScrollBy vp1Scroll (-1)
+appEvent (T.VtyEvent (V.EvKey V.KDown []))   = M.vScrollBy vp2Scroll 1
+appEvent (T.VtyEvent (V.EvKey V.KUp []))     = M.vScrollBy vp2Scroll (-1)
+appEvent (T.VtyEvent (V.EvKey V.KEsc []))    = M.halt
+appEvent (T.MouseDown (SBClick el n) _ _ _) = do
     case n of
         VP1 -> do
             let vp = M.viewportScroll VP1
@@ -119,8 +125,8 @@ appEvent st (T.MouseDown (SBClick el n) _ _ _) = do
         _ ->
             return ()
 
-    M.continue $ st { lastClickedElement = Just (el, n) }
-appEvent st _ = M.continue st
+    lastClickedElement .= Just (el, n)
+appEvent _ = return ()
 
 theme :: AttrMap
 theme =
@@ -132,7 +138,7 @@ theme =
 app :: M.App St e Name
 app =
     M.App { M.appDraw = drawUi
-          , M.appStartEvent = return
+          , M.appStartEvent = return ()
           , M.appHandleEvent = appEvent
           , M.appAttrMap = const theme
           , M.appChooseCursor = M.neverShowCursor

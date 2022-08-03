@@ -1,7 +1,6 @@
 -- | Basic types used by this library.
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Brick.Types
   ( -- * The Widget type
@@ -27,11 +26,11 @@ module Brick.Types
   , ScrollbarRenderer(..)
   , ClickableScrollbarElement(..)
 
-  -- * Event-handling types
-  , EventM(..)
-  , Next
+  -- * Event-handling types and functions
+  , EventM
   , BrickEvent(..)
-  , handleEventLensed
+  , nestEventM
+  , nestEventM'
 
   -- * Rendering infrastructure
   , RenderM
@@ -85,63 +84,72 @@ module Brick.Types
 
   -- * Miscellaneous
   , Size(..)
-  , Padding(..)
   , Direction(..)
 
   -- * Renderer internals (for benchmarking)
   , RenderState
+
+  -- * Re-exports for convenience
+  , get
+  , gets
+  , put
+  , modify
+  , zoom
   )
 where
 
-import Lens.Micro (_1, _2, to, (^.), (&), (.~), Lens')
+import Lens.Micro (_1, _2, to, (^.))
 import Lens.Micro.Type (Getting)
-import Control.Monad.Catch (MonadThrow, MonadCatch, MonadMask)
+import Lens.Micro.Mtl (zoom)
 #if !MIN_VERSION_base(4,13,0)
 import Control.Monad.Fail (MonadFail)
 #endif
-import Control.Monad.Trans.State.Lazy
-import Control.Monad.Trans.Reader
+import Control.Monad.State.Strict
+import Control.Monad.Reader
 import Graphics.Vty (Attr)
-import Control.Monad.IO.Class
 
 import Brick.Types.TH
 import Brick.Types.Internal
+import Brick.Types.EventM
 import Brick.AttrMap (AttrName, attrMapLookup)
 
--- | The type of padding.
-data Padding = Pad Int
-             -- ^ Pad by the specified number of rows or columns.
-             | Max
-             -- ^ Pad up to the number of available rows or columns.
+-- | Given a state value and an 'EventM' that mutates that state, run
+-- the specified action and return resulting modified state.
+nestEventM' :: a
+           -- ^ The initial state to use in the nested action.
+            -> EventM n a b
+            -- ^ The action to run.
+            -> EventM n s a
+nestEventM' s act = fst <$> nestEventM s act
 
--- | A convenience function for handling events intended for values
--- that are targets of lenses in your application state. This function
--- obtains the target value of the specified lens, invokes 'handleEvent'
--- on it, and stores the resulting transformed value back in the state
--- using the lens.
-handleEventLensed :: a
-                  -- ^ The state value.
-                  -> Lens' a b
-                  -- ^ The lens to use to extract and store the target
-                  -- of the event.
-                  -> (e -> b -> EventM n b)
-                  -- ^ The event handler.
-                  -> e
-                  -- ^ The event to handle.
-                  -> EventM n a
-handleEventLensed v target handleEvent ev = do
-    newB <- handleEvent ev (v^.target)
-    return $ v & target .~ newB
+-- | Given a state value and an 'EventM' that mutates that state, run
+-- the specified action and return both the resulting modified state and
+-- the result of the action itself.
+nestEventM :: a
+           -- ^ The initial state to use in the nested action.
+           -> EventM n a b
+           -- ^ The action to run.
+           -> EventM n s (a, b)
+nestEventM s' act = do
+    ro <- EventM ask
+    es <- EventM $ lift $ lift get
+    vtyCtx <- getVtyContext
+    let stInner = ES { nextAction = Continue
+                     , esScrollRequests = esScrollRequests es
+                     , cacheInvalidateRequests = cacheInvalidateRequests es
+                     , requestedVisibleNames = requestedVisibleNames es
+                     , vtyContext = vtyCtx
+                     }
+    ((actResult, newSt), stInnerFinal) <- liftIO $ runStateT (runStateT (runReaderT (runEventM act) ro) s') stInner
 
--- | The monad in which event handlers run. Although it may be tempting
--- to dig into the reader value yourself, just use
--- 'Brick.Main.lookupViewport'.
-newtype EventM n a =
-    EventM { runEventM :: ReaderT (EventRO n) (StateT (EventState n) IO) a
-           }
-           deriving ( Functor, Applicative, Monad, MonadIO
-                    , MonadThrow, MonadCatch, MonadMask, MonadFail
-                    )
+    EventM $ lift $ lift $ modify $
+        \st -> st { nextAction = nextAction stInnerFinal
+                  , esScrollRequests = esScrollRequests stInnerFinal
+                  , cacheInvalidateRequests = cacheInvalidateRequests stInnerFinal
+                  , requestedVisibleNames = requestedVisibleNames stInnerFinal
+                  , vtyContext = vtyContext stInnerFinal
+                  }
+    return (newSt, actResult)
 
 -- | The rendering context's current drawing attribute.
 attrL :: forall r n. Getting r (Context n) Attr

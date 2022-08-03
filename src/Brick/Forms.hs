@@ -3,6 +3,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# OPTIONS_GHC -fno-warn-unused-binds #-}
 -- | Note - this API is designed to support a narrow (but common!) set
 -- of use cases. If you find that you need more customization than this
 -- offers, then you will need to consider building your own layout and
@@ -103,6 +105,7 @@ import qualified Data.Text as T
 import Text.Read (readMaybe)
 
 import Lens.Micro
+import Lens.Micro.Mtl
 
 -- | A form field. This represents an interactive input field in the
 -- form. Its user input is validated and thus converted into a type of
@@ -138,10 +141,8 @@ data FormField a b e n =
               -- ^ A function to render this form field. Parameters are
               -- whether the field is currently focused, followed by the
               -- field state.
-              , formFieldHandleEvent :: BrickEvent n e -> b -> EventM n b
-              -- ^ An event handler for this field. This receives the
-              -- event and the field state and returns a new field
-              -- state.
+              , formFieldHandleEvent :: BrickEvent n e -> EventM n b ()
+              -- ^ An event handler for this field.
               }
 
 -- | A form field state accompanied by the fields that manipulate that
@@ -215,6 +216,8 @@ data Form s e n =
          , formConcatAll :: [Widget n] -> Widget n
          -- ^ Concatenation function for this form's field renderings.
          }
+
+suffixLenses ''Form
 
 -- | Compose a new rendering augmentation function with the one in the
 -- form field collection. For example, we might put a label on the left
@@ -328,9 +331,9 @@ checkboxCustomField :: (Ord n, Show n)
 checkboxCustomField lb check rb stLens name label initialState =
     let initVal = initialState ^. stLens
 
-        handleEvent (MouseDown n _ _ _) s | n == name = return $ not s
-        handleEvent (VtyEvent (EvKey (KChar ' ') [])) s = return $ not s
-        handleEvent _ s = return s
+        handleEvent (MouseDown n _ _ _) | n == name = modify not
+        handleEvent (VtyEvent (EvKey (KChar ' ') [])) = modify not
+        handleEvent _ = return ()
 
     in FormFieldState { formFieldState = initVal
                       , formFields = [ FormField name Just True
@@ -385,8 +388,8 @@ listField options stLens renderItem itemHeight name initialState =
                                Just e -> listMoveToElement e l
                setList s l = s & stLens .~ (snd <$> listSelectedElement l)
 
-        handleEvent (VtyEvent e) s = handleListEvent e s
-        handleEvent _ s = return s
+        handleEvent (VtyEvent e) = handleListEvent e
+        handleEvent _ = return ()
 
     in FormFieldState { formFieldState = initVal
                       , formFields = [ FormField name Just True
@@ -447,12 +450,12 @@ radioCustomField lb check rb stLens options initialState =
                 [(val, _, _)] -> Just val
                 _ -> Nothing
 
-        handleEvent _ (MouseDown n _ _ _) s =
+        handleEvent _ (MouseDown n _ _ _) =
             case lookupOptionValue n of
-                Nothing -> return s
-                Just v -> return v
-        handleEvent new (VtyEvent (EvKey (KChar ' ') [])) _ = return new
-        handleEvent _ _ s = return s
+                Nothing -> return ()
+                Just v -> put v
+        handleEvent new (VtyEvent (EvKey (KChar ' ') [])) = put new
+        handleEvent _ _ = return ()
 
         optionFields = mkOptionField <$> options
         mkOptionField (val, name, label) =
@@ -479,10 +482,11 @@ renderRadio lb check rb val name label foc cur =
         csr = if foc then putCursor name (Location (1,0)) else id
     in clickable name $
        addAttr $ csr $
-       hBox [ txt $ T.singleton lb
-            , txt $ if isSet then T.singleton check else " "
-            , txt $ T.singleton rb <> " " <> label
-            ]
+       txt $ T.concat $
+       [ T.singleton lb
+       , if isSet then T.singleton check else " "
+       , T.singleton rb <> " " <> label
+       ]
 
 -- | A form field for using an editor to edit the text representation of
 -- a value. The other editing fields in this module are special cases of
@@ -729,8 +733,8 @@ renderFormFieldState fr (FormFieldState st _ _ fields helper concatFields) =
             in maybeInvalid (renderField foc st) : renderFields fs
     in helper $ concatFields $ renderFields fields
 
--- | Dispatch an event to the appropriate form field and return a new
--- form. This handles the following events in this order:
+-- | Dispatch an event to the currently focused form field. This handles
+-- the following events in this order:
 --
 -- * On @Tab@ keypresses, this changes the focus to the next field in
 --   the form.
@@ -755,44 +759,31 @@ renderFormFieldState fr (FormFieldState st _ _ fields helper concatFields) =
 -- lens. The external validation flag is ignored during this step to
 -- ensure that external validators have a chance to get the intermediate
 -- validated value.
-handleFormEvent :: (Eq n) => BrickEvent n e -> Form s e n -> EventM n (Form s e n)
-handleFormEvent (VtyEvent (EvKey (KChar '\t') [])) f =
-    return $ f { formFocus = focusNext $ formFocus f }
-handleFormEvent (VtyEvent (EvKey KBackTab [])) f =
-    return $ f { formFocus = focusPrev $ formFocus f }
-handleFormEvent e@(MouseDown n _ _ _) f =
-    handleFormFieldEvent n e $ f { formFocus = focusSetCurrent n (formFocus f) }
-handleFormEvent e@(MouseUp n _ _) f =
-    handleFormFieldEvent n e $ f { formFocus = focusSetCurrent n (formFocus f) }
-handleFormEvent e@(VtyEvent (EvKey KUp [])) f =
-    case focusGetCurrent (formFocus f) of
-        Nothing -> return f
-        Just n  ->
-            case getFocusGrouping f n of
-                Nothing -> forwardToCurrent e f
-                Just grp -> return $ f { formFocus = focusSetCurrent (entryBefore grp n) (formFocus f) }
-handleFormEvent e@(VtyEvent (EvKey KDown [])) f =
-    case focusGetCurrent (formFocus f) of
-        Nothing -> return f
-        Just n  ->
-            case getFocusGrouping f n of
-                Nothing -> forwardToCurrent e f
-                Just grp -> return $ f { formFocus = focusSetCurrent (entryAfter grp n) (formFocus f) }
-handleFormEvent e@(VtyEvent (EvKey KLeft [])) f =
-    case focusGetCurrent (formFocus f) of
-        Nothing -> return f
-        Just n  ->
-            case getFocusGrouping f n of
-                Nothing -> forwardToCurrent e f
-                Just grp -> return $ f { formFocus = focusSetCurrent (entryBefore grp n) (formFocus f) }
-handleFormEvent e@(VtyEvent (EvKey KRight [])) f =
-    case focusGetCurrent (formFocus f) of
-        Nothing -> return f
-        Just n  ->
-            case getFocusGrouping f n of
-                Nothing -> forwardToCurrent e f
-                Just grp -> return $ f { formFocus = focusSetCurrent (entryAfter grp n) (formFocus f) }
-handleFormEvent e f = forwardToCurrent e f
+handleFormEvent :: (Eq n) => BrickEvent n e -> EventM n (Form s e n) ()
+handleFormEvent (VtyEvent (EvKey (KChar '\t') [])) =
+    formFocusL %= focusNext
+handleFormEvent (VtyEvent (EvKey KBackTab [])) =
+    formFocusL %= focusPrev
+handleFormEvent e@(MouseDown n _ _ _) = do
+    formFocusL %= focusSetCurrent n
+    handleFormFieldEvent e n
+handleFormEvent e@(MouseUp n _ _) = do
+    formFocusL %= focusSetCurrent n
+    handleFormFieldEvent e n
+handleFormEvent e@(VtyEvent (EvKey KUp [])) =
+    withFocusAndGrouping e $ \n grp ->
+        formFocusL %= focusSetCurrent (entryBefore grp n)
+handleFormEvent e@(VtyEvent (EvKey KDown [])) =
+    withFocusAndGrouping e $ \n grp ->
+        formFocusL %= focusSetCurrent (entryAfter grp n)
+handleFormEvent e@(VtyEvent (EvKey KLeft [])) =
+    withFocusAndGrouping e $ \n grp ->
+        formFocusL %= focusSetCurrent (entryBefore grp n)
+handleFormEvent e@(VtyEvent (EvKey KRight [])) =
+    withFocusAndGrouping e $ \n grp ->
+        formFocusL %= focusSetCurrent (entryAfter grp n)
+handleFormEvent e =
+    forwardToCurrent e
 
 getFocusGrouping :: (Eq n) => Form s e n -> n -> Maybe [n]
 getFocusGrouping f n = findGroup (formFieldStates f)
@@ -816,16 +807,31 @@ entryBefore as a =
         i' = if i == 0 then length as - 1 else i - 1
     in as !! i'
 
-forwardToCurrent :: (Eq n) => BrickEvent n e -> Form s e n -> EventM n (Form s e n)
-forwardToCurrent e f =
-    case focusGetCurrent (formFocus f) of
-        Nothing -> return f
-        Just n  -> handleFormFieldEvent n e f
+withFocusAndGrouping :: (Eq n) => BrickEvent n e -> (n -> [n] -> EventM n (Form s e n) ()) -> EventM n (Form s e n) ()
+withFocusAndGrouping e act = do
+    foc <- gets formFocus
+    case focusGetCurrent foc of
+        Nothing -> return ()
+        Just n -> do
+            f <- get
+            case getFocusGrouping f n of
+                Nothing -> forwardToCurrent e
+                Just grp -> act n grp
 
-handleFormFieldEvent :: (Eq n) => n -> BrickEvent n e -> Form s e n -> EventM n (Form s e n)
-handleFormFieldEvent n ev f = findFieldState [] (formFieldStates f)
-    where
-        findFieldState _ [] = return f
+withFocus :: (n -> EventM n (Form s e n) ()) -> EventM n (Form s e n) ()
+withFocus act = do
+    foc <- gets formFocus
+    case focusGetCurrent foc of
+        Nothing -> return ()
+        Just n -> act n
+
+forwardToCurrent :: (Eq n) => BrickEvent n e -> EventM n (Form s e n) ()
+forwardToCurrent =
+    withFocus . handleFormFieldEvent
+
+handleFormFieldEvent :: (Eq n) => BrickEvent n e -> n -> EventM n (Form s e n) ()
+handleFormFieldEvent ev n = do
+    let findFieldState _ [] = return ()
         findFieldState prev (e:es) =
             case e of
                 FormFieldState st stLens upd fields helper concatAll -> do
@@ -833,7 +839,7 @@ handleFormFieldEvent n ev f = findFieldState [] (formFieldStates f)
                         findField (field:rest) =
                             case field of
                                 FormField n' validate _ _ handleFunc | n == n' -> do
-                                    nextSt <- handleFunc ev st
+                                    (nextSt, ()) <- nestEventM st (handleFunc ev)
                                     -- If the new state validates, go ahead and update
                                     -- the form state with it.
                                     case validate nextSt of
@@ -844,10 +850,12 @@ handleFormFieldEvent n ev f = findFieldState [] (formFieldStates f)
                     result <- findField fields
                     case result of
                         Nothing -> findFieldState (prev <> [e]) es
-                        Just (newSt, maybeSt) ->
+                        Just (newSt, maybeSt) -> do
                             let newFieldState = FormFieldState newSt stLens upd fields helper concatAll
-                            in return $ f { formFieldStates = prev <> [newFieldState] <> es
-                                          , formState = case maybeSt of
-                                              Nothing -> formState f
-                                              Just s  -> formState f & stLens .~ s
-                                          }
+                            formFieldStatesL .= prev <> [newFieldState] <> es
+                            case maybeSt of
+                              Nothing -> return ()
+                              Just s  -> formStateL.stLens .= s
+
+    states <- gets formFieldStates
+    findFieldState [] states

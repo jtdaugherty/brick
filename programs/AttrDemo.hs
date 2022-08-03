@@ -70,7 +70,7 @@ app :: App () e ()
 app =
     App { appDraw = const [ui]
         , appHandleEvent = resizeOrQuit
-        , appStartEvent = return
+        , appStartEvent = return ()
         , appAttrMap = const theMap
         , appChooseCursor = neverShowCursor
         }
