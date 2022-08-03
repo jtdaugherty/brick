@@ -42,9 +42,10 @@ keyEvents pairs =
 keyEventsList :: KeyEvents e -> [(T.Text, e)]
 keyEventsList (KeyEvents m) = B.toList m
 
--- | Look up the specified event name to get its abstract event.
+-- | Look up the specified event name to get its abstract event. The
+-- lookup ignores leading and trailing whitespace as well as case.
 lookupKeyEvent :: (Ord e) => KeyEvents e -> T.Text -> Maybe e
-lookupKeyEvent (KeyEvents m) name = B.lookup name m
+lookupKeyEvent (KeyEvents m) name = B.lookup (T.strip $ T.toLower name) m
 
 -- | Given an abstract event, get its event name.
 keyEventName :: (Ord e) => KeyEvents e -> e -> Maybe T.Text
