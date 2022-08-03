@@ -120,6 +120,8 @@ main = do
                                   , _counter = 0
                                   }
 
+    -- Now demonstrate how the library's generated key binding help text
+    -- looks in plain text and Markdown formats.
     let sections = [("Main", handlers)]
 
     putStrLn "Generated plain text help:"
