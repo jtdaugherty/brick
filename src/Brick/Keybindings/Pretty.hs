@@ -127,7 +127,13 @@ mkKeybindEventHelp kc h =
   in (label, handlerDescription $ kehHandler h, evText)
 
 -- | Build a 'Widget' displaying key binding information for a single
--- related group of event handlers.
+-- related group of event handlers. This is provided for convenience
+-- so that basic help text for the application's event handlers can be
+-- produced and embedded in the UI.
+--
+-- The resulting widget lists the key events (and keys) bound to the
+-- specified handlers, along with the events' names and the list of
+-- available key bindings for each handler.
 keybindingHelpWidget :: (Ord e)
                      => KeyConfig e
                      -- ^ The key binding configuration in use.
