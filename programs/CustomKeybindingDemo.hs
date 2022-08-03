@@ -66,6 +66,9 @@ handlers =
           counter %= succ
     , K.onEvent DecrementEvent "Decrement the counter" $
           counter %= subtract 1
+
+    -- This handler is always triggered by a specific key and thus
+    -- cannot be rebound to another key.
     , K.onKey (K.bind '\t') "Increment the counter by 10" $
           counter %= (+ 10)
     ]
