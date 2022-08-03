@@ -15,8 +15,9 @@ module Brick.Keybindings.Pretty
 where
 
 import Brick
+import Data.List (sort)
 import Data.Maybe (fromJust)
-
+import qualified Data.Set as S
 import qualified Data.Text as T
 import qualified Graphics.Vty as Vty
 
@@ -108,8 +109,8 @@ mkKeybindEventHelp kc h =
   let trig = kehEventTrigger h
       unbound = [Comment "(unbound)"]
       (label, evText) = case trig of
-          ByKey binding ->
-              (Comment "(non-customizable key)", [Verbatim $ ppBinding binding])
+          ByKey b ->
+              (Comment "(non-customizable key)", [Verbatim $ ppBinding b])
           ByEvent ev ->
               let name = fromJust $ keyEventName (keyConfigEvents kc) ev
               in case lookupKeyConfigBindings kc ev of
@@ -161,7 +162,10 @@ keybindEventHelpWidget (evName, desc, evs) =
 -- 'Brick.Keybindings.Parse.parseBinding'.
 ppBinding :: Binding -> T.Text
 ppBinding (Binding k mods) =
-    T.intercalate "-" $ (ppModifier <$> mods) <> [ppKey k]
+    T.intercalate "-" $ (ppModifier <$> modifierList mods) <> [ppKey k]
+
+modifierList :: S.Set Vty.Modifier -> [Vty.Modifier]
+modifierList = sort . S.toList
 
 -- | Pretty-print a 'Binding' in the same format that is parsed by
 -- 'Brick.Keybindings.Parse.parseBinding'; if no binding is given,

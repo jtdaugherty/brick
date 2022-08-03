@@ -46,6 +46,7 @@ module Brick.Keybindings.KeyDispatcher
 where
 
 import qualified Data.Map.Strict as M
+import qualified Data.Set as S
 import qualified Data.Text as T
 import qualified Graphics.Vty as Vty
 
@@ -86,7 +87,9 @@ data KeyHandler e m =
                -- handler.
                }
 
--- | Find the key handler that matches a Vty key event, if any.
+-- | Find the key handler that matches a Vty key event, if any. Modifier
+-- order is unimportant since the lookup for a matching binding ignores
+-- modifier order.
 --
 -- This works by looking up an event handler whose binding is the
 -- specified key and modifiers based on the 'KeyConfig' that was used to
@@ -96,7 +99,7 @@ data KeyHandler e m =
 -- instead. This is provided for more direct access to the
 -- 'KeyDispatcher' internals.
 lookupVtyEvent :: Vty.Key -> [Vty.Modifier] -> KeyDispatcher e m -> Maybe (KeyHandler e m)
-lookupVtyEvent k mods (KeyDispatcher m) = M.lookup (Binding k mods) m
+lookupVtyEvent k mods (KeyDispatcher m) = M.lookup (Binding k $ S.fromList mods) m
 
 -- | Handle a keyboard event by looking it up in the 'KeyDispatcher'
 -- and invoking the matching binding's handler if one is found. Return
@@ -159,8 +162,8 @@ keyHandlersFromConfig kc eh =
                           | Just Unbound <- lookupKeyConfigBindings kc ev = []
                           | otherwise = allDefaultBindings kc ev
         bindings = case kehEventTrigger eh of
-            ByKey binding -> [binding]
-            ByEvent ev    -> allBindingsFor ev
+            ByKey b    -> [b]
+            ByEvent ev -> allBindingsFor ev
     in [ KeyHandler { khHandler = eh, khBinding = b } | b <- bindings ]
 
 mkHandler :: T.Text -> m () -> Handler m

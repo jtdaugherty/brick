@@ -92,9 +92,7 @@ drawUi st = [body]
     where
         binding = do
             (k, mods) <- st^.lastKey
-            return $ K.Binding { K.kbKey = k
-                               , K.kbMods = mods
-                               }
+            return $ K.binding k mods
         keybindingHelp = K.keybindingHelpWidget (st^.keyConfig) handlers
         status = hLimit 40 $
                  padRight Max $

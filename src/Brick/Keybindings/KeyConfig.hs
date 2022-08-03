@@ -12,6 +12,7 @@ module Brick.Keybindings.KeyConfig
   -- * Specifying bindings
   , Binding(..)
   , ToBinding(..)
+  , binding
   , fn
   , meta
   , ctrl
@@ -31,6 +32,7 @@ where
 
 import Data.List (nub)
 import qualified Data.Map.Strict as M
+import qualified Data.Set as S
 import Data.Maybe (fromMaybe, listToMaybe)
 import qualified Graphics.Vty as Vty
 
@@ -51,9 +53,16 @@ import Brick.Keybindings.KeyEvents
 data Binding =
     Binding { kbKey :: Vty.Key
             -- ^ The key itself.
-            , kbMods :: [Vty.Modifier]
-            -- ^ The list of modifiers. Order is not significant.
+            , kbMods :: S.Set Vty.Modifier
+            -- ^ The set of modifiers.
             } deriving (Eq, Show, Ord)
+
+-- | Construct a 'Binding'. Modifier order is ignored.
+binding :: Vty.Key -> [Vty.Modifier] -> Binding
+binding k mods =
+    Binding { kbKey = k
+            , kbMods = S.fromList mods
+            }
 
 -- | An explicit configuration of key bindings for a key event.
 data BindingState =
@@ -164,7 +173,7 @@ class ToBinding a where
     bind :: a -> Binding
 
 instance ToBinding Vty.Key where
-    bind k = Binding { kbMods = [], kbKey = k }
+    bind k = Binding { kbMods = mempty, kbKey = k }
 
 instance ToBinding Char where
     bind = bind . Vty.KChar
@@ -175,7 +184,7 @@ instance ToBinding Binding where
 addModifier :: (ToBinding a) => Vty.Modifier -> a -> Binding
 addModifier m val =
     let b = bind val
-    in b { kbMods = nub $ m : kbMods b }
+    in b { kbMods = S.insert m (kbMods b) }
 
 -- | Add Meta to a binding.
 meta :: (ToBinding a) => a -> Binding
