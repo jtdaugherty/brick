@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -22,7 +23,10 @@ newtype EventM n s a =
     EventM { runEventM :: ReaderT (EventRO n) (StateT s (StateT (EventState n) IO)) a
            }
            deriving ( Functor, Applicative, Monad, MonadIO
-                    , MonadThrow, MonadCatch, MonadMask, MonadFail
+                    , MonadThrow, MonadCatch, MonadMask
+#if !MIN_VERSION_base(4,13,0)
+                    , MonadFail
+#endif
                     )
 
 instance MonadState s (EventM n s) where
