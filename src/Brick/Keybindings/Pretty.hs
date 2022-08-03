@@ -33,10 +33,10 @@ data TextHunk = Verbatim T.Text
 
 -- | Generate a Markdown document of sections indicating the key binding
 -- state for each event handler.
-keybindingMarkdownTable :: (Ord e)
-                        => KeyConfig e
+keybindingMarkdownTable :: (Ord k)
+                        => KeyConfig k
                         -- ^ The key binding configuration in use.
-                        -> [(T.Text, [KeyEventHandler e m])]
+                        -> [(T.Text, [KeyEventHandler k m])]
                         -- ^ Key event handlers by named section.
                         -> T.Text
 keybindingMarkdownTable kc sections = title <> keybindSectionStrings
@@ -52,10 +52,10 @@ keybindingMarkdownTable kc sections = title <> keybindSectionStrings
 
 -- | Generate a plain text document of sections indicating the key
 -- binding state for each event handler.
-keybindingTextTable :: (Ord e)
-                    => KeyConfig e
+keybindingTextTable :: (Ord k)
+                    => KeyConfig k
                     -- ^ The key binding configuration in use.
-                    -> [(T.Text, [KeyEventHandler e m])]
+                    -> [(T.Text, [KeyEventHandler k m])]
                     -- ^ Key event handlers by named section.
                     -> T.Text
 keybindingTextTable kc sections = title <> keybindSectionStrings
@@ -82,11 +82,11 @@ keybindEventHelpText width eventNameWidth (evName, desc, evs) =
 padTo :: Int -> T.Text -> T.Text
 padTo n s = s <> T.replicate (n - T.length s) " "
 
-mkKeybindEventSectionHelp :: (Ord e)
-                          => KeyConfig e
+mkKeybindEventSectionHelp :: (Ord k)
+                          => KeyConfig k
                           -> ((TextHunk, T.Text, [TextHunk]) -> a)
                           -> ([a] -> a)
-                          -> [KeyEventHandler e m]
+                          -> [KeyEventHandler k m]
                           -> a
 mkKeybindEventSectionHelp kc mkKeybindHelpFunc vertCat kbs =
   vertCat $ mkKeybindHelpFunc <$> (mkKeybindEventHelp kc <$> kbs)
@@ -104,9 +104,9 @@ keybindEventHelpMarkdown (evName, desc, evs) =
        " | " <> desc <>
        " |"
 
-mkKeybindEventHelp :: (Ord e)
-                   => KeyConfig e
-                   -> KeyEventHandler e m
+mkKeybindEventHelp :: (Ord k)
+                   => KeyConfig k
+                   -> KeyEventHandler k m
                    -> (TextHunk, T.Text, [TextHunk])
 mkKeybindEventHelp kc h =
   let trig = kehEventTrigger h
@@ -138,10 +138,10 @@ mkKeybindEventHelp kc h =
 -- The resulting widget lists the key events (and keys) bound to the
 -- specified handlers, along with the events' names and the list of
 -- available key bindings for each handler.
-keybindingHelpWidget :: (Ord e)
-                     => KeyConfig e
+keybindingHelpWidget :: (Ord k)
+                     => KeyConfig k
                      -- ^ The key binding configuration in use.
-                     -> [KeyEventHandler e m]
+                     -> [KeyEventHandler k m]
                      -- ^ The list of the event handlers to include in
                      -- the help display.
                      -> Widget n

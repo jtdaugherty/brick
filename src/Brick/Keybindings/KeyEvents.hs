@@ -21,9 +21,9 @@ where
 import qualified Data.Bimap as B
 import qualified Data.Text as T
 
--- | A bidirectional mapping between events @e@ and their user-readable
+-- | A bidirectional mapping between events @k@ and their user-readable
 -- names.
-data KeyEvents e = KeyEvents (B.Bimap T.Text e)
+data KeyEvents k = KeyEvents (B.Bimap T.Text k)
                  deriving (Eq, Show)
 
 -- | Build a new 'KeyEvents' map from the specified list of events and
@@ -31,7 +31,7 @@ data KeyEvents e = KeyEvents (B.Bimap T.Text e)
 --
 -- Calls 'error' if any events have the same name (ignoring case) or if
 -- multiple names map to the same event.
-keyEvents :: (Ord e) => [(T.Text, e)] -> KeyEvents e
+keyEvents :: (Ord k) => [(T.Text, k)] -> KeyEvents k
 keyEvents pairs =
     let m = B.fromList [(T.strip $ T.toLower n, e) | (n, e) <- pairs]
     in if B.size m /= length pairs
@@ -39,14 +39,14 @@ keyEvents pairs =
        else KeyEvents $ B.fromList pairs
 
 -- | Convert the 'KeyEvents' to a list.
-keyEventsList :: KeyEvents e -> [(T.Text, e)]
+keyEventsList :: KeyEvents k -> [(T.Text, k)]
 keyEventsList (KeyEvents m) = B.toList m
 
 -- | Look up the specified event name to get its abstract event. The
 -- lookup ignores leading and trailing whitespace as well as case.
-lookupKeyEvent :: (Ord e) => KeyEvents e -> T.Text -> Maybe e
+lookupKeyEvent :: (Ord k) => KeyEvents k -> T.Text -> Maybe k
 lookupKeyEvent (KeyEvents m) name = B.lookup (T.strip $ T.toLower name) m
 
 -- | Given an abstract event, get its event name.
-keyEventName :: (Ord e) => KeyEvents e -> e -> Maybe T.Text
+keyEventName :: (Ord k) => KeyEvents k -> k -> Maybe T.Text
 keyEventName (KeyEvents m) e = B.lookupR e m

@@ -6,9 +6,9 @@
 --
 -- The workflow for this API is as follows:
 --
--- * Create a data type @e@ with a constructor for each abstract
+-- * Create a data type @k@ with a constructor for each abstract
 --   application event that you want to trigger with an input key.
--- * To each event @e@, assign a unique user-readable name (such as a
+-- * To each event @k@, assign a unique user-readable name (such as a
 --   name you could imagine using in a configuration file to refer to
 --   the event) and a list of default key bindings.
 -- * Use the resulting data to create a 'KeyConfig' with 'newKeyConfig'.
@@ -16,7 +16,7 @@
 --   within the program or load them from an INI file with routines like
 --   'Brick.Keybindings.Parse.keybindingsFromFile'.
 -- * Implement application event handlers that will be run in response
---   to either specific hard-coded keys or events @e@, both in some
+--   to either specific hard-coded keys or events @k@, both in some
 --   monad @m@ of your choosing, using constructors 'onKey' and
 --   'onEvent'.
 -- * Use the created 'KeyConfig' and handlers to create a
@@ -54,7 +54,7 @@ import Brick.Keybindings.KeyConfig
 
 -- | A set of handlers for specific keys whose handlers run in the monad
 -- @m@.
-newtype KeyDispatcher e m = KeyDispatcher (M.Map Binding (KeyHandler e m))
+newtype KeyDispatcher k m = KeyDispatcher (M.Map Binding (KeyHandler k m))
 
 -- | An 'Handler' represents a handler implementation to be invoked in
 -- response to some event that runs in the monad @m@.
@@ -73,8 +73,8 @@ data Handler m =
 --
 -- In general, you should never need to create one of these. The
 -- internals are exposed to make inspection easy.
-data KeyHandler e m =
-    KeyHandler { khHandler :: KeyEventHandler e m
+data KeyHandler k m =
+    KeyHandler { khHandler :: KeyEventHandler k m
                -- ^ The handler to invoke. Note that this maintains
                -- the original abstract key event handler; this allows
                -- us to obtain the original 'EventTrigger' for the
@@ -98,7 +98,7 @@ data KeyHandler e m =
 -- Ordinarily you will not need to use this function; use 'handleKey'
 -- instead. This is provided for more direct access to the
 -- 'KeyDispatcher' internals.
-lookupVtyEvent :: Vty.Key -> [Vty.Modifier] -> KeyDispatcher e m -> Maybe (KeyHandler e m)
+lookupVtyEvent :: Vty.Key -> [Vty.Modifier] -> KeyDispatcher k m -> Maybe (KeyHandler k m)
 lookupVtyEvent k mods (KeyDispatcher m) = M.lookup (Binding k $ S.fromList mods) m
 
 -- | Handle a keyboard event by looking it up in the 'KeyDispatcher'
@@ -106,7 +106,7 @@ lookupVtyEvent k mods (KeyDispatcher m) = M.lookup (Binding k $ S.fromList mods)
 -- @True@ if the a matching handler was found and run; return @False@ if
 -- no matching binding was found.
 handleKey :: (Monad m)
-          => KeyDispatcher e m
+          => KeyDispatcher k m
           -- ^ The dispatcher to use.
           -> Vty.Key
           -- ^ The key to handle.
@@ -119,44 +119,44 @@ handleKey d k mods = do
         Nothing -> return False
 
 -- | Build a 'KeyDispatcher' to dispatch keys to handle events of type
--- @e@ using actions in a Monad @m@.
+-- @k@ using actions in a Monad @m@.
 --
 -- This works by taking a list of abstract 'KeyEventHandler's and
 -- building a 'KeyDispatcher' of event handlers based on specific Vty
 -- keys using the provided 'KeyConfig' to map between abstract key
--- events of type @e@ and Vty keys. Event handlers triggered by an event
--- @e@ are set up to be triggered by either the customized bindings for
--- @e@ in the 'KeyConfig', no bindings at all if the 'KeyConfig' has
--- marked @e@ as 'Unbound', or the default bindings for @e@ otherwise.
+-- events of type @k@ and Vty keys. Event handlers triggered by an event
+-- @k@ are set up to be triggered by either the customized bindings for
+-- @k@ in the 'KeyConfig', no bindings at all if the 'KeyConfig' has
+-- marked @k@ as 'Unbound', or the default bindings for @k@ otherwise.
 --
 -- Once you have a 'KeyDispatcher', you can dispatch an input key event
 -- to it and invoke the corresponding handler (if any) with 'handleKey'.
-keyDispatcher :: (Ord e)
-              => KeyConfig e
-              -> [KeyEventHandler e m]
-              -> KeyDispatcher e m
+keyDispatcher :: (Ord k)
+              => KeyConfig k
+              -> [KeyEventHandler k m]
+              -> KeyDispatcher k m
 keyDispatcher conf ks = KeyDispatcher $ M.fromList $ buildKeyDispatcherPairs ks conf
 
 -- | Convert a key dispatcher to a list of pairs of bindings and their
 -- handlers.
-keyDispatcherToList :: KeyDispatcher e m
-                    -> [(Binding, KeyHandler e m)]
+keyDispatcherToList :: KeyDispatcher k m
+                    -> [(Binding, KeyHandler k m)]
 keyDispatcherToList (KeyDispatcher m) = M.toList m
 
-buildKeyDispatcherPairs :: (Ord e)
-                        => [KeyEventHandler e m]
-                        -> KeyConfig e
-                        -> [(Binding, KeyHandler e m)]
+buildKeyDispatcherPairs :: (Ord k)
+                        => [KeyEventHandler k m]
+                        -> KeyConfig k
+                        -> [(Binding, KeyHandler k m)]
 buildKeyDispatcherPairs ks conf = pairs
     where
         pairs = mkPair <$> handlers
         mkPair h = (khBinding h, h)
         handlers = concat $ keyHandlersFromConfig conf <$> ks
 
-keyHandlersFromConfig :: (Ord e)
-                      => KeyConfig e
-                      -> KeyEventHandler e m
-                      -> [KeyHandler e m]
+keyHandlersFromConfig :: (Ord k)
+                      => KeyConfig k
+                      -> KeyEventHandler k m
+                      -> [KeyHandler k m]
 keyHandlersFromConfig kc eh =
     let allBindingsFor ev | Just (BindingList ks) <- lookupKeyConfigBindings kc ev = ks
                           | Just Unbound <- lookupKeyConfigBindings kc ev = []
@@ -173,13 +173,13 @@ mkHandler msg action =
             }
 
 -- | Specify a handler for the specified key event.
-onEvent :: e
+onEvent :: k
         -- ^ The key event whose bindings should trigger this handler.
         -> T.Text
         -- ^ The description of the handler.
         -> m ()
         -- ^ The handler to invoke.
-        -> KeyEventHandler e m
+        -> KeyEventHandler k m
 onEvent ev msg action =
     KeyEventHandler { kehHandler = mkHandler msg action
                     , kehEventTrigger = ByEvent ev
@@ -193,17 +193,17 @@ onKey :: (ToBinding a)
       -- ^ The description of the handler.
       -> m ()
       -- ^ The handler to invoke.
-      -> KeyEventHandler e m
+      -> KeyEventHandler k m
 onKey b msg action =
     KeyEventHandler { kehHandler = mkHandler msg action
                     , kehEventTrigger = ByKey $ bind b
                     }
 
 -- | A trigger for an event handler.
-data EventTrigger e =
+data EventTrigger k =
     ByKey Binding
     -- ^ The key event is always triggered by a specific key.
-    | ByEvent e
+    | ByEvent k
     -- ^ The trigger is an abstract key event.
     deriving (Show, Eq, Ord)
 
@@ -211,9 +211,9 @@ data EventTrigger e =
 --
 -- In general, you should never need to create these manually. Instead,
 -- use 'onEvent' and 'onKey'.
-data KeyEventHandler e m =
+data KeyEventHandler k m =
     KeyEventHandler { kehHandler :: Handler m
                     -- ^ The handler to invoke.
-                    , kehEventTrigger :: EventTrigger e
+                    , kehEventTrigger :: EventTrigger k
                     -- ^ The trigger for the handler.
                     }

@@ -82,21 +82,21 @@ data BindingState =
 --
 -- A 'KeyConfig' stores:
 --
--- * A collection of named key events, mapping the event type @e@ to
+-- * A collection of named key events, mapping the event type @k@ to
 --   'Text' labels.
--- * For each event @e@, optionally store a list of default key bindings
+-- * For each event @k@, optionally store a list of default key bindings
 --   for that event.
 -- * An optional customized binding list for each event, setting the
 --   event to either 'Unbound' or providing explicit overridden bindings
 --   with 'BindingList'.
-data KeyConfig e =
-    KeyConfig { keyConfigBindingMap :: M.Map e BindingState
+data KeyConfig k =
+    KeyConfig { keyConfigBindingMap :: M.Map k BindingState
               -- ^ The map of custom bindings for events with custom
               -- bindings.
-              , keyConfigEvents :: KeyEvents e
+              , keyConfigEvents :: KeyEvents k
               -- ^ The base mapping of events and their names that is
               -- used in this configuration.
-              , keyConfigDefaultBindings :: M.Map e [Binding]
+              , keyConfigDefaultBindings :: M.Map k [Binding]
               -- ^ A mapping of events and their default key bindings,
               -- if any.
               }
@@ -105,19 +105,19 @@ data KeyConfig e =
 -- | Build a 'KeyConfig' with the specified 'KeyEvents' event-to-name
 -- mapping, list of default bindings by event, and list of custom
 -- bindings by event.
-newKeyConfig :: (Ord e)
-             => KeyEvents e
+newKeyConfig :: (Ord k)
+             => KeyEvents k
              -- ^ The base mapping of key events and names to use.
-             -> [(e, [Binding])]
+             -> [(k, [Binding])]
              -- ^ Default bindings by key event, such as from a
              -- configuration file or embedded code. Optional on a
              -- per-event basis.
-             -> [(e, BindingState)]
+             -> [(k, BindingState)]
              -- ^ Custom bindings by key event, such as from a
              -- configuration file. Explicitly setting an event to
              -- 'Unbound' here has the effect of disabling its default
              -- bindings. Optional on a per-event basis.
-             -> KeyConfig e
+             -> KeyConfig k
 newKeyConfig evs defaults bindings =
     KeyConfig { keyConfigBindingMap = M.fromList bindings
               , keyConfigEvents = evs
@@ -127,12 +127,12 @@ newKeyConfig evs defaults bindings =
 -- | Look up the binding state for the specified event. This returns
 -- 'Nothing' when the event has no explicitly configured custom
 -- 'BindingState'.
-lookupKeyConfigBindings :: (Ord e) => KeyConfig e -> e -> Maybe BindingState
+lookupKeyConfigBindings :: (Ord k) => KeyConfig k -> k -> Maybe BindingState
 lookupKeyConfigBindings kc e = M.lookup e $ keyConfigBindingMap kc
 
 -- | A convenience function to return the first result of
 -- 'allDefaultBindings', if any.
-firstDefaultBinding :: (Show e, Ord e) => KeyConfig e -> e -> Maybe Binding
+firstDefaultBinding :: (Show k, Ord k) => KeyConfig k -> k -> Maybe Binding
 firstDefaultBinding kc ev = do
     bs <- M.lookup ev (keyConfigDefaultBindings kc)
     case bs of
@@ -142,20 +142,20 @@ firstDefaultBinding kc ev = do
 -- | Returns the list of default bindings for the specified event,
 -- irrespective of whether the event has been explicitly configured with
 -- other bindings or set to 'Unbound'.
-allDefaultBindings :: (Ord e) => KeyConfig e -> e -> [Binding]
+allDefaultBindings :: (Ord k) => KeyConfig k -> k -> [Binding]
 allDefaultBindings kc ev =
     fromMaybe [] $ M.lookup ev (keyConfigDefaultBindings kc)
 
 -- | A convenience function to return the first result of
 -- 'allActiveBindings', if any.
-firstActiveBinding :: (Show e, Ord e) => KeyConfig e -> e -> Maybe Binding
+firstActiveBinding :: (Show k, Ord k) => KeyConfig k -> k -> Maybe Binding
 firstActiveBinding kc ev = listToMaybe $ allActiveBindings kc ev
 
 -- | Return all active key bindings for the specified event. This
 -- returns customized bindings if any have been set in the 'KeyConfig',
 -- no bindings if the event has been explicitly set to 'Unbound', or the
 -- default bindings if the event is absent from the customized bindings.
-allActiveBindings :: (Show e, Ord e) => KeyConfig e -> e -> [Binding]
+allActiveBindings :: (Show k, Ord k) => KeyConfig k -> k -> [Binding]
 allActiveBindings kc ev = nub foundBindings
     where
         defaultBindings = allDefaultBindings kc ev

@@ -145,7 +145,7 @@ parseBinding s = go (T.splitOn "-" $ T.toLower s) []
 -- Returns @Nothing@ if the named section was not found; otherwise
 -- returns a (possibly empty) list of binding states for each event in
 -- @evs@.
-keybindingsFromIni :: KeyEvents e
+keybindingsFromIni :: KeyEvents k
                    -- ^ The key event name mapping to use to parse the
                    -- configuration data.
                    -> T.Text
@@ -153,13 +153,13 @@ keybindingsFromIni :: KeyEvents e
                    -- read.
                    -> T.Text
                    -- ^ The text of the INI document to read.
-                   -> Either String (Maybe [(e, BindingState)])
+                   -> Either String (Maybe [(k, BindingState)])
 keybindingsFromIni evs section doc =
     Ini.parseIniFile doc (keybindingIniParser evs section)
 
 -- | Parse custom key binidngs from the specified INI file path. See
 -- 'keybindingsFromIni' for details.
-keybindingsFromFile :: KeyEvents e
+keybindingsFromFile :: KeyEvents k
                     -- ^ The key event name mapping to use to parse the
                     -- configuration data.
                     -> T.Text
@@ -167,13 +167,13 @@ keybindingsFromFile :: KeyEvents e
                     -- read.
                     -> FilePath
                     -- ^ The path to the INI file to read.
-                    -> IO (Either String (Maybe [(e, BindingState)]))
+                    -> IO (Either String (Maybe [(k, BindingState)]))
 keybindingsFromFile evs section path =
     keybindingsFromIni evs section <$> T.readFile path
 
 -- | The low-level INI parser for custom key bindings used by this
 -- module, exported for applications that use the @config-ini@ package.
-keybindingIniParser :: KeyEvents e -> T.Text -> Ini.IniParser (Maybe [(e, BindingState)])
+keybindingIniParser :: KeyEvents k -> T.Text -> Ini.IniParser (Maybe [(k, BindingState)])
 keybindingIniParser evs section =
     Ini.sectionMb section $ do
         fmap catMaybes $ forM (keyEventsList evs) $ \(name, e) -> do
