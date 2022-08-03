@@ -66,6 +66,8 @@ handlers =
           counter %= succ
     , K.onEvent DecrementEvent "Decrement the counter" $
           counter %= subtract 1
+    , K.onKey (K.bind '\t') "Increment the counter by 10" $
+          counter %= (+ 10)
     ]
 
 appEvent :: T.BrickEvent () e -> T.EventM () St ()
