@@ -68,8 +68,8 @@ Conventions
 documentation and as you explore the library source and write your own
 programs.
 
-- Use of `microlens`_ packages: ``brick`` uses ``microlens`` family of
-  packages internally and also exposes lenses for many types in the
+- Use of `microlens`_ packages: ``brick`` uses the ``microlens`` family
+  of packages internally and also exposes lenses for many types in the
   library. However, if you prefer not to use the lens interface in your
   program, all lens interfaces have non-lens equivalents exported by
   the same module. In general, the "``L``" suffix on something tells
