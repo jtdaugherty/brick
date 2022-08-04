@@ -42,7 +42,6 @@ tested-with:         GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.5, GHC == 8.8.4, GHC
 
 extra-doc-files:     README.md,
                      docs/guide.rst,
-                     docs/samtay-tutorial.md,
                      docs/snake-demo.gif,
                      CHANGELOG.md,
                      docs/programs-screenshots.md,
