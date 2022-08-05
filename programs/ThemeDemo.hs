@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module Main where
 
 import Control.Monad (void)
@@ -32,7 +31,7 @@ import Brick.Widgets.Core
   , withDefAttr
   )
 import Brick.Util (on, fg)
-import Brick.AttrMap (AttrName)
+import Brick.AttrMap (AttrName, attrName)
 
 ui :: Widget n
 ui =
@@ -44,7 +43,7 @@ ui =
          ]
 
 keybindingAttr :: AttrName
-keybindingAttr = "keybinding"
+keybindingAttr = attrName "keybinding"
 
 theme1 :: Theme
 theme1 =

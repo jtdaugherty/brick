@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE CPP #-}
 module Main where
@@ -16,7 +15,7 @@ import qualified Brick.Types as T
 import qualified Brick.Main as M
 import qualified Brick.Widgets.Center as C
 import qualified Brick.Widgets.Border as B
-import Brick.AttrMap (AttrMap, AttrName, attrMap)
+import Brick.AttrMap (AttrMap, AttrName, attrMap, attrName)
 import Brick.Util (on)
 import Brick.Types
   ( Widget
@@ -56,7 +55,7 @@ vp3Size :: (Int, Int)
 vp3Size = (25, 25)
 
 selectedAttr :: AttrName
-selectedAttr = "selected"
+selectedAttr = attrName "selected"
 
 drawUi :: St -> [Widget Name]
 drawUi st = [ui]

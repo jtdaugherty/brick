@@ -157,8 +157,9 @@ keybindingsFromIni :: KeyEvents k
 keybindingsFromIni evs section doc =
     Ini.parseIniFile doc (keybindingIniParser evs section)
 
--- | Parse custom key binidngs from the specified INI file path. See
--- 'keybindingsFromIni' for details.
+-- | Parse custom key binidngs from the specified INI file path. This
+-- does not catch or convert any exceptions resulting from I/O errors.
+-- See 'keybindingsFromIni' for details.
 keybindingsFromFile :: KeyEvents k
                     -- ^ The key event name mapping to use to parse the
                     -- configuration data.

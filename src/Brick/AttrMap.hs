@@ -2,9 +2,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 -- | This module provides types and functions for managing an attribute
 -- map which maps attribute names ('AttrName') to attributes ('Attr').
--- This module is designed to be used with the 'OverloadedStrings'
--- language extension to permit easy construction of 'AttrName' values
--- and you should also use 'mappend' ('<>') to combine names.
 --
 -- Attribute maps work by mapping hierarchical attribute names to
 -- attributes and inheriting parent names' attributes when child names
@@ -52,7 +49,6 @@ import Data.Bits ((.|.))
 import qualified Data.Map as M
 import Data.Maybe (catMaybes)
 import Data.List (inits)
-import Data.String (IsString(..))
 import GHC.Generics (Generic)
 
 import Graphics.Vty (Attr(..), MaybeDefault(..), Style)
@@ -65,9 +61,9 @@ import Graphics.Vty (Attr(..), MaybeDefault(..), Style)
 -- example:
 --
 -- @
--- "window" <> "border"
--- "window" <> "title"
--- "header" <> "clock" <> "seconds"
+-- attrName "window" <> attrName "border"
+-- attrName "window" <> attrName "title"
+-- attrName "header" <> attrName "clock" <> attrName "seconds"
 -- @
 data AttrName = AttrName [String]
               deriving (Show, Read, Eq, Ord, Generic, NFData)
@@ -78,9 +74,6 @@ instance Sem.Semigroup AttrName where
 instance Monoid AttrName where
     mempty = AttrName []
     mappend = (Sem.<>)
-
-instance IsString AttrName where
-    fromString = AttrName . (:[])
 
 -- | An attribute map which maps 'AttrName' values to 'Attr' values.
 data AttrMap = AttrMap Attr (M.Map AttrName Attr)

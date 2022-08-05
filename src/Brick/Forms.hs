@@ -642,15 +642,15 @@ toPassword s = txt $ T.replicate (T.length $ T.concat s) "*"
 
 -- | The namespace for the other form attributes.
 formAttr :: AttrName
-formAttr = "brickForm"
+formAttr = attrName "brickForm"
 
 -- | The attribute for form input fields with invalid values.
 invalidFormInputAttr :: AttrName
-invalidFormInputAttr = formAttr <> "invalidInput"
+invalidFormInputAttr = formAttr <> attrName "invalidInput"
 
 -- | The attribute for form input fields that have the focus.
 focusedFormInputAttr :: AttrName
-focusedFormInputAttr = formAttr <> "focusedInput"
+focusedFormInputAttr = formAttr <> attrName "focusedInput"
 
 -- | Returns whether all form fields in the form currently have valid
 -- values according to the fields' validation functions. This is useful

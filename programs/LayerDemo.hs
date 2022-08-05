@@ -1,5 +1,4 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 module Main where
 
@@ -31,6 +30,7 @@ import Brick.Util (fg)
 import Brick.AttrMap
   ( attrMap
   , AttrName
+  , attrName
   )
 
 data St =
@@ -96,7 +96,7 @@ appEvent (T.VtyEvent (V.EvKey V.KEsc [])) = M.halt
 appEvent _ = return ()
 
 arrowAttr :: AttrName
-arrowAttr = "attr"
+arrowAttr = attrName "attr"
 
 app :: M.App St e Name
 app =

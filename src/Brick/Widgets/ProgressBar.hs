@@ -22,11 +22,11 @@ import Brick.Widgets.Core
 
 -- | The attribute of the completed portion of the progress bar.
 progressCompleteAttr :: AttrName
-progressCompleteAttr = "progressComplete"
+progressCompleteAttr = attrName "progressComplete"
 
 -- | The attribute of the incomplete portion of the progress bar.
 progressIncompleteAttr :: AttrName
-progressIncompleteAttr = "progressIncomplete"
+progressIncompleteAttr = attrName "progressIncomplete"
 
 -- | Draw a progress bar with the specified (optional) label and
 -- progress value. This fills available horizontal space and is one row

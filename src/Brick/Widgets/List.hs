@@ -250,17 +250,17 @@ listMoveToEnd l = listMoveTo (max 0 $ length (listElements l) - 1) l
 
 -- | The top-level attribute used for the entire list.
 listAttr :: AttrName
-listAttr = "list"
+listAttr = attrName "list"
 
 -- | The attribute used only for the currently-selected list item when
 -- the list does not have focus. Extends 'listAttr'.
 listSelectedAttr :: AttrName
-listSelectedAttr = listAttr <> "selected"
+listSelectedAttr = listAttr <> attrName "selected"
 
 -- | The attribute used only for the currently-selected list item when
 -- the list has focus. Extends 'listSelectedAttr'.
 listSelectedFocusedAttr :: AttrName
-listSelectedFocusedAttr = listSelectedAttr <> "focused"
+listSelectedFocusedAttr = listSelectedAttr <> attrName "focused"
 
 -- | Construct a list in terms of container 't' with element type 'e'.
 list :: (Foldable t)

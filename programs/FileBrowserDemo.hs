@@ -12,7 +12,7 @@ import Control.Monad.State (get)
 import qualified Data.Text as Text
 import qualified Brick.Main as M
 import qualified Brick.Widgets.List as L
-import Brick.AttrMap (AttrName)
+import Brick.AttrMap (AttrName, attrName)
 import Brick.Types
   ( Widget
   , BrickEvent(..)
@@ -77,7 +77,7 @@ appEvent (VtyEvent ev) = do
 appEvent _ = return ()
 
 errorAttr :: AttrName
-errorAttr = "error"
+errorAttr = attrName "error"
 
 theMap :: A.AttrMap
 theMap = A.attrMap V.defAttr
