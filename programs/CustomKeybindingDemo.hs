@@ -103,7 +103,7 @@ drawUi st = [body]
         keybindingHelp = K.keybindingHelpWidget (st^.keyConfig) handlers
         status = hLimit 40 $
                  padRight Max $
-                 vBox [ txt $ "Last key:         " <> K.ppMaybeBinding binding
+                 vBox [ txt $ "Last key:         " <> maybe "(none)" K.ppBinding binding
                       , str $ "Last key handled: " <> show (st^.lastKeyHandled)
                       , str $ "Counter:          " <> show (st^.counter)
                       ]
