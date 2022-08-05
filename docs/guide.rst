@@ -1608,6 +1608,79 @@ For more details on how to do this, see the Haddock documentation for
 the ``FormFieldState`` and ``FormField`` data types along with the
 implementations of the built-in form field types.
 
+Customizable Keybindings
+========================
+
+Brick applications typically start out by explicitly checking incoming
+events for specific keys in ``appHandleEvent``. While this works well
+enough, it results in *tight coupling* between the input key events and
+the event handlers that get run. As applications evolve, it becomes
+important to decouple the input key events and their handlers to allow
+the input keys to be customized by the user. That's where Brick's
+customizable keybindings API comes in.
+
+The customizable keybindings API provides:
+
+* ``Brick.Keybindings.Parse``: parsing and loading user-provided
+  keybinding configuration files,
+* ``Brick.Keybindings.Pretty``: pretty-printing keybinding strings and
+  generating keybinding help text in ``Widget``, plain text, and
+  Markdown formats so you can provide help to users both within the
+  program and outside of it,
+* ``Brick.Keybindings.KeyEvents``: specifying the application's abstract
+  key events and their configuration names,
+* ``Brick.Keybindings.KeyConfig``: bundling default and customized
+  keybindings for each abstract event into a structure for use by the
+  dispatcher, and
+* ``Brick.Keybindings.KeyDispatcher``: specifying handlers and
+  dispatching incoming key events to them.
+
+Brick provides a complete working example of the custom keybinding API
+in ``programs/CustomKeybindingDemo.hs``. This section of the User
+Guide describes the API at a high level. More detailed documentation
+on how to use the API can be found in the module documentation for
+``Brick.Keybindings.KeyDispatcher``.
+
+The following table compares Brick application design decisions and
+runtime behaviors in a typical application compared to one that uses the
+customizable keybindings API:
+
++---------------------+------------------------+-------------------------+
+| **Approach**        | **Before runtime**     | **At runtime**          |
++---------------------+------------------------+-------------------------+
+| Typical application | The application author | #. An input event       |
+| (no custom          | decides which keys will|    arrives when the user|
+| keybindings):       | trigger application    |    presses a key.       |
+|                     | behaviors. The event   | #. The event handler    |
+|                     | handler is written to  |    pattern-mathces on   |
+|                     | pattern-match on       |    the input event to   |
+|                     | specific keys.         |    check for a match and|
+|                     |                        |    then runs the        |
+|                     |                        |    corresponding        |
+|                     |                        |    handler.             |
++---------------------+------------------------+-------------------------+
+| Application with    | The application author | #. A Vty input event    |
+| custom keybindings  | specifies the possible |    arrives when the user|
+| API integrated:     | *abstract events* that |    presses a key.       |
+|                     | correspond to the      | #. The input event is   |
+|                     | application's          |    provided to          |
+|                     | behaviors. The events  |    ``appHandleEvent``.  |
+|                     | are given default      | #. ``appHandleEvent``   |
+|                     | keybindings. The       |    passes the event on  |
+|                     | application provides   |    to a                 |
+|                     | event handlers for the |    ``KeyDispatcher``.   |
+|                     | abstract events, not   | #. The key dispatcher   |
+|                     | specific keys. If      |    checks to see whether|
+|                     | desired, the           |    the input key event  |
+|                     | application can load   |    maps to an abstract  |
+|                     | user-defined custom    |    event.               |
+|                     | keybindings from an INI| #. If the dispatcher    |
+|                     | file at startup to     |    finds a match, the   |
+|                     | override the           |    corresponding        |
+|                     | application's defaults.|    abstract event's key |
+|                     |                        |    handler is run.      |
++---------------------+------------------------+-------------------------+
+
 Joining Borders
 ===============
 
