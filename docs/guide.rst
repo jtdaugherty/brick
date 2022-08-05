@@ -1651,7 +1651,7 @@ customizable keybindings API:
 +---------------------+------------------------+-------------------------+
 | Typical application | The application author | #. An input event       |
 | (no custom          | decides which keys will|    arrives when the user|
-| keybindings):       | trigger application    |    presses a key.       |
+| keybindings)        | trigger application    |    presses a key.       |
 |                     | behaviors. The event   | #. The event handler    |
 |                     | handler is written to  |    pattern-mathces on   |
 |                     | pattern-match on       |    the input event to   |
@@ -1662,7 +1662,7 @@ customizable keybindings API:
 +---------------------+------------------------+-------------------------+
 | Application with    | The application author | #. A Vty input event    |
 | custom keybindings  | specifies the possible |    arrives when the user|
-| API integrated:     | *abstract events* that |    presses a key.       |
+| API integrated      | *abstract events* that |    presses a key.       |
 |                     | correspond to the      | #. The input event is   |
 |                     | application's          |    provided to          |
 |                     | behaviors. The events  |    ``appHandleEvent``.  |
