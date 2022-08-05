@@ -100,13 +100,24 @@ drawUi :: St -> [Widget ()]
 drawUi st = [body]
     where
         binding = uncurry K.binding <$> st^.lastKey
-        keybindingHelp = K.keybindingHelpWidget (st^.keyConfig) handlers
-        status = hLimit 40 $
+
+        -- Generate key binding help using the library so we can embed
+        -- it in the UI.
+        keybindingHelp = B.borderWithLabel (txt "Active Keybindings") $
+                         K.keybindingHelpWidget (st^.keyConfig) handlers
+
+        -- Show the status of the last pressed key, whether we handled
+        -- it, and other bits of the application state.
+        status = B.borderWithLabel (txt "Status") $
+                 hLimit 40 $
                  padRight Max $
                  vBox [ txt $ "Last key:         " <> maybe "(none)" K.ppBinding binding
                       , str $ "Last key handled: " <> show (st^.lastKeyHandled)
                       , str $ "Counter:          " <> show (st^.counter)
                       ]
+
+        -- Show info about whether the application is currently using
+        -- custom bindings loaded from an INI file.
         customBindingInfo =
             B.borderWithLabel (txt "Custom Bindings") $
             case st^.loadedCustomBindings of
@@ -119,11 +130,10 @@ drawUi st = [body]
                               "Pass its path to this " <>
                               "program on the command line."
                 Just f -> str "Loaded custom bindings from:" <=> str (show f)
+
         body = C.center $
-               ((padRight (Pad 7) $
-                 (B.borderWithLabel (txt "Status") status) <=> customBindingInfo)
-                ) <+>
-                B.borderWithLabel (txt "Active Keybindings") keybindingHelp
+               (padRight (Pad 2) $ status <=> customBindingInfo) <+>
+               keybindingHelp
 
 app :: M.App St e ()
 app =
