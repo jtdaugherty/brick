@@ -141,22 +141,31 @@ main :: IO ()
 main = do
     args <- getArgs
 
+    -- If the command line specified the path to an INI file with custom
+    -- bindings, attempt to load it.
     (customBindings, customFile) <- case args of
         [iniFilePath] -> do
             result <- K.keybindingsFromFile allKeyEvents sectionName iniFilePath
             case result of
+                -- A section was found and had zero more bindings.
                 Right (Just bindings) ->
                     return (bindings, Just iniFilePath)
+
+                -- No section was found at all.
                 Right Nothing -> do
                     putStrLn $ "Error: found no section " <> show sectionName <> " in " <> show iniFilePath
                     exitFailure
+
+                -- There was some problem parsing the file as an INI
+                -- file.
                 Left e -> do
                     putStrLn $ "Error reading keybindings file " <> show iniFilePath <> ": " <> e
                     exitFailure
+
         _ -> return ([], Nothing)
 
-    -- Create a key config that has no customized bindings overriding
-    -- the default ones.
+    -- Create a key config that includes the default bindings as well as
+    -- the custom bindings we loaded from the INI file, if any.
     let kc = K.newKeyConfig allKeyEvents defaultBindings customBindings
 
     void $ M.defaultMain app $ St { _keyConfig = kc
