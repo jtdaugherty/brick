@@ -868,13 +868,14 @@ setAvailableSize (w, h) p =
         render $ cropToContext p
 
 -- | When drawing the specified widget, set the attribute used for
--- drawing to the one with the specified name. Note that the widget
--- may use further calls to 'withAttr' to change the active drawing
--- attribute, so this only takes effect if nothing in the specified
--- widget invokes 'withAttr'. If you want to prevent that, use
--- 'forceAttr'. Attributes used this way still get merged hierarchically
--- and still fall back to the attribute map's default attribute. If you
--- want to change the default attribute, use 'withDefAttr'.
+-- drawing to the one with the specified name. Note that the widget may
+-- make further changes to the active drawing attribute, so this only
+-- takes effect if nothing in the specified widget invokes 'withAttr'
+-- or otherwise changes the rendering context's attribute setup. If you
+-- want to prevent that, use 'forceAttr'. Attributes used this way still
+-- get merged hierarchically and still fall back to the attribute map's
+-- default attribute. If you want to change the default attribute, use
+-- 'withDefAttr'.
 --
 -- For example:
 --
