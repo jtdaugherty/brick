@@ -1,5 +1,4 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 module Main where
 
@@ -51,9 +50,9 @@ buttonLayer st =
       C.hCenterLayer (vLimit 3 $ hLimit 50 $ E.renderEditor (str . unlines) True (st^.edit))
     where
         buttons = mkButton <$> buttonData
-        buttonData = [ (Button1, "Button 1", "button1")
-                     , (Button2, "Button 2", "button2")
-                     , (Button3, "Button 3", "button3")
+        buttonData = [ (Button1, "Button 1", attrName "button1")
+                     , (Button2, "Button 2", attrName "button2")
+                     , (Button3, "Button 3", attrName "button3")
                      ]
         mkButton (name, label, attr) =
             let wasClicked = (fst <$> st^.lastReportedClick) == Just name
@@ -82,7 +81,7 @@ infoLayer st = T.Widget T.Fixed T.Fixed $ do
                 Just (name, T.Location l) ->
                     "Mouse down at " <> show name <> " @ " <> show l
     T.render $ translateBy (T.Location (0, h-1)) $ clickable Info $
-               withDefAttr "info" $
+               withDefAttr (attrName "info") $
                C.hCenter $ str msg
 
 appEvent :: T.BrickEvent Name e -> T.EventM Name St ()
@@ -104,10 +103,10 @@ appEvent ev =
 
 aMap :: AttrMap
 aMap = attrMap V.defAttr
-    [ ("info",      V.white `on` V.magenta)
-    , ("button1",   V.white `on` V.cyan)
-    , ("button2",   V.white `on` V.green)
-    , ("button3",   V.white `on` V.blue)
+    [ (attrName "info",      V.white `on` V.magenta)
+    , (attrName "button1",   V.white `on` V.cyan)
+    , (attrName "button2",   V.white `on` V.green)
+    , (attrName "button3",   V.white `on` V.blue)
     , (E.editFocusedAttr, V.black `on` V.yellow)
     ]
 

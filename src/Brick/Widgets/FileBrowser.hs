@@ -165,7 +165,7 @@ import qualified System.FilePath as FP
 import Text.Printf (printf)
 
 import Brick.Types
-import Brick.AttrMap (AttrName)
+import Brick.AttrMap (AttrName, attrName)
 import Brick.Widgets.Core
 import Brick.Widgets.List
 
@@ -837,49 +837,49 @@ attrForFileType UnixSocket = fileBrowserUnixSocketAttr
 
 -- | The base attribute for all file browser attributes.
 fileBrowserAttr :: AttrName
-fileBrowserAttr = "fileBrowser"
+fileBrowserAttr = attrName "fileBrowser"
 
 -- | The attribute used for the current directory displayed at the top
 -- of the browser.
 fileBrowserCurrentDirectoryAttr :: AttrName
-fileBrowserCurrentDirectoryAttr = fileBrowserAttr <> "currentDirectory"
+fileBrowserCurrentDirectoryAttr = fileBrowserAttr <> attrName "currentDirectory"
 
 -- | The attribute used for the entry information displayed at the
 -- bottom of the browser.
 fileBrowserSelectionInfoAttr :: AttrName
-fileBrowserSelectionInfoAttr = fileBrowserAttr <> "selectionInfo"
+fileBrowserSelectionInfoAttr = fileBrowserAttr <> attrName "selectionInfo"
 
 -- | The attribute used to render directory entries.
 fileBrowserDirectoryAttr :: AttrName
-fileBrowserDirectoryAttr = fileBrowserAttr <> "directory"
+fileBrowserDirectoryAttr = fileBrowserAttr <> attrName "directory"
 
 -- | The attribute used to render block device entries.
 fileBrowserBlockDeviceAttr :: AttrName
-fileBrowserBlockDeviceAttr = fileBrowserAttr <> "block"
+fileBrowserBlockDeviceAttr = fileBrowserAttr <> attrName "block"
 
 -- | The attribute used to render regular file entries.
 fileBrowserRegularFileAttr :: AttrName
-fileBrowserRegularFileAttr = fileBrowserAttr <> "regular"
+fileBrowserRegularFileAttr = fileBrowserAttr <> attrName "regular"
 
 -- | The attribute used to render character device entries.
 fileBrowserCharacterDeviceAttr :: AttrName
-fileBrowserCharacterDeviceAttr = fileBrowserAttr <> "char"
+fileBrowserCharacterDeviceAttr = fileBrowserAttr <> attrName "char"
 
 -- | The attribute used to render named pipe entries.
 fileBrowserNamedPipeAttr :: AttrName
-fileBrowserNamedPipeAttr = fileBrowserAttr <> "pipe"
+fileBrowserNamedPipeAttr = fileBrowserAttr <> attrName "pipe"
 
 -- | The attribute used to render symbolic link entries.
 fileBrowserSymbolicLinkAttr :: AttrName
-fileBrowserSymbolicLinkAttr = fileBrowserAttr <> "symlink"
+fileBrowserSymbolicLinkAttr = fileBrowserAttr <> attrName "symlink"
 
 -- | The attribute used to render Unix socket entries.
 fileBrowserUnixSocketAttr :: AttrName
-fileBrowserUnixSocketAttr = fileBrowserAttr <> "unixSocket"
+fileBrowserUnixSocketAttr = fileBrowserAttr <> attrName "unixSocket"
 
 -- | The attribute used for selected entries in the file browser.
 fileBrowserSelectedAttr :: AttrName
-fileBrowserSelectedAttr = fileBrowserAttr <> "selected"
+fileBrowserSelectedAttr = fileBrowserAttr <> attrName "selected"
 
 -- | A file type filter for use with 'setFileBrowserEntryFilter'. This
 -- filter permits entries whose file types are in the specified list.

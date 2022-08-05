@@ -99,15 +99,15 @@ dialog title buttonData w =
 
 -- | The default attribute of the dialog
 dialogAttr :: AttrName
-dialogAttr = "dialog"
+dialogAttr = attrName "dialog"
 
 -- | The default attribute for all dialog buttons
 buttonAttr :: AttrName
-buttonAttr = "button"
+buttonAttr = attrName "button"
 
 -- | The attribute for the selected dialog button (extends 'dialogAttr')
 buttonSelectedAttr :: AttrName
-buttonSelectedAttr = buttonAttr <> "selected"
+buttonSelectedAttr = buttonAttr <> attrName "selected"
 
 -- | Render a dialog with the specified body widget. This renders the
 -- dialog as a layer, which makes this suitable as a top-level layer in

@@ -1544,17 +1544,17 @@ viewport vpname typ p =
 
 -- | The base attribute for scroll bars.
 scrollbarAttr :: AttrName
-scrollbarAttr = "scrollbar"
+scrollbarAttr = attrName "scrollbar"
 
 -- | The attribute for scroll bar troughs. This attribute is a
 -- specialization of @scrollbarAttr@.
 scrollbarTroughAttr :: AttrName
-scrollbarTroughAttr = scrollbarAttr <> "trough"
+scrollbarTroughAttr = scrollbarAttr <> attrName "trough"
 
 -- | The attribute for scroll bar handles. This attribute is a
 -- specialization of @scrollbarAttr@.
 scrollbarHandleAttr :: AttrName
-scrollbarHandleAttr = scrollbarAttr <> "handle"
+scrollbarHandleAttr = scrollbarAttr <> attrName "handle"
 
 maybeClick :: (Ord n)
            => n

@@ -39,7 +39,7 @@ import qualified Brick.BorderMap as BM
 
 -- | The top-level border attribute name.
 borderAttr :: AttrName
-borderAttr = "border"
+borderAttr = attrName "border"
 
 -- | Draw the specified border element using the active border style
 -- using 'borderAttr'.

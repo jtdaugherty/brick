@@ -193,12 +193,12 @@ applyEdit f e = e & editContentsL %~ f
 
 -- | The attribute assigned to the editor when it does not have focus.
 editAttr :: AttrName
-editAttr = "edit"
+editAttr = attrName "edit"
 
 -- | The attribute assigned to the editor when it has focus. Extends
 -- 'editAttr'.
 editFocusedAttr :: AttrName
-editFocusedAttr = editAttr <> "focused"
+editFocusedAttr = editAttr <> attrName "focused"
 
 -- | Get the contents of the editor.
 getEditContents :: Monoid t => Editor t n -> [t]

@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE CPP #-}
 module Main where
 
@@ -84,7 +83,7 @@ initialState :: L.List () Char
 initialState = L.list () (Vec.fromList ['a','b','c']) 1
 
 customAttr :: A.AttrName
-customAttr = L.listSelectedAttr <> "custom"
+customAttr = L.listSelectedAttr <> A.attrName "custom"
 
 theMap :: A.AttrMap
 theMap = A.attrMap V.defAttr

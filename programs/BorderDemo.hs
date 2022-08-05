@@ -68,7 +68,7 @@ mkBorderDemo (styleName, sty) =
     txt $ "  " <> styleName <> " style  "
 
 titleAttr :: A.AttrName
-titleAttr = "title"
+titleAttr = A.attrName "title"
 
 borderMappings :: [(A.AttrName, V.Attr)]
 borderMappings =

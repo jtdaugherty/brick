@@ -1,5 +1,4 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE OverloadedStrings #-}
 module Main where
 
 import Control.Monad (void)
@@ -31,6 +30,7 @@ import Brick.Widgets.Center
   )
 import Brick.AttrMap
   ( AttrName
+  , attrName
   , attrMap
   )
 
@@ -66,7 +66,7 @@ appEvent (VtyEvent (V.EvKey V.KEsc [])) = M.halt
 appEvent _ = return ()
 
 emphAttr :: AttrName
-emphAttr = "emphasis"
+emphAttr = attrName "emphasis"
 
 app :: M.App Int e Name
 app =
