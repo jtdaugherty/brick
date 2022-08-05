@@ -989,17 +989,18 @@ to support wide characters in your application, this will not work:
 
    let width = Data.Text.length t
 
-because if the string contains any wide characters, their widths
-will not be counted properly. In order to get this right, use the
-``TextWidth`` type class to compute the width:
+If the string contains any wide characters, their widths will not be
+counted properly. In order to get this right, use the ``TextWidth`` type
+class to compute the width:
 
 .. code:: haskell
 
    let width = Brick.Widgets.Core.textWidth t
 
-The ``TextWidth`` type class uses Vty's character width routine
-to compute the correct width. If you need to compute
-the width of a single character, use ``Graphics.Text.wcwidth``.
+The ``TextWidth`` type class uses Vty's character width routine to
+compute the width by looking up the string's characdters in a Unicode
+width table. If you need to compute the width of a single character, use
+``Graphics.Text.wcwidth``.
 
 Extents
 =======
