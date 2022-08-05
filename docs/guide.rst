@@ -108,8 +108,8 @@ various functions:
    data App s e n =
        App { appDraw         :: s -> [Widget n]
            , appChooseCursor :: s -> [CursorLocation n] -> Maybe (CursorLocation n)
-           , appHandleEvent  :: s -> BrickEvent n e -> EventM n (Next s)
-           , appStartEvent   :: s -> EventM n s
+           , appHandleEvent  :: BrickEvent n e -> EventM n s ()
+           , appStartEvent   :: EventM n s ()
            , appAttrMap      :: s -> AttrMap
            }
 
@@ -209,107 +209,153 @@ the application state as a result of an event:
 
 .. code:: haskell
 
-   appHandleEvent :: s -> BrickEvent n e -> EventM n (Next s)
+   appHandleEvent :: BrickEvent n e -> EventM n s ()
 
-The first parameter of type ``s`` is your application's state at the
-time the event arrives. ``appHandleEvent`` is responsible for deciding
-how to change the state based on the event and then return it.
+``appHandleEvent`` is responsible for deciding how to change the state
+based on the event. The single parameter to the event handler is the
+event to be handled. Its type variables ``n`` and ``e`` correspond
+to the *resource name type* and *event type* of your application,
+respectively, and must match the corresponding types in ``App`` and
+``EventM``.
 
-The second parameter of type ``BrickEvent n e`` is the event itself.
-The type variables ``n`` and ``e`` correspond to the *resource name
-type* and *event type* of your application, respectively, and must match
-the corresponding types in ``App`` and ``EventM``.
+The ``EventM`` monad is parameterized on the *resource name type*
+``n`` and your application's state type ``s``. The ``EventM`` monad
+is a state monad over ``s``, so one way to access and modify your
+application's state in an event handler is to use the ``MonadState``
+type class and associated operations from the ``mtl`` package. The
+recommended approach, however, is to use the lens operations from the
+``microlens-mtl`` package with lenses to perform concise state updates.
+We'll cover this topic in more detail in `Event Handlers for Widget
+State`_.
 
-The return value type ``Next s`` value describes what should happen
-after the event handler is finished. We have four choices:
+Once the event handler has performed any relevant state updates, it can
+also indicate what should happen once the event handler has finished
+executing. By default, after an event handler has completed, Brick will
+redraw the screen with the application state (by calling ``appDraw``)
+and wait for the next input event. However, there are two other options:
 
-* ``Brick.Main.continue s``: continue executing the event loop with the
-  specified application state ``s`` as the next value. Commonly this is
-  where you'd modify the state based on the event and return it.
-* ``Brick.Main.continueWithoutRedraw s``: continue executing the event
-  loop with the specified application state ``s`` as the next value, but
-  unlike ``continue``, do not redraw the screen using the new state.
-  This is a faster version of ``continue`` since it doesn't redraw the
-  screen; it just leaves up the previous screen contents. This function
-  is only useful when you know that your state change won't cause
-  anything on the screen to change. When in doubt, use ``continue``.
-* ``Brick.Main.halt s``: halt the event loop and return the final
-  application state value ``s``. This state value is returned to the
-  caller of ``defaultMain`` or ``customMain`` where it can be used prior
-  to finally exiting ``main``.
-* ``Brick.Main.suspendAndResume act``: suspend the ``brick`` event loop
-  and execute the specified ``IO`` action ``act``. The action ``act``
-  must be of type ``IO s``, so when it executes it must return the next
-  application state. When ``suspendAndResume`` is used, the ``brick``
-  event loop is shut down and the terminal state is restored to its
-  state when the ``brick`` event loop began execution. When it finishes
-  executing, the event loop will be resumed using the returned state
-  value. This is useful for situations where your program needs to
-  suspend your interface and execute some other program that needs to
-  gain control of the terminal (such as an external editor).
+* ``Brick.Main.halt``: halt the event loop. The application state as it
+  exists after the event handler completes is returned to the caller
+  of ``defaultMain`` or ``customMain``.
+* ``Brick.Main.continueWithoutRedraw``: continue executing the event
+  loop, but do not redraw the screen using the new state before waiting
+  for another input event. This is faster than the default continue
+  behavior since it doesn't redraw the screen; it just leaves up the
+  previous screen contents. This function is only useful when you know
+  that your event handler's state change(s) won't cause anything on
+  the screen to change. Use this only when you are certain that no
+  redraw of the screen is needed *and* when you are trying to address a
+  performance problem. (See also `The Rendering Cache`_ for details on
+  how to detail with rendering performance issues.)
 
-The ``EventM`` monad is the event-handling monad. This monad is a
-transformer around ``IO`` so you are free to do I/O in this monad by
-using ``liftIO``. Beyond I/O, this monad is used to make scrolling
-requests to the renderer (see `Viewports`_) and obtain named extents
-(see `Extents`_). Keep in mind that time spent blocking in your event
-handler is time during which your UI is unresponsive, so consider this
-when deciding whether to have background threads do work instead of
-inlining the work in the event handler.
+The ``EventM`` monad is a transformer around ``IO`` so I/O is possible
+in this monad by using ``liftIO``. Keep in mind, however, that event
+handlers should execute as quickly as possible to avoid introducing
+screen redraw latency. Consider using background threads to work
+asynchronously when it would otherwise cause redraw latency.
 
-Widget Event Handlers
-*********************
+Beyond I/O, ``EventM`` is used to make scrolling requests to the
+renderer (see `Viewports`_), obtain named extents (see `Extents`_), and
+other duties.
 
-Event handlers are responsible for transforming the application state.
-While you can use ordinary methods to do this such as pattern matching
-and pure function calls, some widget state types such as the ones
-provided by the ``Brick.Widgets.List`` and ``Brick.Widgets.Edit``
-modules provide their own widget-specific event-handling functions.
-For example, ``Brick.Widgets.Edit`` provides ``handleEditorEvent`` and
-``Brick.Widgets.List`` provides ``handleListEvent``.
+Event Handlers for Widget State
+*******************************
 
-Since these event handlers run in ``EventM``, they have access to
-rendering viewport states via ``Brick.Main.lookupViewport`` and the
-``IO`` monad via ``liftIO``.
+The top-level ``appHandleEvent`` handler is responsible for managing
+the application state, but it also needs to be able to update the state
+associated with states specific to widget types that come with Brick.
 
-To use these handlers in your program, invoke them on the relevant piece
-of state in your application state. In the following example we use an
-``Edit`` state from ``Brick.Widgets.Edit``:
+For example, consider an application that uses Brick's built-in text
+editor from ``Brick.Widgets.Edit``. The built-in editor is similar to
+the main application in that it has three important elements:
 
-.. code:: haskell
+* The editor state of type ``Editor t n``: this stores the editor's
+  contents, cursor position, etc.
+* The editor's drawing function, ``renderEditor``: this is responsible
+  for drawing the editor in the UI.
+* The editor's event handler, ``handleEditorEvent``: this is responsible
+  for updating the editor's contents and cursor position in response to
+  key events.
 
-   data Name = Edit1
-   type MyState = Editor String Name
+To use the built-in editor, the application must:
 
-   myEvent :: MyState -> BrickEvent n e -> EventM Name (Next MyState)
-   myEvent s (VtyEvent e) = continue =<< handleEditorEvent e s
+* Embed an ``Editor t n`` somewhere in the application state ``s``,
+* Render the editor's state at the appropriate place in ``appDraw`` with
+  ``renderEditor``, and
+* Dispatch events to the editor in the ``appHandleEvent`` with
+  ``handleEditorEvent``.
 
-This pattern works well enough when your application state has an
-event handler as shown in the ``Edit`` example above, but it can
-become unpleasant if the value on which you want to invoke a handler
-is embedded deeply within your application state. If you have chosen
-to generate lenses for your application state fields, you can use the
-convenience function ``handleEventLensed`` by specifying your state, a
-lens, and the event:
+An example application state using an editor might look like this:
 
 .. code:: haskell
 
-   data Name = Edit1
-   data MyState = MyState { _theEdit :: Editor String Name
-                          }
+   data MyState = MyState { _editor :: Editor Text n }
    makeLenses ''MyState
 
-   myEvent :: MyState -> BrickEvent n e -> EventM Name (Next MyState)
-   myEvent s (VtyEvent e) = continue =<< handleEventLensed s theEdit handleEditorEvent e
+This declares the ``MyState`` type with an ``Editor`` contained within
+it and uses Template Haskell to generate a lens, ``editor``, to allow us
+to easily update the editor state in our event handler.
 
-You might consider that preferable to the desugared version:
+To dispatch events to the ``editor`` we'd start by writing the
+application event handler:
 
 .. code:: haskell
 
-   myEvent :: MyState -> BrickEvent n e -> EventM Name (Next MyState)
-   myEvent s (VtyEvent e) = do
-     newVal <- handleEditorEvent e (s^.theEdit)
-     continue $ s & theEdit .~ newVal
+   handleEvent :: BrickEvent n e -> EventM n MyState ()
+   handleEvent e = do
+       ...
+
+But there's a problem: ``handleEditorEvent``'s type indicates that it
+can only run over a state of type ``Editor t n``, but our handler runs
+on ``MyState``. Specifically, ``handleEditorEvent`` has this type:
+
+.. code:: haskell
+
+   handleEditorEvent :: BrickEvent n e -> EventM n (Editor t n) ()
+
+This means that to use ``handleEditorEvent``, it must be composed
+into the application's event handler, but since the state types ``s``
+and ``Editor t n`` do not match, we need a way to compose these event
+handlers. There are two ways to do this:
+
+* Use ``Lens.Micro.Mtl.zoom`` from the ``microlens-mtl`` package
+  (re-exported by ``Brick.Types`` for convenience). This function is
+  required when you want to change the state type to a field embedded in
+  your application state using a lens. For example:
+
+.. code:: haskell
+
+   handleEvent :: BrickEvent n e -> EventM n MyState ()
+   handleEvent e = do
+       zoom editor $ handleEditorEvent e
+
+* Use ``Brick.Types.nestEventM``: this function lets you provide a state
+  value and run ``EventM`` using that state. The following
+  ``nestEventM`` example is equivalent to the ``zoom`` example above:
+
+.. code:: haskell
+
+   import Lens.Micro (_1)
+   import Lens.Micro.Mtl (use, (.=))
+
+   handleEvent :: BrickEvent n e -> EventM n MyState ()
+   handleEvent e = do
+       editorState <- use editor
+       (newEditorState, ()) <- nestEventM editorState $ do
+           handleEditorEvent e
+       editor .= newEditorState
+
+The ``zoom`` function, together with lenses for your application state's
+fields, is by far the best way to manage your state in ``EventM``. As
+you can see from the examples above, the ``zoom`` approach avoids a lot
+of boilerplate. The ``nestEventM`` approach is provided in cases where
+the state that you need to mutate is not easily accessed by ``zoom``.
+
+Finally, if you prefer to avoid the use of lenses, you can always use
+the ``MonadState`` API to get, put, and modify your state. Keep in
+mind that the ``MonadState`` approach will still require the use of
+``nestEventM`` when events scoped to widget states such as ``Editor``
+need to be handled.
 
 Using Your Own Event Type
 *************************
@@ -339,8 +385,8 @@ handler:
 
 .. code:: haskell
 
-   myEvent :: s -> BrickEvent n CounterEvent -> EventM n (Next s)
-   myEvent s (AppEvent (Counter i)) = ...
+   myEvent :: BrickEvent n CounterEvent -> EventM n s ()
+   myEvent (AppEvent (Counter i)) = ...
 
 The next step is to actually *generate* our custom events and
 inject them into the ``brick`` event stream so they make it to the
@@ -403,13 +449,14 @@ type provides ``appStartEvent`` function for this purpose:
 
 .. code:: haskell
 
-   appStartEvent :: s -> EventM n s
+   appStartEvent :: EventM n s ()
 
-This function takes the initial application state and returns it in
-``EventM``, possibly changing it and possibly making viewport requests.
-This function is invoked once and only once, at application startup.
-For more details, see `Viewports`_. You will probably just want to use
-``return`` as the implementation of this function for most applications.
+This function is a handler action to run on the initial application
+state. This function is invoked once and only once, at application
+startup. This might be a place to make initial viewport scroll requests
+or make changes to the Vty environment. You will probably just want
+to use ``return ()`` as the implementation of this function for most
+applications.
 
 appChooseCursor: Placing the Cursor
 -----------------------------------
@@ -1057,7 +1104,7 @@ location in the terminal, and any modifier keys pressed.
 
 .. code:: haskell
 
-   handleEvent s (VtyEvent (EvMouseDown col row button mods) = ...
+   handleEvent (VtyEvent (EvMouseDown col row button mods) = ...
 
 Brick Mouse Events
 ------------------
@@ -1080,10 +1127,10 @@ The most direct way to do this is to check a specific extent:
 
 .. code:: haskell
 
-   handleEvent s (VtyEvent (EvMouseDown col row _ _)) = do
+   handleEvent (VtyEvent (EvMouseDown col row _ _)) = do
      mExtent <- lookupExtent SomeExtent
      case mExtent of
-       Nothing -> continue s
+       Nothing -> return ()
        Just e -> do
          if Brick.Main.clickedExtent (col, row) e
            then ...
@@ -1096,7 +1143,7 @@ different layers? The next approach is to find all clicked extents:
 
 .. code:: haskell
 
-   handleEvent s (VtyEvent (EvMouseDown col row _ _)) = do
+   handleEvent (VtyEvent (EvMouseDown col row _ _)) = do
      extents <- Brick.Main.findClickedExtents (col, row)
      -- Then check to see if a specific extent is in the list, or just
      -- take the first one in the list.
@@ -1131,8 +1178,8 @@ offered by ``brick``. When rendering the interface we use
         border $
         str "Click me"
 
-   handleEvent s (MouseDown MyButton button modifiers coords) = ...
-   handleEvent s (MouseUp MyButton button coords) = ...
+   handleEvent (MouseDown MyButton button modifiers coords) = ...
+   handleEvent (MouseUp MyButton button coords) = ...
 
 This approach enables event handlers to use pattern matching to check
 for mouse clicks on specific regions; this uses extent reporting
@@ -1214,14 +1261,14 @@ functions for making scrolling requests:
 
 .. code:: haskell
 
-   hScrollPage        :: Direction -> EventM n ()
-   hScrollBy          :: Int       -> EventM n ()
-   hScrollToBeginning ::              EventM n ()
-   hScrollToEnd       ::              EventM n ()
-   vScrollPage        :: Direction -> EventM n ()
-   vScrollBy          :: Int       -> EventM n ()
-   vScrollToBeginning ::              EventM n ()
-   vScrollToEnd       ::              EventM n ()
+   hScrollPage        :: Direction -> EventM n s ()
+   hScrollBy          :: Int       -> EventM n s ()
+   hScrollToBeginning ::              EventM n s ()
+   hScrollToEnd       ::              EventM n s ()
+   vScrollPage        :: Direction -> EventM n s ()
+   vScrollBy          :: Int       -> EventM n s ()
+   vScrollToBeginning ::              EventM n s ()
+   vScrollToEnd       ::              EventM n s ()
 
 In each case the scrolling function scrolls the viewport by the
 specified amount in the specified direction; functions prefixed with
@@ -1237,11 +1284,10 @@ Using ``viewportScroll`` we can write an event handler that scrolls the
 
 .. code:: haskell
 
-   myHandler :: s -> e -> EventM n (Next s)
-   myHandler s e = do
+   myHandler :: e -> EventM n s ()
+   myHandler e = do
        let vp = viewportScroll Viewport1
        hScrollBy vp 1
-       continue s
 
 Scrolling Viewports With Visibility Requests
 --------------------------------------------
@@ -1508,14 +1554,14 @@ attribute map are:
 Handling Form Events
 --------------------
 
-Handling form events is easy: we just call
-``Brick.Forms.handleFormEvent`` with the ``BrickEvent`` and the
-``Form``. This automatically dispatches input events to the
-currently-focused input field, and it also manages focus changes with
-``Tab`` and ``Shift-Tab`` keybindings. (For details on all of its
-behaviors, see the Haddock documentation for ``handleFormEvent``.) It's
-still up to the application to decide when events should go to the form
-in the first place.
+Handling form events is easy: we just use ``zoom`` to call
+``Brick.Forms.handleFormEvent`` with the ``BrickEvent`` and a lens
+to access the ``Form`` in the application state. This automatically
+dispatches input events to the currently-focused input field, and it
+also manages focus changes with ``Tab`` and ``Shift-Tab`` keybindings.
+(For details on all of its behaviors, see the Haddock documentation for
+``handleFormEvent``.) It's still up to the application to decide when
+events should go to the form in the first place.
 
 Since the form field handlers take ``BrickEvent`` values, that means
 that custom fields could even handle application-specific events (of the
@@ -1782,7 +1828,7 @@ use the cache invalidation functions in ``EventM``:
 
 .. code:: haskell
 
-   handleEvent s ... = do
+   handleEvent ... = do
      -- Invalidate just a single cache entry:
      Brick.Main.invalidateCacheEntry ExpensiveThing
 
