@@ -57,7 +57,7 @@ data St =
        , _counter :: Int
        -- ^ The counter value to manipulate in the handlers.
        , _loadedCustomBindings :: Maybe FilePath
-       -- ^ Whether the application found custom keybindings in the
+       -- ^ Set if the application found custom keybindings in the
        -- specified file.
        }
 
