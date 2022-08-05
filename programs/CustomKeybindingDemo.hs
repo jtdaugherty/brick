@@ -176,7 +176,8 @@ main = do
                                   }
 
     -- Now demonstrate how the library's generated key binding help text
-    -- looks in plain text and Markdown formats.
+    -- looks in plain text and Markdown formats. These can be used to
+    -- generate documentation for users.
     let sections = [("Main", handlers)]
 
     putStrLn "Generated plain text help:"
