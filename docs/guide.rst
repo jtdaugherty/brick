@@ -151,10 +151,10 @@ To run an ``App``, we pass it to ``Brick.Main.defaultMain`` or
 
    main :: IO ()
    main = do
-     let app = App { ... }
-         initialState = ...
-     finalState <- defaultMain app initialState
-     -- Use finalState and exit
+       let app = App { ... }
+           initialState = ...
+       finalState <- defaultMain app initialState
+       -- Use finalState and exit
 
 The ``customMain`` function is for more advanced uses; for details see
 `Using Your Own Event Type`_.
@@ -517,9 +517,10 @@ resource name type ``n`` and would be able to pattern-match on
 
 .. code:: haskell
 
-   myApp = App { ...
-               , appChooseCursor = \_ -> showCursorNamed CustomName
-               }
+   myApp =
+       App { ...
+           , appChooseCursor = \_ -> showCursorNamed CustomName
+           }
 
 See the next section for more information on using names.
 
@@ -570,9 +571,8 @@ we don't know which of the two uses of ``Viewport1`` will be affected:
 
 .. code:: haskell
 
-   do
-     let vp = viewportScroll Viewport1
-     vScrollBy vp 1
+   let vp = viewportScroll Viewport1
+   vScrollBy vp 1
 
 The solution is to ensure that for a given resource type (in this case
 viewport), a unique name is assigned in each use.
@@ -1060,10 +1060,10 @@ to the Vty library handle in ``EventM`` (in e.g. ``appHandleEvent``):
    import qualified Graphics.Vty as V
 
    do
-     vty <- Brick.Main.getVtyHandle
-     let output = V.outputIface vty
-     when (V.supportsMode output V.BracketedPaste) $
-         liftIO $ V.setMode output V.BracketedPaste True
+       vty <- Brick.Main.getVtyHandle
+       let output = V.outputIface vty
+       when (V.supportsMode output V.BracketedPaste) $
+           liftIO $ V.setMode output V.BracketedPaste True
 
 Once enabled, paste mode will generate Vty ``EvPaste`` events. These
 events will give you the entire pasted content as a ``ByteString`` which
@@ -1081,10 +1081,10 @@ To enable mouse mode, we need to get access to the Vty library handle in
 .. code:: haskell
 
    do
-     vty <- Brick.Main.getVtyHandle
-     let output = outputIface vty
-     when (supportsMode output Mouse) $
-       liftIO $ setMode output Mouse True
+       vty <- Brick.Main.getVtyHandle
+       let output = outputIface vty
+       when (supportsMode output Mouse) $
+           liftIO $ setMode output Mouse True
 
 Bear in mind that some terminals do not support mouse interaction, so
 use Vty's ``getModeStatus`` to find out whether your terminal will
@@ -1129,13 +1129,13 @@ The most direct way to do this is to check a specific extent:
 .. code:: haskell
 
    handleEvent (VtyEvent (EvMouseDown col row _ _)) = do
-     mExtent <- lookupExtent SomeExtent
-     case mExtent of
-       Nothing -> return ()
-       Just e -> do
-         if Brick.Main.clickedExtent (col, row) e
-           then ...
-           else ...
+       mExtent <- lookupExtent SomeExtent
+       case mExtent of
+           Nothing -> return ()
+           Just e -> do
+               if Brick.Main.clickedExtent (col, row) e
+                   then ...
+                   else ...
 
 This approach works well enough if you know which extent you're
 interested in checking, but what if there are many extents and you
@@ -1145,9 +1145,9 @@ different layers? The next approach is to find all clicked extents:
 .. code:: haskell
 
    handleEvent (VtyEvent (EvMouseDown col row _ _)) = do
-     extents <- Brick.Main.findClickedExtents (col, row)
-     -- Then check to see if a specific extent is in the list, or just
-     -- take the first one in the list.
+       extents <- Brick.Main.findClickedExtents (col, row)
+       -- Then check to see if a specific extent is in the list, or just
+       -- take the first one in the list.
 
 This approach finds all clicked extents and returns them in a list with
 the following properties:
@@ -1520,7 +1520,7 @@ control layout, or change attributes:
 .. code:: haskell
 
     (str "Name: " <+>) @@=
-      editTextField name NameField (Just 1)
+        editTextField name NameField (Just 1)
 
 Now when we invoke ``renderForm`` on a form using the above example,
 we'll see a ``"Name:"`` label to the left of the editor field for
@@ -1830,11 +1830,11 @@ use the cache invalidation functions in ``EventM``:
 .. code:: haskell
 
    handleEvent ... = do
-     -- Invalidate just a single cache entry:
-     Brick.Main.invalidateCacheEntry ExpensiveThing
+       -- Invalidate just a single cache entry:
+       Brick.Main.invalidateCacheEntry ExpensiveThing
 
-     -- Invalidate the entire cache (useful on a resize):
-     Brick.Main.invalidateCache
+       -- Invalidate the entire cache (useful on a resize):
+       Brick.Main.invalidateCache
 
 Implementing Custom Widgets
 ===========================
