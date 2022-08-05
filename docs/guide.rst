@@ -1004,11 +1004,12 @@ the width of a single character, use ``Graphics.Text.wcwidth``.
 Extents
 =======
 
-When an application needs to know where a particular widget was drawn by
-the renderer, the application can request that the renderer record the
-*extent* of the widget--its upper-left corner and size--and provide it
-in an event handler. In the following example, the application needs to
-know where the bordered box containing "Foo" is rendered:
+When an application needs to know where a particular widget was drawn
+by the renderer, the application can request that the renderer record
+the *extent* of the widget--its upper-left corner and size--and provide
+access to it in an event handler. Extents are represented using Brick's
+``Brick.Types.Extent`` type. In the following example, the application
+needs to know where the bordered box containing "Foo" is rendered:
 
 .. code:: haskell
 
@@ -1027,15 +1028,14 @@ the renderer using a resource name:
         reportExtent FooBox $
         border $ str "Foo"
 
-Now, whenever the ``ui`` is rendered, the location and size of the
-bordered box containing "Foo" will be recorded. We can then look it up
-in event handlers in ``EventM``:
+Now, whenever the ``ui`` is rendered, the extent of the bordered box
+containing "Foo" will be recorded. We can then look it up in event
+handlers in ``EventM``:
 
 .. code:: haskell
 
-   do
-     mExtent <- Brick.Main.lookupExtent FooBox
-     case mExtent of
+   mExtent <- Brick.Main.lookupExtent FooBox
+   case mExtent of
        Nothing -> ...
        Just (Extent _ upperLeft (width, height)) -> ...
 
