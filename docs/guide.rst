@@ -97,8 +97,8 @@ Compiling Brick Applications
 Brick applications must be compiled with the threaded RTS using the GHC
 ``-threaded`` option.
 
-The App Type
-============
+The ``App`` Type
+================
 
 To use the library we must provide it with a value of type
 ``Brick.Main.App``. This type is a record type whose fields perform
@@ -159,8 +159,8 @@ To run an ``App``, we pass it to ``Brick.Main.defaultMain`` or
 The ``customMain`` function is for more advanced uses; for details see
 `Using Your Own Event Type`_.
 
-appDraw: Drawing an Interface
------------------------------
+``appDraw``: Drawing an Interface
+---------------------------------
 
 The value of ``appDraw`` is a function that turns the current
 application state into a list of *layers* of type ``Widget``, listed
@@ -202,8 +202,8 @@ The most important module providing drawing functions is
 ``Brick.Widgets.Core``. Beyond that, any module in the ``Brick.Widgets``
 namespace provides specific kinds of functionality.
 
-appHandleEvent: Handling Events
--------------------------------
+``appHandleEvent``: Handling Events
+-----------------------------------
 
 The value of ``appHandleEvent`` is a function that decides how to modify
 the application state as a result of an event:
@@ -438,8 +438,8 @@ bound for the event channel. In general, consider the performance of
 your event handler when choosing the channel capacity and design event
 producers so that they can block if the channel is full.
 
-appStartEvent: Starting up
---------------------------
+``appStartEvent``: Starting up
+------------------------------
 
 When an application starts, it may be desirable to perform some of
 the duties typically only possible when an event has arrived, such as
@@ -459,8 +459,8 @@ or make changes to the Vty environment. You will probably just want
 to use ``return ()`` as the implementation of this function for most
 applications.
 
-appChooseCursor: Placing the Cursor
------------------------------------
+``appChooseCursor``: Placing the Cursor
+---------------------------------------
 
 The rendering process for a ``Widget`` may return information about
 where that widget would like to place the cursor. For example, a text
@@ -585,8 +585,8 @@ viewport), a unique name is assigned in each use.
    ui = (viewport Viewport1 Vertical $ str "Foo") <+>
         (viewport Viewport2 Vertical $ str "Bar") <+>
 
-appAttrMap: Managing Attributes
--------------------------------
+``appAttrMap``: Managing Attributes
+-----------------------------------
 
 In ``brick`` we use an *attribute map* to assign attributes to elements
 of the interface. Rather than specifying specific attributes when
@@ -966,8 +966,8 @@ Attributes`_.
 If the theme is further customized at runtime, any changes can be saved
 with ``Brick.Themes.saveCustomizations``.
 
-Wide Character Support and the TextWidth class
-==============================================
+Wide Character Support and the ``TextWidth`` class
+==================================================
 
 Brick attempts to support rendering wide characters in all widgets,
 and the brick editor supports entering and editing wide characters.
