@@ -1116,14 +1116,47 @@ a higher-level mouse event interface that ties into the drawing
 language. The disadvantage to the low-level interface described above is
 that you still need to determine *what* was clicked, i.e., the part of
 the interface that was under the mouse cursor. There are two ways to do
-this with ``brick``: with *extent checking* and *click reporting*.
+this with ``brick``: with *click reporting* and *extent checking*.
+
+Click reporting
+***************
+
+The *click reporting* approach is the most high-level approach offered
+by ``brick`` and the one that we recommend you use. In this approach,
+we use ``Brick.Widgets.Core.clickable`` when drawing the interface to
+request that a given widget generate ``MouseDown`` and ``MouseUp``
+events when it is clicked.
+
+.. code:: haskell
+
+   data Name = MyButton
+
+   ui :: Widget Name
+   ui = center $
+        clickable MyButton $
+        border $
+        str "Click me"
+
+   handleEvent (MouseDown MyButton button modifiers coords) = ...
+   handleEvent (MouseUp MyButton button coords) = ...
+
+This approach enables event handlers to use pattern matching to check
+for mouse clicks on specific regions; this uses `Extent checking`_
+under the hood but makes it possible to denote which widgets are
+clickable in the interface description. The event's click coordinates
+are local to the widget being clicked. In the above example, a click
+on the upper-left corner of the border would result in coordinates of
+``(0,0)``.
 
 Extent checking
 ***************
 
 The *extent checking* approach entails requesting extents (see
 `Extents`_) for parts of your interface, then checking the Vty mouse
-click event's coordinates against one or more extents.
+click event's coordinates against one or more extents. This approach
+is slightly lower-level than the direct mouse click reporting approach
+above but is provided in case you need more control over how mouse
+clicks are dealt with.
 
 The most direct way to do this is to check a specific extent:
 
@@ -1161,35 +1194,6 @@ the following properties:
 
 As a result, the extents are ordered in a natural way, starting with the
 most specific extents and proceeding to the most general.
-
-Click reporting
-***************
-
-The *click reporting* approach is the most high-level approach
-offered by ``brick``. When rendering the interface we use
-``Brick.Widgets.Core.clickable`` to request that a given widget generate
-``MouseDown`` and ``MouseUp`` events when it is clicked.
-
-.. code:: haskell
-
-   data Name = MyButton
-
-   ui :: Widget Name
-   ui = center $
-        clickable MyButton $
-        border $
-        str "Click me"
-
-   handleEvent (MouseDown MyButton button modifiers coords) = ...
-   handleEvent (MouseUp MyButton button coords) = ...
-
-This approach enables event handlers to use pattern matching to check
-for mouse clicks on specific regions; this uses extent reporting
-under the hood but makes it possible to denote which widgets are
-clickable in the interface description. The event's click coordinates
-are local to the widget being clicked. In the above example, a click
-on the upper-left corner of the border would result in coordinates of
-``(0,0)``.
 
 Viewports
 =========
