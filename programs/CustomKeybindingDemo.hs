@@ -7,11 +7,14 @@ import Lens.Micro ((^.))
 import Lens.Micro.TH (makeLenses)
 import Lens.Micro.Mtl ((<~), (.=), (%=), use)
 import Control.Monad (void)
+import qualified Data.Text as Text
 import qualified Data.Text.IO as Text
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid ((<>))
 #endif
 import qualified Graphics.Vty as V
+import System.Environment (getArgs)
+import System.Exit (exitFailure)
 
 import qualified Brick.Types as T
 import Brick.Types (Widget)
@@ -53,6 +56,9 @@ data St =
        -- ^ Whether the last key was handled by a handler.
        , _counter :: Int
        -- ^ The counter value to manipulate in the handlers.
+       , _loadedCustomBindings :: Maybe FilePath
+       -- ^ Whether the application found custom keybindings in the
+       -- specified file.
        }
 
 makeLenses ''St
@@ -101,9 +107,22 @@ drawUi st = [body]
                       , str $ "Last key handled: " <> show (st^.lastKeyHandled)
                       , str $ "Counter:          " <> show (st^.counter)
                       ]
+        customBindingInfo =
+            B.borderWithLabel (txt "Custom Bindings") $
+            case st^.loadedCustomBindings of
+                Nothing ->
+                    hLimit 40 $
+                    txtWrap $ "No custom bindings loaded. " <>
+                              "Create an INI file with a " <>
+                              (Text.pack $ show sectionName) <>
+                              " section and pass its path to this " <>
+                              "program on the command line."
+                Just f -> str "Loaded custom bindings from:" <=> str (show f)
         body = C.center $
-               (padRight (Pad 7) $ B.borderWithLabel (txt "Status") status) <+>
-               B.borderWithLabel (txt "Keybinding Help") keybindingHelp
+               ((padRight (Pad 7) $
+                 (B.borderWithLabel (txt "Status") status) <=> customBindingInfo)
+                ) <+>
+                B.borderWithLabel (txt "Active Keybindings") keybindingHelp
 
 app :: M.App St e ()
 app =
@@ -114,16 +133,36 @@ app =
           , M.appChooseCursor = M.showFirstCursor
           }
 
+sectionName :: Text.Text
+sectionName = "keybindings"
+
 main :: IO ()
 main = do
+    args <- getArgs
+
+    (customBindings, customFile) <- case args of
+        [iniFilePath] -> do
+            result <- K.keybindingsFromFile allKeyEvents sectionName iniFilePath
+            case result of
+                Right (Just bindings) ->
+                    return (bindings, Just iniFilePath)
+                Right Nothing -> do
+                    putStrLn $ "Error: found no section " <> show sectionName <> " in " <> show iniFilePath
+                    exitFailure
+                Left e -> do
+                    putStrLn $ "Error reading keybindings file " <> show iniFilePath <> ": " <> e
+                    exitFailure
+        _ -> return ([], Nothing)
+
     -- Create a key config that has no customized bindings overriding
     -- the default ones.
-    let kc = K.newKeyConfig allKeyEvents defaultBindings []
+    let kc = K.newKeyConfig allKeyEvents defaultBindings customBindings
 
     void $ M.defaultMain app $ St { _keyConfig = kc
                                   , _lastKey = Nothing
                                   , _lastKeyHandled = False
                                   , _counter = 0
+                                  , _loadedCustomBindings = customFile
                                   }
 
     -- Now demonstrate how the library's generated key binding help text
