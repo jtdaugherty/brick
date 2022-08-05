@@ -74,10 +74,11 @@ programs.
   program, all lens interfaces have non-lens equivalents exported by
   the same module. In general, the "``L``" suffix on something tells
   you it is a lens; the name without the "``L``" suffix is the non-lens
-  version. You can get by without using ``brick``'s lens interface but
-  your life will probably be much more pleasant once your application
-  state becomes sufficiently complex if you use lenses to modify it (see
-  `appHandleEvent: Handling Events`_).
+  version. You can get by without using ``brick``'s lens interface
+  but your life will probably be much more pleasant if you use lenses
+  to modify your application state once it state becomes sufficiently
+  complex (see `appHandleEvent: Handling Events`_ and `Event Handlers
+  for Component State`_).
 - Attribute names: some modules export attribute names (see `How
   Attributes Work`_) associated with user interface elements. These tend
   to end in an "``Attr``" suffix (e.g. ``borderAttr``). In addition,
@@ -225,7 +226,7 @@ application's state in an event handler is to use the ``MonadState``
 type class and associated operations from the ``mtl`` package. The
 recommended approach, however, is to use the lens operations from the
 ``microlens-mtl`` package with lenses to perform concise state updates.
-We'll cover this topic in more detail in `Event Handlers for Widget
+We'll cover this topic in more detail in `Event Handlers for Component
 State`_.
 
 Once the event handler has performed any relevant state updates, it can
@@ -258,12 +259,12 @@ Beyond I/O, ``EventM`` is used to make scrolling requests to the
 renderer (see `Viewports`_), obtain named extents (see `Extents`_), and
 other duties.
 
-Event Handlers for Widget State
-*******************************
+Event Handlers for Component State
+**********************************
 
 The top-level ``appHandleEvent`` handler is responsible for managing
 the application state, but it also needs to be able to update the state
-associated with states specific to widget types that come with Brick.
+associated with UI components such as those that come with Brick.
 
 For example, consider an application that uses Brick's built-in text
 editor from ``Brick.Widgets.Edit``. The built-in editor is similar to
