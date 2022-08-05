@@ -1636,10 +1636,10 @@ The customizable keybindings API provides:
   dispatching incoming key events to them.
 
 Brick provides a complete working example of the custom keybinding API
-in ``programs/CustomKeybindingDemo.hs``. This section of the User
-Guide describes the API at a high level. More detailed documentation
-on how to use the API can be found in the module documentation for
-``Brick.Keybindings.KeyDispatcher``.
+in ``programs/CustomKeybindingDemo.hs``. This section of the User Guide
+describes the API at a high level. More detailed documentation on how to
+use the API, including a step-by-step process for using it, can be found
+in the module documentation for ``Brick.Keybindings.KeyDispatcher``.
 
 The following table compares Brick application design decisions and
 runtime behaviors in a typical application compared to one that uses the
