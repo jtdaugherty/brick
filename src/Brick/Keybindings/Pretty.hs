@@ -3,16 +3,19 @@
 -- and for generating Markdown, plain text, and Brick displays of event
 -- handler's key binding configurations.
 module Brick.Keybindings.Pretty
-  ( keybindingTextTable
+  (
+  -- * Generating help output
+    keybindingTextTable
   , keybindingMarkdownTable
   , keybindingHelpWidget
 
+  -- * Pretty-printing primitives
   , ppBinding
   , ppMaybeBinding
   , ppKey
   , ppModifier
 
-  -- * Attributes
+  -- * Attributes for Widget rendering
   , keybindingHelpBaseAttr
   , eventNameAttr
   , eventDescriptionAttr
@@ -229,14 +232,18 @@ ppModifier Vty.MAlt   = "A"
 ppModifier Vty.MCtrl  = "C"
 ppModifier Vty.MShift = "S"
 
+-- | The base attribute for 'Widget' keybinding help.
 keybindingHelpBaseAttr :: AttrName
 keybindingHelpBaseAttr = attrName "keybindingHelp"
 
+-- | The attribute for event names in keybinding help 'Widget's.
 eventNameAttr :: AttrName
 eventNameAttr = keybindingHelpBaseAttr <> attrName "eventName"
 
+-- | The attribute for event descriptions in keybinding help 'Widget's.
 eventDescriptionAttr :: AttrName
 eventDescriptionAttr = keybindingHelpBaseAttr <> attrName "eventDescription"
 
+-- | The attribute for keybinding lists in keybinding help 'Widget's.
 keybindingAttr :: AttrName
 keybindingAttr = keybindingHelpBaseAttr <> attrName "keybinding"
