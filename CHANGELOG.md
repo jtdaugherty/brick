@@ -24,6 +24,10 @@ ticket](https://github.com/jtdaugherty/brick/issues/379).
       BrickEvent n e -> EventM n s ()`. This also affected all of
       Brick's built-in event handler functions for `List`, `Editor`,
       etc.
+    * The `appHandleEvent` and `appStartEvent` fields of `App` changed
+      types to reflect the new structure of `EventM`. `appStartEvent`
+      will just be `return ()` rather than `return` for most
+      applications.
     * `EventM` can be used with the `MonadState` API from `mtl` as well
       as with the very nice lens combinators in `microlens-mtl`.
     * The `Next` type was removed.
