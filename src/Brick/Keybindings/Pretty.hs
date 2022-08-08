@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 -- | This module provides functions for pretty-printing key bindings
 -- and for generating Markdown, plain text, and Brick displays of event
--- handler's key binding configurations.
+-- handler key binding configurations.
 module Brick.Keybindings.Pretty
   (
   -- * Generating help output
