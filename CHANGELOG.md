@@ -2,6 +2,61 @@
 Brick changelog
 ---------------
 
+1.0
+---
+
+Version 1.0 of `brick` comes with some improvements that will require
+you to update your programs. This document details the list of API
+changes in 1.0 that are likely to introduce breakage and how to deal
+with each one.
+
+* The event-handling monad `EventM` was improved and changed in some
+  substantial ways.
+  * The type has changed from `EventM n a` to `EventM n s a` and is now
+    an `mtl`-compatible state monad over `s`.
+  * The `Next` type was removed.
+  * Event handlers consequently no longer take and return an explicit
+    state value; an event handler that formerly had the type `handler ::
+    s -> BrickEvent n e -> EventM n (Next s)` now has type `handler ::
+    BrickEvent n e -> EventM n s ()`.
+  * Since `Next` was removed, control flow is now as follows:
+    * Without any explicit specification, an `EventM` block always
+      continues execution of the `brick` event loop when it finishes.
+      `continue` was removed from the API.
+    * `halt` is still used to indicate that the event loop should halt
+      after the calling handler is finished, but `halt` no longer takes
+      an explicit state value argument.
+    * `suspendAndResume` is now immediate; previously,
+      `suspendAndResume` indicated that the specified action should run
+      once the event handler finished. Now, the event handler is paused
+      while the specified action is run. This allows `EventM` code to
+      continue to run after `suspendAndResume` is called and before
+      control is returned to `brick.
+  * Brick now depends on `mtl` rather than `transformers`.
+  * State-specific event handlers like `handleListEvent` and
+    `handleEditorEvent` are now statically typed to be scoped to the
+    states they manage, so `zoom` from `microlens-mt`l must be used to
+    invoke them. `Brick.Types` re-exports `zoom` for convenience.
+* The `IsString` instance for `AttrName` was removed.
+  * This change is motivated by the API wart that resulted from the
+    overloading of both `<>` and string literals that resulted in code
+    such as `someAttrName = "blah" <> "things"`. While that worked to
+    create an `AttrName` with two segments, it was far too easy to read
+    as two strings concatenated. The overloading hid what is really
+    going on with the segments of the attribute name. The way to write
+    the above example after this change is `someAttrName = attrName
+    "blah" <> attrName "things"`.
+
+Other changes in this release:
+
+* Brick now provides an optional API for user-defined keybindings
+  for applications. See the User Guide section, the Haddock for
+  `Brick.Keybindings.KeyDispatcher`, and the new demo program
+  `programs/CustomKeybindingDemo.hs` to get started.
+* `Brick.Widgets.List` got `listSelectedElementL`, a traversal for
+  accessing the currently selected element of a list. (Thanks Fraser
+  Tweedale)
+
 0.73
 ----
 
