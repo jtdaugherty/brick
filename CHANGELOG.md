@@ -6,10 +6,12 @@ Brick changelog
 ---
 
 Version 1.0 of `brick` comes with some improvements that will require
-you to update your programs. This document details the list of API
+you to update your programs. This section details the list of API
 changes in 1.0 that are likely to introduce breakage and how to deal
-with each one. You can also consult the demonstration programs to see
-working examples of the new API.
+with each one. You can also consult the demonstration
+programs to see orking examples of the new API. For those
+interested in a bit of discussion on the changes, see [this
+ticket](https://github.com/jtdaugherty/brick/issues/379).
 
 * The event-handling monad `EventM` was improved and changed in some
   substantial ways.
@@ -65,9 +67,10 @@ working examples of the new API.
 Other changes in this release:
 
 * Brick now provides an optional API for user-defined keybindings
-  for applications. See the User Guide section, the Haddock for
-  `Brick.Keybindings.KeyDispatcher`, and the new demo program
-  `programs/CustomKeybindingDemo.hs` to get started.
+  for applications! See the User Guide section "Customizable
+  Keybindings", the Haddock for `Brick.Keybindings.KeyDispatcher`,
+  and the new demo program `programs/CustomKeybindingDemo.hs` to get
+  started.
 * `Brick.Widgets.List` got `listSelectedElementL`, a traversal for
   accessing the currently selected element of a list. (Thanks Fraser
   Tweedale)
