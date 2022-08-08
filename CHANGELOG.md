@@ -29,6 +29,9 @@ with each one.
       just the states they manage, so `zoom` from `microlens-mtl` must
       be used to invoke them. `Brick.Types` re-exports `zoom` for
       convenience.
+    * If an `EventM` block needs to operate on some state `s` that is
+      not accessible via a lens into the application state, the `EventM`
+      block can be set up with `Brick.Types.nestEventM`.
     * `handleEventLensed` was removed from the API in lieu of the new
       `zoom` behavior. Code that previously handled events with
       `handleEventLensed s someLens someHandler e` is now just written
