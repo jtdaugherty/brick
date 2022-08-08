@@ -20,6 +20,7 @@ import qualified Brick.Types as T
 import Brick.Types (Widget)
 import qualified Brick.Keybindings as K
 import Brick.AttrMap
+import Brick.Util (fg)
 import qualified Brick.Main as M
 import qualified Brick.Widgets.Border as B
 import qualified Brick.Widgets.Center as C
@@ -140,7 +141,10 @@ app =
     M.App { M.appDraw = drawUi
           , M.appStartEvent = return ()
           , M.appHandleEvent = appEvent
-          , M.appAttrMap = const $ attrMap V.defAttr []
+          , M.appAttrMap = const $ attrMap V.defAttr [ (K.eventNameAttr, fg V.magenta)
+                                                     , (K.eventDescriptionAttr, fg V.cyan)
+                                                     , (K.keybindingAttr, fg V.yellow)
+                                                     ]
           , M.appChooseCursor = M.showFirstCursor
           }
 

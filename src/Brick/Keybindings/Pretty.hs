@@ -11,11 +11,17 @@ module Brick.Keybindings.Pretty
   , ppMaybeBinding
   , ppKey
   , ppModifier
+
+  -- * Attributes
+  , keybindingHelpBaseAttr
+  , eventNameAttr
+  , eventDescriptionAttr
+  , keybindingAttr
   )
 where
 
 import Brick
-import Data.List (sort)
+import Data.List (sort, intersperse)
 import Data.Maybe (fromJust)
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid ((<>))
@@ -146,19 +152,19 @@ keybindingHelpWidget :: (Ord k)
                      -- the help display.
                      -> Widget n
 keybindingHelpWidget kc =
-    mkKeybindEventSectionHelp kc keybindEventHelpWidget vBox
+    withDefAttr keybindingHelpBaseAttr .
+    mkKeybindEventSectionHelp kc keybindEventHelpWidget (vBox . intersperse (str " "))
 
 keybindEventHelpWidget :: (TextHunk, T.Text, [TextHunk]) -> Widget n
 keybindEventHelpWidget (evName, desc, evs) =
     let evText = T.intercalate ", " (getText <$> evs)
         getText (Comment s) = s
         getText (Verbatim s) = s
-        label = case evName of
+        label = withDefAttr eventNameAttr $ case evName of
             Comment s -> txt s -- TODO: was "; " <> s
             Verbatim s -> txt s -- TODO: was: emph $ txt s
-    in padBottom (Pad 1) $
-       vBox [ txt desc
-            , label <+> txt (" = " <> evText)
+    in vBox [ withDefAttr eventDescriptionAttr $ txt desc
+            , label <+> txt " = " <+> withDefAttr keybindingAttr (txt evText)
             ]
 
 -- | Pretty-print a 'Binding' in the same format that is parsed by
@@ -222,3 +228,15 @@ ppModifier Vty.MMeta  = "M"
 ppModifier Vty.MAlt   = "A"
 ppModifier Vty.MCtrl  = "C"
 ppModifier Vty.MShift = "S"
+
+keybindingHelpBaseAttr :: AttrName
+keybindingHelpBaseAttr = attrName "keybindingHelp"
+
+eventNameAttr :: AttrName
+eventNameAttr = keybindingHelpBaseAttr <> attrName "eventName"
+
+eventDescriptionAttr :: AttrName
+eventDescriptionAttr = keybindingHelpBaseAttr <> attrName "eventDescription"
+
+keybindingAttr :: AttrName
+keybindingAttr = keybindingHelpBaseAttr <> attrName "keybinding"
