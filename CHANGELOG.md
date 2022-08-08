@@ -14,7 +14,9 @@ interested in a bit of discussion on the changes, see [this
 ticket](https://github.com/jtdaugherty/brick/issues/379).
 
 * The event-handling monad `EventM` was improved and changed in some
-  substantial ways.
+  substantial ways, all aimed at making `EventM` code cleaner, more
+  composable, and more amenable to lens updates to the application
+  state.
   * The type has changed from `EventM n a` to `EventM n s a` and is now
     an `mtl`-compatible state monad over `s`. Some consequences and
     related changes are:
