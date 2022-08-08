@@ -57,7 +57,7 @@ data St =
        -- ^ Whether the last key was handled by a handler.
        , _counter :: Int
        -- ^ The counter value to manipulate in the handlers.
-       , _loadedCustomBindings :: Maybe FilePath
+       , _customBindingsPath :: Maybe FilePath
        -- ^ Set if the application found custom keybindings in the
        -- specified file.
        }
@@ -124,7 +124,7 @@ drawUi st = [body]
         -- custom bindings loaded from an INI file.
         customBindingInfo =
             B.borderWithLabel (txt "Custom Bindings") $
-            case st^.loadedCustomBindings of
+            case st^.customBindingsPath of
                 Nothing ->
                     hLimit 40 $
                     txtWrap $ "No custom bindings loaded. Create an INI file with a " <>
@@ -191,7 +191,7 @@ main = do
                                   , _lastKey = Nothing
                                   , _lastKeyHandled = False
                                   , _counter = 0
-                                  , _loadedCustomBindings = customFile
+                                  , _customBindingsPath = customFile
                                   }
 
     -- Now demonstrate how the library's generated key binding help text
