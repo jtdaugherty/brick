@@ -210,7 +210,8 @@ data EventTrigger k =
 -- | A handler for an abstract key event.
 --
 -- In general, you should never need to create these manually. Instead,
--- use 'onEvent' and 'onKey'.
+-- use 'onEvent' and 'onKey'. The internals of this type are exposed to
+-- allow inspection of handler data for e.g. custom help generation.
 data KeyEventHandler k m =
     KeyEventHandler { kehHandler :: Handler m
                     -- ^ The handler to invoke.
