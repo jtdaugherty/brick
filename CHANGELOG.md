@@ -18,7 +18,9 @@ with each one.
     * Event handlers no longer take and return an explicit state value;
       an event handler that formerly had the type `handler :: s ->
       BrickEvent n e -> EventM n (Next s)` now has type `handler ::
-      BrickEvent n e -> EventM n s ()`.
+      BrickEvent n e -> EventM n s ()`. This also affected all of
+      Brick's built-in event handler functions for `List`, `Editor`,
+      etc.
     * `EventM` can be used with the `MonadState` API from `mtl` as well
       as with the very nice lens combinators in `microlens-mtl`.
     * The `Next` type was removed.
