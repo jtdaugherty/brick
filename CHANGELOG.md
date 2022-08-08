@@ -2,6 +2,85 @@
 Brick changelog
 ---------------
 
+1.0
+---
+
+Version 1.0 of `brick` comes with some improvements that will require
+you to update your programs. This section details the list of API
+changes in 1.0 that are likely to introduce breakage and how to deal
+with each one. You can also consult the demonstration
+programs to see orking examples of the new API. For those
+interested in a bit of discussion on the changes, see [this
+ticket](https://github.com/jtdaugherty/brick/issues/379).
+
+* The event-handling monad `EventM` was improved and changed in some
+  substantial ways, all aimed at making `EventM` code cleaner, more
+  composable, and more amenable to lens updates to the application
+  state.
+  * The type has changed from `EventM n a` to `EventM n s a` and is now
+    an `mtl`-compatible state monad over `s`. Some consequences and
+    related changes are:
+    * Event handlers no longer take and return an explicit state value;
+      an event handler that formerly had the type `handler :: s ->
+      BrickEvent n e -> EventM n (Next s)` now has type `handler ::
+      BrickEvent n e -> EventM n s ()`. This also affected all of
+      Brick's built-in event handler functions for `List`, `Editor`,
+      etc.
+    * The `appHandleEvent` and `appStartEvent` fields of `App` changed
+      types to reflect the new structure of `EventM`. `appStartEvent`
+      will just be `return ()` rather than `return` for most
+      applications.
+    * `EventM` can be used with the `MonadState` API from `mtl` as well
+      as with the very nice lens combinators in `microlens-mtl`.
+    * The `Next` type was removed.
+    * State-specific event handlers like `handleListEvent` and
+      `handleEditorEvent` are now statically typed to be scoped to
+      just the states they manage, so `zoom` from `microlens-mtl` must
+      be used to invoke them. `Brick.Types` re-exports `zoom` for
+      convenience. `handleEventLensed` was removed from the API in lieu
+      of the new `zoom` behavior. Code that previously handled events
+      with `handleEventLensed s someLens someHandler e` is now just
+      written `zoom someLens $ someHandler e`.
+    * If an `EventM` block needs to operate on some state `s` that is
+      not accessible via a lens into the application state, the `EventM`
+      block can be set up with `Brick.Types.nestEventM`.
+  * Since `Next` was removed, control flow is now as follows:
+    * Without any explicit specification, an `EventM` block always
+      continues execution of the `brick` event loop when it finishes.
+      `continue` was removed from the API. What was previously `continue
+      $ s & someLens .~ value` will become `someLens .= value`.
+    * `halt` is still used to indicate that the event loop should halt
+      after the calling handler is finished, but `halt` no longer takes
+      an explicit state value argument.
+    * `suspendAndResume` is now immediate; previously,
+      `suspendAndResume` indicated that the specified action should run
+      once the event handler finished. Now, the event handler is paused
+      while the specified action is run. This allows `EventM` code to
+      continue to run after `suspendAndResume` is called and before
+      control is returned to `brick`.
+  * Brick now depends on `mtl` rather than `transformers`.
+* The `IsString` instance for `AttrName` was removed.
+  * This change is motivated by the API wart that resulted from the
+    overloading of both `<>` and string literals (via
+    `OverloadedStrings`) that resulted in code such as `someAttrName
+    = "blah" <> "things"`. While that worked to create an `AttrName`
+    with two segments, it was far too easy to read as two strings
+    concatenated. The overloading hid what is really going on with the
+    segments of the attribute name. The way to write the above example
+    after this change is `someAttrName = attrName "blah" <> attrName
+    "things"`.
+
+Other changes in this release:
+
+* Brick now provides an optional API for user-defined keybindings
+  for applications! See the User Guide section "Customizable
+  Keybindings", the Haddock for `Brick.Keybindings.KeyDispatcher`,
+  and the new demo program `programs/CustomKeybindingDemo.hs` to get
+  started.
+* `Brick.Widgets.List` got `listSelectedElementL`, a traversal for
+  accessing the currently selected element of a list. (Thanks Fraser
+  Tweedale)
+
 0.73
 ----
 
