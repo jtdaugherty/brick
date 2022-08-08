@@ -8,7 +8,8 @@ Brick changelog
 Version 1.0 of `brick` comes with some improvements that will require
 you to update your programs. This document details the list of API
 changes in 1.0 that are likely to introduce breakage and how to deal
-with each one.
+with each one. You can also consult the demonstration programs to see
+working examples of the new API.
 
 * The event-handling monad `EventM` was improved and changed in some
   substantial ways.
