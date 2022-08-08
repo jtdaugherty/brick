@@ -16,8 +16,8 @@ ticket](https://github.com/jtdaugherty/brick/issues/379).
 * The event-handling monad `EventM` was improved and changed in some
   substantial ways.
   * The type has changed from `EventM n a` to `EventM n s a` and is now
-    an `mtl`-compatible state monad over `s`. Some consequences of this
-    change are:
+    an `mtl`-compatible state monad over `s`. Some consequences and
+    related changes are:
     * Event handlers no longer take and return an explicit state value;
       an event handler that formerly had the type `handler :: s ->
       BrickEvent n e -> EventM n (Next s)` now has type `handler ::
