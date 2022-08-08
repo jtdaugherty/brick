@@ -56,7 +56,7 @@ ticket](https://github.com/jtdaugherty/brick/issues/379).
       once the event handler finished. Now, the event handler is paused
       while the specified action is run. This allows `EventM` code to
       continue to run after `suspendAndResume` is called and before
-      control is returned to `brick.
+      control is returned to `brick`.
   * Brick now depends on `mtl` rather than `transformers`.
 * The `IsString` instance for `AttrName` was removed.
   * This change is motivated by the API wart that resulted from the
