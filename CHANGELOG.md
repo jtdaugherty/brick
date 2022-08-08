@@ -13,12 +13,24 @@ with each one.
 * The event-handling monad `EventM` was improved and changed in some
   substantial ways.
   * The type has changed from `EventM n a` to `EventM n s a` and is now
-    an `mtl`-compatible state monad over `s`.
-  * The `Next` type was removed.
-  * Event handlers consequently no longer take and return an explicit
-    state value; an event handler that formerly had the type `handler ::
-    s -> BrickEvent n e -> EventM n (Next s)` now has type `handler ::
-    BrickEvent n e -> EventM n s ()`.
+    an `mtl`-compatible state monad over `s`. Some consequences of this
+    change are:
+    * Event handlers no longer take and return an explicit state value;
+      an event handler that formerly had the type `handler :: s ->
+      BrickEvent n e -> EventM n (Next s)` now has type `handler ::
+      BrickEvent n e -> EventM n s ()`.
+    * `EventM` can be used with the `MonadState` API from `mtl` as well
+      as with the very nice lens combinators in `microlens-mtl`.
+    * The `Next` type was removed.
+    * State-specific event handlers like `handleListEvent` and
+      `handleEditorEvent` are now statically typed to be scoped to
+      just the states they manage, so `zoom` from `microlens-mtl` must
+      be used to invoke them. `Brick.Types` re-exports `zoom` for
+      convenience.
+    * `handleEventLensed` was removed from the API in lieu of the new
+      `zoom` behavior. Code that previously handled events with
+      `handleEventLensed s someLens someHandler e` is now just written
+      `zoom someLens $ someHandler e`.
   * Since `Next` was removed, control flow is now as follows:
     * Without any explicit specification, an `EventM` block always
       continues execution of the `brick` event loop when it finishes.
@@ -33,10 +45,6 @@ with each one.
       continue to run after `suspendAndResume` is called and before
       control is returned to `brick.
   * Brick now depends on `mtl` rather than `transformers`.
-  * State-specific event handlers like `handleListEvent` and
-    `handleEditorEvent` are now statically typed to be scoped to the
-    states they manage, so `zoom` from `microlens-mt`l must be used to
-    invoke them. `Brick.Types` re-exports `zoom` for convenience.
 * The `IsString` instance for `AttrName` was removed.
   * This change is motivated by the API wart that resulted from the
     overloading of both `<>` and string literals that resulted in code
