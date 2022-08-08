@@ -53,13 +53,14 @@ working examples of the new API.
   * Brick now depends on `mtl` rather than `transformers`.
 * The `IsString` instance for `AttrName` was removed.
   * This change is motivated by the API wart that resulted from the
-    overloading of both `<>` and string literals that resulted in code
-    such as `someAttrName = "blah" <> "things"`. While that worked to
-    create an `AttrName` with two segments, it was far too easy to read
-    as two strings concatenated. The overloading hid what is really
-    going on with the segments of the attribute name. The way to write
-    the above example after this change is `someAttrName = attrName
-    "blah" <> attrName "things"`.
+    overloading of both `<>` and string literals (via
+    `OverloadedStrings`) that resulted in code such as `someAttrName
+    = "blah" <> "things"`. While that worked to create an `AttrName`
+    with two segments, it was far too easy to read as two strings
+    concatenated. The overloading hid what is really going on with the
+    segments of the attribute name. The way to write the above example
+    after this change is `someAttrName = attrName "blah" <> attrName
+    "things"`.
 
 Other changes in this release:
 
