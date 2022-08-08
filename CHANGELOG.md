@@ -47,7 +47,8 @@ ticket](https://github.com/jtdaugherty/brick/issues/379).
   * Since `Next` was removed, control flow is now as follows:
     * Without any explicit specification, an `EventM` block always
       continues execution of the `brick` event loop when it finishes.
-      `continue` was removed from the API.
+      `continue` was removed from the API. What was previously `continue
+      $ s & someLens .~ value` will become `someLens .= value`.
     * `halt` is still used to indicate that the event loop should halt
       after the calling handler is finished, but `halt` no longer takes
       an explicit state value argument.
