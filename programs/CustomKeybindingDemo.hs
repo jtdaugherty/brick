@@ -127,12 +127,10 @@ drawUi st = [body]
             case st^.loadedCustomBindings of
                 Nothing ->
                     hLimit 40 $
-                    txtWrap $ "No custom bindings loaded. " <>
-                              "Create an INI file with a " <>
+                    txtWrap $ "No custom bindings loaded. Create an INI file with a " <>
                               (Text.pack $ show sectionName) <>
                               " section or use 'programs/custom_keys.ini'. " <>
-                              "Pass its path to this " <>
-                              "program on the command line."
+                              "Pass its path to this program on the command line."
                 Just f -> str "Loaded custom bindings from:" <=> str (show f)
 
         body = C.center $
