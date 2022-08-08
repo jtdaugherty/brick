@@ -35,14 +35,13 @@ ticket](https://github.com/jtdaugherty/brick/issues/379).
       `handleEditorEvent` are now statically typed to be scoped to
       just the states they manage, so `zoom` from `microlens-mtl` must
       be used to invoke them. `Brick.Types` re-exports `zoom` for
-      convenience.
+      convenience. `handleEventLensed` was removed from the API in lieu
+      of the new `zoom` behavior. Code that previously handled events
+      with `handleEventLensed s someLens someHandler e` is now just
+      written `zoom someLens $ someHandler e`.
     * If an `EventM` block needs to operate on some state `s` that is
       not accessible via a lens into the application state, the `EventM`
       block can be set up with `Brick.Types.nestEventM`.
-    * `handleEventLensed` was removed from the API in lieu of the new
-      `zoom` behavior. Code that previously handled events with
-      `handleEventLensed s someLens someHandler e` is now just written
-      `zoom someLens $ someHandler e`.
   * Since `Next` was removed, control flow is now as follows:
     * Without any explicit specification, an `EventM` block always
       continues execution of the `brick` event loop when it finishes.
