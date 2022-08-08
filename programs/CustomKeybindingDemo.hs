@@ -112,7 +112,7 @@ drawUi st = [body]
         status = B.borderWithLabel (txt "Status") $
                  hLimit 40 $
                  padRight Max $
-                 vBox [ txt $ "Last key:         " <> maybe "(none)" K.ppBinding binding
+                 vBox [ txt "Last key:         " <+> (withDefAttr lastKeyAttr $ txt $ maybe "(none)" K.ppBinding binding)
                       , str $ "Last key handled: " <> show (st^.lastKeyHandled)
                       , str $ "Counter:          " <> show (st^.counter)
                       ]
@@ -136,6 +136,9 @@ drawUi st = [body]
                (padRight (Pad 2) $ status <=> customBindingInfo) <+>
                keybindingHelp
 
+lastKeyAttr :: AttrName
+lastKeyAttr = attrName "lastKey"
+
 app :: M.App St e ()
 app =
     M.App { M.appDraw = drawUi
@@ -144,6 +147,7 @@ app =
           , M.appAttrMap = const $ attrMap V.defAttr [ (K.eventNameAttr, fg V.magenta)
                                                      , (K.eventDescriptionAttr, fg V.cyan)
                                                      , (K.keybindingAttr, fg V.yellow)
+                                                     , (lastKeyAttr, fg V.white `V.withStyle` V.bold)
                                                      ]
           , M.appChooseCursor = M.showFirstCursor
           }
