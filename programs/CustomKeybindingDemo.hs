@@ -107,12 +107,15 @@ drawUi st = [body]
         keybindingHelp = B.borderWithLabel (txt "Active Keybindings") $
                          K.keybindingHelpWidget (st^.keyConfig) handlers
 
+        lastKeyDisplay = withDefAttr lastKeyAttr $
+                         txt $ maybe "(none)" K.ppBinding binding
+
         -- Show the status of the last pressed key, whether we handled
         -- it, and other bits of the application state.
         status = B.borderWithLabel (txt "Status") $
                  hLimit 40 $
                  padRight Max $
-                 vBox [ txt "Last key:         " <+> (withDefAttr lastKeyAttr $ txt $ maybe "(none)" K.ppBinding binding)
+                 vBox [ txt   "Last key:         " <+> lastKeyDisplay
                       , str $ "Last key handled: " <> show (st^.lastKeyHandled)
                       , str $ "Counter:          " <> show (st^.counter)
                       ]
