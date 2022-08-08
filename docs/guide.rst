@@ -1628,7 +1628,7 @@ The customizable keybindings API provides:
 
 * ``Brick.Keybindings.Parse``: parsing and loading user-provided
   keybinding configuration files,
-* ``Brick.Keybindings.Pretty``: pretty-printing keybinding strings and
+* ``Brick.Keybindings.Pretty``: pretty-printing keybindings and
   generating keybinding help text in ``Widget``, plain text, and
   Markdown formats so you can provide help to users both within the
   program and outside of it,
