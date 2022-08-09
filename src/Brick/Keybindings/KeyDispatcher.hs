@@ -56,7 +56,7 @@ import Brick.Keybindings.KeyConfig
 -- handlers run in the monad @m@.
 newtype KeyDispatcher k m = KeyDispatcher (M.Map Binding (KeyHandler k m))
 
--- | An 'Handler' represents a handler implementation to be invoked in
+-- | A 'Handler' represents a handler implementation to be invoked in
 -- response to some event that runs in the monad @m@.
 --
 -- In general, you should never need to make one of these manually.
