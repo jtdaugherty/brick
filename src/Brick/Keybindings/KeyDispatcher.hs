@@ -71,8 +71,8 @@ data Handler m =
 
 -- | A handler for a specific key.
 --
--- In general, you should never need to create one of these. The
--- internals are exposed to make inspection easy.
+-- In general, you should never need to create one of these manually.
+-- The internals are exposed to make inspection easy.
 data KeyHandler k m =
     KeyHandler { khHandler :: KeyEventHandler k m
                -- ^ The handler to invoke. Note that this maintains
