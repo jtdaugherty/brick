@@ -585,10 +585,11 @@ viewportScroll n =
 -- state without redrawing the screen. This is faster than 'continue'
 -- because it skips the redraw, but the drawback is that you need to
 -- be really sure that you don't want a screen redraw. If your state
--- changed in a way that needs to be reflected on the screen, use
--- 'continue'. This function is for cases where you know that you did
--- something that won't have an impact on the screen state and you want
--- to save on redraw cost.
+-- changed in a way that needs to be reflected on the screen, just don't
+-- call this; 'EventM' blocks default to triggering redraws when they
+-- finish executing. This function is for cases where you know that you
+-- did something that won't have an impact on the screen state and you
+-- want to save on redraw cost.
 continueWithoutRedraw :: EventM n s ()
 continueWithoutRedraw =
     EventM $ lift $ lift $ modify $ \es -> es { nextAction = ContinueWithoutRedraw }
