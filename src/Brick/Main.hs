@@ -110,11 +110,8 @@ data App s e n =
         -- application state is what you probably want to use to decide
         -- which one wins.
         , appHandleEvent :: BrickEvent n e -> EventM n s ()
-        -- ^ This function takes the current application state and an
-        -- event and returns an action to be taken and a corresponding
-        -- transformed application state. Possible options are
-        -- 'continue', 'continueWithoutRedraw', 'suspendAndResume', and
-        -- 'halt'.
+        -- ^ This function handles an event and updates the current
+        -- application state.
         , appStartEvent :: EventM n s ()
         -- ^ This function gets called once just prior to the first
         -- drawing of your application. Here is where you can make
