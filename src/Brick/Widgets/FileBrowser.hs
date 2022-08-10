@@ -3,6 +3,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 -- | This module provides a file browser widget that allows users to
 -- navigate directory trees, search for files and directories, and
 -- select entries of interest. For a complete working demonstration of
@@ -198,6 +200,9 @@ data FileBrowser n =
                 -- Note that this is a record field so it can be used to
                 -- change the selection function.
                 }
+
+instance Named (FileBrowser n) n where
+    getName = getName . fileBrowserEntries
 
 -- | File status information.
 data FileStatus =
