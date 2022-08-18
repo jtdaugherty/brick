@@ -52,11 +52,11 @@ import qualified Graphics.Vty as Vty
 
 import Brick.Keybindings.KeyConfig
 
--- | A set of handlers for specific keys whose handlers run in the monad
--- @m@.
+-- | A dispatcher keys that map to abstract events @k@ and whose
+-- handlers run in the monad @m@.
 newtype KeyDispatcher k m = KeyDispatcher (M.Map Binding (KeyHandler k m))
 
--- | An 'Handler' represents a handler implementation to be invoked in
+-- | A 'Handler' represents a handler implementation to be invoked in
 -- response to some event that runs in the monad @m@.
 --
 -- In general, you should never need to make one of these manually.
@@ -71,8 +71,8 @@ data Handler m =
 
 -- | A handler for a specific key.
 --
--- In general, you should never need to create one of these. The
--- internals are exposed to make inspection easy.
+-- In general, you should never need to create one of these manually.
+-- The internals are exposed to make inspection easy.
 data KeyHandler k m =
     KeyHandler { khHandler :: KeyEventHandler k m
                -- ^ The handler to invoke. Note that this maintains

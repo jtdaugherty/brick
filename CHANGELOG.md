@@ -80,6 +80,8 @@ Other changes in this release:
 * `Brick.Widgets.List` got `listSelectedElementL`, a traversal for
   accessing the currently selected element of a list. (Thanks Fraser
   Tweedale)
+* The `MonadFail` derived instance for `EventM` was removed for GHC >=
+  8.8.
 
 0.73
 ----
