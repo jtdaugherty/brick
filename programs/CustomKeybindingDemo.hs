@@ -191,6 +191,17 @@ main = do
 
     -- Before starting the application, check on whether any events have
     -- colliding bindings. Exit if so.
+    --
+    -- Note that in a Real Application, we would more than likely
+    -- want to check for collisions among specific sets of
+    -- events. For example, if 'Esc' was bound to both 'quit' and
+    -- 'close-dialog-box', we might not care about such a collision
+    -- if the application only ever handled the 'close-dialog-box'
+    -- event in a separate mode and only ever handled 'quit' at the
+    -- top-level of the event handler. But if we had two events such as
+    -- 'dialog-box-okay' and 'dialog-box-cancel' that were intended to
+    -- be handled in the same mode, we might want to check that those
+    -- two events did not have the same binding.
     forM_ (K.reverseKeyMappings kc) $ \(b, evs) -> do
         when (S.size evs > 1) $ do
             Text.putStrLn $ "Error: key '" <> K.ppBinding b <> "' is bound to multiple events:"
