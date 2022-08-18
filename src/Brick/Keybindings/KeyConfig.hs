@@ -4,6 +4,12 @@
 --
 -- To get started, see 'newKeyConfig'. Once a 'KeyConfig' has been
 -- constructed, see 'Brick.Keybindings.KeyHandlerMap.keyDispatcher'.
+--
+-- Since a key configuration can have keys bound to multiple events, it
+-- is the application author's responsibility to check for collisions
+-- since the nature of the collisions will depend on how the application
+-- is implemented. To check for collisions, use the result of
+-- 'reverseKeyMappings'.
 module Brick.Keybindings.KeyConfig
   ( KeyConfig
   , newKeyConfig
