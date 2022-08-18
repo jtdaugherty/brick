@@ -23,6 +23,7 @@ module Brick.Keybindings.KeyConfig
   , firstActiveBinding
   , allDefaultBindings
   , allActiveBindings
+  , reverseKeyMappings
 
   -- * Misc
   , keyConfigEvents
@@ -33,7 +34,7 @@ where
 import Data.List (nub)
 import qualified Data.Map.Strict as M
 import qualified Data.Set as S
-import Data.Maybe (fromMaybe, listToMaybe)
+import Data.Maybe (fromMaybe, listToMaybe, catMaybes)
 import qualified Graphics.Vty as Vty
 
 import Brick.Keybindings.KeyEvents
@@ -90,9 +91,14 @@ data BindingState =
 --   event to either 'Unbound' or providing explicit overridden bindings
 --   with 'BindingList'.
 data KeyConfig k =
-    KeyConfig { keyConfigBindingMap :: M.Map k BindingState
-              -- ^ The map of custom bindings for events with custom
-              -- bindings.
+    KeyConfig { keyConfigCustomBindings :: [(k, BindingState)]
+              -- ^ The list of custom binding states for events with
+              -- custom bindings. We use a list to ensure that we
+              -- preserve key bindings for keys that are mapped to more
+              -- than one event. This may be valid or invalid depending
+              -- on the events in question; whether those bindings
+              -- constitute a collision is up to the application
+              -- developer to check.
               , keyConfigEvents :: KeyEvents k
               -- ^ The base mapping of events and their names that is
               -- used in this configuration.
@@ -116,19 +122,50 @@ newKeyConfig :: (Ord k)
              -- ^ Custom bindings by key event, such as from a
              -- configuration file. Explicitly setting an event to
              -- 'Unbound' here has the effect of disabling its default
-             -- bindings. Optional on a per-event basis.
+             -- bindings. Optional on a per-event basis. Note that this
+             -- function does not check for collisions since it is up to
+             -- the application to determine whether a key bound to more
+             -- than one event constitutes a collision!
              -> KeyConfig k
 newKeyConfig evs defaults bindings =
-    KeyConfig { keyConfigBindingMap = M.fromList bindings
+    KeyConfig { keyConfigCustomBindings = bindings
               , keyConfigEvents = evs
               , keyConfigDefaultBindings = M.fromList defaults
               }
+
+-- | Return a list of reverse mappings including each key bound to any
+-- event combined with the list of events to which it is bound. This is
+-- useful for identifying problematic key binding collisions. Since key
+-- binding collisions cannot be determined in general, we leave it up to
+-- the application author to determine which key-to-event bindings are
+-- problematic.
+reverseKeyMappings :: (Ord k, Eq k) => KeyConfig k -> [(Binding, S.Set k)]
+reverseKeyMappings kc = M.toList resultMap
+    where
+        -- Get all default bindings
+        defaultBindings = M.toList $ keyConfigDefaultBindings kc
+        -- Get all explicitly unbound events
+        explicitlyUnboundEvents = fmap fst $ filter ((== Unbound) . snd) $ keyConfigCustomBindings kc
+        -- Remove explicitly unbound events from the default set of
+        -- bindings
+        defaultBindingsWithoutUnbound = filter ((`notElem` explicitlyUnboundEvents) . fst) defaultBindings
+        -- Now get customized binding lists
+        customizedKeybindingLists = catMaybes $ (flip fmap) (keyConfigCustomBindings kc) $ \(k, bState) -> do
+            case bState of
+                Unbound -> Nothing
+                BindingList bs -> Just (k, bs)
+        -- Now build a map from binding to event list
+        allPairs = defaultBindingsWithoutUnbound <>
+                   customizedKeybindingLists
+        addBindings m (ev, bs) =
+            M.unionWith S.union m $ M.fromList [(b, S.singleton ev) | b <- bs]
+        resultMap = foldl addBindings mempty allPairs
 
 -- | Look up the binding state for the specified event. This returns
 -- 'Nothing' when the event has no explicitly configured custom
 -- 'BindingState'.
 lookupKeyConfigBindings :: (Ord k) => KeyConfig k -> k -> Maybe BindingState
-lookupKeyConfigBindings kc e = M.lookup e $ keyConfigBindingMap kc
+lookupKeyConfigBindings kc e = lookup e $ keyConfigCustomBindings kc
 
 -- | A convenience function to return the first result of
 -- 'allDefaultBindings', if any.

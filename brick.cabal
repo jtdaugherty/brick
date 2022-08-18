@@ -155,6 +155,7 @@ executable brick-custom-keybinding-demo
                        brick,
                        text,
                        vty,
+                       containers,
                        microlens,
                        microlens-mtl,
                        microlens-th

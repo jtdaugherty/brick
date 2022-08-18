@@ -6,7 +6,9 @@ module Main where
 import Lens.Micro ((^.))
 import Lens.Micro.TH (makeLenses)
 import Lens.Micro.Mtl ((<~), (.=), (%=), use)
-import Control.Monad (void)
+import Control.Monad (void, forM_, when)
+import qualified Data.Set as S
+import Data.Maybe (fromJust)
 import qualified Data.Text as Text
 import qualified Data.Text.IO as Text
 #if !(MIN_VERSION_base(4,11,0))
@@ -186,6 +188,15 @@ main = do
     -- Create a key config that includes the default bindings as well as
     -- the custom bindings we loaded from the INI file, if any.
     let kc = K.newKeyConfig allKeyEvents defaultBindings customBindings
+
+    -- Before starting the application, check on whether any events have
+    -- colliding bindings. Exit if so.
+    forM_ (K.reverseKeyMappings kc) $ \(b, evs) -> do
+        when (S.size evs > 1) $ do
+            Text.putStrLn $ "Error: key '" <> K.ppBinding b <> "' is bound to multiple events:"
+            forM_ evs $ \e ->
+                Text.putStrLn $ "  " <> Text.pack (show e) <> " (" <> fromJust (K.keyEventName allKeyEvents e) <> ")"
+            exitFailure
 
     void $ M.defaultMain app $ St { _keyConfig = kc
                                   , _lastKey = Nothing
