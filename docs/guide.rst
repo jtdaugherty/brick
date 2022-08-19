@@ -11,7 +11,8 @@ Its main goal is to make terminal user interface development as painless
 and as direct as possible. ``brick`` builds on `vty`_; `vty` provides
 the terminal input and output interface and drawing primitives,
 while ``brick`` builds on those to provide a high-level application
-abstraction and combinators for expressing user interface layouts.
+abstraction, combinators for expressing user interface layouts, and
+infrastructure for handling events.
 
 This documentation is intended to provide a high-level overview of
 the library's design along with guidance for using it, but details on
