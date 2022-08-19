@@ -15,6 +15,8 @@
 --   If desired, provide custom keybindings to 'newKeyConfig' from
 --   within the program or load them from an INI file with routines like
 --   'Brick.Keybindings.Parse.keybindingsFromFile'.
+-- * Optionally check for keybinding collisions with
+--   'Brick.Keybindings.KeyConfig.reverseKeyMappings'.
 -- * Implement application event handlers that will be run in response
 --   to either specific hard-coded keys or events @k@, both in some
 --   monad @m@ of your choosing, using constructors 'onKey' and
