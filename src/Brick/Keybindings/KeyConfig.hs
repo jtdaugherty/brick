@@ -9,7 +9,7 @@
 -- is the application author's responsibility to check for collisions
 -- since the nature of the collisions will depend on how the application
 -- is implemented. To check for collisions, use the result of
--- 'reverseKeyMappings'.
+-- 'keyEventMappings'.
 module Brick.Keybindings.KeyConfig
   ( KeyConfig
   , newKeyConfig
@@ -29,7 +29,7 @@ module Brick.Keybindings.KeyConfig
   , firstActiveBinding
   , allDefaultBindings
   , allActiveBindings
-  , reverseKeyMappings
+  , keyEventMappings
 
   -- * Misc
   , keyConfigEvents
@@ -139,14 +139,14 @@ newKeyConfig evs defaults bindings =
               , keyConfigDefaultBindings = M.fromList defaults
               }
 
--- | Return a list of reverse mappings including each key bound to any
--- event combined with the list of events to which it is bound. This is
--- useful for identifying problematic key binding collisions. Since key
--- binding collisions cannot be determined in general, we leave it up to
--- the application author to determine which key-to-event bindings are
+-- | Return a list of mappings including each key bound to any event
+-- combined with the list of events to which it is bound. This is useful
+-- for identifying problematic key binding collisions. Since key binding
+-- collisions cannot be determined in general, we leave it up to the
+-- application author to determine which key-to-event bindings are
 -- problematic.
-reverseKeyMappings :: (Ord k, Eq k) => KeyConfig k -> [(Binding, S.Set k)]
-reverseKeyMappings kc = M.toList resultMap
+keyEventMappings :: (Ord k, Eq k) => KeyConfig k -> [(Binding, S.Set k)]
+keyEventMappings kc = M.toList resultMap
     where
         -- Get all default bindings
         defaultBindings = M.toList $ keyConfigDefaultBindings kc

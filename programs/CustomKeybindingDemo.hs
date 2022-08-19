@@ -202,7 +202,7 @@ main = do
     -- 'dialog-box-okay' and 'dialog-box-cancel' that were intended to
     -- be handled in the same mode, we might want to check that those
     -- two events did not have the same binding.
-    forM_ (K.reverseKeyMappings kc) $ \(b, evs) -> do
+    forM_ (K.keyEventMappings kc) $ \(b, evs) -> do
         when (S.size evs > 1) $ do
             Text.putStrLn $ "Error: key '" <> K.ppBinding b <> "' is bound to multiple events:"
             forM_ evs $ \e ->
