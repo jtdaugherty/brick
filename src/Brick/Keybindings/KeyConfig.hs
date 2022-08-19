@@ -39,6 +39,9 @@ where
 
 import Data.List (nub)
 import qualified Data.Map.Strict as M
+#if !(MIN_VERSION_base(4,11,0))
+import Data.Monoid ((<>))
+#endif
 import qualified Data.Set as S
 import Data.Maybe (fromMaybe, listToMaybe, catMaybes)
 import qualified Graphics.Vty as Vty
