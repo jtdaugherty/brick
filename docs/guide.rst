@@ -1687,6 +1687,70 @@ customizable keybindings API:
 |                     |                        |    handler is run.      |
 +---------------------+------------------------+-------------------------+
 
+Keybinding Collisions
+---------------------
+
+An important issue to consider in using the custom keybinding API is
+that it is possible for the user to map the same key to more than one
+event. We refer to this situation as a *keybinding collision*. Whether
+the collision represents a problem depends on how the events in question
+are going to be handled by the application. This section provides an
+example scenario and describes a way to deal with this situation.
+
+Suppose an application has two key events:
+
+.. code:: haskell
+
+   data KeyEvent = QuitEvent
+                 | CloseWindowEvent
+
+   allKeyEvents :: KeyEvents KeyEvent
+   allKeyEvents =
+       K.keyEvents [ ("quit",         QuitEvent)
+                   , ("close-window", CloseWindowEvent)
+                   ]
+
+   defaultBindings :: [(KeyEvent, [Binding])]
+   defaultBindings =
+       [ (QuitEvent,        [ctrl 'q'])
+       , (CloseWindowEvent, [bind KEsc])
+       ]
+
+Suppose also that the application using the above key events has a
+feature that opens a window, and that ``CloseWindowEvent`` is used to
+close the window, while ``QuitEvent`` is used to quit the application.
+
+A user might then provide a custom INI file to rebind keys as follows::
+
+   [keybindings]
+   quit = Esc
+   close-window = Esc
+
+While this is a valid configuration for the user to provide, it would
+result in a keybinding collision for ``Esc`` since it is now bound
+to two events. Whether that's a problem depends entirely on how
+``QuitEvent`` and ``CloseWindowEvent`` are handled:
+
+* If the application handles both events in the same event handler,
+  the ``KeyDispatcher`` would not know which event should be
+  handled since ``Esc`` maps to more than one event. Building a
+  ``KeyDispatcher`` from a ``KeyConfig`` with such a collision would
+  mean that it would be undefined which of the two events' handlers
+  would actually get invoked.
+* If the application handles the two events in different handlers then
+  the collision has no effect and is not a problem. This could
+  happen, for instance, if the application only ever handled
+  ``CloseWindowEvent`` when the window in question was open and only
+  handled ``QuitEvent`` when the window had been closed. This kind of
+  "modal" approach to handling events means that we only consider a key
+  to have a collision if it is bound to two or more events that are
+  handled in the same event handler.
+
+Brick provides ``Brick.Keybindings.KeyConfig.reverseKeyMappings`` to
+help you investigate whether any collisions in your key configuration
+based on how your events will be handled. The custom keybinding demo
+program also demonstrates how ``reverseKeyMappings`` might be used.
+
 Joining Borders
 ===============
 
