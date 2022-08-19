@@ -1732,24 +1732,39 @@ to two events. Whether that's a problem depends entirely on how
 ``QuitEvent`` and ``CloseWindowEvent`` are handled:
 
 * If the application handles both events in the same event handler,
-  the ``KeyDispatcher`` would not know which event should be
-  handled since ``Esc`` maps to more than one event. Building a
-  ``KeyDispatcher`` from a ``KeyConfig`` with such a collision would
-  mean that it would be undefined which of the two events' handlers
-  would actually get invoked.
-* If the application handles the two events in different handlers then
-  the collision has no effect and is not a problem. This could
-  happen, for instance, if the application only ever handled
-  ``CloseWindowEvent`` when the window in question was open and only
-  handled ``QuitEvent`` when the window had been closed. This kind of
-  "modal" approach to handling events means that we only consider a key
-  to have a collision if it is bound to two or more events that are
-  handled in the same event handler.
+  the ``KeyDispatcher`` for those events would fail to construct since
+  ``Esc`` maps to more than one event. Building a ``KeyDispatcher``
+  from a ``KeyConfig`` with such a collision would fail and return
+  information about the collisions.
+* If the application handles the two events in different handlers
+  then the collision has no effect and is not a problem since different
+  ``KeyDispatcher`` values would be constructed to handle the events
+  separately. This could happen, for instance, if the application only
+  ever handled ``CloseWindowEvent`` when the window in question was
+  open and only handled ``QuitEvent`` when the window had been closed.
+  This kind of "modal" approach to handling events means that we only
+  consider a key to have a collision if it is bound to two or more
+  events that are handled in the same event handler.
 
-Brick provides ``Brick.Keybindings.KeyConfig.reverseKeyMappings`` to
-help you investigate whether any collisions in your key configuration
-based on how your events will be handled. The custom keybinding demo
-program also demonstrates how ``reverseKeyMappings`` might be used.
+There's also another situation that would be problematic, which is when
+an abstract event like ``QuitEvent`` has a key mapping that collides
+with a key handler that is bound to a specific key rather than an event
+using ``Brick.Keybindings.KeyDispatcher.onKey``:
+
+.. code:: haskell
+
+    K.onKey (K.bind '\t') "Increment the counter by 10" $
+        counter %= (+ 10)
+
+If ``onKey`` is used, the handler it creates is only triggered by
+the specified key (``Tab`` in the example above). But the handler
+is included alongside handlers that are also triggered by ``Tab``,
+so if those event handlers were provided together when creating a
+``KeyDispatcher`` then it would fail to construct due to the collision.
+
+Brick provides ``Brick.Keybindings.KeyConfig.keyEventMappings`` to help
+with finding collisions and ``keyDispatcher`` fails when collisions are
+detected.
 
 Joining Borders
 ===============

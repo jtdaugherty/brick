@@ -62,6 +62,8 @@ data St =
        , _customBindingsPath :: Maybe FilePath
        -- ^ Set if the application found custom keybindings in the
        -- specified file.
+       , _dispatcher :: K.KeyDispatcher KeyEvent (T.EventM () St)
+       -- ^ The key dispatcher we'll use to dispatch input events.
        }
 
 makeLenses ''St
@@ -92,8 +94,7 @@ appEvent (T.VtyEvent (V.EvKey k mods)) = do
     -- Dispatch the key to the event handler to which the key is mapped,
     -- if any. Also record in lastKeyHandled whether the dispatcher
     -- found a matching handler.
-    kc <- use keyConfig
-    let d = K.keyDispatcher kc handlers
+    d <- use dispatcher
     lastKey .= Just (k, mods)
     lastKeyHandled <~ K.handleKey d k mods
 appEvent _ =
@@ -209,11 +210,32 @@ main = do
                 Text.putStrLn $ "  " <> Text.pack (show e) <> " (" <> fromJust (K.keyEventName allKeyEvents e) <> ")"
             exitFailure
 
+    -- Now build a key dispatcher for our event handlers. If this fails
+    -- due to key collision detection, we'll print out info about the
+    -- collisions.
+    d <- case K.keyDispatcher kc handlers of
+        Right d -> return d
+        Left collisions -> do
+            putStrLn "Error: some key events have the same keys bound to them."
+
+            forM_ collisions $ \(b, hs) -> do
+                Text.putStrLn $ "Handlers with the '" <> K.ppBinding b <> "' binding:"
+                forM_ hs $ \h -> do
+                    let trigger = case K.kehEventTrigger $ K.khHandler h of
+                            K.ByKey k   -> "triggered by the key '" <> K.ppBinding k <> "'"
+                            K.ByEvent e -> "triggered by the event '" <> fromJust (K.keyEventName allKeyEvents e) <> "'"
+                        desc = K.handlerDescription $ K.kehHandler $ K.khHandler h
+
+                    Text.putStrLn $ "  " <> desc <> " (" <> trigger <> ")"
+
+            exitFailure
+
     void $ M.defaultMain app $ St { _keyConfig = kc
                                   , _lastKey = Nothing
                                   , _lastKeyHandled = False
                                   , _counter = 0
                                   , _customBindingsPath = customFile
+                                  , _dispatcher = d
                                   }
 
     -- Now demonstrate how the library's generated key binding help text

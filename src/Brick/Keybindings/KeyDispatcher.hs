@@ -15,16 +15,17 @@
 --   If desired, provide custom keybindings to 'newKeyConfig' from
 --   within the program or load them from an INI file with routines like
 --   'Brick.Keybindings.Parse.keybindingsFromFile'.
--- * Optionally check for keybinding collisions with
+-- * Optionally check for configuration-wide keybinding collisions with
 --   'Brick.Keybindings.KeyConfig.keyEventMappings'.
 -- * Implement application event handlers that will be run in response
 --   to either specific hard-coded keys or events @k@, both in some
 --   monad @m@ of your choosing, using constructors 'onKey' and
 --   'onEvent'.
 -- * Use the created 'KeyConfig' and handlers to create a
---   'KeyDispatcher' with 'keyDispatcher'.
+--   'KeyDispatcher' with 'keyDispatcher', dealing with collisions if
+--   they arise.
 -- * As user input events arrive, dispatch them to the appropriate
---   handler using 'handleKey'.
+--   handler in the dispatcher using 'handleKey'.
 module Brick.Keybindings.KeyDispatcher
   ( -- * Key dispatching
     KeyDispatcher
@@ -51,6 +52,8 @@ import qualified Data.Map.Strict as M
 import qualified Data.Set as S
 import qualified Data.Text as T
 import qualified Graphics.Vty as Vty
+import Data.Function (on)
+import Data.List (groupBy, sortBy)
 
 import Brick.Keybindings.KeyConfig
 
@@ -121,7 +124,12 @@ handleKey d k mods = do
         Nothing -> return False
 
 -- | Build a 'KeyDispatcher' to dispatch keys to handle events of type
--- @k@ using actions in a Monad @m@.
+-- @k@ using actions in a Monad @m@. If any collisions are detected,
+-- this fails with 'Left' and returns the list of colliding event
+-- handlers for each overloaded binding. (Each returned 'KeyHandler'
+-- contains the original 'KeyEventHandler' that was used to build it so
+-- those can be inspected to understand which handlers are mapped to the
+-- same key.)
 --
 -- This works by taking a list of abstract 'KeyEventHandler's and
 -- building a 'KeyDispatcher' of event handlers based on specific Vty
@@ -136,8 +144,18 @@ handleKey d k mods = do
 keyDispatcher :: (Ord k)
               => KeyConfig k
               -> [KeyEventHandler k m]
-              -> KeyDispatcher k m
-keyDispatcher conf ks = KeyDispatcher $ M.fromList $ buildKeyDispatcherPairs ks conf
+              -> Either [(Binding, [KeyHandler k m])] (KeyDispatcher k m)
+keyDispatcher conf ks =
+    let pairs = buildKeyDispatcherPairs ks conf
+        groups = groupBy ((==) `on` fst) $ sortBy (compare `on` fst) pairs
+        badGroups = filter ((> 1) . length) groups
+        combine :: [(Binding, KeyHandler k m)] -> (Binding, [KeyHandler k m])
+        combine as =
+            let b = fst $ head as
+            in (b, snd <$> as)
+    in if null badGroups
+       then Right $ KeyDispatcher $ M.fromList pairs
+       else Left $ combine <$> badGroups
 
 -- | Convert a key dispatcher to a list of pairs of bindings and their
 -- handlers.
