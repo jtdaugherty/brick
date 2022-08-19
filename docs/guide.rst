@@ -1736,7 +1736,7 @@ to two events. Whether that's a problem depends entirely on how
   ``Esc`` maps to more than one event. Building a ``KeyDispatcher``
   from a ``KeyConfig`` with such a collision would fail and return
   information about the collisions.
-* If the application handles the two events in different handlers
+* If the application handles the two events in different dispatchers
   then the collision has no effect and is not a problem since different
   ``KeyDispatcher`` values would be constructed to handle the events
   separately. This could happen, for instance, if the application only
@@ -1747,24 +1747,26 @@ to two events. Whether that's a problem depends entirely on how
   events that are handled in the same event handler.
 
 There's also another situation that would be problematic, which is when
-an abstract event like ``QuitEvent`` has a key mapping that collides
-with a key handler that is bound to a specific key rather than an event
-using ``Brick.Keybindings.KeyDispatcher.onKey``:
+an abstract event like ``QuitEvent`` has a key mapping that
+collides with a key handler that is bound to a specific key using
+``Brick.Keybindings.KeyDispatcher.onKey`` rather than an event:
 
 .. code:: haskell
 
     K.onKey (K.bind '\t') "Increment the counter by 10" $
         counter %= (+ 10)
 
-If ``onKey`` is used, the handler it creates is only triggered by
-the specified key (``Tab`` in the example above). But the handler
-is included alongside handlers that are also triggered by ``Tab``,
-so if those event handlers were provided together when creating a
-``KeyDispatcher`` then it would fail to construct due to the collision.
+If ``onKey`` is used, the handler it creates is only triggered by the
+specified key (``Tab`` in the example above). But the handler may be
+included alongside handlers in the same dispatcher that are *also*
+triggered by ``Tab``, so if those event handlers were provided together
+when creating a ``KeyDispatcher`` then it would fail to construct due to
+the collision.
 
 Brick provides ``Brick.Keybindings.KeyConfig.keyEventMappings`` to help
-with finding collisions and ``keyDispatcher`` fails when collisions are
-detected.
+finding collisions at the key configuration level. Finding out about
+collisions at the dispatcher level is possible by handling the failure
+case when calling ``Brick.Keybindings.KeyDispatcher.keyDispatcher``.
 
 Joining Borders
 ===============
