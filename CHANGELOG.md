@@ -2,6 +2,26 @@
 Brick changelog
 ---------------
 
+1.1
+---
+
+API changes:
+* `keyDispatcher` now returns `Either` to fail with collision
+  information if collisions are detected due to overloaded keybindings.
+  This fixes a critical problem in `KeyDispatcher` where it would
+  previously silently ignore all but one handler for a specified key
+  if the key configuration resulted in the same key being mapped to
+  multiple handlers (either by event or by statically specified key).
+* Added `Brick.Keybindings.KeyConfig.keyEventMappings` to allow
+  applications to check for colliding bindings at the key configuration
+  level.
+
+Other changes:
+* The User Guide got a new subsection on keybinding collisions.
+* `programs/CustomKeybindingDemo.hs` got additional code to demonstrate
+  how to check for and deal with keybinding collisions.
+* `FileBrowser` got a `Named` instance.
+
 1.0
 ---
 
