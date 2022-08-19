@@ -31,9 +31,9 @@ primitives and combinators to place text on the screen, set its
 attributes (e.g. foreground color), and express layout constraints (e.g.
 padding, centering, box layouts, scrolling viewports, etc.).
 
-These functions get packaged into an `App` structure that we hand off to
-the ``brick`` library's main event loop. We'll cover that in detail in
-`The App Type`_.
+These functions get packaged into an ``App`` structure that we hand off
+to the ``brick`` library's main event loop. We'll cover that in detail
+in `The App Type`_.
 
 Installation
 ------------
