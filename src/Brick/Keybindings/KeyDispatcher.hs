@@ -129,7 +129,8 @@ handleKey d k mods = do
 -- handlers for each overloaded binding. (Each returned 'KeyHandler'
 -- contains the original 'KeyEventHandler' that was used to build it so
 -- those can be inspected to understand which handlers are mapped to the
--- same key.)
+-- same key, either via an abstract key event using 'onEvent' or via a
+-- statically configured key using 'onKey'.)
 --
 -- This works by taking a list of abstract 'KeyEventHandler's and
 -- building a 'KeyDispatcher' of event handlers based on specific Vty
