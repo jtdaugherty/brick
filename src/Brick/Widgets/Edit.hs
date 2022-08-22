@@ -181,10 +181,12 @@ editor :: Z.GenericTextZipper a
        -> Editor a n
 editor name limit s = Editor (Z.textZipper (Z.lines s) limit) name
 
--- | Apply an editing operation to the editor's contents. Bear in mind
--- that you should only apply zipper operations that operate on the
--- current line; the editor will only ever render the first line of
--- text.
+-- | Apply an editing operation to the editor's contents.
+--
+-- This is subject to the restrictions of the underlying text zipper;
+-- for example, if the underlying zipper has a line limit configured,
+-- any edits applied here will be be ignored if they edit text outside
+-- the line limit.
 applyEdit :: (Z.TextZipper t -> Z.TextZipper t)
           -- ^ The 'Data.Text.Zipper' editing transformation to apply
           -> Editor t n
