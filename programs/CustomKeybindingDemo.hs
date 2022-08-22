@@ -242,8 +242,8 @@ main = do
     -- looks in plain text and Markdown formats. These can be used to
     -- generate documentation for users. Note that the output generated
     -- here takes the active bindings into account! If you don't want
-    -- that, use handlers that were built from a KeyConfig that didn't
-    -- have any custom bindings applied.
+    -- that, use a key config that doesn't have any custom bindings
+    -- applied.
     let sections = [("Main", handlers)]
 
     putStrLn "Generated plain text help:"
