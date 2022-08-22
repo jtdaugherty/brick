@@ -581,10 +581,6 @@ fileBrowserCursor b = snd <$> listSelectedElement (b^.fileBrowserEntriesL)
 -- * @Ctrl-f@: 'actionFileBrowserListPageDown'
 -- * @Ctrl-d@: 'actionFileBrowserListHalfPageDown'
 -- * @Ctrl-u@: 'actionFileBrowserListHalfPageUp'
--- * @g@: 'actionFileBrowserListTop'
--- * @G@: 'actionFileBrowserListBottom'
--- * @j@: 'actionFileBrowserListNext'
--- * @k@: 'actionFileBrowserListPrev'
 -- * @Ctrl-n@: 'actionFileBrowserListNext'
 -- * @Ctrl-p@: 'actionFileBrowserListPrev'
 --
@@ -593,6 +589,10 @@ fileBrowserCursor b = snd <$> listSelectedElement (b^.fileBrowserEntriesL)
 -- * @/@: 'actionFileBrowserBeginSearch'
 -- * @Enter@: 'actionFileBrowserSelectEnter'
 -- * @Space@: 'actionFileBrowserSelectCurrent'
+-- * @g@: 'actionFileBrowserListTop'
+-- * @G@: 'actionFileBrowserListBottom'
+-- * @j@: 'actionFileBrowserListNext'
+-- * @k@: 'actionFileBrowserListPrev'
 --
 -- Events handled only in search mode:
 --
