@@ -280,7 +280,7 @@ newFileBrowser :: (FileInfo -> Bool)
                -- executable's current working directory.
                -> IO (FileBrowser n)
 newFileBrowser selPredicate name mCwd = do
-    initialCwd <- case mCwd of
+    initialCwd <- FP.normalise <$> case mCwd of
         Just path -> return path
         Nothing -> D.getCurrentDirectory
 
