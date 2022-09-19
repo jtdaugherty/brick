@@ -77,7 +77,7 @@ programs.
   you it is a lens; the name without the "``L``" suffix is the non-lens
   version. You can get by without using ``brick``'s lens interface
   but your life will probably be much more pleasant if you use lenses
-  to modify your application state once it state becomes sufficiently
+  to modify your application state once it becomes sufficiently
   complex (see `appHandleEvent: Handling Events`_ and `Event Handlers
   for Component State`_).
 - Attribute names: some modules export attribute names (see `How
@@ -248,7 +248,7 @@ and wait for the next input event. However, there are two other options:
   the screen to change. Use this only when you are certain that no
   redraw of the screen is needed *and* when you are trying to address a
   performance problem. (See also `The Rendering Cache`_ for details on
-  how to detail with rendering performance issues.)
+  how to deal with rendering performance issues.)
 
 The ``EventM`` monad is a transformer around ``IO`` so I/O is possible
 in this monad by using ``liftIO``. Keep in mind, however, that event
@@ -845,7 +845,7 @@ foreground color, background color, and style. These three components
 can be independently specified to have an explicit value, and any
 component not explicitly specified can default to whatever the terminal
 is currently using. Vty styles can be combined together, e.g. underline
-and bold, so styles are cummulative.
+and bold, so styles are cumulative.
 
 What if a widget attempts to draw with an attribute name that is not
 specified in the map at all? In that case, the attribute map's "default
@@ -975,7 +975,7 @@ and the brick editor supports entering and editing wide characters.
 Wide characters are those such as many Asian characters and emoji
 that need more than a single terminal column to be displayed.
 
-Unfortunatley, there is not a fully correct solution to determining
+Unfortunately, there is not a fully correct solution to determining
 the character width that the user's terminal will use for a given
 character. The current recommendation is to avoid use of wide characters
 due to these issues. If you still must use them, you can read `vty`_'s
@@ -999,7 +999,7 @@ class to compute the width:
    let width = Brick.Widgets.Core.textWidth t
 
 The ``TextWidth`` type class uses Vty's character width routine to
-compute the width by looking up the string's characdters in a Unicode
+compute the width by looking up the string's characters in a Unicode
 width table. If you need to compute the width of a single character, use
 ``Graphics.Text.wcwidth``.
 
@@ -1550,7 +1550,7 @@ The ``Brick.Forms`` module uses and exports two attribute names (see
 * ``focusedFormInputAttr`` - this attribute is used to render the form
   field that has the focus.
 * ``invalidFormInputAttr`` - this attribute is used to render any form
-  field that has user input that has valid validation.
+  field that has user input that has invalid validation.
 
 Your application should set both of these. Some good mappings in the
 attribute map are:
@@ -1659,7 +1659,7 @@ customizable keybindings API:
 | (no custom          | decides which keys will|    arrives when the user|
 | keybindings)        | trigger application    |    presses a key.       |
 |                     | behaviors. The event   | #. The event handler    |
-|                     | handler is written to  |    pattern-mathces on   |
+|                     | handler is written to  |    pattern-matches on   |
 |                     | pattern-match on       |    the input event to   |
 |                     | specific keys.         |    check for a match and|
 |                     |                        |    then runs the        |
@@ -1791,7 +1791,7 @@ rendering process.
 Border-joining works by iteratively *redrawing* the edges of widgets as
 those edges come into contact with other widgets during rendering. If
 the adjacent edge locations of two widgets both use joinable borders,
-the Brick will re-draw one of the characters to so that it connects
+the Brick will re-draw one of the characters so that it connects
 seamlessly with the adjacent border.
 
 How Joining Works
