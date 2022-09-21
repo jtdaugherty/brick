@@ -4,7 +4,7 @@
 -- [Brick User Guide](https://github.com/jtdaugherty/brick/blob/master/docs/guide.rst).
 -- The README also has links to other learning resources. Unlike
 -- most Haskell libraries that only have API documentation, Brick
--- is best larned by reading the User Guide and other materials and
+-- is best learned by reading the User Guide and other materials and
 -- referring to the API docs only as needed. Enjoy!
 module Brick
   ( module Brick.Main

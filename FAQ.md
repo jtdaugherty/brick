@@ -12,8 +12,8 @@ brick FAQ
 * A: For wide characters to be displayed correctly, [vty]'s
   determination of the character width and the user's
   terminal emulator's determination of the character width
-  must match. Unforunately, every terminal emulator
-  calulcates this differently, and none correctly follow
+  must match. Unfortunately, every terminal emulator
+  calculates this differently, and none correctly follow
   the Unicode standard.
   The issue is further complicated by Unicode combining
   characters and releases of new versions of the Unicode

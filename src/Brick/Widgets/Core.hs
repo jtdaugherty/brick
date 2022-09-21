@@ -199,7 +199,7 @@ freezeBorders p = Widget (hSize p) (vSize p) $ (bordersL %~ BM.clear) <$> render
 emptyWidget :: Widget n
 emptyWidget = raw V.emptyImage
 
--- | Add an offset to all cursor locations, visbility requests, and
+-- | Add an offset to all cursor locations, visibility requests, and
 -- extents in the specified rendering result. This function is critical
 -- for maintaining correctness in the rendering results as they are
 -- processed successively by box layouts and other wrapping combinators,
