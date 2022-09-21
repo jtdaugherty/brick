@@ -76,9 +76,9 @@ app =
             -- we'd build the attribute map at startup and store it in
             -- the application state. Here I just use themeToAttrMap to
             -- show the mechanics of the API.
-            if s == 1
-            then themeToAttrMap theme1
-            else themeToAttrMap theme2
+            themeToAttrMap $ if s == 1
+                             then theme1
+                             else theme2
         , appChooseCursor = neverShowCursor
         }
 
