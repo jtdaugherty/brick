@@ -140,11 +140,11 @@ mergeWithDefault a (AttrMap d _) = combineAttrs d a
 -- For example:
 --
 -- @
--- attrMapLookup ("foo" <> "bar") (attrMap a []) == a
--- attrMapLookup ("foo" <> "bar") (attrMap (bg blue) [("foo" <> "bar", fg red)]) == red \`on\` blue
--- attrMapLookup ("foo" <> "bar") (attrMap (bg blue) [("foo" <> "bar", red `on` cyan)]) == red \`on\` cyan
--- attrMapLookup ("foo" <> "bar") (attrMap (bg blue) [("foo" <> "bar", fg red), ("foo", bg cyan)]) == red \`on\` cyan
--- attrMapLookup ("foo" <> "bar") (attrMap (bg blue) [("foo", fg red)]) == red \`on\` blue
+-- attrMapLookup (attrName "foo" <> attrName "bar") (attrMap a []) == a
+-- attrMapLookup (attrName "foo" <> attrName "bar") (attrMap (bg blue) [(attrName "foo" <> attrName "bar", fg red)]) == red \`on\` blue
+-- attrMapLookup (attrName "foo" <> attrName "bar") (attrMap (bg blue) [(attrName "foo" <> attrName "bar", red `on` cyan)]) == red \`on\` cyan
+-- attrMapLookup (attrName "foo" <> attrName "bar") (attrMap (bg blue) [(attrName "foo" <> attrName "bar", fg red), ("foo", bg cyan)]) == red \`on\` cyan
+-- attrMapLookup (attrName "foo" <> attrName "bar") (attrMap (bg blue) [(attrName "foo", fg red)]) == red \`on\` blue
 -- @
 attrMapLookup :: AttrName -> AttrMap -> Attr
 attrMapLookup _ (ForceAttr a) = a
