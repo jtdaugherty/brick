@@ -37,7 +37,7 @@
 -- the same @fg@, @bg@, and @style@ settings as for the default
 -- attribute. Furthermore, if an attribute name has multiple components,
 -- the fields in the INI file should use periods as delimiters. For
--- example, if a theme has an attribute name (@"foo" <> "bar"@), then
+-- example, if a theme has an attribute name (@attrName "foo" <> attrName "bar"@), then
 -- the file may specify three fields:
 --
 --  * @foo.bar.fg@ - a color specification
@@ -50,7 +50,7 @@
 --
 -- Attribute names with multiple components (e.g. @attr1 <> attr2@) can
 -- be referenced in customization files by separating the names with
--- a dot. For example, the attribute name @"list" <> "selected"@ can be
+-- a dot. For example, the attribute name @attrName "list" <> attrName "selected"@ can be
 -- referenced by using the string "list.selected".
 module Brick.Themes
   ( CustomAttr(..)
