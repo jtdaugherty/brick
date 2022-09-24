@@ -281,7 +281,7 @@ newForm :: [s -> FormFieldState s e n]
 newForm mkEs s =
     let es = mkEs <*> pure s
     in Form { formFieldStates = es
-            , formFocus       = focusRing $ concat $ formFieldNames <$> es
+            , formFocus       = focusRing $ concatMap formFieldNames es
             , formState       = s
             , formConcatAll   = vBox
             }
@@ -482,7 +482,7 @@ renderRadio lb check rb val name label foc cur =
         csr = if foc then putCursor name (Location (1,0)) else id
     in clickable name $
        addAttr $ csr $
-       txt $ T.concat $
+       txt $ T.concat
        [ T.singleton lb
        , if isSet then T.singleton check else " "
        , T.singleton rb <> " " <> label
@@ -664,7 +664,7 @@ allFieldsValid = null . invalidFields
 -- force the user to repair invalid inputs before moving on from a form
 -- editing session.
 invalidFields :: Form s e n -> [n]
-invalidFields f = concat $ getInvalidFields <$> formFieldStates f
+invalidFields f = concatMap getInvalidFields (formFieldStates f)
 
 -- | Manually indicate that a field has invalid contents. This can be
 -- useful in situations where validation beyond the form element's
@@ -695,8 +695,8 @@ setFieldValid v n form =
 getInvalidFields :: FormFieldState s e n -> [n]
 getInvalidFields (FormFieldState st _ _ fs _ _) =
     let gather (FormField n validate extValid _ _) =
-            if (not extValid || (isNothing $ validate st)) then [n] else []
-    in concat $ gather <$> fs
+            if not extValid || isNothing (validate st) then [n] else []
+    in concatMap gather fs
 
 -- | Render a form.
 --

@@ -691,9 +691,9 @@ renderBox br ws =
           paddedImages = padImage <$> rewrittenImages
 
       cropResultToContext $ Result (concatenatePrimary br paddedImages)
-                            (concat $ cursors <$> allTranslatedResults)
-                            (concat $ visibilityRequests <$> allTranslatedResults)
-                            (concat $ extents <$> allTranslatedResults)
+                            (concatMap cursors allTranslatedResults)
+                            (concatMap visibilityRequests allTranslatedResults)
+                            (concatMap extents allTranslatedResults)
                             newBorders
 
 catDynBorder
@@ -1430,10 +1430,10 @@ viewport vpname typ p =
 
       -- If the rendering state includes any scrolling requests for this
       -- viewport, apply those
-      reqs <- lift $ gets $ (^.rsScrollRequestsL)
+      reqs <- lift $ gets (^.rsScrollRequestsL)
       let relevantRequests = snd <$> filter (\(n, _) -> n == vpname) reqs
       when (not $ null relevantRequests) $ do
-          mVp <- lift $ gets $ (^.viewportMapL.to (M.lookup vpname))
+          mVp <- lift $ gets (^.viewportMapL.to (M.lookup vpname))
           case mVp of
               Nothing -> error $ "BUG: viewport: viewport name " <> show vpname <> " absent from viewport map"
               Just vp -> do
@@ -1451,7 +1451,7 @@ viewport vpname typ p =
       -- If the sub-rendering requested visibility, update the scroll
       -- state accordingly
       when (not $ null $ initialResult^.visibilityRequestsL) $ do
-          mVp <- lift $ gets $ (^.viewportMapL.to (M.lookup vpname))
+          mVp <- lift $ gets (^.viewportMapL.to (M.lookup vpname))
           case mVp of
               Nothing -> error $ "BUG: viewport: viewport name " <> show vpname <> " absent from viewport map"
               Just vp -> do
@@ -1464,7 +1464,7 @@ viewport vpname typ p =
 
       -- If the size of the rendering changes enough to make the
       -- viewport offsets invalid, reset them
-      mVp <- lift $ gets $ (^.viewportMapL.to (M.lookup vpname))
+      mVp <- lift $ gets (^.viewportMapL.to (M.lookup vpname))
       vp <- case mVp of
           Nothing -> error $ "BUG: viewport: viewport name " <> show vpname <> " absent from viewport map"
           Just v -> return v

@@ -12,13 +12,10 @@ import Control.Monad (void)
 import qualified Graphics.Vty as V
 
 import qualified Brick.Types as T
-import Brick.Types (locationRowL, locationColumnL, Widget)
+import Brick.Types (locationRowL, locationColumnL, Location(..), Widget)
 import qualified Brick.Main as M
 import qualified Brick.Widgets.Border as B
 import qualified Brick.Widgets.Center as C
-import Brick.Types
-  ( Location(..)
-  )
 import Brick.Widgets.Core
   ( translateBy
   , str

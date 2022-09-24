@@ -12,10 +12,9 @@ import Lens.Micro ((^.), (&), (%~))
 import Lens.Micro.Mtl ((%=))
 import Control.Monad.State.Strict
 import Control.Monad.Reader
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, mapMaybe)
 import qualified Data.Map as M
 import qualified Data.Set as S
-import Data.Maybe (catMaybes)
 import qualified Graphics.Vty as V
 
 import Brick.Types
@@ -63,7 +62,7 @@ renderFinal aMap layerRenders (w, h) chooseCursor rs =
                       }
 
         layersTopmostFirst = reverse layerResults
-        pic = V.picForLayers $ uncurry V.resize (w, h) <$> (^.imageL) <$> layersTopmostFirst
+        pic = V.picForLayers $ V.resize w h <$> (^.imageL) <$> layersTopmostFirst
 
         -- picWithBg is a workaround for runaway attributes.
         -- See https://github.com/coreyoconnor/vty/issues/95
@@ -91,7 +90,7 @@ cropImage :: Context n -> V.Image -> V.Image
 cropImage c = V.crop (max 0 $ c^.availWidthL) (max 0 $ c^.availHeightL)
 
 cropCursors :: Context n -> [CursorLocation n] -> [CursorLocation n]
-cropCursors ctx cs = catMaybes $ cropCursor <$> cs
+cropCursors ctx cs = mapMaybe cropCursor cs
     where
         -- A cursor location is removed if it is not within the region
         -- described by the context.
@@ -105,7 +104,7 @@ cropCursors ctx cs = catMaybes $ cropCursor <$> cs
                ]
 
 cropExtents :: Context n -> [Extent n] -> [Extent n]
-cropExtents ctx es = catMaybes $ cropExtent <$> es
+cropExtents ctx es = mapMaybe cropExtent es
     where
         -- An extent is cropped in places where it is not within the
         -- region described by the context.

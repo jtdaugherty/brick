@@ -30,9 +30,9 @@ ui =
     vBox [ str "This text uses the global default attribute."
          , withAttr (attrName "foundFull") $
            str "Specifying an attribute name means we look it up in the attribute tree."
-         , (withAttr (attrName "foundFgOnly") $
-           str ("When we find a value, we merge it with its parent in the attribute")
-           <=> str "name tree all the way to the root (the global default).")
+         , withAttr (attrName "foundFgOnly") $
+           str "When we find a value, we merge it with its parent in the attribute"
+           <=> str "name tree all the way to the root (the global default)."
          , withAttr (attrName "missing") $
            str "A missing attribute name just resumes the search at its parent."
          , withAttr (attrName "general" <> attrName "specific") $
@@ -42,7 +42,7 @@ ui =
          , withAttr (attrName "foundFgOnly") $
            str "... or only what you want to change and inherit the rest."
          , str "Attribute names are assembled with the Monoid append operation to indicate"
-         , str "hierarchy levels, e.g. \"window\" <> \"title\"."
+         , str "hierarchy levels, e.g. attrName \"window\" <> attrName \"title\"."
          , str " "
          , withAttr (attrName "linked") $
            str "This text is hyperlinked in terminals that support hyperlinking."

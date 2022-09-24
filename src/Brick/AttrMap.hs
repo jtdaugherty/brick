@@ -47,7 +47,7 @@ import qualified Data.Semigroup as Sem
 import Control.DeepSeq
 import Data.Bits ((.|.))
 import qualified Data.Map as M
-import Data.Maybe (catMaybes)
+import Data.Maybe (mapMaybe)
 import Data.List (inits)
 import GHC.Generics (Generic)
 
@@ -150,7 +150,7 @@ attrMapLookup :: AttrName -> AttrMap -> Attr
 attrMapLookup _ (ForceAttr a) = a
 attrMapLookup (AttrName []) (AttrMap theDefault _) = theDefault
 attrMapLookup (AttrName ns) (AttrMap theDefault m) =
-    let results = catMaybes $ (\n -> M.lookup n m) <$> (AttrName <$> (inits ns))
+    let results = mapMaybe (\n -> M.lookup (AttrName n) m) (inits ns)
     in foldl combineAttrs theDefault results
 
 -- | Set the default attribute value in an attribute map.
