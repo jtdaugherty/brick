@@ -130,7 +130,7 @@ appEvent _ = return ()
 
 theme :: AttrMap
 theme =
-    attrMap V.defAttr $
+    attrMap V.defAttr
     [ (scrollbarAttr,       fg V.white)
     , (scrollbarHandleAttr, fg V.brightYellow)
     ]

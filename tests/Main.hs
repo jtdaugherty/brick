@@ -112,5 +112,5 @@ return []
 
 main :: IO ()
 main =
-  (all id <$> sequenceA [$quickCheckAll, List.main, Render.main])
+  (and <$> sequenceA [$quickCheckAll, List.main, Render.main])
   >>= bool exitFailure exitSuccess
