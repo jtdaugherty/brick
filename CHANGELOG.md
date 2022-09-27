@@ -2,6 +2,15 @@
 Brick changelog
 ---------------
 
+1.2
+---
+
+Package changes:
+* Supports base 4.17 (GHC 9.4).
+
+Bug fixes:
+* `newFileBrowser` now normalizes its initial path (#387).
+
 1.1
 ---
 
