@@ -641,15 +641,14 @@ renderBox br ws =
       let availPrimary = c^.(contextPrimary br)
           availSecondary = c^.(contextSecondary br)
 
-          renderHis _ [] = pure []
-          renderHis remainingPrimary ((i, prim):rest) = do
-              result <- render $ limitPrimary br remainingPrimary
-                               $ limitSecondary br availSecondary
-                               $ cropToContext prim
-              let newRem = remainingPrimary - (result^.imageL.(to $ imagePrimary br))
-              ((i, result) :) <$> renderHis newRem rest
+          renderHi prim = do
+            remainingPrimary <- get
+            result <- lift $ render $ limitPrimary br remainingPrimary
+                                    $ limitSecondary br availSecondary
+                                    $ cropToContext prim
+            result <$ put (remainingPrimary - (result^.imageL.(to $ imagePrimary br)))
 
-      renderedHis <- renderHis availPrimary his
+      renderedHis <- evalStateT (traverse (traverse renderHi) his) availPrimary
 
       renderedLows <- case lows of
           [] -> return []
