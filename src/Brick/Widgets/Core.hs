@@ -126,7 +126,6 @@ import Control.Monad.State.Strict
 import Control.Monad.Reader
 import qualified Data.Foldable as F
 import qualified Data.Text as T
-import qualified Data.DList as DL
 import qualified Data.Map as M
 import qualified Data.Set as S
 import qualified Data.IMap as I
@@ -642,15 +641,15 @@ renderBox br ws =
       let availPrimary = c^.(contextPrimary br)
           availSecondary = c^.(contextSecondary br)
 
-          renderHis _ prev [] = return $ DL.toList prev
-          renderHis remainingPrimary prev ((i, prim):rest) = do
+          renderHis _ [] = pure []
+          renderHis remainingPrimary ((i, prim):rest) = do
               result <- render $ limitPrimary br remainingPrimary
                                $ limitSecondary br availSecondary
                                $ cropToContext prim
-              renderHis (remainingPrimary - (result^.imageL.(to $ imagePrimary br)))
-                        (DL.snoc prev (i, result)) rest
+              let newRem = remainingPrimary - (result^.imageL.(to $ imagePrimary br))
+              ((i, result) :) <$> renderHis newRem rest
 
-      renderedHis <- renderHis availPrimary DL.empty his
+      renderedHis <- renderHis availPrimary his
 
       renderedLows <- case lows of
           [] -> return []
