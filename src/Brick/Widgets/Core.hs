@@ -125,6 +125,7 @@ import Lens.Micro.Mtl (use, (%=))
 import Control.Monad.State.Strict
 import Control.Monad.Reader
 import qualified Data.Foldable as F
+import Data.Traversable (for)
 import qualified Data.Text as T
 import qualified Data.Map as M
 import qualified Data.Set as S
@@ -646,24 +647,22 @@ renderBox br ws =
             result <- lift $ render $ limitPrimary br remainingPrimary
                                     $ limitSecondary br availSecondary
                                     $ cropToContext prim
-            result <$ put (remainingPrimary - (result^.imageL.(to $ imagePrimary br)))
+            result <$ (put $! remainingPrimary - (result^.imageL.(to $ imagePrimary br)))
 
-      renderedHis <- evalStateT (traverse (traverse renderHi) his) availPrimary
+      (renderedHis, remainingPrimary) <-
+        runStateT (traverse (traverse renderHi) his) availPrimary
 
       renderedLows <- case lows of
           [] -> return []
           ls -> do
-              let remainingPrimary = c^.(contextPrimary br) -
-                                     (sum $ (^._2.imageL.(to $ imagePrimary br)) <$> renderedHis)
-                  primaryPerLow = remainingPrimary `div` length ls
+              let primaryPerLow = remainingPrimary `div` length ls
                   rest = remainingPrimary - (primaryPerLow * length ls)
-                  secondaryPerLow = c^.(contextSecondary br)
                   primaries = replicate rest (primaryPerLow + 1) <>
                               replicate (length ls - rest) primaryPerLow
 
               let renderLow ((i, prim), pri) =
                       (i,) <$> (render $ limitPrimary br pri
-                                       $ limitSecondary br secondaryPerLow
+                                       $ limitSecondary br availSecondary
                                        $ cropToContext prim)
 
               if remainingPrimary > 0 then mapM renderLow (zip ls primaries) else return []
@@ -671,11 +670,10 @@ renderBox br ws =
       let rendered = sortBy (compare `DF.on` fst) $ renderedHis ++ renderedLows
           allResults = snd <$> rendered
           allImages = (^.imageL) <$> allResults
-          allPrimaries = imagePrimary br <$> allImages
-          allTranslatedResults = (flip map) (zip [0..] allResults) $ \(i, result) ->
-              let off = locationFromOffset br offPrimary
-                  offPrimary = sum $ take i allPrimaries
-              in addResultOffset off result
+          allTranslatedResults = flip evalState 0 $ for allResults $ \result -> do
+              offPrimary <- get
+              put $ offPrimary + (result ^. imageL . to (imagePrimary br))
+              pure $ addResultOffset (locationFromOffset br offPrimary) result
           -- Determine the secondary dimension value to pad to. In a
           -- vertical box we want all images to be the same width to
           -- avoid attribute over-runs or blank spaces with the wrong
