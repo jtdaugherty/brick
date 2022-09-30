@@ -2,6 +2,15 @@
 Brick changelog
 ---------------
 
+1.3
+---
+
+Package changes:
+* Removed dependency on `dlist`.
+
+Performance improvements:
+* Improved the performance of `vBox` and `hBox` (thanks Fraser Tweedale)
+
 1.2
 ---
 
