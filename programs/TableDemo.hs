@@ -45,7 +45,7 @@ rightTableB :: Table ()
 rightTableB =
     columnBorders False $
     setDefaultColAlignment AlignCenter $
-    table [ [txt "A",     txt "table"]
+    table [ [txt "A",       txt "table"]
           , [txt "without", txt "column borders"]
           ]
 
@@ -55,7 +55,7 @@ rightTableC =
     rowBorders False $
     columnBorders False $
     setDefaultColAlignment AlignCenter $
-    table [ [txt "A",     txt "table"]
+    table [ [txt "A",       txt "table"]
           , [txt "without", txt "any borders"]
           ]
 

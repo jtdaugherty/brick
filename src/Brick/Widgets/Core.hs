@@ -125,8 +125,8 @@ import Lens.Micro.Mtl (use, (%=))
 import Control.Monad.State.Strict
 import Control.Monad.Reader
 import qualified Data.Foldable as F
+import Data.Traversable (for)
 import qualified Data.Text as T
-import qualified Data.DList as DL
 import qualified Data.Map as M
 import qualified Data.Set as S
 import qualified Data.IMap as I
@@ -199,7 +199,7 @@ freezeBorders p = Widget (hSize p) (vSize p) $ (bordersL %~ BM.clear) <$> render
 emptyWidget :: Widget n
 emptyWidget = raw V.emptyImage
 
--- | Add an offset to all cursor locations, visbility requests, and
+-- | Add an offset to all cursor locations, visibility requests, and
 -- extents in the specified rendering result. This function is critical
 -- for maintaining correctness in the rendering results as they are
 -- processed successively by box layouts and other wrapping combinators,
@@ -642,30 +642,27 @@ renderBox br ws =
       let availPrimary = c^.(contextPrimary br)
           availSecondary = c^.(contextSecondary br)
 
-          renderHis _ prev [] = return $ DL.toList prev
-          renderHis remainingPrimary prev ((i, prim):rest) = do
-              result <- render $ limitPrimary br remainingPrimary
-                               $ limitSecondary br availSecondary
-                               $ cropToContext prim
-              renderHis (remainingPrimary - (result^.imageL.(to $ imagePrimary br)))
-                        (DL.snoc prev (i, result)) rest
+          renderHi prim = do
+            remainingPrimary <- get
+            result <- lift $ render $ limitPrimary br remainingPrimary
+                                    $ limitSecondary br availSecondary
+                                    $ cropToContext prim
+            result <$ (put $! remainingPrimary - (result^.imageL.(to $ imagePrimary br)))
 
-      renderedHis <- renderHis availPrimary DL.empty his
+      (renderedHis, remainingPrimary) <-
+        runStateT (traverse (traverse renderHi) his) availPrimary
 
       renderedLows <- case lows of
           [] -> return []
           ls -> do
-              let remainingPrimary = c^.(contextPrimary br) -
-                                     (sum $ (^._2.imageL.(to $ imagePrimary br)) <$> renderedHis)
-                  primaryPerLow = remainingPrimary `div` length ls
+              let primaryPerLow = remainingPrimary `div` length ls
                   rest = remainingPrimary - (primaryPerLow * length ls)
-                  secondaryPerLow = c^.(contextSecondary br)
                   primaries = replicate rest (primaryPerLow + 1) <>
                               replicate (length ls - rest) primaryPerLow
 
               let renderLow ((i, prim), pri) =
                       (i,) <$> (render $ limitPrimary br pri
-                                       $ limitSecondary br secondaryPerLow
+                                       $ limitSecondary br availSecondary
                                        $ cropToContext prim)
 
               if remainingPrimary > 0 then mapM renderLow (zip ls primaries) else return []
@@ -673,11 +670,10 @@ renderBox br ws =
       let rendered = sortBy (compare `DF.on` fst) $ renderedHis ++ renderedLows
           allResults = snd <$> rendered
           allImages = (^.imageL) <$> allResults
-          allPrimaries = imagePrimary br <$> allImages
-          allTranslatedResults = (flip map) (zip [0..] allResults) $ \(i, result) ->
-              let off = locationFromOffset br offPrimary
-                  offPrimary = sum $ take i allPrimaries
-              in addResultOffset off result
+          allTranslatedResults = flip evalState 0 $ for allResults $ \result -> do
+              offPrimary <- get
+              put $ offPrimary + (result ^. imageL . to (imagePrimary br))
+              pure $ addResultOffset (locationFromOffset br offPrimary) result
           -- Determine the secondary dimension value to pad to. In a
           -- vertical box we want all images to be the same width to
           -- avoid attribute over-runs or blank spaces with the wrong
@@ -691,9 +687,9 @@ renderBox br ws =
           paddedImages = padImage <$> rewrittenImages
 
       cropResultToContext $ Result (concatenatePrimary br paddedImages)
-                            (concat $ cursors <$> allTranslatedResults)
-                            (concat $ visibilityRequests <$> allTranslatedResults)
-                            (concat $ extents <$> allTranslatedResults)
+                            (concatMap cursors allTranslatedResults)
+                            (concatMap visibilityRequests allTranslatedResults)
+                            (concatMap extents allTranslatedResults)
                             newBorders
 
 catDynBorder
@@ -1430,10 +1426,10 @@ viewport vpname typ p =
 
       -- If the rendering state includes any scrolling requests for this
       -- viewport, apply those
-      reqs <- lift $ gets $ (^.rsScrollRequestsL)
+      reqs <- lift $ gets (^.rsScrollRequestsL)
       let relevantRequests = snd <$> filter (\(n, _) -> n == vpname) reqs
       when (not $ null relevantRequests) $ do
-          mVp <- lift $ gets $ (^.viewportMapL.to (M.lookup vpname))
+          mVp <- lift $ gets (^.viewportMapL.to (M.lookup vpname))
           case mVp of
               Nothing -> error $ "BUG: viewport: viewport name " <> show vpname <> " absent from viewport map"
               Just vp -> do
@@ -1451,7 +1447,7 @@ viewport vpname typ p =
       -- If the sub-rendering requested visibility, update the scroll
       -- state accordingly
       when (not $ null $ initialResult^.visibilityRequestsL) $ do
-          mVp <- lift $ gets $ (^.viewportMapL.to (M.lookup vpname))
+          mVp <- lift $ gets (^.viewportMapL.to (M.lookup vpname))
           case mVp of
               Nothing -> error $ "BUG: viewport: viewport name " <> show vpname <> " absent from viewport map"
               Just vp -> do
@@ -1464,7 +1460,7 @@ viewport vpname typ p =
 
       -- If the size of the rendering changes enough to make the
       -- viewport offsets invalid, reset them
-      mVp <- lift $ gets $ (^.viewportMapL.to (M.lookup vpname))
+      mVp <- lift $ gets (^.viewportMapL.to (M.lookup vpname))
       vp <- case mVp of
           Nothing -> error $ "BUG: viewport: viewport name " <> show vpname <> " absent from viewport map"
           Just v -> return v

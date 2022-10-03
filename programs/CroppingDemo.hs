@@ -27,7 +27,7 @@ import qualified Graphics.Vty as V
 
 example :: Widget n
 example =
-    border $
+    border
     (txt "Example" <=> txt "Widget")
 
 mkExample :: Widget n -> Widget n

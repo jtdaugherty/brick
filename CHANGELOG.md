@@ -2,6 +2,24 @@
 Brick changelog
 ---------------
 
+1.3
+---
+
+Package changes:
+* Removed dependency on `dlist`.
+
+Performance improvements:
+* Improved the performance of `vBox` and `hBox` (thanks Fraser Tweedale)
+
+1.2
+---
+
+Package changes:
+* Supports base 4.17 (GHC 9.4).
+
+Bug fixes:
+* `newFileBrowser` now normalizes its initial path (#387).
+
 1.1
 ---
 

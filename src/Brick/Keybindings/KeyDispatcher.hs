@@ -172,7 +172,7 @@ buildKeyDispatcherPairs ks conf = pairs
     where
         pairs = mkPair <$> handlers
         mkPair h = (khBinding h, h)
-        handlers = concat $ keyHandlersFromConfig conf <$> ks
+        handlers = concatMap (keyHandlersFromConfig conf) ks
 
 keyHandlersFromConfig :: (Ord k)
                       => KeyConfig k

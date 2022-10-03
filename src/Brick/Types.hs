@@ -1,5 +1,4 @@
 -- | Basic types used by this library.
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE RankNTypes #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Brick.Types

@@ -47,7 +47,7 @@ import qualified Data.Semigroup as Sem
 import Control.DeepSeq
 import Data.Bits ((.|.))
 import qualified Data.Map as M
-import Data.Maybe (catMaybes)
+import Data.Maybe (mapMaybe)
 import Data.List (inits)
 import GHC.Generics (Generic)
 
@@ -99,7 +99,7 @@ attrMap :: Attr
 attrMap theDefault pairs = AttrMap theDefault (M.fromList pairs)
 
 -- | Create an attribute map in which all lookups map to the same
--- attribute. This is functionally equivalent to @AttrMap attr []@.
+-- attribute. This is functionally equivalent to @attrMap attr []@.
 forceAttrMap :: Attr -> AttrMap
 forceAttrMap = ForceAttr
 
@@ -140,17 +140,17 @@ mergeWithDefault a (AttrMap d _) = combineAttrs d a
 -- For example:
 --
 -- @
--- attrMapLookup ("foo" <> "bar") (attrMap a []) == a
--- attrMapLookup ("foo" <> "bar") (attrMap (bg blue) [("foo" <> "bar", fg red)]) == red \`on\` blue
--- attrMapLookup ("foo" <> "bar") (attrMap (bg blue) [("foo" <> "bar", red `on` cyan)]) == red \`on\` cyan
--- attrMapLookup ("foo" <> "bar") (attrMap (bg blue) [("foo" <> "bar", fg red), ("foo", bg cyan)]) == red \`on\` cyan
--- attrMapLookup ("foo" <> "bar") (attrMap (bg blue) [("foo", fg red)]) == red \`on\` blue
+-- attrMapLookup (attrName "foo" <> attrName "bar") (attrMap a []) == a
+-- attrMapLookup (attrName "foo" <> attrName "bar") (attrMap (bg blue) [(attrName "foo" <> attrName "bar", fg red)]) == red \`on\` blue
+-- attrMapLookup (attrName "foo" <> attrName "bar") (attrMap (bg blue) [(attrName "foo" <> attrName "bar", red `on` cyan)]) == red \`on\` cyan
+-- attrMapLookup (attrName "foo" <> attrName "bar") (attrMap (bg blue) [(attrName "foo" <> attrName "bar", fg red), ("foo", bg cyan)]) == red \`on\` cyan
+-- attrMapLookup (attrName "foo" <> attrName "bar") (attrMap (bg blue) [(attrName "foo", fg red)]) == red \`on\` blue
 -- @
 attrMapLookup :: AttrName -> AttrMap -> Attr
 attrMapLookup _ (ForceAttr a) = a
 attrMapLookup (AttrName []) (AttrMap theDefault _) = theDefault
 attrMapLookup (AttrName ns) (AttrMap theDefault m) =
-    let results = catMaybes $ (\n -> M.lookup n m) <$> (AttrName <$> (inits ns))
+    let results = mapMaybe (\n -> M.lookup (AttrName n) m) (inits ns)
     in foldl combineAttrs theDefault results
 
 -- | Set the default attribute value in an attribute map.
