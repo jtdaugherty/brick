@@ -29,7 +29,7 @@ Version 1.0 of `brick` comes with some improvements that will require
 you to update your programs. This section details the list of API
 changes in 1.0 that are likely to introduce breakage and how to deal
 with each one. You can also consult the demonstration
-programs to see orking examples of the new API. For those
+programs to see working examples of the new API. For those
 interested in a bit of discussion on the changes, see [this
 ticket](https://github.com/jtdaugherty/brick/issues/379).
 
