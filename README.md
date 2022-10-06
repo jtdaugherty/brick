@@ -86,12 +86,14 @@ it, get in touch!
 | [`kpxhs`](https://github.com/akazukin5151/kpxhs) | An interactive [Keepass](https://github.com/keepassxreboot/keepassxc/) database viewer |
 | [`htyper`](https://github.com/Simon-Hostettler/htyper) | A typing speed test program |
 | [`ullekha`](https://github.com/ajithnn/ullekha) | An interactive terminal notes/todo app with file/redis persistence |
+| [`mywork`](https://github.com/kquick/mywork) [[Hackage]](https://hackage.haskell.org/package/mywork) | A tool to keep track of the projects you are working on |
 
 These third-party packages also extend `brick`:
 
 | Project | Description |
 | ------- | ----------- |
 | [`brick-filetree`](https://github.com/ChrisPenner/brick-filetree) [[Hackage]](http://hackage.haskell.org/package/brick-filetree) | A widget for exploring a directory tree and selecting or flagging files and directories |
+| [`brick-panes`](https://github.com/kquick/brick-panes) [[Hackage]](https://hackage.haskell.org/package/brick-panes) | A Brick overlay library providing composition and isolation of screen areas for TUI apps. |
 
 Release Announcements / News
 ----------------------------
