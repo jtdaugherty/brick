@@ -886,7 +886,7 @@ setAvailableSize (w, h) p =
 --                         , withAttr "highlight" (str b)
 --                         ]
 --
---    render1 = renderA ("Brick", "fun")
+--    render1 = renderA (\"Brick\", "fun")
 --    render2 = withAttr "warning" render1
 -- @
 --
@@ -930,7 +930,7 @@ modifyDefAttr f p =
 --                         , str " is "
 --                         , withAttr "highlight" (str b) ]
 --
---    render1 = renderA ("Brick", "fun")
+--    render1 = renderA (\"Brick\", "fun")
 --    render2 = withDefAttr "warning" render1
 -- @
 --
