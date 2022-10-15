@@ -508,7 +508,6 @@ data BoxRenderer n =
                 , imagePrimary :: V.Image -> Int
                 , imageSecondary :: V.Image -> Int
                 , limitPrimary :: Int -> Widget n -> Widget n
-                , limitSecondary :: Int -> Widget n -> Widget n
                 , primaryWidgetSize :: Widget n -> Size
                 , concatenatePrimary :: [V.Image] -> V.Image
                 , concatenateSecondary :: [V.Image] -> V.Image
@@ -534,7 +533,6 @@ vBoxRenderer =
                 , imagePrimary = V.imageHeight
                 , imageSecondary = V.imageWidth
                 , limitPrimary = vLimit
-                , limitSecondary = hLimit
                 , primaryWidgetSize = vSize
                 , concatenatePrimary = V.vertCat
                 , concatenateSecondary = V.horizCat
@@ -562,7 +560,6 @@ hBoxRenderer =
                 , imagePrimary = V.imageWidth
                 , imageSecondary = V.imageHeight
                 , limitPrimary = hLimit
-                , limitSecondary = vLimit
                 , primaryWidgetSize = hSize
                 , concatenatePrimary = V.horizCat
                 , concatenateSecondary = V.vertCat
