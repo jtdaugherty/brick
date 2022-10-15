@@ -639,18 +639,13 @@ renderBox br ws =
           (his, lows) = partition (\p -> (primaryWidgetSize br $ snd p) == Fixed)
                         pairsIndexed
 
-      let availPrimary = c^.(contextPrimary br)
-          availSecondary = c^.(contextSecondary br)
-
           renderHi prim = do
             remainingPrimary <- get
-            result <- lift $ render $ limitPrimary br remainingPrimary
-                                    $ limitSecondary br availSecondary
-                                    $ cropToContext prim
+            result <- lift $ render $ limitPrimary br remainingPrimary prim
             result <$ (put $! remainingPrimary - (result^.imageL.(to $ imagePrimary br)))
 
       (renderedHis, remainingPrimary) <-
-        runStateT (traverse (traverse renderHi) his) availPrimary
+        runStateT (traverse (traverse renderHi) his) (c ^. contextPrimary br)
 
       renderedLows <- case lows of
           [] -> return []
@@ -660,10 +655,7 @@ renderBox br ws =
                   primaries = replicate rest (primaryPerLow + 1) <>
                               replicate (length ls - rest) primaryPerLow
 
-              let renderLow ((i, prim), pri) =
-                      (i,) <$> (render $ limitPrimary br pri
-                                       $ limitSecondary br availSecondary
-                                       $ cropToContext prim)
+              let renderLow ((i, prim), pri) = (i,) <$> render (limitPrimary br pri prim)
 
               if remainingPrimary > 0 then mapM renderLow (zip ls primaries) else return []
 
