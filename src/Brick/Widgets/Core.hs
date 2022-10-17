@@ -268,17 +268,6 @@ addCursorOffset off r =
 unrestricted :: Int
 unrestricted = 100000
 
--- | Take a substring capable of fitting into the number of specified
--- columns. This function takes character column widths into
--- consideration.
-takeColumns :: Int -> String -> String
-takeColumns _ "" = ""
-takeColumns numCols (c:cs) =
-    let w = V.safeWcwidth c
-    in if w > numCols
-       then []
-       else c : takeColumns (numCols - w) cs
-
 -- | Make a widget from a string, but wrap the words in the input's
 -- lines at the available width using the default wrapping settings. The
 -- input string should not contain escape sequences or carriage returns.
@@ -329,8 +318,8 @@ txtWrapWith settings s =
                                    (lStr <> T.replicate (maxLength - safeTextWidth lStr) " ")
               in return $ emptyResult & imageL .~ (V.horizCat [V.vertCat lineImgs, padding])
 
--- | Build a widget from a 'String'. Breaks newlines up and space-pads
--- short lines out to the length of the longest line.
+-- | Build a widget from a 'String'. Behaves the same as 'txt' when the
+-- input contains multiple lines.
 --
 -- The input string must not contain tab characters. If it does,
 -- interface corruption will result since the terminal will likely
@@ -338,25 +327,10 @@ txtWrapWith settings s =
 -- replace tabs with the appropriate number of spaces as desired. The
 -- input string should not contain escape sequences or carriage returns.
 str :: String -> Widget n
-str s =
-    Widget Fixed Fixed $ do
-      c <- getContext
-      let theLines = fixEmpty <$> (dropUnused . lines) s
-          fixEmpty :: String -> String
-          fixEmpty [] = " "
-          fixEmpty l = l
-          dropUnused l = takeColumns (availWidth c) <$> take (availHeight c) l
-      case force theLines of
-          [] -> return emptyResult
-          [one] -> return $ emptyResult & imageL .~ (V.string (c^.attrL) one)
-          multiple ->
-              let maxLength = maximum $ V.safeWcswidth <$> multiple
-                  lineImgs = lineImg <$> multiple
-                  lineImg lStr = V.string (c^.attrL) (lStr ++ replicate (maxLength - V.safeWcswidth lStr) ' ')
-              in return $ emptyResult & imageL .~ (V.vertCat lineImgs)
+str = txt . T.pack
 
--- | Build a widget from a 'T.Text' value. Behaves the same as 'str'
--- when the input contains multiple lines.
+-- | Build a widget from a 'T.Text' value. Breaks newlines up and
+-- space-pads short lines out to the length of the longest line.
 --
 -- The input string must not contain tab characters. If it does,
 -- interface corruption will result since the terminal will likely
