@@ -285,9 +285,6 @@ strWrap = strWrapWith defaultWrapSettings
 strWrapWith :: WrapSettings -> String -> Widget n
 strWrapWith settings t = txtWrapWith settings $ T.pack t
 
-safeTextWidth :: T.Text -> Int
-safeTextWidth = V.safeWcswidth . T.unpack
-
 -- | Make a widget from text, but wrap the words in the input's lines at
 -- the available width using the default wrapping settings. The input
 -- text should not contain escape sequences or carriage returns.
@@ -311,11 +308,11 @@ txtWrapWith settings s =
       case force theLines of
           [] -> return emptyResult
           multiple ->
-              let maxLength = maximum $ safeTextWidth <$> multiple
+              let maxLength = maximum $ textWidth <$> multiple
                   padding = V.charFill (c^.attrL) ' ' (c^.availWidthL - maxLength) (length lineImgs)
                   lineImgs = lineImg <$> multiple
                   lineImg lStr = V.text' (c^.attrL)
-                                   (lStr <> T.replicate (maxLength - safeTextWidth lStr) " ")
+                                   (lStr <> T.replicate (maxLength - textWidth lStr) " ")
               in return $ emptyResult & imageL .~ (V.horizCat [V.vertCat lineImgs, padding])
 
 -- | Build a widget from a 'String'. Behaves the same as 'txt' when the
