@@ -364,7 +364,44 @@ str s =
 -- replace tabs with the appropriate number of spaces as desired. The
 -- input text should not contain escape sequences or carriage returns.
 txt :: T.Text -> Widget n
-txt = str . T.unpack
+txt s =
+    -- Althoguh vty Image uses lazy Text internally, using lazy text at this
+    -- level may not be an improvement.  Indeed it can be much worse, due
+    -- the overhead of lazy Text being significant compared to the typically
+    -- short string content used to compose UIs.
+    Widget Fixed Fixed $ do
+        c <- getContext
+        let theLines = fixEmpty <$> (dropUnused . T.lines) s
+            fixEmpty l = if T.null l then T.singleton ' ' else l
+            dropUnused l = takeColumnsT (availWidth c) <$> take (availHeight c) l
+        pure $ case theLines of
+            [] -> emptyResult
+            [one] -> emptyResult & imageL .~ (V.text' (c^.attrL) one)
+            multiple ->
+                let maxLength = maximum $ V.safeWctwidth <$> multiple
+                    lineImgs = lineImg <$> multiple
+                    lineImg lStr = V.text' (c^.attrL)
+                        (lStr <> T.replicate (maxLength - V.safeWctwidth lStr) (T.singleton ' '))
+                in emptyResult & imageL .~ (V.vertCat lineImgs)
+
+-- | Take up to the given width, having regard to character width.
+takeColumnsT :: Int -> T.Text -> T.Text
+takeColumnsT w s = T.take (fst $ T.foldl' f (0,0) s) s
+    where
+    -- The accumulator value is (index in Text value, width of Text so far)
+    f (i,z) c
+        -- Width was previously exceeded; continue with same values.
+        | z < 0                   = (i, z)
+        -- Width exceeded.  Signal this with z = -1.  Index will no longer be
+        -- incremented.
+        --
+        -- Why not short circuit (e.g. using foldlM construction)?
+        -- Because in the typical case, the Either allocation costs exceed
+        -- any benefits.  The pathological case, string length >> width, is
+        -- probably rare.
+        | z + V.safeWcwidth c > w = (i, -1)
+        -- Width not yet exceeded.  Increment index and add character width.
+        | otherwise               = (i + 1, z + V.safeWcwidth c)
 
 -- | Hyperlink the given widget to the specified URL. Not all terminal
 -- emulators support this. In those that don't, this should have no
