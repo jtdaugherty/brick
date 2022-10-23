@@ -28,6 +28,9 @@ module Brick.Widgets.Border
   )
 where
 
+#if !(MIN_VERSION_base(4,11,0))
+import Data.Monoid ((<>))
+#endif
 import Lens.Micro ((^.), (&), (.~), to)
 import Graphics.Vty (imageHeight, imageWidth)
 
