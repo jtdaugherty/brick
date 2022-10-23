@@ -2,6 +2,21 @@
 Brick changelog
 ---------------
 
+1.4
+---
+
+API changes:
+* `Brick.Widgets.Border` got `hBorderAttr` and `vBorderAttr` for use by
+  `hBorder` and `vBorder` respectively. The new attributes inherit from
+  `borderAttr`, so applications that just specify `borderAttr` will not
+  see any change in behavior for those specific border elements.
+
+Performance improvements:
+* `Brick.Widgets.Core.txt` had its performance improved. (thanks Fraser
+  Tweedale)
+* `Brick.Widgets.Core.hBox` and `vBox` had their performance improved.
+  (thanks Fraser Tweedale)
+
 1.3
 ---
 
