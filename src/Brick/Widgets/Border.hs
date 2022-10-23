@@ -20,6 +20,8 @@ module Brick.Widgets.Border
 
   -- * Attribute names
   , borderAttr
+  , hBorderAttr
+  , vBorderAttr
 
   -- * Utility
   , joinableBorder
@@ -40,6 +42,14 @@ import qualified Brick.BorderMap as BM
 -- | The top-level border attribute name.
 borderAttr :: AttrName
 borderAttr = attrName "border"
+
+-- | The horizontal border attribute name. Inherits from 'borderAttr'.
+hBorderAttr :: AttrName
+hBorderAttr = borderAttr <> attrName "horizontal"
+
+-- | The vertical border attribute name. Inherits from 'borderAttr'.
+vBorderAttr :: AttrName
+vBorderAttr = borderAttr <> attrName "vertical"
 
 -- | Draw the specified border element using the active border style
 -- using 'borderAttr'.
@@ -95,7 +105,8 @@ border_ label wrapped =
              $ vLimit (middleResult^.imageL.to imageHeight + 2)
              $ total
 
--- | A horizontal border.  Fills all horizontal space.
+-- | A horizontal border. Fills all horizontal space. Draws using
+-- 'hBorderAttr'.
 hBorder :: Widget n
 hBorder =
     withAttr borderAttr $ Widget Greedy Fixed $ do
@@ -105,7 +116,8 @@ hBorder =
       db <- dynBorderFromDirections (Edges False False True True)
       let dynBorders = BM.insertH mempty (Run w db)
                      $ BM.emptyCoordinates (Edges 0 0 0 (w-1))
-      setDynBorders dynBorders $ render $ vLimit 1 $ fill (bsHorizontal bs)
+      setDynBorders dynBorders $ render $ withAttr hBorderAttr
+                               $ vLimit 1 $ fill (bsHorizontal bs)
 
 -- | A horizontal border with a label placed in the center of the
 -- border. Fills all horizontal space.
@@ -117,7 +129,8 @@ hBorderWithLabel label =
       res <- render $ vLimit 1 label
       render $ hBox [hBorder, Widget Fixed Fixed (return res), hBorder]
 
--- | A vertical border.  Fills all vertical space.
+-- | A vertical border. Fills all vertical space. Draws using
+-- 'vBorderAttr'.
 vBorder :: Widget n
 vBorder =
     withAttr borderAttr $ Widget Fixed Greedy $ do
@@ -127,7 +140,8 @@ vBorder =
       db <- dynBorderFromDirections (Edges True True False False)
       let dynBorders = BM.insertV mempty (Run h db)
                      $ BM.emptyCoordinates (Edges 0 (h-1) 0 0)
-      setDynBorders dynBorders $ render $ hLimit 1 $ fill (bsVertical bs)
+      setDynBorders dynBorders $ render $ withAttr vBorderAttr
+                               $ hLimit 1 $ fill (bsVertical bs)
 
 -- | Initialize a 'DynBorder'. It will be 'bsDraw'n and 'bsOffer'ing
 -- in the given directions to begin with, and accept join offers from

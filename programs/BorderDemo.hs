@@ -73,6 +73,8 @@ titleAttr = A.attrName "title"
 borderMappings :: [(A.AttrName, V.Attr)]
 borderMappings =
     [ (B.borderAttr,         V.yellow `on` V.black)
+    , (B.vBorderAttr,        fg V.cyan)
+    , (B.hBorderAttr,        fg V.magenta)
     , (titleAttr,            fg V.cyan)
     ]
 
