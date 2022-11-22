@@ -96,7 +96,8 @@ dialog :: (Eq n)
        -- ^ The dialog title
        -> Maybe (n, [(String, n, a)])
        -- ^ The currently-selected button resource name and the button
-       -- labels, resource names, and values to use
+       -- labels, resource names, and values to use for each button,
+       -- respectively
        -> Int
        -- ^ The maximum width of the dialog
        -> Dialog a n
@@ -152,9 +153,9 @@ renderDialog d body =
             , hCenter buttons
             ]
 
--- | Obtain the value associated with the dialog's currently-selected
--- button, if any. This function is probably what you want when someone
--- presses 'Enter' in a dialog.
+-- | Obtain the resource name and value associated with the dialog's
+-- currently-selected button, if any. The result of this function is
+-- probably what you want when someone presses 'Enter' in a dialog.
 dialogSelection :: (Eq n) => Dialog a n -> Maybe (n, a)
 dialogSelection d = do
     n' <- focusGetCurrent $ dialogFocus d
