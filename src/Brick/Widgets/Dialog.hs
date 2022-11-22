@@ -15,11 +15,12 @@ module Brick.Widgets.Dialog
   ( Dialog
   , dialogTitle
   , dialogButtons
-  , dialogSelectedIndex
   , dialogWidth
   -- * Construction and rendering
   , dialog
   , renderDialog
+  , getDialogFocus
+  , setDialogFocus
   -- * Handling events
   , handleDialogEvent
   -- * Getting a dialog's current value
@@ -30,20 +31,20 @@ module Brick.Widgets.Dialog
   , buttonSelectedAttr
   -- * Lenses
   , dialogButtonsL
-  , dialogSelectedIndexL
   , dialogWidthL
   , dialogTitleL
   )
 where
 
 import Lens.Micro
+import Lens.Micro.Mtl ((%=))
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid
 #endif
-import Data.List (intersperse)
+import Data.List (intersperse, find)
 import Graphics.Vty.Input (Event(..), Key(..))
 
-import Brick.Util (clamp)
+import Brick.Focus
 import Brick.Types
 import Brick.Widgets.Core
 import Brick.Widgets.Center
@@ -59,43 +60,54 @@ import Brick.AttrMap
 --
 -- * Tab or Right Arrow: select the next button
 -- * Shift-tab or Left Arrow: select the previous button
-data Dialog a =
-    Dialog { dialogTitle :: Maybe String
+data Dialog a n =
+    Dialog { dialogTitle :: Maybe (Widget n)
            -- ^ The dialog title
-           , dialogButtons :: [(String, a)]
-           -- ^ The dialog button labels and values
-           , dialogSelectedIndex :: Maybe Int
-           -- ^ The currently selected dialog button index (if any)
+           , dialogButtons :: [(String, n, a)]
+           -- ^ The dialog buttons' labels, resource names, and values
            , dialogWidth :: Int
            -- ^ The maximum width of the dialog
+           , dialogFocus :: FocusRing n
+           -- ^ The focus ring for the dialog's buttons
            }
 
 suffixLenses ''Dialog
 
-handleDialogEvent :: Event -> EventM n (Dialog a) ()
+handleDialogEvent :: Event -> EventM n (Dialog a n) ()
 handleDialogEvent ev = do
-    modify $ \d -> case ev of
-        EvKey (KChar '\t') [] -> nextButtonBy 1 True d
-        EvKey KBackTab [] -> nextButtonBy (-1) True d
-        EvKey KRight [] -> nextButtonBy 1 False d
-        EvKey KLeft [] -> nextButtonBy (-1) False d
-        _ -> d
+    case ev of
+        EvKey (KChar '\t') [] -> dialogFocusL %= focusNext
+        EvKey KRight []       -> dialogFocusL %= focusNext
+        EvKey KBackTab []     -> dialogFocusL %= focusPrev
+        EvKey KLeft []        -> dialogFocusL %= focusPrev
+        _ -> return ()
+
+-- | Set the focused button of a dialog.
+setDialogFocus :: (Eq n) => n -> Dialog a n -> Dialog a n
+setDialogFocus n d = d { dialogFocus = focusSetCurrent n $ dialogFocus d }
+
+-- | Get the focused button of a dialog.
+getDialogFocus :: Dialog a n -> Maybe n
+getDialogFocus = focusGetCurrent . dialogFocus
 
 -- | Create a dialog.
-dialog :: Maybe String
+dialog :: (Eq n)
+       => Maybe (Widget n)
        -- ^ The dialog title
-       -> Maybe (Int, [(String, a)])
-       -- ^ The currently-selected button index (starting at zero) and
-       -- the button labels and values to use
+       -> Maybe (n, [(String, n, a)])
+       -- ^ The currently-selected button resource name and the button
+       -- labels, resource names, and values to use
        -> Int
        -- ^ The maximum width of the dialog
-       -> Dialog a
+       -> Dialog a n
 dialog title buttonData w =
-    let (buttons, idx) = case buttonData of
-          Nothing -> ([], Nothing)
-          Just (_, []) -> ([], Nothing)
-          Just (i, bs) -> (bs, Just $ clamp 0 (length bs - 1) i)
-    in Dialog title buttons idx w
+    let (r, buttons) = case buttonData of
+            Nothing ->
+                (focusRing [], [])
+            Just (focName, entries) ->
+                let ns = (\(_, n, _) -> n) <$> entries
+                in (focusSetCurrent focName $ focusRing ns, entries)
+    in Dialog title buttons w r
 
 -- | The default attribute of the dialog
 dialogAttr :: AttrName
@@ -113,17 +125,25 @@ buttonSelectedAttr = buttonAttr <> attrName "selected"
 -- dialog as a layer, which makes this suitable as a top-level layer in
 -- your rendering function to be rendered on top of the rest of your
 -- interface.
-renderDialog :: Dialog a -> Widget n -> Widget n
+renderDialog :: (Ord n) => Dialog a n -> Widget n -> Widget n
 renderDialog d body =
     let buttonPadding = str "   "
-        mkButton (i, (s, _)) = let att = if Just i == d^.dialogSelectedIndexL
-                                         then buttonSelectedAttr
-                                         else buttonAttr
-                               in withAttr att $ str $ "  " <> s <> "  "
+        foc = focusGetCurrent $ dialogFocus d
+        mkButton (s, n, _) =
+            let att = if Just n == foc
+                      then buttonSelectedAttr
+                      else buttonAttr
+                csr = if Just n == foc
+                      then putCursor n (Location (1,0))
+                      else id
+            in csr $
+               clickable n $
+               withAttr att $
+               str $ "  " <> s <> "  "
         buttons = hBox $ intersperse buttonPadding $
-                         mkButton <$> (zip [0..] (d^.dialogButtonsL))
+                         mkButton <$> (d^.dialogButtonsL)
 
-        doBorder = maybe border borderWithLabel (str <$> d^.dialogTitleL)
+        doBorder = maybe border borderWithLabel (d^.dialogTitleL)
     in centerLayer $
        withDefAttr dialogAttr $
        hLimit (d^.dialogWidthL) $
@@ -132,24 +152,12 @@ renderDialog d body =
             , hCenter buttons
             ]
 
-nextButtonBy :: Int -> Bool -> Dialog a -> Dialog a
-nextButtonBy amt wrapCycle d =
-    let numButtons = length $ d^.dialogButtonsL
-    in if numButtons == 0 then d
-       else case d^.dialogSelectedIndexL of
-           Nothing -> d & dialogSelectedIndexL .~ (Just 0)
-           Just i -> d & dialogSelectedIndexL .~ (Just newIndex)
-               where
-                   addedIndex = i + amt
-                   newIndex = if wrapCycle
-                              then addedIndex `mod` numButtons
-                              else max 0 $ min addedIndex $ numButtons - 1
-
 -- | Obtain the value associated with the dialog's currently-selected
 -- button, if any. This function is probably what you want when someone
 -- presses 'Enter' in a dialog.
-dialogSelection :: Dialog a -> Maybe a
-dialogSelection d =
-    case d^.dialogSelectedIndexL of
-        Nothing -> Nothing
-        Just i -> Just $ ((d^.dialogButtonsL) !! i)^._2
+dialogSelection :: (Eq n) => Dialog a n -> Maybe (n, a)
+dialogSelection d = do
+    n' <- focusGetCurrent $ dialogFocus d
+    let matches (_, n, _) = n == n'
+    (_, n, a) <- find matches (d^.dialogButtonsL)
+    return (n, a)

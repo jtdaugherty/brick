@@ -25,12 +25,18 @@ import qualified Brick.Types as T
 data Choice = Red | Blue | Green
             deriving Show
 
-drawUI :: D.Dialog Choice -> [Widget ()]
+data Name =
+    RedButton
+    | BlueButton
+    | GreenButton
+    deriving (Show, Eq, Ord)
+
+drawUI :: D.Dialog Choice Name -> [Widget Name]
 drawUI d = [ui]
     where
         ui = D.renderDialog d $ C.hCenter $ padAll 1 $ str "This is the dialog body."
 
-appEvent :: BrickEvent () e -> T.EventM () (D.Dialog Choice) ()
+appEvent :: BrickEvent Name e -> T.EventM Name (D.Dialog Choice Name) ()
 appEvent (VtyEvent ev) =
     case ev of
         V.EvKey V.KEsc [] -> M.halt
@@ -38,12 +44,12 @@ appEvent (VtyEvent ev) =
         _ -> D.handleDialogEvent ev
 appEvent _ = return ()
 
-initialState :: D.Dialog Choice
-initialState = D.dialog (Just "Title") (Just (0, choices)) 50
+initialState :: D.Dialog Choice Name
+initialState = D.dialog (Just $ str "Title") (Just (RedButton, choices)) 50
     where
-        choices = [ ("Red", Red)
-                  , ("Blue", Blue)
-                  , ("Green", Green)
+        choices = [ ("Red",   RedButton,   Red)
+                  , ("Blue",  BlueButton,  Blue)
+                  , ("Green", GreenButton, Green)
                   ]
 
 theMap :: A.AttrMap
@@ -53,7 +59,7 @@ theMap = A.attrMap V.defAttr
     , (D.buttonSelectedAttr, bg V.yellow)
     ]
 
-theApp :: M.App (D.Dialog Choice) e ()
+theApp :: M.App (D.Dialog Choice Name) e Name
 theApp =
     M.App { M.appDraw = drawUI
           , M.appChooseCursor = M.showFirstCursor
