@@ -2,6 +2,24 @@
 Brick changelog
 ---------------
 
+1.5
+---
+
+This release focuses on API improvements in `Brick.Widgets.Dialog`:
+
+* `Dialog` got an additional type argument, `n`, for resource names.
+* The `dialog` constructor now takes `[(String, n, a)]` rather than
+  `[(String, a)]`; this allows the caller to associate a resource name
+  with each dialog button.
+* Dialog buttons now report click events under their associated resource
+  names.
+* Dialog buttons now `putCursor` when they are focused in order to work
+  better with screen readers.
+* The `Dialog` module got `getDialogFocus` and `setDialogFocus`
+  functions to help with focus management, and as part of this change,
+  the `dialogSelectedIndex` function and its lens `dialogSelectedIndexL`
+  were removed.
+
 1.4
 ---
 
