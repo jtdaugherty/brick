@@ -5,12 +5,15 @@
 -- dialog title, if any, as well as its body and buttons.
 --
 -- Note that this dialog is really for simple use cases where you want
--- to get the user's answer to a question, such as "Would you like
--- to save changes before quitting?" If you require something more
--- sophisticated, you'll need to build it yourself. You might also
--- consider seeing the 'Brick.Forms' module for help with input
--- management, and see the implementation of this module to see how to
--- reproduce a dialog-style UI.
+-- to get the user's answer to a question, such as "Would you like to
+-- save changes before quitting?" As is typical in such cases, we assume
+-- that this dialog box is used modally, meaning that while it is open
+-- it is has exclusive input focus until it is closed.
+--
+-- If you require something more sophisticated, you'll need to build it
+-- yourself. You might also consider seeing the 'Brick.Forms' module for
+-- help with input management and see the implementation of this module
+-- to see how to reproduce a dialog-style UI.
 module Brick.Widgets.Dialog
   ( Dialog
   , dialogTitle
