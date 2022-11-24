@@ -52,24 +52,19 @@ box st =
 -- is full, i.e., items that cannot be rendered are never evaluated or
 -- drawn.
 renderBottomUp :: [Widget n] -> Widget n
-renderBottomUp ws =
-    Widget Greedy Greedy $ do
-        let go _ [] = return V.emptyImage
-            go remainingHeight (c:cs) = do
-                cResult <- render c
-                let img = image cResult
-                    newRemainingHeight = remainingHeight - V.imageHeight img
-                if newRemainingHeight == 0
-                   then return img
-                   else if newRemainingHeight < 0
-                        then return $ V.cropTop remainingHeight img
-                        else do
-                            rest <- go newRemainingHeight cs
-                            return $ V.vertCat [rest, img]
+renderBottomUp ws = Widget Greedy Greedy $ do
+    let go _ [] = pure V.emptyImage
+        go remainingHeight (c:cs) = do
+            img <- image <$> render c
+            let newRemainingHeight = remainingHeight - V.imageHeight img
+            case compare newRemainingHeight 0 of
+                EQ -> pure img
+                LT -> pure $ V.cropTop remainingHeight img
+                GT -> (`V.vertJoin` img) <$> go newRemainingHeight cs
 
-        ctx <- getContext
-        img <- go (availHeight ctx) ws
-        render $ fill ' ' <=> raw img
+    ctx <- getContext
+    img <- go (availHeight ctx) ws
+    render $ fill ' ' <=> raw img
 
 textLines :: [T.Text]
 textLines =
