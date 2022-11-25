@@ -505,6 +505,23 @@ executable brick-edit-demo
                        microlens-th,
                        microlens-mtl
 
+executable brick-editor-line-numbers-demo
+  if !flag(demos)
+    Buildable: False
+  hs-source-dirs:      programs
+  ghc-options:         -threaded -Wall -Wcompat -O2
+  default-language:    Haskell2010
+  main-is:             EditorLineNumbersDemo.hs
+  build-depends:       base,
+                       brick,
+                       vty,
+                       text,
+                       vector,
+                       mtl,
+                       microlens >= 0.3.0.0,
+                       microlens-th,
+                       microlens-mtl
+
 executable brick-border-demo
   if !flag(demos)
     Buildable: False
