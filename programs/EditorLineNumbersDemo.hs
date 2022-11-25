@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE CPP #-}
 module Main where
 
 import Control.Monad (void)
@@ -6,6 +7,9 @@ import Lens.Micro
 import Lens.Micro.TH
 import Lens.Micro.Mtl
 import qualified Graphics.Vty as V
+#if !(MIN_VERSION_base(4,11,0))
+import Data.Semigroup ((<>))
+#endif
 
 import qualified Brick.Main as M
 import qualified Brick.Types as T
