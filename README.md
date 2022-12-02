@@ -87,6 +87,7 @@ it, get in touch!
 | [`htyper`](https://github.com/Simon-Hostettler/htyper) | A typing speed test program |
 | [`ullekha`](https://github.com/ajithnn/ullekha) | An interactive terminal notes/todo app with file/redis persistence |
 | [`mywork`](https://github.com/kquick/mywork) [[Hackage]](https://hackage.haskell.org/package/mywork) | A tool to keep track of the projects you are working on |
+| [`hic-hac-hoe`](https://github.com/blastwind/hic-hac-hoe) | Play tic tac toe in terminal! |
 
 These third-party packages also extend `brick`:
 
