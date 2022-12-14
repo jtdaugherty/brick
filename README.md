@@ -89,6 +89,7 @@ it, get in touch!
 | [`mywork`](https://github.com/kquick/mywork) [[Hackage]](https://hackage.haskell.org/package/mywork) | A tool to keep track of the projects you are working on |
 | [`hic-hac-hoe`](https://github.com/blastwind/hic-hac-hoe) | Play tic tac toe in terminal! |
 | [`babel-cards`](https://github.com/srhoulam/babel-cards) | A TUI spaced-repetition memorization tool. Similar to Anki. |
+| [`codenames-haskell`](https://github.com/VigneshN1997/codenames-haskell) | An implementation of the Codenames game |
 
 These third-party packages also extend `brick`:
 
