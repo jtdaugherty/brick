@@ -214,8 +214,8 @@ the application state as a result of an event:
    appHandleEvent :: BrickEvent n e -> EventM n s ()
 
 ``appHandleEvent`` is responsible for deciding how to change the state
-based on the event. The single parameter to the event handler is the
-event to be handled. Its type variables ``n`` and ``e`` correspond
+based on incoming events. The single parameter to the event handler is
+the event to be handled. Its type variables ``n`` and ``e`` correspond
 to the *resource name type* and *event type* of your application,
 respectively, and must match the corresponding types in ``App`` and
 ``EventM``.
@@ -254,11 +254,11 @@ The ``EventM`` monad is a transformer around ``IO`` so I/O is possible
 in this monad by using ``liftIO``. Keep in mind, however, that event
 handlers should execute as quickly as possible to avoid introducing
 screen redraw latency. Consider using background threads to work
-asynchronously when it would otherwise cause redraw latency.
+asynchronously when handling an event would otherwise cause redraw
+latency.
 
-Beyond I/O, ``EventM`` is used to make scrolling requests to the
-renderer (see `Viewports`_), obtain named extents (see `Extents`_), and
-other duties.
+``EventM`` is also used to make scrolling requests to the renderer (see
+`Viewports`_), obtain named extents (see `Extents`_), and other duties.
 
 Event Handlers for Component State
 **********************************
