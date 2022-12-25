@@ -6,9 +6,10 @@ interface should be drawn based on your current application state and
 you provide a state transformation function to handle events.
 
 `brick` exposes a declarative API. Unlike most GUI toolkits which
-require you to write a long and tedious sequence of "create a widget,
-now bind an event handler", `brick` just requires you to describe your
-interface using a set of declarative layout combinators.
+require you to write a long and tedious sequence of widget creations
+and layout setup, `brick` just requires you to describe your interface
+using a set of declarative layout combinators. Event-handling is done by
+pattern-matching on incoming events and updating your application state.
 
 Under the hood, this library builds upon
 [vty](http://hackage.haskell.org/package/vty), so some knowledge of Vty
