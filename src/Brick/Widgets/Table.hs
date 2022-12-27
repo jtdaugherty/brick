@@ -7,6 +7,7 @@ module Brick.Widgets.Table
   (
   -- * Types
     Table
+  , BorderConfiguration(..)
   , ColumnAlignment(..)
   , RowAlignment(..)
   , TableException(..)
@@ -90,10 +91,15 @@ data Table n =
           , tableRows :: [[Widget n]]
           , defaultColumnAlignment :: ColumnAlignment
           , defaultRowAlignment :: RowAlignment
-          , drawSurroundingBorder :: Bool
-          , drawRowBorders :: Bool
-          , drawColumnBorders :: Bool
+          , tableBorderConfiguration :: BorderConfiguration
           }
+
+-- | A border configuration for a table.
+data BorderConfiguration =
+    BorderConfiguration { drawSurroundingBorder :: Bool
+                        , drawRowBorders :: Bool
+                        , drawColumnBorders :: Bool
+                        }
 
 -- | Construct a new table.
 --
@@ -148,27 +154,29 @@ table rows =
         t = Table { columnAlignments = mempty
                   , rowAlignments = mempty
                   , tableRows = rows
-                  , drawSurroundingBorder = True
-                  , drawRowBorders = True
-                  , drawColumnBorders = True
                   , defaultColumnAlignment = AlignLeft
                   , defaultRowAlignment = AlignTop
+                  , tableBorderConfiguration =
+                      BorderConfiguration { drawSurroundingBorder = True
+                                          , drawRowBorders = True
+                                          , drawColumnBorders = True
+                                          }
                   }
 
 -- | Configure whether the table draws a border on its exterior.
 surroundingBorder :: Bool -> Table n -> Table n
 surroundingBorder b t =
-    t { drawSurroundingBorder = b }
+    t { tableBorderConfiguration = (tableBorderConfiguration t) { drawSurroundingBorder = b } }
 
 -- | Configure whether the table draws borders between its rows.
 rowBorders :: Bool -> Table n -> Table n
 rowBorders b t =
-    t { drawRowBorders = b }
+    t { tableBorderConfiguration = (tableBorderConfiguration t) { drawRowBorders = b } }
 
 -- | Configure whether the table draws borders between its columns.
 columnBorders :: Bool -> Table n -> Table n
 columnBorders b t =
-    t { drawColumnBorders = b }
+    t { tableBorderConfiguration = (tableBorderConfiguration t) { drawColumnBorders = b } }
 
 -- | Align the specified column to the right. The argument is the column
 -- index, starting with zero. Silently does nothing if the index is out
@@ -235,18 +243,26 @@ renderTable :: Table n -> Widget n
 renderTable t =
     joinBorders $
     Widget Fixed Fixed $ do
-        tableCellLayout t >>= addTableBorders >>= render
+        tableCellLayout t >>= addBorders >>= render
 
+-- | The result of performing table cell intermediate rendering and
+-- layout.
 data RenderedTableCells n =
     RenderedTableCells { renderedTableRows :: [[Widget n]]
+                       -- ^ The table's cells in row-major order.
                        , renderedTableColumnWidths :: [Int]
+                       -- ^ The widths of the table's columns.
                        , renderedTableRowHeights :: [Int]
-                       , renderedTableSource :: Table n
+                       -- ^ The heights of the table's rows.
+                       , borderConfiguration :: BorderConfiguration
+                       -- ^ The border configuration to use.
                        }
 
-addTableBorders :: RenderedTableCells n -> RenderM n (Widget n)
-addTableBorders r = do
-    let t = renderedTableSource r
+-- | Augment rendered table cells with borders according to the
+-- border configuration accompanying the cells.
+addBorders :: RenderedTableCells n -> RenderM n (Widget n)
+addBorders r = do
+    let cfg = borderConfiguration r
         rows = renderedTableRows r
         rowHeights = renderedTableRowHeights r
         colWidths = renderedTableColumnWidths r
@@ -254,10 +270,10 @@ addTableBorders r = do
         contentWidth = sum colWidths
         contentHeight = sum rowHeights
 
-        hBorderLength = contentWidth + if drawColumnBorders t
+        hBorderLength = contentWidth + if drawColumnBorders cfg
                                        then max (length colWidths - 1) 0
                                        else 0
-        vBorderHeight = contentHeight + if drawRowBorders t
+        vBorderHeight = contentHeight + if drawRowBorders cfg
                                         then max (length rowHeights - 1) 0
                                         else 0
         horizBorder = hLimit hBorderLength hBorder
@@ -269,14 +285,14 @@ addTableBorders r = do
             vBox [topRightCorner, vertBorder, bottomRightCorner]
 
         maybeWrap check f =
-            if check t then f else id
+            if check cfg then f else id
         addSurroundingBorder b =
             leftBorder <+> (horizBorder <=> b <=> horizBorder) <+> rightBorder
         addRowBorders =
             intersperse horizBorder
 
         rowsWithColumnBorders = (\(h, row) -> hBox $ maybeColumnBorders h row) <$> zip rowHeights rows
-        maybeColumnBorders height = maybeIntersperse t drawColumnBorders (vLimit height vBorder)
+        maybeColumnBorders height = maybeIntersperse cfg drawColumnBorders (vLimit height vBorder)
         body = vBox $
                maybeWrap drawRowBorders addRowBorders rowsWithColumnBorders
 
@@ -318,12 +334,12 @@ tableCellLayout t = do
     return $ RenderedTableCells { renderedTableRows = rows
                                 , renderedTableColumnWidths = colWidths
                                 , renderedTableRowHeights = rowHeights
-                                , renderedTableSource = t
+                                , borderConfiguration = tableBorderConfiguration t
                                 }
 
-maybeIntersperse :: Table n -> (Table n -> Bool) -> Widget n -> [Widget n] -> [Widget n]
-maybeIntersperse t f v | f t = intersperse v
-                       | otherwise = id
+maybeIntersperse :: BorderConfiguration -> (BorderConfiguration -> Bool) -> Widget n -> [Widget n] -> [Widget n]
+maybeIntersperse cfg f v | f cfg = intersperse v
+                         | otherwise = id
 
 topLeftCorner :: Widget n
 topLeftCorner = joinableBorder $ Edges False True False True
