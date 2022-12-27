@@ -7,7 +7,6 @@ module Brick.Widgets.Table
   (
   -- * Types
     Table
-  , BorderConfiguration(..)
   , ColumnAlignment(..)
   , RowAlignment(..)
   , TableException(..)
@@ -35,6 +34,7 @@ module Brick.Widgets.Table
 
   -- * Low-level API
   , RenderedTableCells(..)
+  , BorderConfiguration(..)
   , tableCellLayout
   , addBorders
   , alignColumns
