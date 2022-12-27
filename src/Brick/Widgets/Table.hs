@@ -37,6 +37,7 @@ module Brick.Widgets.Table
   , RenderedTableCells(..)
   , tableCellLayout
   , addBorders
+  , alignColumns
   )
 where
 
@@ -357,6 +358,21 @@ bottomLeftCorner = joinableBorder $ Edges True False False True
 
 bottomRightCorner :: Widget n
 bottomRightCorner = joinableBorder $ Edges True False True False
+
+-- | Given a "table row" of widgets, align each one according to the
+-- list of specified column alignments in columns of the specified
+-- widths.
+alignColumns :: [ColumnAlignment]
+             -- ^ The column alignments to use for each widget,
+             -- respectively.
+             -> [Int]
+             -- ^ The width of each column in terminal columns,
+             -- respectively.
+             -> [Widget n]
+             -- ^ The column cells to align.
+             -> [Widget n]
+alignColumns as widths cells =
+    (\(w, a, c) -> applyColAlignment w a c) <$> zip3 widths as cells
 
 applyColAlignment :: Int -> ColumnAlignment -> Widget n -> Widget n
 applyColAlignment width align w =
