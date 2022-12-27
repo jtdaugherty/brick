@@ -238,7 +238,7 @@ renderTable t =
         tableCellLayout t >>= addTableBorders >>= render
 
 data RenderedTableCells n =
-    RenderedTableCells { renderedTableColumns :: [[Widget n]]
+    RenderedTableCells { renderedTableRows :: [[Widget n]]
                        , renderedTableColumnWidths :: [Int]
                        , renderedTableRowHeights :: [Int]
                        , renderedTableSource :: Table n
@@ -247,7 +247,7 @@ data RenderedTableCells n =
 addTableBorders :: RenderedTableCells n -> RenderM n (Widget n)
 addTableBorders r = do
     let t = renderedTableSource r
-        columns = renderedTableColumns r
+        rows = renderedTableRows r
         rowHeights = renderedTableRowHeights r
         colWidths = renderedTableColumnWidths r
 
@@ -268,15 +268,15 @@ addTableBorders r = do
             if check t then f else id
         addSurroundingBorder b =
             leftBorder <+> (topBorder <=> b <=> bottomBorder) <+> rightBorder
-        addColumnBorders =
-            let maybeAddCrosses = maybeIntersperse t drawRowBorders cross
-                columnBorder = vBox $ maybeAddCrosses vBorders
-            in intersperse columnBorder
+        addRowBorders =
+            let maybeAddCrosses = maybeIntersperse t drawColumnBorders cross
+                rowBorder = hBox $ maybeAddCrosses hBorders
+            in intersperse rowBorder
 
-        columnsWithRowBorders = (\(w, column) -> vBox $ maybeRowBorders w column) <$> zip colWidths columns
-        maybeRowBorders width = maybeIntersperse t drawRowBorders (hLimit width hBorder)
-        body = hBox $
-               maybeWrap drawColumnBorders addColumnBorders columnsWithRowBorders
+        rowsWithColumnBorders = (\(h, row) -> hBox $ maybeColumnBorders h row) <$> zip rowHeights rows
+        maybeColumnBorders height = maybeIntersperse t drawColumnBorders (vLimit height vBorder)
+        body = vBox $
+               maybeWrap drawRowBorders addRowBorders rowsWithColumnBorders
 
     return $ maybeWrap drawSurroundingBorder addSurroundingBorder body
 
@@ -286,32 +286,34 @@ tableCellLayout t = do
     cellResults <- forM (tableRows t) $ mapM render
 
     let rowHeights = rowHeight <$> cellResults
-        colWidths = colWidth <$> byColumn
+        colWidths = colWidth <$> transpose cellResults
+        numRows = length rowHeights
+        numCols = if length cellResults >= 1
+                     then length (cellResults !! 0)
+                     else 0
         allRowAligns = (\i -> M.findWithDefault (defaultRowAlignment t) i (rowAlignments t)) <$>
-                       [0..length rowHeights - 1]
+                       [0..numRows - 1]
         allColAligns = (\i -> M.findWithDefault (defaultColumnAlignment t) i (columnAlignments t)) <$>
-                       [0..length byColumn - 1]
+                       [0..numCols - 1]
         rowHeight = maximum . fmap (imageHeight . image)
         colWidth = maximum . fmap (imageWidth . image)
-        byColumn = transpose cellResults
 
         toW = Widget Fixed Fixed . return
         fillEmptyCell w h result =
             if imageWidth (image result) == 0 && imageHeight (image result) == 0
             then result { image = charFill (ctx^.attrL) ' ' w h }
             else result
-        mkColumn (hAlign, width, colCells) =
-            let paddedCells = flip map (zip3 allRowAligns rowHeights colCells) $ \(vAlign, rHeight, cell) ->
+        mkRow (vAlign, height, rowCells) =
+            let paddedCells = flip map (zip3 allColAligns colWidths rowCells) $ \(hAlign, width, cell) ->
                     applyColAlignment width hAlign $
-                    applyRowAlignment rHeight vAlign $
+                    applyRowAlignment height vAlign $
                     toW $
-                    fillEmptyCell width rHeight cell
+                    fillEmptyCell width height cell
             in paddedCells
 
-    let columns = mkColumn <$>
-                  zip3 allColAligns colWidths byColumn
+    let rows = mkRow <$> zip3 allRowAligns rowHeights cellResults
 
-    return $ RenderedTableCells { renderedTableColumns = columns
+    return $ RenderedTableCells { renderedTableRows = rows
                                 , renderedTableColumnWidths = colWidths
                                 , renderedTableRowHeights = rowHeights
                                 , renderedTableSource = t
