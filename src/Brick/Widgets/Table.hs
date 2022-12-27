@@ -255,14 +255,24 @@ addTableBorders r = do
         hBorders = mkHBorder <$> colWidths
         mkHBorder w = hLimit w hBorder
         mkVBorder h = vLimit h vBorder
+        contentWidth = sum colWidths
+        contentHeight = sum rowHeights
         topBorder =
-            hBox $ maybeIntersperse t drawColumnBorders topT hBorders
+            if drawColumnBorders t
+               then hBox $ intersperse topT hBorders
+               else hLimit contentWidth hBorder
         bottomBorder =
-            hBox $ maybeIntersperse t drawColumnBorders bottomT hBorders
+            if drawColumnBorders t
+               then hBox $ intersperse bottomT hBorders
+               else hLimit contentWidth hBorder
         leftBorder =
-            vBox $ topLeftCorner : maybeIntersperse t drawRowBorders leftT vBorders <> [bottomLeftCorner]
+            if drawRowBorders t
+               then vBox $ topLeftCorner : intersperse leftT vBorders <> [bottomLeftCorner]
+               else vBox [topLeftCorner, vLimit contentHeight vBorder, bottomLeftCorner]
         rightBorder =
-            vBox $ topRightCorner : maybeIntersperse t drawRowBorders rightT vBorders <> [bottomRightCorner]
+            if drawRowBorders t
+               then vBox $ topRightCorner : intersperse rightT vBorders <> [bottomRightCorner]
+               else vBox [topRightCorner, vLimit contentHeight vBorder, bottomRightCorner]
 
         maybeWrap check f =
             if check t then f else id
