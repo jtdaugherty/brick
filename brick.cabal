@@ -415,6 +415,23 @@ executable brick-attr-demo
                        text,
                        microlens
 
+executable brick-tabular-list-demo
+  if !flag(demos)
+    Buildable: False
+  hs-source-dirs:      programs
+  ghc-options:         -threaded -Wall -Wcompat -O2
+  default-language:    Haskell2010
+  main-is:             TabularListDemo.hs
+  build-depends:       base,
+                       brick,
+                       vty,
+                       text,
+                       microlens >= 0.3.0.0,
+                       microlens-mtl,
+                       microlens-th,
+                       mtl,
+                       vector
+
 executable brick-list-demo
   if !flag(demos)
     Buildable: False
