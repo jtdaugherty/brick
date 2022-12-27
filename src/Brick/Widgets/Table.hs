@@ -32,6 +32,11 @@ module Brick.Widgets.Table
 
   -- * Rendering
   , renderTable
+
+  -- * Low-level API
+  , RenderedTableCells(..)
+  , tableCellLayout
+  , addBorders
   )
 where
 
