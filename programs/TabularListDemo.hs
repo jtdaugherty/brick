@@ -23,8 +23,7 @@ import Brick.Types
   ( Widget
   )
 import Brick.Widgets.Core
-  ( (<+>)
-  , (<=>)
+  ( (<=>)
   , str
   , vLimit
   , hLimit
@@ -47,11 +46,10 @@ drawUI :: AppState -> [Widget ()]
 drawUI s = [ui]
     where
         l = s^.tabularList
-        label = str "Item " <+> cur <+> str " of " <+> total
+        label = str $ "Row " <> cur <> " / col " <> show (s^.colIndex + 1)
         cur = case l^.(L.listSelectedL) of
-                Nothing -> str "-"
-                Just i -> str (show (i + 1))
-        total = str $ show $ Vec.length $ l^.(L.listElementsL)
+                Nothing -> "-"
+                Just i -> show (i + 1)
         box = B.borderWithLabel label $
               hLimit totalWidth $
               vLimit 15 $
