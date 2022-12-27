@@ -24,6 +24,7 @@ import Brick.Types
   )
 import Brick.Widgets.Core
   ( (<+>)
+  , (<=>)
   , str
   , vLimit
   , hLimit
@@ -54,6 +55,7 @@ drawUI s = [ui]
         box = B.borderWithLabel label $
               hLimit totalWidth $
               vLimit 15 $
+              listDrawElement 0 False headerRow <=>
               L.renderList (listDrawElement (s^.colIndex)) True l
         ui = C.vCenter $ vBox [ C.hCenter box
                               , str " "
@@ -117,6 +119,9 @@ columnWidths = [10, 15, 20]
 
 totalWidth :: Int
 totalWidth = sum columnWidths
+
+headerRow :: Row
+headerRow = Row "Col 1" "Col 2" "Col 3"
 
 columnAlignments :: [Table.ColumnAlignment]
 columnAlignments = [Table.AlignLeft, Table.AlignCenter, Table.AlignRight]
