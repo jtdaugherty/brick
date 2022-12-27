@@ -60,6 +60,7 @@ drawUI s = [ui]
         ui = C.vCenter $ vBox [ C.hCenter box
                               , str " "
                               , C.hCenter $ str "Press +/- to add/remove list elements."
+                              , C.hCenter $ str "Use arrow keys to change selection."
                               , C.hCenter $ str "Press Esc to exit."
                               ]
 
