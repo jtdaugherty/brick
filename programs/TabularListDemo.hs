@@ -90,13 +90,14 @@ appEvent _ = return ()
 
 listDrawElement :: Int -> Bool -> Row -> Widget ()
 listDrawElement colIdx sel (Row a b c) =
-    let ws = maybeSelect [str a, str b, str c]
+    let ws = [str a, str b, str c]
         maybeSelect es = selectCell <$> zip [0..] es
         selectCell (i, w) = if sel && i == colIdx
                             then withDefAttr selectedCellAttr w
                             else w
     in hLimit totalWidth $
        hBox $
+       maybeSelect $
        Table.alignColumns columnAlignments columnWidths ws
 
 initialState :: AppState
