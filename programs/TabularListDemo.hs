@@ -79,12 +79,12 @@ appEvent (T.VtyEvent e) =
                 Nothing -> return ()
                 Just i -> tabularList %= L.listRemove i
 
-        V.EvKey V.KEsc [] -> M.halt
-
         V.EvKey V.KLeft [] ->
             colIndex %= (\i -> max 0 (i - 1))
         V.EvKey V.KRight [] ->
             colIndex %= (\i -> min (length columnAlignments - 1) (i + 1))
+
+        V.EvKey V.KEsc [] -> M.halt
 
         ev -> T.zoom tabularList $ L.handleListEvent ev
 appEvent _ = return ()
