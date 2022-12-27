@@ -235,59 +235,91 @@ renderTable :: Table n -> Widget n
 renderTable t =
     joinBorders $
     Widget Fixed Fixed $ do
-        ctx <- getContext
-        cellResults <- forM (tableRows t) $ mapM render
+        tableCellLayout t >>= addTableBorders >>= render
 
-        let maybeIntersperse f v = if f t then intersperse v else id
-            rowHeights = rowHeight <$> cellResults
-            colWidths = colWidth <$> byColumn
-            allRowAligns = (\i -> M.findWithDefault (defaultRowAlignment t) i (rowAlignments t)) <$>
-                           [0..length rowHeights - 1]
-            allColAligns = (\i -> M.findWithDefault (defaultColumnAlignment t) i (columnAlignments t)) <$>
-                           [0..length byColumn - 1]
-            rowHeight = maximum . fmap (imageHeight . image)
-            colWidth = maximum . fmap (imageWidth . image)
-            byColumn = transpose cellResults
-            toW = Widget Fixed Fixed . return
-            fillEmptyCell w h result =
-                if imageWidth (image result) == 0 && imageHeight (image result) == 0
-                then result { image = charFill (ctx^.attrL) ' ' w h }
-                else result
-            mkColumn (hAlign, width, colCells) =
-                let paddedCells = flip map (zip3 allRowAligns rowHeights colCells) $ \(vAlign, rHeight, cell) ->
-                        applyColAlignment width hAlign $
-                        applyRowAlignment rHeight vAlign $
-                        toW $
-                        fillEmptyCell width rHeight cell
-                    maybeRowBorders = maybeIntersperse drawRowBorders (hLimit width hBorder)
-                in vBox $ maybeRowBorders paddedCells
+data RenderedTableCells n =
+    RenderedTableCells { renderedTableColumns :: [[Widget n]]
+                       , renderedTableColumnWidths :: [Int]
+                       , renderedTableRowHeights :: [Int]
+                       , renderedTableSource :: Table n
+                       }
 
-            vBorders = mkVBorder <$> rowHeights
-            hBorders = mkHBorder <$> colWidths
-            mkHBorder w = hLimit w hBorder
-            mkVBorder h = vLimit h vBorder
-            topBorder =
-                hBox $ maybeIntersperse drawColumnBorders topT hBorders
-            bottomBorder =
-                hBox $ maybeIntersperse drawColumnBorders bottomT hBorders
-            leftBorder =
-                vBox $ topLeftCorner : maybeIntersperse drawRowBorders leftT vBorders <> [bottomLeftCorner]
-            rightBorder =
-                vBox $ topRightCorner : maybeIntersperse drawRowBorders rightT vBorders <> [bottomRightCorner]
+addTableBorders :: RenderedTableCells n -> RenderM n (Widget n)
+addTableBorders r = do
+    let t = renderedTableSource r
+        columns = renderedTableColumns r
+        rowHeights = renderedTableRowHeights r
+        colWidths = renderedTableColumnWidths r
 
-            maybeWrap check f =
-                if check t then f else id
-            addSurroundingBorder body =
-                leftBorder <+> (topBorder <=> body <=> bottomBorder) <+> rightBorder
-            addColumnBorders =
-                let maybeAddCrosses = maybeIntersperse drawRowBorders cross
-                    columnBorder = vBox $ maybeAddCrosses vBorders
-                in intersperse columnBorder
+        vBorders = mkVBorder <$> rowHeights
+        hBorders = mkHBorder <$> colWidths
+        mkHBorder w = hLimit w hBorder
+        mkVBorder h = vLimit h vBorder
+        topBorder =
+            hBox $ maybeIntersperse t drawColumnBorders topT hBorders
+        bottomBorder =
+            hBox $ maybeIntersperse t drawColumnBorders bottomT hBorders
+        leftBorder =
+            vBox $ topLeftCorner : maybeIntersperse t drawRowBorders leftT vBorders <> [bottomLeftCorner]
+        rightBorder =
+            vBox $ topRightCorner : maybeIntersperse t drawRowBorders rightT vBorders <> [bottomRightCorner]
 
-        let columns = mkColumn <$> zip3 allColAligns colWidths byColumn
-            body = hBox $
-                   maybeWrap drawColumnBorders addColumnBorders columns
-        render $ maybeWrap drawSurroundingBorder addSurroundingBorder body
+        maybeWrap check f =
+            if check t then f else id
+        addSurroundingBorder b =
+            leftBorder <+> (topBorder <=> b <=> bottomBorder) <+> rightBorder
+        addColumnBorders =
+            let maybeAddCrosses = maybeIntersperse t drawRowBorders cross
+                columnBorder = vBox $ maybeAddCrosses vBorders
+            in intersperse columnBorder
+
+        columnsWithRowBorders = (\(w, column) -> vBox $ maybeRowBorders w column) <$> zip colWidths columns
+        maybeRowBorders width = maybeIntersperse t drawRowBorders (hLimit width hBorder)
+        body = hBox $
+               maybeWrap drawColumnBorders addColumnBorders columnsWithRowBorders
+
+    return $ maybeWrap drawSurroundingBorder addSurroundingBorder body
+
+tableCellLayout :: Table n -> RenderM n (RenderedTableCells n)
+tableCellLayout t = do
+    ctx <- getContext
+    cellResults <- forM (tableRows t) $ mapM render
+
+    let rowHeights = rowHeight <$> cellResults
+        colWidths = colWidth <$> byColumn
+        allRowAligns = (\i -> M.findWithDefault (defaultRowAlignment t) i (rowAlignments t)) <$>
+                       [0..length rowHeights - 1]
+        allColAligns = (\i -> M.findWithDefault (defaultColumnAlignment t) i (columnAlignments t)) <$>
+                       [0..length byColumn - 1]
+        rowHeight = maximum . fmap (imageHeight . image)
+        colWidth = maximum . fmap (imageWidth . image)
+        byColumn = transpose cellResults
+
+        toW = Widget Fixed Fixed . return
+        fillEmptyCell w h result =
+            if imageWidth (image result) == 0 && imageHeight (image result) == 0
+            then result { image = charFill (ctx^.attrL) ' ' w h }
+            else result
+        mkColumn (hAlign, width, colCells) =
+            let paddedCells = flip map (zip3 allRowAligns rowHeights colCells) $ \(vAlign, rHeight, cell) ->
+                    applyColAlignment width hAlign $
+                    applyRowAlignment rHeight vAlign $
+                    toW $
+                    fillEmptyCell width rHeight cell
+            in paddedCells
+
+    let columns = mkColumn <$>
+                  zip3 allColAligns colWidths byColumn
+
+    return $ RenderedTableCells { renderedTableColumns = columns
+                                , renderedTableColumnWidths = colWidths
+                                , renderedTableRowHeights = rowHeights
+                                , renderedTableSource = t
+                                }
+
+maybeIntersperse :: Table n -> (Table n -> Bool) -> Widget n -> [Widget n] -> [Widget n]
+maybeIntersperse t f v | f t = intersperse v
+                       | otherwise = id
 
 topLeftCorner :: Widget n
 topLeftCorner = joinableBorder $ Edges False True False True
