@@ -251,37 +251,29 @@ addTableBorders r = do
         rowHeights = renderedTableRowHeights r
         colWidths = renderedTableColumnWidths r
 
-        vBorders = mkVBorder <$> rowHeights
-        hBorders = mkHBorder <$> colWidths
-        mkHBorder w = hLimit w hBorder
-        mkVBorder h = vLimit h vBorder
         contentWidth = sum colWidths
         contentHeight = sum rowHeights
-        topBorder =
-            if drawColumnBorders t
-               then hBox $ intersperse topT hBorders
-               else hLimit contentWidth hBorder
-        bottomBorder =
-            if drawColumnBorders t
-               then hBox $ intersperse bottomT hBorders
-               else hLimit contentWidth hBorder
+
+        hBorderLength = contentWidth + if drawColumnBorders t
+                                       then max (length colWidths - 1) 0
+                                       else 0
+        vBorderHeight = contentHeight + if drawRowBorders t
+                                        then max (length rowHeights - 1) 0
+                                        else 0
+        horizBorder = hLimit hBorderLength hBorder
+        vertBorder = vLimit vBorderHeight vBorder
+
         leftBorder =
-            if drawRowBorders t
-               then vBox $ topLeftCorner : intersperse leftT vBorders <> [bottomLeftCorner]
-               else vBox [topLeftCorner, vLimit contentHeight vBorder, bottomLeftCorner]
+            vBox [topLeftCorner, vertBorder, bottomLeftCorner]
         rightBorder =
-            if drawRowBorders t
-               then vBox $ topRightCorner : intersperse rightT vBorders <> [bottomRightCorner]
-               else vBox [topRightCorner, vLimit contentHeight vBorder, bottomRightCorner]
+            vBox [topRightCorner, vertBorder, bottomRightCorner]
 
         maybeWrap check f =
             if check t then f else id
         addSurroundingBorder b =
-            leftBorder <+> (topBorder <=> b <=> bottomBorder) <+> rightBorder
+            leftBorder <+> (horizBorder <=> b <=> horizBorder) <+> rightBorder
         addRowBorders =
-            let maybeAddCrosses = maybeIntersperse t drawColumnBorders cross
-                rowBorder = hBox $ maybeAddCrosses hBorders
-            in intersperse rowBorder
+            intersperse horizBorder
 
         rowsWithColumnBorders = (\(h, row) -> hBox $ maybeColumnBorders h row) <$> zip rowHeights rows
         maybeColumnBorders height = maybeIntersperse t drawColumnBorders (vLimit height vBorder)
@@ -344,21 +336,6 @@ bottomLeftCorner = joinableBorder $ Edges True False False True
 
 bottomRightCorner :: Widget n
 bottomRightCorner = joinableBorder $ Edges True False True False
-
-cross :: Widget n
-cross = joinableBorder $ Edges True True True True
-
-leftT :: Widget n
-leftT = joinableBorder $ Edges True True False True
-
-rightT :: Widget n
-rightT = joinableBorder $ Edges True True True False
-
-topT :: Widget n
-topT = joinableBorder $ Edges False True True True
-
-bottomT :: Widget n
-bottomT = joinableBorder $ Edges True False True True
 
 applyColAlignment :: Int -> ColumnAlignment -> Widget n -> Widget n
 applyColAlignment width align w =
