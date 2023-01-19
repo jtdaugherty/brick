@@ -149,13 +149,14 @@ Feature Overview
  * A filesystem browser for file and directory selection
  * Borders can be configured to automatically connect!
 
-Brick-Users Discussion
-----------------------
+Brick Discussion
+----------------
 
-The `brick-users` Google Group / e-mail list is a place to discuss
-library changes, give feedback, and ask questions. You can subscribe at:
+There are two forums for discussing brick-related things:
 
-[https://groups.google.com/group/brick-users](https://groups.google.com/group/brick-users)
+1. The [Discussions page](https://github.com/jtdaugherty/brick/discussions) on the github repo, and
+1. The `brick-users` Google Group / e-mail list. You can subscribe
+   [here](https://groups.google.com/group/brick-users).
 
 Status
 ------
