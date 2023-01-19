@@ -10,6 +10,7 @@ where
 
 import Lens.Micro ((^.), (&), (%~))
 import Lens.Micro.Mtl ((%=))
+import Control.Monad
 import Control.Monad.State.Strict
 import Control.Monad.Reader
 import Data.Maybe (fromMaybe, mapMaybe)

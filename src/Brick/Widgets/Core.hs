@@ -122,6 +122,7 @@ import Data.Monoid ((<>))
 
 import Lens.Micro ((^.), (.~), (&), (%~), to, _1, _2, each, to, Lens')
 import Lens.Micro.Mtl (use, (%=))
+import Control.Monad
 import Control.Monad.State.Strict
 import Control.Monad.Reader
 import qualified Data.Foldable as F
