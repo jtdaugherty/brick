@@ -2,6 +2,29 @@
 Brick changelog
 ---------------
 
+1.6
+---
+
+Package changes:
+* Support `mtl` 2.3 (thanks Daniel Firth)
+
+API changes:
+* `Brick.Widgets.Table` got a new `alignColumns` function that can be
+  used to do column layout of a list of widgets using `ColumnAlignment`
+  values from the table API.
+* `Brick.Widgets.Table` got a new low-level table-rendering API for use
+  in applications that want to use the table layout machinery without
+  using `Table` itself. This includes:
+  * `tableCellLayout` - does table cell layout using table configuration
+    settings,
+  * `addBorders` - adds row, column, and surrounding borders using table
+    border-drawing settings, and
+  * `RenderedTableCells` and `BorderConfiguration` - the low-level types
+    used for the new functions.
+
+Other changes:
+* Added a new `EditorLineNumbersDemo` demo program.
+
 1.5
 ---
 
