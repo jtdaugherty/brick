@@ -485,6 +485,19 @@ fill ch =
 -- in the specified order (uppermost first). Defers growth policies to
 -- the growth policies of the contained widgets (if any are greedy, so
 -- is the box).
+--
+-- Allocates space to 'Fixed' elements first and 'Greedy' elements
+-- second. For example, if a 'vBox' contains three elements @A@, @B@,
+-- and @C@, and if @A@ and @B@ are 'Fixed', then 'vBox' first renders
+-- @A@ and @B@. Suppose those two take up 10 rows total, and the 'vBox'
+-- was given 50 rows. This means 'vBox' then allocates the remaining
+-- 40 rows to @C@. If, on the other hand, @A@ and @B@ take up 50 rows
+-- together, @C@ will not be rendered at all.
+--
+-- If all elements are 'Greedy', 'vBox' allocates the available height
+-- evenly among the elements. So, for example, if a 'vBox' is rendered
+-- in 90 rows and has three 'Greedy' elements, each element will be
+-- allocated 30 rows.
 {-# NOINLINE vBox #-}
 vBox :: [Widget n] -> Widget n
 vBox [] = emptyWidget
@@ -495,6 +508,19 @@ vBox pairs = renderBox vBoxRenderer pairs
 -- in the specified order (leftmost first). Defers growth policies to
 -- the growth policies of the contained widgets (if any are greedy, so
 -- is the box).
+--
+-- Allocates space to 'Fixed' elements first and 'Greedy' elements
+-- second. For example, if an 'hBox' contains three elements @A@, @B@,
+-- and @C@, and if @A@ and @B@ are 'Fixed', then 'hBox' first renders
+-- @A@ and @B@. Suppose those two take up 10 columns total, and the
+-- 'hBox' was given 50 columns. This means 'hBox' then allocates the
+-- remaining 40 columns to @C@. If, on the other hand, @A@ and @B@ take
+-- up 50 columns together, @C@ will not be rendered at all.
+--
+-- If all elements are 'Greedy', 'hBox' allocates the available width
+-- evenly among the elements. So, for example, if an 'hBox' is rendered
+-- in 90 columns and has three 'Greedy' elements, each element will be
+-- allocated 30 columns.
 {-# NOINLINE hBox #-}
 hBox :: [Widget n] -> Widget n
 hBox [] = emptyWidget
