@@ -835,9 +835,11 @@ rewriteImage br (loRewrite, hiRewrite) old = rewriteHi . rewriteLo $ old where
 -- growth of otherwise-greedy widgets. This is non-greedy horizontally
 -- and defers to the limited widget vertically.
 hLimit :: Int -> Widget n -> Widget n
-hLimit w p =
-    Widget Fixed (vSize p) $
-      withReaderT (availWidthL %~ (min w)) $ render $ cropToContext p
+hLimit w p
+    | w <= 0 = emptyWidget
+    | otherwise =
+        Widget Fixed (vSize p) $
+          withReaderT (availWidthL %~ (min w)) $ render $ cropToContext p
 
 -- | Limit the space available to the specified widget to the specified
 -- percentage of available width, as a value between 0 and 100
@@ -846,22 +848,26 @@ hLimit w p =
 -- growth of otherwise-greedy widgets. This is non-greedy horizontally
 -- and defers to the limited widget vertically.
 hLimitPercent :: Int -> Widget n -> Widget n
-hLimitPercent w' p =
-    Widget Fixed (vSize p) $ do
-      let w = clamp 0 100 w'
-      ctx <- getContext
-      let usableWidth = ctx^.availWidthL
-          widgetWidth = round (toRational usableWidth * (toRational w / 100))
-      withReaderT (availWidthL %~ (min widgetWidth)) $ render $ cropToContext p
+hLimitPercent w' p
+    | w' <= 0 = emptyWidget
+    | otherwise =
+        Widget Fixed (vSize p) $ do
+          let w = clamp 0 100 w'
+          ctx <- getContext
+          let usableWidth = ctx^.availWidthL
+              widgetWidth = round (toRational usableWidth * (toRational w / 100))
+          withReaderT (availWidthL %~ (min widgetWidth)) $ render $ cropToContext p
 
 -- | Limit the space available to the specified widget to the specified
 -- number of rows. This is important for constraining the vertical
 -- growth of otherwise-greedy widgets. This is non-greedy vertically and
 -- defers to the limited widget horizontally.
 vLimit :: Int -> Widget n -> Widget n
-vLimit h p =
-    Widget (hSize p) Fixed $
-      withReaderT (availHeightL %~ (min h)) $ render $ cropToContext p
+vLimit h p
+    | h <= 0 = emptyWidget
+    | otherwise =
+        Widget (hSize p) Fixed $
+          withReaderT (availHeightL %~ (min h)) $ render $ cropToContext p
 
 -- | Limit the space available to the specified widget to the specified
 -- percentage of available height, as a value between 0 and 100
@@ -870,22 +876,26 @@ vLimit h p =
 -- growth of otherwise-greedy widgets. This is non-greedy vertically and
 -- defers to the limited widget horizontally.
 vLimitPercent :: Int -> Widget n -> Widget n
-vLimitPercent h' p =
-    Widget (hSize p) Fixed $ do
-      let h = clamp 0 100 h'
-      ctx <- getContext
-      let usableHeight = ctx^.availHeightL
-          widgetHeight = round (toRational usableHeight * (toRational h / 100))
-      withReaderT (availHeightL %~ (min widgetHeight)) $ render $ cropToContext p
+vLimitPercent h' p
+    | h' <= 0 = emptyWidget
+    | otherwise =
+        Widget (hSize p) Fixed $ do
+          let h = clamp 0 100 h'
+          ctx <- getContext
+          let usableHeight = ctx^.availHeightL
+              widgetHeight = round (toRational usableHeight * (toRational h / 100))
+          withReaderT (availHeightL %~ (min widgetHeight)) $ render $ cropToContext p
 
 -- | Set the rendering context height and width for this widget. This
 -- is useful for relaxing the rendering size constraints on e.g. layer
 -- widgets where cropping to the screen size is undesirable.
 setAvailableSize :: (Int, Int) -> Widget n -> Widget n
-setAvailableSize (w, h) p =
-    Widget Fixed Fixed $
-      withReaderT (\c -> c & availHeightL .~ h & availWidthL .~ w) $
-        render $ cropToContext p
+setAvailableSize (w, h) p
+    | w <= 0 || h <= 0 = emptyWidget
+    | otherwise =
+        Widget Fixed Fixed $
+          withReaderT (\c -> c & availHeightL .~ h & availWidthL .~ w) $
+            render $ cropToContext p
 
 -- | When drawing the specified widget, set the attribute used for
 -- drawing to the one with the specified name. Note that the widget may
