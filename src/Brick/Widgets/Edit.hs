@@ -188,7 +188,7 @@ editor name limit s = Editor (Z.textZipper (Z.lines s) limit) name
 -- any edits applied here will be ignored if they edit text outside
 -- the line limit.
 applyEdit :: (Z.TextZipper t -> Z.TextZipper t)
-          -- ^ The 'Data.Text.Zipper' editing transformation to apply
+          -- ^ The 'Z.TextZipper' editing transformation to apply
           -> Editor t n
           -> Editor t n
 applyEdit f e = e & editContentsL %~ f
