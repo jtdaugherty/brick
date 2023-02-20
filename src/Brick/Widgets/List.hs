@@ -204,9 +204,9 @@ handleListEvent e =
         _ -> return ()
 
 -- | Enable list movement with the vi keys with a fallback handler if
--- none match. Use 'handleListEventVi' 'handleListEvent' in place of
--- 'handleListEvent' to add the vi keys bindings to the standard ones.
--- Movements handled include:
+-- none match. Use 'handleListEventVi' in place of 'handleListEvent'
+-- to add the vi keys bindings to the standard ones. Movements handled
+-- include:
 --
 -- * Up (k)
 -- * Down (j)
