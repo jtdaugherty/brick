@@ -92,6 +92,7 @@ it, get in touch!
 | [`babel-cards`](https://github.com/srhoulam/babel-cards) | A TUI spaced-repetition memorization tool. Similar to Anki. |
 | [`codenames-haskell`](https://github.com/VigneshN1997/codenames-haskell) | An implementation of the Codenames game |
 | [`haradict`](https://github.com/srhoulam/haradict) | A TUI Arabic dictionary powered by [ElixirFM](https://github.com/otakar-smrz/elixir-fm) |
+| [`Giter`](https://gitlab.com/refaelsh/giter) | A UI wrapper around Git CLI inspired by [Magit](https://magit.vc/). |
 
 These third-party packages also extend `brick`:
 
