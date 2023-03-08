@@ -4,6 +4,7 @@ module Brick.Util
   , on
   , fg
   , bg
+  , style
   , clOffset
   )
 where
@@ -55,6 +56,11 @@ fg = (defAttr `withForeColor`)
 -- foreground color is the "default").
 bg :: Color -> Attr
 bg = (defAttr `withBackColor`)
+
+-- | Create an attribute from the specified style (the colors are the
+-- "default").
+style :: Style -> Attr
+style = (defAttr `withStyle`)
 
 -- | Add a 'Location' offset to the specified 'CursorLocation'.
 clOffset :: CursorLocation n -> Location -> CursorLocation n
