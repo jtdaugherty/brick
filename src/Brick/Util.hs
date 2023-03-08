@@ -52,7 +52,7 @@ fg :: Color -> Attr
 fg = (defAttr `withForeColor`)
 
 -- | Create an attribute from the specified background color (the
--- background color is the "default").
+-- foreground color is the "default").
 bg :: Color -> Attr
 bg = (defAttr `withBackColor`)
 
