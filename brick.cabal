@@ -80,7 +80,7 @@ Flag demos
 
 library
   default-language:    Haskell2010
-  ghc-options:         -Wall -Wcompat -O2
+  ghc-options:         -Wall -Wcompat -O2 -Wunused-packages
   default-extensions:  CPP
   hs-source-dirs:      src
   exposed-modules:
@@ -132,7 +132,6 @@ library
                        mtl,
                        config-ini,
                        vector,
-                       contravariant,
                        stm >= 2.4.3,
                        text,
                        text-zipper >= 0.13,
