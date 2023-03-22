@@ -710,7 +710,9 @@ getInvalidFields (FormFieldState st _ _ fs _ _) =
 -- 'invalidFormInputAttr' attribute.
 --
 -- Finally, all of the resulting field renderings are concatenated with
--- the form's concatenation function (see 'setFormConcat').
+-- the form's concatenation function (see 'setFormConcat'). A visibility
+-- request is also issued for the currently-focused form field in case
+-- the form is rendered within a viewport.
 renderForm :: (Eq n) => Form s e n -> Widget n
 renderForm (Form es fr _ concatAll) =
     concatAll $ renderFormFieldState fr <$> es
@@ -730,7 +732,8 @@ renderFormFieldState fr (FormFieldState st _ _ fields helper concatFields) =
                                then id
                                else forceAttr invalidFormInputAttr
                 foc = Just n == focusGetCurrent fr
-            in maybeInvalid (renderField foc st) : renderFields fs
+                maybeVisible = if foc then visible else id
+            in (maybeVisible $ maybeInvalid $ renderField foc st) : renderFields fs
     in helper $ concatFields $ renderFields fields
 
 -- | Dispatch an event to the currently focused form field. This handles
