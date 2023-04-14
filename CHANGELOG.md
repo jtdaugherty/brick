@@ -2,6 +2,20 @@
 Brick changelog
 ---------------
 
+1.7
+---
+
+Package changes:
+* Allow building with `base` 4.18 (GHC 9.6) (thanks Mario Lang)
+
+API changes:
+* Added a new function, `Brick.Util.style`, to create a Vty `Attr` from
+  a style value (thanks Amir Dekel)
+
+Other improvements:
+* `Brick.Forms.renderForm` now issues a visibility request for the
+  focused form field, which makes forms usable within viewports.
+
 1.6
 ---
 
