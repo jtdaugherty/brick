@@ -143,9 +143,10 @@ module Brick.Widgets.FileBrowser
 where
 
 import qualified Control.Exception as E
-import Control.Monad (forM)
+import Control.Monad (forM, when)
 import Control.Monad.IO.Class (liftIO)
 import Data.Char (toLower, isPrint)
+import Data.Foldable (for_)
 import Data.Maybe (fromMaybe, isJust, fromJust)
 import qualified Data.Foldable as F
 import qualified Data.Text as T
@@ -318,10 +319,7 @@ selectDirectories :: FileInfo -> Bool
 selectDirectories i =
     case fileInfoFileType i of
         Just Directory -> True
-        Just SymbolicLink ->
-            case fileInfoLinkTargetType i of
-                Just Directory -> True
-                _ -> False
+        Just SymbolicLink -> fileInfoLinkTargetType i == Just Directory
         _ -> False
 
 -- | Set the filtering function used to determine which entries in
@@ -362,7 +360,7 @@ setWorkingDirectory path b = do
             Left (_::E.IOException) -> entries
             Right parent -> parent : entries
 
-    return $ (setEntries allEntries b)
+    return $ setEntries allEntries b
                  & fileBrowserWorkingDirectoryL .~ path
                  & fileBrowserExceptionL .~ exc
                  & fileBrowserSelectedFilesL .~ mempty
@@ -492,7 +490,7 @@ applyFilterAndSearch :: FileBrowser n -> FileBrowser n
 applyFilterAndSearch b =
     let filterMatch = fromMaybe (const True) (b^.fileBrowserEntryFilterL)
         searchMatch = maybe (const True)
-                            (\search i -> (T.toLower search `T.isInfixOf` (T.pack $ toLower <$> fileInfoSanitizedFilename i)))
+                            (\search i -> T.toLower search `T.isInfixOf` T.pack (toLower <$> fileInfoSanitizedFilename i))
                             (b^.fileBrowserSearchStringL)
         match i = filterMatch i && searchMatch i
         matching = filter match $ b^.fileBrowserLatestResultsL
@@ -714,6 +712,9 @@ handleFileBrowserEventCommon e =
         _ ->
             zoom fileBrowserEntriesL $ handleListEvent e
 
+markSelected :: FileInfo -> EventM n (FileBrowser n) ()
+markSelected e = fileBrowserSelectedFilesL %= Set.insert (fileInfoFilename e)
+
 -- | If the browser's current entry is selectable according to
 -- @fileBrowserSelectable@, add it to the selection set and return.
 -- If not, and if the entry is a directory or a symlink targeting a
@@ -723,29 +724,16 @@ handleFileBrowserEventCommon e =
 maybeSelectCurrentEntry :: EventM n (FileBrowser n) ()
 maybeSelectCurrentEntry = do
     b <- get
-    case fileBrowserCursor b of
-        Nothing -> return ()
-        Just entry ->
-            if fileBrowserSelectable b entry
-            then fileBrowserSelectedFilesL %= Set.insert (fileInfoFilename entry)
-            else case fileInfoFileType entry of
-                Just Directory ->
-                    put =<< (liftIO $ setWorkingDirectory (fileInfoFilePath entry) b)
-                Just SymbolicLink ->
-                    case fileInfoLinkTargetType entry of
-                        Just Directory ->
-                            put =<< (liftIO $ setWorkingDirectory (fileInfoFilePath entry) b)
-                        _ ->
-                            return ()
-                _ ->
-                    return ()
+    for_ (fileBrowserCursor b) $ \entry ->
+        if fileBrowserSelectable b entry
+        then markSelected entry
+        else when (selectDirectories entry) $
+            put =<< liftIO (setWorkingDirectory (fileInfoFilePath entry) b)
 
 selectCurrentEntry :: EventM n (FileBrowser n) ()
 selectCurrentEntry = do
     b <- get
-    case fileBrowserCursor b of
-        Nothing -> return ()
-        Just e -> fileBrowserSelectedFilesL %= Set.insert (fileInfoFilename e)
+    for_ (fileBrowserCursor b) markSelected
 
 -- | Render a file browser. This renders a list of entries in the
 -- working directory, a cursor to select from among the entries, a
@@ -765,7 +753,7 @@ renderFileBrowser :: (Show n, Ord n)
                   -- ^ The browser to render.
                   -> Widget n
 renderFileBrowser foc b =
-    let maxFilenameLength = maximum $ (length . fileInfoFilename) <$> (b^.fileBrowserEntriesL)
+    let maxFilenameLength = maximum $ length . fileInfoFilename <$> (b^.fileBrowserEntriesL)
         cwdHeader = padRight Max $
                     str $ sanitizeFilename $ fileBrowserWorkingDirectory b
         selInfo = case listSelectedElement (b^.fileBrowserEntriesL) of
@@ -789,7 +777,7 @@ renderFileBrowser foc b =
                                         then ", " <> prettyFileSize (fileStatusSize stat)
                                         else ""
                         in fileTypeLabel (fileStatusFileType stat) <> maybeSize
-            in txt $ (T.pack $ fileInfoSanitizedFilename i) <> ": " <> label
+            in txt $ T.pack (fileInfoSanitizedFilename i) <> ": " <> label
 
         maybeSearchInfo = case b^.fileBrowserSearchStringL of
             Nothing -> emptyWidget
