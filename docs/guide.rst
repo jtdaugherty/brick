@@ -1745,12 +1745,12 @@ to two events. Whether that's a problem depends entirely on how
   open and only handled ``QuitEvent`` when the window had been closed.
   This kind of "modal" approach to handling events means that we only
   consider a key to have a collision if it is bound to two or more
-  events that are handled in the same event handler.
+  events that are handled in the same event handling context.
 
-There's also another situation that would be problematic, which is when
-an abstract event like ``QuitEvent`` has a key mapping that
+There's also another situation that would be problematic, which is
+when an abstract event like ``QuitEvent`` has a key mapping that
 collides with a key handler that is bound to a specific key using
-``Brick.Keybindings.KeyDispatcher.onKey`` rather than an event:
+``Brick.Keybindings.KeyDispatcher.onKey`` rather than an abstract event:
 
 .. code:: haskell
 
