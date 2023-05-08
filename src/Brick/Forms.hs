@@ -359,6 +359,9 @@ renderCheckbox lb check rb label n foc val =
 -- | A form field for selecting a single choice from a set of possible
 -- choices in a scrollable list. This uses a 'List' internally.
 --
+-- This field's attributes are governed by those exported from
+-- 'Brick.Widgets.List'.
+--
 -- This field responds to the same input events that a 'List' does.
 listField :: forall s e n a . (Ord n, Show n, Eq a)
           => (s -> Vector a)
@@ -492,6 +495,9 @@ renderRadio lb check rb val name label foc cur =
 -- a value. The other editing fields in this module are special cases of
 -- this function.
 --
+-- This field's attributes are governed by those exported from
+-- 'Brick.Widgets.Edit'.
+--
 -- This field responds to all events handled by 'editor', including
 -- mouse events.
 editField :: (Ord n, Show n)
@@ -550,6 +556,9 @@ editField stLens n limit ini val renderText wrapEditor initialState =
 -- useful in cases where the user-facing representation of a value
 -- matches the 'Show' representation exactly, such as with 'Int'.
 --
+-- This field's attributes are governed by those exported from
+-- 'Brick.Widgets.Edit'.
+--
 -- This field responds to all events handled by 'editor', including
 -- mouse events.
 editShowableField :: (Ord n, Show n, Read a, Show a)
@@ -569,6 +578,9 @@ editShowableField stLens n =
 -- pass for validation. This field is mostly useful in cases where the
 -- user-facing representation of a value matches the 'Show' representation
 -- exactly, such as with 'Int', but you don't want to accept just /any/ 'Int'.
+--
+-- This field's attributes are governed by those exported from
+-- 'Brick.Widgets.Edit'.
 --
 -- This field responds to all events handled by 'editor', including
 -- mouse events.
@@ -598,6 +610,9 @@ editShowableFieldWithValidate stLens n isValid =
 -- | A form field using an editor to edit a text value. Since the value
 -- is free-form text, it is always valid.
 --
+-- This field's attributes are governed by those exported from
+-- 'Brick.Widgets.Edit'.
+--
 -- This field responds to all events handled by 'editor', including
 -- mouse events.
 editTextField :: (Ord n, Show n)
@@ -619,6 +634,9 @@ editTextField stLens n limit =
 -- | A form field using a single-line editor to edit a free-form text
 -- value represented as a password. The value is always considered valid
 -- and is always represented with one asterisk per password character.
+--
+-- This field's attributes are governed by those exported from
+-- 'Brick.Widgets.Edit'.
 --
 -- This field responds to all events handled by 'editor', including
 -- mouse events.
@@ -644,11 +662,18 @@ toPassword s = txt $ T.replicate (T.length $ T.concat s) "*"
 formAttr :: AttrName
 formAttr = attrName "brickForm"
 
--- | The attribute for form input fields with invalid values.
+-- | The attribute for form input fields with invalid values. Note that
+-- this attribute will affect any field considered invalid and will take
+-- priority over any attributes that the field uses to render itself.
 invalidFormInputAttr :: AttrName
 invalidFormInputAttr = formAttr <> attrName "invalidInput"
 
--- | The attribute for form input fields that have the focus.
+-- | The attribute for form input fields that have the focus. Note that
+-- this attribute only affects fields that do not already use their own
+-- attributes when rendering, such as editor- and list-based fields.
+-- Those need to be styled by setting the appropriate attributes; see
+-- the documentation for field constructors to find out which attributes
+-- need to be configured.
 focusedFormInputAttr :: AttrName
 focusedFormInputAttr = formAttr <> attrName "focusedInput"
 
