@@ -6,8 +6,6 @@
 -- | Support for representing attribute themes and loading and saving
 -- theme customizations in INI-style files.
 --
--- The file format is as follows:
---
 -- Customization files are INI-style files with two sections, both
 -- optional: @"default"@ and @"other"@.
 --
