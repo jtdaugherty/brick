@@ -1649,8 +1649,8 @@ step-by-step process for using it, in the module documentation for
 ``Brick.Keybindings.KeyDispatcher``.
 
 The following table compares Brick application design decisions and
-runtime behaviors in a typical application compared to one that uses the
-customizable keybindings API:
+runtime behaviors in a typical application to those of an application
+that uses the customizable keybindings API:
 
 +---------------------+------------------------+-------------------------+
 | **Approach**        | **Before runtime**     | **At runtime**          |
