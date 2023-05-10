@@ -2,6 +2,17 @@
 Brick changelog
 ---------------
 
+1.8
+---
+
+API changes:
+* Added `Brick.Widgets.Core.forceAttrAllowStyle`, which is like
+  `forceAttr` but allows styles to be preserved rather than overridden.
+
+Other improvements:
+* The `Brick.Forms` documentation was updated to clarify how attributes
+  get used for form fields.
+
 1.7
 ---
 
