@@ -50,6 +50,7 @@ module Brick.Widgets.Core
   , modifyDefAttr
   , withAttr
   , forceAttr
+  , forceAttrAllowStyle
   , overrideAttr
   , updateAttrMap
 
@@ -1028,6 +1029,17 @@ forceAttr an p =
     Widget (hSize p) (vSize p) $ do
         c <- getContext
         withReaderT (ctxAttrMapL .~ (forceAttrMap (attrMapLookup an (c^.ctxAttrMapL)))) (render p)
+
+-- | Like 'forceAttr', except that the style of attribute lookups in the
+-- attribute map is preserved and merged witht the forced attribute.
+-- This allows for situations where 'forceAttr' would otherwise ignore
+-- style information that is important to preserve.
+forceAttrAllowStyle :: AttrName -> Widget n -> Widget n
+forceAttrAllowStyle an p =
+    Widget (hSize p) (vSize p) $ do
+        c <- getContext
+        let m = c^.ctxAttrMapL
+        withReaderT (ctxAttrMapL .~ (forceAttrMapAllowStyle (attrMapLookup an m) m)) (render p)
 
 -- | Override the lookup of the attribute name 'targetName' to return
 -- the attribute value associated with 'fromName' when rendering the

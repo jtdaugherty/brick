@@ -27,6 +27,7 @@ module Brick.AttrMap
   -- * Construction
   , attrMap
   , forceAttrMap
+  , forceAttrMapAllowStyle
   , attrName
   -- * Inspection
   , attrNameComponents
@@ -78,6 +79,7 @@ instance Monoid AttrName where
 -- | An attribute map which maps 'AttrName' values to 'Attr' values.
 data AttrMap = AttrMap Attr (M.Map AttrName Attr)
              | ForceAttr Attr
+             | ForceAttrAllowStyle Attr AttrMap
              deriving (Show, Generic, NFData)
 
 -- | Create an attribute name from a string.
@@ -103,6 +105,11 @@ attrMap theDefault pairs = AttrMap theDefault (M.fromList pairs)
 forceAttrMap :: Attr -> AttrMap
 forceAttrMap = ForceAttr
 
+-- | Create an attribute map in which all lookups map to the same
+-- attribute. This is functionally equivalent to @attrMap attr []@.
+forceAttrMapAllowStyle :: Attr -> AttrMap -> AttrMap
+forceAttrMapAllowStyle = ForceAttrAllowStyle
+
 -- | Given an attribute and a map, merge the attribute with the map's
 -- default attribute. If the map is forcing all lookups to a specific
 -- attribute, the forced attribute is returned without merging it with
@@ -122,6 +129,7 @@ forceAttrMap = ForceAttr
 -- @
 mergeWithDefault :: Attr -> AttrMap -> Attr
 mergeWithDefault _ (ForceAttr a) = a
+mergeWithDefault a (ForceAttrAllowStyle f _) = f
 mergeWithDefault a (AttrMap d _) = combineAttrs d a
 
 -- | Look up the specified attribute name in the map. Map lookups
@@ -148,6 +156,12 @@ mergeWithDefault a (AttrMap d _) = combineAttrs d a
 -- @
 attrMapLookup :: AttrName -> AttrMap -> Attr
 attrMapLookup _ (ForceAttr a) = a
+attrMapLookup a (ForceAttrAllowStyle forced m) =
+    -- Look up the attribute in the contained map, then keep only its
+    -- style.
+    let result = attrMapLookup a m
+    in forced { attrStyle = attrStyle forced `combineStyles` attrStyle result
+              }
 attrMapLookup (AttrName []) (AttrMap theDefault _) = theDefault
 attrMapLookup (AttrName ns) (AttrMap theDefault m) =
     let results = mapMaybe (\n -> M.lookup (AttrName n) m) (inits ns)
@@ -156,11 +170,14 @@ attrMapLookup (AttrName ns) (AttrMap theDefault m) =
 -- | Set the default attribute value in an attribute map.
 setDefaultAttr :: Attr -> AttrMap -> AttrMap
 setDefaultAttr _ (ForceAttr a) = ForceAttr a
+setDefaultAttr newDefault (ForceAttrAllowStyle a m) =
+    ForceAttrAllowStyle a (setDefaultAttr newDefault m)
 setDefaultAttr newDefault (AttrMap _ m) = AttrMap newDefault m
 
 -- | Get the default attribute value in an attribute map.
 getDefaultAttr :: AttrMap -> Attr
 getDefaultAttr (ForceAttr a) = a
+getDefaultAttr (ForceAttrAllowStyle _ m) = getDefaultAttr m
 getDefaultAttr (AttrMap d _) = d
 
 combineAttrs :: Attr -> Attr -> Attr
@@ -185,6 +202,7 @@ combineStyles _ v = v
 applyAttrMappings :: [(AttrName, Attr)] -> AttrMap -> AttrMap
 applyAttrMappings _ (ForceAttr a) = ForceAttr a
 applyAttrMappings ms (AttrMap d m) = AttrMap d ((M.fromList ms) `M.union` m)
+applyAttrMappings ms (ForceAttrAllowStyle a m) = ForceAttrAllowStyle a (applyAttrMappings ms m)
 
 -- | Update an attribute map such that a lookup of 'ontoName' returns
 -- the attribute value specified by 'fromName'.  This is useful for
