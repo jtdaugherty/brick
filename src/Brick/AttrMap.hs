@@ -129,7 +129,7 @@ forceAttrMapAllowStyle = ForceAttrAllowStyle
 -- @
 mergeWithDefault :: Attr -> AttrMap -> Attr
 mergeWithDefault _ (ForceAttr a) = a
-mergeWithDefault a (ForceAttrAllowStyle f _) = f
+mergeWithDefault _ (ForceAttrAllowStyle f _) = f
 mergeWithDefault a (AttrMap d _) = combineAttrs d a
 
 -- | Look up the specified attribute name in the map. Map lookups
