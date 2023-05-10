@@ -1031,9 +1031,9 @@ forceAttr an p =
         withReaderT (ctxAttrMapL .~ (forceAttrMap (attrMapLookup an (c^.ctxAttrMapL)))) (render p)
 
 -- | Like 'forceAttr', except that the style of attribute lookups in the
--- attribute map is preserved and merged witht the forced attribute.
--- This allows for situations where 'forceAttr' would otherwise ignore
--- style information that is important to preserve.
+-- attribute map is preserved and merged with the forced attribute. This
+-- allows for situations where 'forceAttr' would otherwise ignore style
+-- information that is important to preserve.
 forceAttrAllowStyle :: AttrName -> Widget n -> Widget n
 forceAttrAllowStyle an p =
     Widget (hSize p) (vSize p) $ do
