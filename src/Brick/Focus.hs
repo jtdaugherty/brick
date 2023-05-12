@@ -25,6 +25,7 @@ import Brick.Widgets.Core (Named(..))
 -- | A focus ring containing a sequence of resource names to focus and a
 -- currently-focused name.
 newtype FocusRing n = FocusRing (C.CList n)
+                    deriving (Show)
 
 -- | Construct a focus ring from the list of resource names.
 focusRing :: [n] -> FocusRing n
