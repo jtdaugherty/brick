@@ -2,6 +2,12 @@
 Brick changelog
 ---------------
 
+1.9
+---
+
+API changes:
+* `FocusRing` got a `Show` instance.
+
 1.8
 ---
 
