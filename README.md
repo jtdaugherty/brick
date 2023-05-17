@@ -205,7 +205,12 @@ should consider to make submitting patches easier for all concerned:
    codebase.
  - Please adjust or provide Haddock and/or user guide documentation
    relevant to any changes you make.
- - New commits should be `-Wall` clean.
+ - Please ensure that commits are `-Wall` clean.
+ - Please ensure that each commit makes a single, logical, isolated
+   change as much as possible.
+ - Please do not submit changes that your linter told you to make. I
+   will probably decline them. Relatedly: please do not submit changes
+   that change only style without changing functionality.
  - Please do NOT include package version changes in your patches.
    Package version changes are only done at release time when the full
    scope of a release's changes can be evaluated to determine the
