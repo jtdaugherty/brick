@@ -94,6 +94,7 @@ it, get in touch!
 | [`haradict`](https://github.com/srhoulam/haradict) | A TUI Arabic dictionary powered by [ElixirFM](https://github.com/otakar-smrz/elixir-fm) |
 | [`Giter`](https://gitlab.com/refaelsh/giter) | A UI wrapper around Git CLI inspired by [Magit](https://magit.vc/). |
 | [`Brickudoku`](https://github.com/Thecentury/brickudoku) | A hybrid of Tetris and Sudoku |
+| [`timeloop`](https://github.com/cdupont/timeloop) | A time-travelling demonstrator |
 
 These third-party packages also extend `brick`:
 
