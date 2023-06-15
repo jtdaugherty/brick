@@ -130,7 +130,7 @@ Documentation for `brick` comes in a variety of forms:
 
 * [The official brick user guide](https://github.com/jtdaugherty/brick/blob/master/docs/guide.rst)
 * [Haddock documentation](https://hackage.haskell.org/package/brick)
-* [Demo programs](https://github.com/jtdaugherty/brick/blob/master/programs) ([Screenshots](https://github.com/jtdaugherty/brick/blob/master/docs/programs-screenshots.md))
+* [Demo programs](https://github.com/jtdaugherty/brick/blob/master/programs)
 * [FAQ](https://github.com/jtdaugherty/brick/blob/master/FAQ.md)
 
 Feature Overview
