@@ -71,7 +71,7 @@ app =
         , appStartEvent = return ()
         , appAttrMap = \s ->
             -- Note that in practice this is not ideal: we don't want
-            -- to build an attribute from a theme every time this is
+            -- to build an attribute map from a theme every time this is
             -- invoked, because it gets invoked once per redraw. Instead
             -- we'd build the attribute map at startup and store it in
             -- the application state. Here I just use themeToAttrMap to
