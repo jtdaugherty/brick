@@ -72,8 +72,8 @@ mkBorderDemo (styleName, sty) =
 titleAttr :: A.AttrName
 titleAttr = A.attrName "title"
 
-borderMappings :: [(A.AttrName, V.Attr)]
-borderMappings =
+attrs :: [(A.AttrName, V.Attr)]
+attrs =
     [ (B.borderAttr,         V.yellow `on` V.black)
     , (B.vBorderAttr,        fg V.cyan)
     , (B.hBorderAttr,        fg V.magenta)
@@ -82,7 +82,7 @@ borderMappings =
 
 colorDemo :: Widget ()
 colorDemo =
-    updateAttrMap (A.applyAttrMappings borderMappings) $
+    updateAttrMap (A.applyAttrMappings attrs) $
     B.borderWithLabel (withAttr titleAttr $ str "title") $
     hLimit 20 $
     vLimit 5 $
