@@ -16,12 +16,12 @@ import Brick.Types
   ( Widget
   )
 import Brick.Widgets.Core
-  ( (<=>)
-  , (<+>)
+  ( (<+>)
   , withAttr
   , vLimit
   , hLimit
   , hBox
+  , vBox
   , updateAttrMap
   , withBorderStyle
   , txt
@@ -91,13 +91,14 @@ colorDemo =
 
 ui :: Widget ()
 ui =
-    hBox borderDemos
-    <=> B.hBorder
-    <=> colorDemo
-    <=> B.hBorderWithLabel (str "horizontal border label")
-    <=> (C.center (str "Left of vertical border")
-         <+> B.vBorder
-         <+> C.center (str "Right of vertical border"))
+    vBox [ hBox borderDemos
+         , B.hBorder
+         , colorDemo
+         , B.hBorderWithLabel (str "horizontal border label")
+         , (C.center (str "Left of vertical border")
+             <+> B.vBorder
+             <+> C.center (str "Right of vertical border"))
+         ]
 
 main :: IO ()
 main = M.simpleMain ui
