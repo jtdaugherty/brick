@@ -26,6 +26,7 @@ import Brick.Widgets.Core
   , withBorderStyle
   , txt
   , str
+  , padLeftRight
   )
 import qualified Brick.Widgets.Center as C
 import qualified Brick.Widgets.Border as B
@@ -65,7 +66,8 @@ mkBorderDemo (styleName, sty) =
     B.borderWithLabel (str "label") $
     vLimit 5 $
     C.vCenter $
-    txt $ "  " <> styleName <> " style  "
+    padLeftRight 2 $
+    txt $ styleName <> " style"
 
 titleAttr :: A.AttrName
 titleAttr = A.attrName "title"
