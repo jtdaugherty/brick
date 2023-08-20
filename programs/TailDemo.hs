@@ -16,6 +16,7 @@ import Brick
 import Brick.BChan
 import Brick.Widgets.Border
 import qualified Graphics.Vty as V
+import Graphics.Vty.CrossPlatform (mkVty)
 
 data AppState =
     AppState { _textAreaHeight :: Int
@@ -142,11 +143,10 @@ randomVal as = do
 
 main :: IO ()
 main = do
-    cfg <- V.standardIOConfig
-    vty <- V.mkVty cfg
+    vty <- mkVty V.defaultConfig
     chan <- newBChan 10
 
     -- Run thread to simulate incoming data
     void $ forkIO $ generateLines chan
 
-    void $ customMain vty (V.mkVty cfg) (Just chan) app initialState
+    void $ customMain vty (mkVty V.defaultConfig) (Just chan) app initialState

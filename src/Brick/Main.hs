@@ -73,11 +73,11 @@ import Graphics.Vty
   , displayBounds
   , shutdown
   , nextEvent
-  , mkVty
-  , defaultConfig
   , restoreInputState
   , inputIface
   )
+import Graphics.Vty.CrossPlatform (mkVty)
+import Graphics.Vty.Config (defaultConfig)
 import Graphics.Vty.Attributes (defAttr)
 
 import Brick.BChan (BChan, newBChan, readBChan, readBChan2, writeBChan)

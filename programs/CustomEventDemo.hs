@@ -12,6 +12,7 @@ import Control.Concurrent (threadDelay, forkIO)
 import Data.Monoid
 #endif
 import qualified Graphics.Vty as V
+import Graphics.Vty.CrossPlatform (mkVty)
 
 import Brick.BChan
 import Brick.Main
@@ -82,6 +83,6 @@ main = do
         writeBChan chan Counter
         threadDelay 1000000
 
-    let buildVty = V.mkVty V.defaultConfig
+    let buildVty = mkVty V.defaultConfig
     initialVty <- buildVty
     void $ customMain initialVty buildVty (Just chan) theApp initialState

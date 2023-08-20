@@ -11,6 +11,8 @@ import Data.Monoid ((<>))
 #endif
 
 import qualified Graphics.Vty as V
+import Graphics.Vty.CrossPlatform (mkVty)
+
 import Brick
 import Brick.Forms
   ( Form
@@ -136,7 +138,7 @@ app =
 main :: IO ()
 main = do
     let buildVty = do
-          v <- V.mkVty =<< V.standardIOConfig
+          v <- mkVty V.defaultConfig
           V.setMode (V.outputIface v) V.Mouse True
           return v
 

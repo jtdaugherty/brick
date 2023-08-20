@@ -96,6 +96,7 @@ library
 
   build-depends:       base >= 4.9.0.0 && < 4.19.0.0,
                        vty >= 5.36,
+                       vty-crossplatform,
                        bimap >= 0.5 && < 0.6,
                        data-clist >= 0.1,
                        directory >= 1.2.5.0,
@@ -159,6 +160,7 @@ executable brick-tail-demo
                        brick,
                        text,
                        vty,
+                       vty-crossplatform,
                        random,
                        microlens-th,
                        microlens-mtl
@@ -202,6 +204,7 @@ executable brick-form-demo
                        text,
                        microlens,
                        microlens-th,
+                       vty-crossplatform,
                        vty
 
 executable brick-text-wrap-demo
@@ -259,6 +262,7 @@ executable brick-viewport-scrollbars-demo
   build-depends:       base,
                        brick,
                        vty,
+                       vty-crossplatform,
                        text,
                        microlens,
                        microlens-mtl,
@@ -449,6 +453,7 @@ executable brick-custom-event-demo
   build-depends:       base,
                        brick,
                        vty,
+                       vty-crossplatform,
                        text,
                        microlens >= 0.3.0.0,
                        microlens-th,
