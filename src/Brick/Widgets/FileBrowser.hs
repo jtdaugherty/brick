@@ -164,10 +164,8 @@ import qualified Graphics.Vty as Vty
 
 import qualified System.Directory as D
 
-#ifndef mingw32_HOST_OS
-import qualified System.Posix.Files as U
-import qualified System.Posix.Types as U
-#endif
+import qualified System.PosixCompat.Files as U
+import System.Posix.Types (COff(..))
 
 import qualified System.FilePath as FP
 import Text.Printf (printf)
@@ -391,58 +389,13 @@ getFileInfo :: String
             -> IO FileInfo
 getFileInfo name = go []
     where
-
-#ifdef mingw32_HOST_OS
-        go history fullPath = do
-            filePath <- D.makeAbsolute fullPath
-
-            fileSize <- D.getFileSize fullPath
-            fileType <- fileTypeFromPath filePath
-
-            let stat = FileStatus { fileStatusFileType = fileType
-                                  , fileStatusSize = fromInteger fileSize
-                                  }
-
-            targetTy <- case fileType of
-                Just SymbolicLink -> do
-                    targetPathResult <- E.try $ D.getSymbolicLinkTarget filePath
-                    case targetPathResult of
-                        Left (_::E.SomeException) -> return Nothing
-                        Right targetPath ->
-                            -- Watch out for recursive symlink chains:
-                            -- if history starts repeating, abort the
-                            -- symlink following process.
-                            --
-                            -- Examples:
-                            --   $ ln -s foo foo
-                            --
-                            --   $ ln -s foo bar
-                            --   $ ln -s bar foo
-                            if targetPath `elem` history
-                            then return Nothing
-                            else do
-                                targetInfo <- liftIO $ go (fullPath : history) targetPath
-                                case fileInfoFileStatus targetInfo of
-                                    Right (FileStatus _ targetTy) -> return targetTy
-                                    _ -> return Nothing
-                _ -> return Nothing
-
-            return FileInfo { fileInfoFilename = name
-                            , fileInfoFilePath = filePath
-                            , fileInfoSanitizedFilename = sanitizeFilename name
-                            , fileInfoFileStatus = Right stat
-                            , fileInfoLinkTargetType = targetTy
-                            }
-
-#else
-
         go history fullPath = do
             filePath <- D.makeAbsolute fullPath
             statusResult <- E.try $ U.getSymbolicLinkStatus filePath
 
             let stat = do
                   status <- statusResult
-                  let U.COff sz = U.fileSize status
+                  let COff sz = U.fileSize status
                   return FileStatus { fileStatusFileType = fileTypeFromStatus status
                                     , fileStatusSize = sz
                                     }
@@ -477,7 +430,6 @@ getFileInfo name = go []
                             , fileInfoFileStatus = stat
                             , fileInfoLinkTargetType = targetTy
                             }
-#endif
 
 -- | Get the file type for this file info entry. If the file type could
 -- not be obtained due to an 'IOException', return 'Nothing'.
@@ -603,19 +555,6 @@ entriesForDirectory rawPath = do
 
     return allEntries
 
-#ifdef mingw32_HOST_OS
-
-fileTypeFromPath :: FilePath -> IO (Maybe FileType)
-fileTypeFromPath filePath = do
-    isSymLink <- D.pathIsSymbolicLink filePath
-    isDir <- D.doesDirectoryExist  filePath
-
-    return $ if | isSymLink -> Just SymbolicLink
-                | isDir     -> Just Directory
-                | otherwise -> Just RegularFile
-
-#else
-
 fileTypeFromStatus :: U.FileStatus -> Maybe FileType
 fileTypeFromStatus s =
     if | U.isBlockDevice s     -> Just BlockDevice
@@ -626,8 +565,6 @@ fileTypeFromStatus s =
        | U.isSocket s          -> Just UnixSocket
        | U.isSymbolicLink s    -> Just SymbolicLink
        | otherwise             -> Nothing
-
-#endif
 
 -- | Get the file information for the file under the cursor, if any.
 fileBrowserCursor :: FileBrowser n -> Maybe FileInfo
