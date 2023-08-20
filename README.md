@@ -13,7 +13,7 @@ pattern-matching on incoming events and updating your application state.
 
 Under the hood, this library builds upon
 [vty](http://hackage.haskell.org/package/vty), so some knowledge of Vty
-will be helpful in using this library.
+will be necessary to use this library.
 
 Example
 -------
