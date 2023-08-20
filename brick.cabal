@@ -114,9 +114,9 @@ library
                        text-zipper >= 0.13,
                        template-haskell,
                        deepseq >= 1.3 && < 1.5,
+                       unix-compat,
                        bytestring,
-                       word-wrap >= 0.2,
-                       unix-compat
+                       word-wrap >= 0.2
 
 executable brick-custom-keybinding-demo
   if !flag(demos)
