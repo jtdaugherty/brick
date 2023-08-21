@@ -162,7 +162,7 @@ import Lens.Micro.Mtl ((%=))
 import Lens.Micro.TH (lensRules, generateUpdateableOptics)
 import qualified Graphics.Vty as Vty
 import qualified System.Directory as D
-import qualified System.Posix.Files as U
+import qualified System.PosixCompat.Files as U
 import qualified System.Posix.Types as U
 import qualified System.FilePath as FP
 import Text.Printf (printf)
