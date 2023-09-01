@@ -46,28 +46,29 @@ import Brick.Widgets.Core
   , withHScrollBarHandles
   , withClickableHScrollBars
   , withClickableVScrollBars
-  , ScrollbarRenderer(..)
+  , VScrollbarRenderer(..)
+  , HScrollbarRenderer(..)
   , scrollbarAttr
   , scrollbarHandleAttr
   )
 
-customHScrollbars :: ScrollbarRenderer n
+customHScrollbars :: HScrollbarRenderer n
 customHScrollbars =
-    ScrollbarRenderer { renderScrollbar = vLimit 1 $ fill '^'
-                      , renderScrollbarTrough = vLimit 1 $ fill ' '
-                      , renderScrollbarHandleBefore = str "<<"
-                      , renderScrollbarHandleAfter = str ">>"
-                      , scrollbarAllocation = 2
-                      }
+    HScrollbarRenderer { renderHScrollbar = vLimit 1 $ fill '^'
+                       , renderHScrollbarTrough = vLimit 1 $ fill ' '
+                       , renderHScrollbarHandleBefore = str "<<"
+                       , renderHScrollbarHandleAfter = str ">>"
+                       , scrollbarHeightAllocation = 2
+                       }
 
-customVScrollbars :: ScrollbarRenderer n
+customVScrollbars :: VScrollbarRenderer n
 customVScrollbars =
-    ScrollbarRenderer { renderScrollbar = C.hCenter $ hLimit 1 $ fill '*'
-                      , renderScrollbarTrough = fill ' '
-                      , renderScrollbarHandleBefore = C.hCenter $ str "-^-"
-                      , renderScrollbarHandleAfter = C.hCenter $ str "-v-"
-                      , scrollbarAllocation = 5
-                      }
+    VScrollbarRenderer { renderVScrollbar = C.hCenter $ hLimit 1 $ fill '*'
+                       , renderVScrollbarTrough = fill ' '
+                       , renderVScrollbarHandleBefore = C.hCenter $ str "-^-"
+                       , renderVScrollbarHandleAfter = C.hCenter $ str "-v-"
+                       , scrollbarWidthAllocation = 5
+                       }
 
 data Name = VP1 | VP2 | SBClick T.ClickableScrollbarElement Name
           deriving (Ord, Show, Eq)

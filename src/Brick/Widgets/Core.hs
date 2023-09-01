@@ -101,7 +101,8 @@ module Brick.Widgets.Core
   , withHScrollBarHandles
   , withVScrollBarRenderer
   , withHScrollBarRenderer
-  , ScrollbarRenderer(..)
+  , VScrollbarRenderer(..)
+  , HScrollbarRenderer(..)
   , verticalScrollbarRenderer
   , horizontalScrollbarRenderer
   , scrollbarAttr
@@ -1285,21 +1286,21 @@ withVScrollBarHandles w =
 -- | Render vertical viewport scroll bars in the specified widget with
 -- the specified renderer. This is only needed if you want to override
 -- the use of the default renderer, 'verticalScrollbarRenderer'.
-withVScrollBarRenderer :: ScrollbarRenderer n -> Widget n -> Widget n
+withVScrollBarRenderer :: VScrollbarRenderer n -> Widget n -> Widget n
 withVScrollBarRenderer r w =
     Widget (hSize w) (vSize w) $
         withReaderT (ctxVScrollBarRendererL .~ Just r) (render w)
 
 -- | The default renderer for vertical viewport scroll bars. Override
 -- with 'withVScrollBarRenderer'.
-verticalScrollbarRenderer :: ScrollbarRenderer n
+verticalScrollbarRenderer :: VScrollbarRenderer n
 verticalScrollbarRenderer =
-    ScrollbarRenderer { renderScrollbar = fill '█'
-                      , renderScrollbarTrough = fill ' '
-                      , renderScrollbarHandleBefore = str "^"
-                      , renderScrollbarHandleAfter = str "v"
-                      , scrollbarAllocation = 1
-                      }
+    VScrollbarRenderer { renderVScrollbar = fill '█'
+                       , renderVScrollbarTrough = fill ' '
+                       , renderVScrollbarHandleBefore = str "^"
+                       , renderVScrollbarHandleAfter = str "v"
+                       , scrollbarWidthAllocation = 1
+                       }
 
 -- | Enable horizontal scroll bars on all viewports in the specified
 -- widget and draw them with the specified orientation.
@@ -1344,21 +1345,21 @@ withHScrollBarHandles w =
 -- | Render horizontal viewport scroll bars in the specified widget with
 -- the specified renderer. This is only needed if you want to override
 -- the use of the default renderer, 'horizontalScrollbarRenderer'.
-withHScrollBarRenderer :: ScrollbarRenderer n -> Widget n -> Widget n
+withHScrollBarRenderer :: HScrollbarRenderer n -> Widget n -> Widget n
 withHScrollBarRenderer r w =
     Widget (hSize w) (vSize w) $
         withReaderT (ctxHScrollBarRendererL .~ Just r) (render w)
 
 -- | The default renderer for horizontal viewport scroll bars. Override
 -- with 'withHScrollBarRenderer'.
-horizontalScrollbarRenderer :: ScrollbarRenderer n
+horizontalScrollbarRenderer :: HScrollbarRenderer n
 horizontalScrollbarRenderer =
-    ScrollbarRenderer { renderScrollbar = fill '█'
-                      , renderScrollbarTrough = fill ' '
-                      , renderScrollbarHandleBefore = str "<"
-                      , renderScrollbarHandleAfter = str ">"
-                      , scrollbarAllocation = 1
-                      }
+    HScrollbarRenderer { renderHScrollbar = fill '█'
+                       , renderHScrollbarTrough = fill ' '
+                       , renderHScrollbarHandleBefore = str "<"
+                       , renderHScrollbarHandleAfter = str ">"
+                       , scrollbarHeightAllocation = 1
+                       }
 
 -- | Render the specified widget in a named viewport with the
 -- specified type. This permits widgets to be scrolled without being
@@ -1375,11 +1376,11 @@ horizontalScrollbarRenderer =
 -- don't like the appearance of the resulting scroll bars (defaults:
 -- 'verticalScrollbarRenderer' and 'horizontalScrollbarRenderer'),
 -- you can customize how they are drawn by making your own
--- 'ScrollbarRenderer' and using 'withVScrollBarRenderer' and/or
--- 'withHScrollBarRenderer'. Note that when you enable scrollbars, the
--- content of your viewport will lose one column of available space if
--- vertical scroll bars are enabled and one row of available space if
--- horizontal scroll bars are enabled.
+-- 'VScrollbarRenderer' or 'HScrollbarRenderer' and using
+-- 'withVScrollBarRenderer' and/or 'withHScrollBarRenderer'. Note that
+-- when you enable scrollbars, the content of your viewport will lose
+-- one column of available space if vertical scroll bars are enabled and
+-- one row of available space if horizontal scroll bars are enabled.
 --
 -- If a viewport receives more than one visibility request, then the
 -- visibility requests are merged with the inner visibility request
@@ -1443,8 +1444,8 @@ viewport vpname typ p =
           newSize = (newWidth, newHeight)
           newWidth = c^.availWidthL - vSBWidth
           newHeight = c^.availHeightL - hSBHeight
-          vSBWidth = maybe 0 (const $ scrollbarAllocation vsRenderer) vsOrientation
-          hSBHeight = maybe 0 (const $ scrollbarAllocation hsRenderer) hsOrientation
+          vSBWidth = maybe 0 (const $ scrollbarWidthAllocation vsRenderer) vsOrientation
+          hSBHeight = maybe 0 (const $ scrollbarHeightAllocation hsRenderer) hsOrientation
           doInsert (Just vp) = Just $ vp & vpSize .~ newSize
           doInsert Nothing = Just newVp
 
@@ -1622,13 +1623,13 @@ maybeClick n (Just f) el w = clickable (f el n) w
 -- render a scroll bar of your own, you can do so outside the @viewport@
 -- context.
 verticalScrollbar :: (Ord n)
-                  => ScrollbarRenderer n
+                  => VScrollbarRenderer n
                   -- ^ The renderer to use.
                   -> VScrollBarOrientation
                   -- ^ The scroll bar orientation. The orientation
                   -- governs how additional padding is added to
                   -- the scroll bar if it is smaller than it space
-                  -- allocation according to 'scrollbarAllocation'.
+                  -- allocation according to 'scrollbarWidthAllocation'.
                   -> n
                   -- ^ The viewport name associated with this scroll
                   -- bar.
@@ -1644,16 +1645,16 @@ verticalScrollbar :: (Ord n)
                   -- ^ The total viewport content height.
                   -> Widget n
 verticalScrollbar vsRenderer o n constr showHandles vpHeight vOffset contentHeight =
-    hLimit (scrollbarAllocation vsRenderer) $
+    hLimit (scrollbarWidthAllocation vsRenderer) $
     applyPadding $
     if showHandles
        then vBox [ vLimit 1 $
                    maybeClick n constr SBHandleBefore $
-                   withDefAttr scrollbarHandleAttr $ renderScrollbarHandleBefore vsRenderer
+                   withDefAttr scrollbarHandleAttr $ renderVScrollbarHandleBefore vsRenderer
                  , sbBody
                  , vLimit 1 $
                    maybeClick n constr SBHandleAfter $
-                   withDefAttr scrollbarHandleAttr $ renderScrollbarHandleAfter vsRenderer
+                   withDefAttr scrollbarHandleAttr $ renderVScrollbarHandleAfter vsRenderer
                  ]
        else sbBody
     where
@@ -1663,7 +1664,7 @@ verticalScrollbar vsRenderer o n constr showHandles vpHeight vOffset contentHeig
             OnRight -> padLeft Max
 
 verticalScrollbar' :: (Ord n)
-                   => ScrollbarRenderer n
+                   => VScrollbarRenderer n
                    -- ^ The renderer to use.
                    -> n
                    -- ^ The viewport name associated with this scroll
@@ -1680,7 +1681,7 @@ verticalScrollbar' :: (Ord n)
                    -- ^ The total viewport content height.
                    -> Widget n
 verticalScrollbar' vsRenderer _ _ vpHeight _ 0 =
-    vLimit vpHeight $ renderScrollbarTrough vsRenderer
+    vLimit vpHeight $ renderVScrollbarTrough vsRenderer
 verticalScrollbar' vsRenderer n constr vpHeight vOffset contentHeight =
     Widget Fixed Greedy $ do
         c <- getContext
@@ -1712,16 +1713,16 @@ verticalScrollbar' vsRenderer n constr vpHeight vOffset contentHeight =
 
             sbAbove = maybeClick n constr SBTroughBefore $
                       withDefAttr scrollbarTroughAttr $ vLimit sbOffset $
-                      renderScrollbarTrough vsRenderer
+                      renderVScrollbarTrough vsRenderer
             sbBelow = maybeClick n constr SBTroughAfter $
                       withDefAttr scrollbarTroughAttr $ vLimit (ctxHeight - (sbOffset + sbSize)) $
-                      renderScrollbarTrough vsRenderer
+                      renderVScrollbarTrough vsRenderer
             sbMiddle = maybeClick n constr SBBar $
-                       withDefAttr scrollbarAttr $ vLimit sbSize $ renderScrollbar vsRenderer
+                       withDefAttr scrollbarAttr $ vLimit sbSize $ renderVScrollbar vsRenderer
 
             sb = if sbSize == ctxHeight
                  then vLimit sbSize $
-                      renderScrollbarTrough vsRenderer
+                      renderVScrollbarTrough vsRenderer
                  else vBox [sbAbove, sbMiddle, sbBelow]
 
         render sb
@@ -1735,13 +1736,14 @@ verticalScrollbar' vsRenderer n constr vpHeight vOffset contentHeight =
 -- render a scroll bar of your own, you can do so outside the @viewport@
 -- context.
 horizontalScrollbar :: (Ord n)
-                    => ScrollbarRenderer n
+                    => HScrollbarRenderer n
                     -- ^ The renderer to use.
                     -> HScrollBarOrientation
                     -- ^ The scroll bar orientation. The orientation
-                    -- governs how additional padding is added to
-                    -- the scroll bar if it is smaller than it space
-                    -- allocation according to 'scrollbarAllocation'.
+                    -- governs how additional padding is added
+                    -- to the scroll bar if it is smaller
+                    -- than it space allocation according to
+                    -- 'scrollbarHeightAllocation'.
                     -> n
                     -- ^ The viewport name associated with this scroll
                     -- bar.
@@ -1759,16 +1761,16 @@ horizontalScrollbar :: (Ord n)
                     -- ^ The total viewport content width.
                     -> Widget n
 horizontalScrollbar hsRenderer o n constr showHandles vpWidth hOffset contentWidth =
-    vLimit (scrollbarAllocation hsRenderer) $
+    vLimit (scrollbarHeightAllocation hsRenderer) $
     applyPadding $
     if showHandles
        then hBox [ hLimit 1 $
                    maybeClick n constr SBHandleBefore $
-                   withDefAttr scrollbarHandleAttr $ renderScrollbarHandleBefore hsRenderer
+                   withDefAttr scrollbarHandleAttr $ renderHScrollbarHandleBefore hsRenderer
                  , sbBody
                  , hLimit 1 $
                    maybeClick n constr SBHandleAfter $
-                   withDefAttr scrollbarHandleAttr $ renderScrollbarHandleAfter hsRenderer
+                   withDefAttr scrollbarHandleAttr $ renderHScrollbarHandleAfter hsRenderer
                  ]
        else sbBody
     where
@@ -1778,7 +1780,7 @@ horizontalScrollbar hsRenderer o n constr showHandles vpWidth hOffset contentWid
             OnBottom -> padTop Max
 
 horizontalScrollbar' :: (Ord n)
-                     => ScrollbarRenderer n
+                     => HScrollbarRenderer n
                      -- ^ The renderer to use.
                      -> n
                      -- ^ The viewport name associated with this scroll
@@ -1794,7 +1796,7 @@ horizontalScrollbar' :: (Ord n)
                      -- ^ The total viewport content width.
                      -> Widget n
 horizontalScrollbar' hsRenderer _ _ vpWidth _ 0 =
-    hLimit vpWidth $ renderScrollbarTrough hsRenderer
+    hLimit vpWidth $ renderHScrollbarTrough hsRenderer
 horizontalScrollbar' hsRenderer n constr vpWidth hOffset contentWidth =
     Widget Greedy Fixed $ do
         c <- getContext
@@ -1825,16 +1827,16 @@ horizontalScrollbar' hsRenderer n constr vpWidth hOffset contentWidth =
 
             sbLeft = maybeClick n constr SBTroughBefore $
                      withDefAttr scrollbarTroughAttr $ hLimit sbOffset $
-                     renderScrollbarTrough hsRenderer
+                     renderHScrollbarTrough hsRenderer
             sbRight = maybeClick n constr SBTroughAfter $
                       withDefAttr scrollbarTroughAttr $ hLimit (ctxWidth - (sbOffset + sbSize)) $
-                      renderScrollbarTrough hsRenderer
+                      renderHScrollbarTrough hsRenderer
             sbMiddle = maybeClick n constr SBBar $
-                       withDefAttr scrollbarAttr $ hLimit sbSize $ renderScrollbar hsRenderer
+                       withDefAttr scrollbarAttr $ hLimit sbSize $ renderHScrollbar hsRenderer
 
             sb = if sbSize == ctxWidth
                  then hLimit sbSize $
-                      renderScrollbarTrough hsRenderer
+                      renderHScrollbarTrough hsRenderer
                  else hBox [sbLeft, sbMiddle, sbRight]
 
         render sb

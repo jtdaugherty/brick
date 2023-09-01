@@ -22,7 +22,8 @@ module Brick.Types
   , vpContentSize
   , VScrollBarOrientation(..)
   , HScrollBarOrientation(..)
-  , ScrollbarRenderer(..)
+  , VScrollbarRenderer(..)
+  , HScrollbarRenderer(..)
   , ClickableScrollbarElement(..)
 
   -- * Event-handling types and functions

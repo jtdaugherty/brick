@@ -22,7 +22,8 @@ module Brick.Types.Internal
   , cursorLocationVisibleL
   , VScrollBarOrientation(..)
   , HScrollBarOrientation(..)
-  , ScrollbarRenderer(..)
+  , VScrollbarRenderer(..)
+  , HScrollbarRenderer(..)
   , ClickableScrollbarElement(..)
   , Context(..)
   , ctxAttrMapL
@@ -165,43 +166,68 @@ data VScrollBarOrientation = OnLeft | OnRight
 data HScrollBarOrientation = OnBottom | OnTop
                            deriving (Show, Eq)
 
--- | A scroll bar renderer.
-data ScrollbarRenderer n =
-    ScrollbarRenderer { renderScrollbar :: Widget n
-                      -- ^ How to render the body of the scroll bar.
-                      -- This should provide a widget that expands in
-                      -- whatever direction(s) this renderer will be
-                      -- used for. So, for example, if this was used to
-                      -- render vertical scroll bars, this widget would
-                      -- need to be one that expands vertically such as
-                      -- @fill@. The same goes for the trough widget.
-                      , renderScrollbarTrough :: Widget n
-                      -- ^ How to render the "trough" of the scroll bar
-                      -- (the area to either side of the scroll bar
-                      -- body). This should expand as described in the
-                      -- documentation for the scroll bar field.
-                      , renderScrollbarHandleBefore :: Widget n
-                      -- ^ How to render the handle that appears at
-                      -- the top or left of the scrollbar. The result
-                      -- will be allowed to be at most one column wide
-                      -- for horizontal handles and one row high for
-                      -- vertical handles.
-                      , renderScrollbarHandleAfter :: Widget n
-                      -- ^ How to render the handle that appears at the
-                      -- bottom or right of the scrollbar. The result
-                      -- will be allowed to be at most one column wide
-                      -- for horizontal handles and one row high for
-                      -- vertical handles.
-                      , scrollbarAllocation :: Int
-                      -- ^ The number of rows (for a horizontal
-                      -- scrollbar) or columns (for a vertical
-                      -- scrollbar) that will be allocated to the scroll
-                      -- bar. This determines how much space the widgets
-                      -- of the scroll bar elements can take up. If they
-                      -- use less than this amount, padding will be
-                      -- applied between the scroll bar and the viewport
-                      -- contents.
-                      }
+-- | A vertical scroll bar renderer.
+data VScrollbarRenderer n =
+    VScrollbarRenderer { renderVScrollbar :: Widget n
+                       -- ^ How to render the body of the scroll bar.
+                       -- This should provide a widget that expands in
+                       -- whatever direction(s) this renderer will be
+                       -- used for. So, for example, this widget would
+                       -- need to be one that expands vertically such as
+                       -- @fill@. The same goes for the trough widget.
+                       , renderVScrollbarTrough :: Widget n
+                       -- ^ How to render the "trough" of the scroll bar
+                       -- (the area to either side of the scroll bar
+                       -- body). This should expand as described in the
+                       -- documentation for the scroll bar field.
+                       , renderVScrollbarHandleBefore :: Widget n
+                       -- ^ How to render the handle that appears at
+                       -- the top or left of the scrollbar. The result
+                       -- will be allowed to be at most one row high.
+                       , renderVScrollbarHandleAfter :: Widget n
+                       -- ^ How to render the handle that appears at the
+                       -- bottom or right of the scrollbar. The result
+                       -- will be allowed to be at most one row high.
+                       , scrollbarWidthAllocation :: Int
+                       -- ^ The number of columns that will be allocated
+                       -- to the scroll bar. This determines how much
+                       -- space the widgets of the scroll bar elements
+                       -- can take up. If they use less than this
+                       -- amount, padding will be applied between the
+                       -- scroll bar and the viewport contents.
+                       }
+
+-- | A horizontal scroll bar renderer.
+data HScrollbarRenderer n =
+    HScrollbarRenderer { renderHScrollbar :: Widget n
+                       -- ^ How to render the body of the scroll bar.
+                       -- This should provide a widget that expands
+                       -- in whatever direction(s) this renderer will
+                       -- be used for. So, for example, this widget
+                       -- would need to be one that expands horizontally
+                       -- such as @fill@. The same goes for the trough
+                       -- widget.
+                       , renderHScrollbarTrough :: Widget n
+                       -- ^ How to render the "trough" of the scroll bar
+                       -- (the area to either side of the scroll bar
+                       -- body). This should expand as described in the
+                       -- documentation for the scroll bar field.
+                       , renderHScrollbarHandleBefore :: Widget n
+                       -- ^ How to render the handle that appears at the
+                       -- top or left of the scrollbar. The result will
+                       -- be allowed to be at most one column wide.
+                       , renderHScrollbarHandleAfter :: Widget n
+                       -- ^ How to render the handle that appears at the
+                       -- bottom or right of the scrollbar. The result
+                       -- will be allowed to be at most one column wide.
+                       , scrollbarHeightAllocation :: Int
+                       -- ^ The number of rows that will be allocated to
+                       -- the scroll bar. This determines how much space
+                       -- the widgets of the scroll bar elements can
+                       -- take up. If they use less than this amount,
+                       -- padding will be applied between the scroll bar
+                       -- and the viewport contents.
+                       }
 
 data VisibilityRequest =
     VR { vrPosition :: Location
@@ -415,9 +441,9 @@ data Context n =
             , ctxAttrMap :: AttrMap
             , ctxDynBorders :: Bool
             , ctxVScrollBarOrientation :: Maybe VScrollBarOrientation
-            , ctxVScrollBarRenderer :: Maybe (ScrollbarRenderer n)
+            , ctxVScrollBarRenderer :: Maybe (VScrollbarRenderer n)
             , ctxHScrollBarOrientation :: Maybe HScrollBarOrientation
-            , ctxHScrollBarRenderer :: Maybe (ScrollbarRenderer n)
+            , ctxHScrollBarRenderer :: Maybe (HScrollbarRenderer n)
             , ctxVScrollBarShowHandles :: Bool
             , ctxHScrollBarShowHandles :: Bool
             , ctxVScrollBarClickableConstr :: Maybe (ClickableScrollbarElement -> n -> n)
