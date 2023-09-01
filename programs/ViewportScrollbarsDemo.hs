@@ -125,6 +125,7 @@ appEvent (T.VtyEvent (V.EvKey V.KDown []))   = M.vScrollBy vp2Scroll 1
 appEvent (T.VtyEvent (V.EvKey V.KUp []))     = M.vScrollBy vp2Scroll (-1)
 appEvent (T.VtyEvent (V.EvKey V.KEsc []))    = M.halt
 appEvent (T.MouseDown (SBClick el n) _ _ _) = do
+    lastClickedElement .= Just (el, n)
     case n of
         VP1 -> do
             let vp = M.viewportScroll VP1
@@ -144,8 +145,6 @@ appEvent (T.MouseDown (SBClick el n) _ _ _) = do
                 T.SBBar          -> return ()
         _ ->
             return ()
-
-    lastClickedElement .= Just (el, n)
 appEvent _ = return ()
 
 theme :: AttrMap
