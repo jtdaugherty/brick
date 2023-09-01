@@ -1613,7 +1613,7 @@ maybeClick :: (Ord n)
 maybeClick _ Nothing _ w = w
 maybeClick n (Just f) el w = clickable (f el n) w
 
--- | Build a vertical scroll bar using the specified render and
+-- | Build a vertical scroll bar using the specified renderer and
 -- settings.
 --
 -- You probably don't want to use this directly; instead,
@@ -1625,7 +1625,10 @@ verticalScrollbar :: (Ord n)
                   => ScrollbarRenderer n
                   -- ^ The renderer to use.
                   -> VScrollBarOrientation
-                  -- ^ The scroll bar orientation.
+                  -- ^ The scroll bar orientation. The orientation
+                  -- governs how additional padding is added to
+                  -- the scroll bar if it is smaller than it space
+                  -- allocation according to 'scrollbarAllocation'.
                   -> n
                   -- ^ The viewport name associated with this scroll
                   -- bar.
@@ -1721,7 +1724,7 @@ verticalScrollbar' vsRenderer n constr vpHeight vOffset contentHeight =
 
         render sb
 
--- | Build a horizontal scroll bar using the specified render and
+-- | Build a horizontal scroll bar using the specified renderer and
 -- settings.
 --
 -- You probably don't want to use this directly; instead, use
@@ -1733,7 +1736,10 @@ horizontalScrollbar :: (Ord n)
                     => ScrollbarRenderer n
                     -- ^ The renderer to use.
                     -> HScrollBarOrientation
-                    -- ^ The scroll bar orientation.
+                    -- ^ The scroll bar orientation. The orientation
+                    -- governs how additional padding is added to
+                    -- the scroll bar if it is smaller than it space
+                    -- allocation according to 'scrollbarAllocation'.
                     -> n
                     -- ^ The viewport name associated with this scroll
                     -- bar.
