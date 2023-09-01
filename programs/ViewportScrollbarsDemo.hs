@@ -41,6 +41,7 @@ import Brick.Widgets.Core
   , withVScrollBars
   , withHScrollBars
   , withHScrollBarRenderer
+  , withVScrollBarRenderer
   , withVScrollBarHandles
   , withHScrollBarHandles
   , withClickableHScrollBars
@@ -50,12 +51,22 @@ import Brick.Widgets.Core
   , scrollbarHandleAttr
   )
 
-customScrollbars :: ScrollbarRenderer n
-customScrollbars =
-    ScrollbarRenderer { renderScrollbar = fill '^'
-                      , renderScrollbarTrough = fill ' '
+customHScrollbars :: ScrollbarRenderer n
+customHScrollbars =
+    ScrollbarRenderer { renderScrollbar = vLimit 1 $ fill '^'
+                      , renderScrollbarTrough = vLimit 1 $ fill ' '
                       , renderScrollbarHandleBefore = str "<<"
                       , renderScrollbarHandleAfter = str ">>"
+                      , scrollbarAllocation = 2
+                      }
+
+customVScrollbars :: ScrollbarRenderer n
+customVScrollbars =
+    ScrollbarRenderer { renderScrollbar = C.hCenter $ hLimit 1 $ fill '*'
+                      , renderScrollbarTrough = fill ' '
+                      , renderScrollbarHandleBefore = C.hCenter $ str "-^-"
+                      , renderScrollbarHandleAfter = C.hCenter $ str "-v-"
+                      , scrollbarAllocation = 5
                       }
 
 data Name = VP1 | VP2 | SBClick T.ClickableScrollbarElement Name
@@ -68,7 +79,7 @@ makeLenses ''St
 drawUi :: St -> [Widget Name]
 drawUi st = [ui]
     where
-        ui = C.center $ hLimit 70 $ vLimit 21 $
+        ui = C.center $ hLimit 80 $ vLimit 21 $
              (vBox [ pair
                    , C.hCenter (str "Last clicked scroll bar element:")
                    , str $ show $ _lastClickedElement st
@@ -77,7 +88,7 @@ drawUi st = [ui]
                       B.border $
                       withClickableHScrollBars SBClick $
                       withHScrollBars OnBottom $
-                      withHScrollBarRenderer customScrollbars $
+                      withHScrollBarRenderer customHScrollbars $
                       withHScrollBarHandles $
                       viewport VP1 Horizontal $
                       str $ "Press left and right arrow keys to scroll this viewport.\n" <>
@@ -86,9 +97,18 @@ drawUi st = [ui]
                     , B.border $
                       withClickableVScrollBars SBClick $
                       withVScrollBars OnLeft $
+                      withVScrollBarRenderer customVScrollbars $
                       withVScrollBarHandles $
                       viewport VP2 Both $
-                      vBox $ str "Press ctrl-arrow keys to scroll this viewport horizontally and vertically."
+                      vBox $
+                      (str $ unlines $
+                       [ "Press up and down arrow keys to"
+                       , "scroll this viewport vertically."
+                       , "This viewport uses a custom"
+                       , "scroll bar renderer with"
+                       , "a larger space allocation and"
+                       , "even more fancy rendering."
+                       ])
                       : (str <$> [ "Line " <> show i | i <- [2..55::Int] ])
                     ]
 

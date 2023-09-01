@@ -181,16 +181,26 @@ data ScrollbarRenderer n =
                       -- body). This should expand as described in the
                       -- documentation for the scroll bar field.
                       , renderScrollbarHandleBefore :: Widget n
-                      -- ^ How to render the handle that appears at the
-                      -- top or left of the scrollbar. The result should
-                      -- be at most one row high for horizontal handles
-                      -- and one column wide for vertical handles.
-                      , renderScrollbarHandleAfter :: Widget n
                       -- ^ How to render the handle that appears at
-                      -- the bottom or right of the scrollbar. The
-                      -- result should be at most one row high for
-                      -- horizontal handles and one column wide for
+                      -- the top or left of the scrollbar. The result
+                      -- will be allowed to be at most one column wide
+                      -- for horizontal handles and one row high for
                       -- vertical handles.
+                      , renderScrollbarHandleAfter :: Widget n
+                      -- ^ How to render the handle that appears at the
+                      -- bottom or right of the scrollbar. The result
+                      -- will be allowed to be at most one column wide
+                      -- for horizontal handles and one row high for
+                      -- vertical handles.
+                      , scrollbarAllocation :: Int
+                      -- ^ The number of rows (for a horizontal
+                      -- scrollbar) or columns (for a vertical
+                      -- scrollbar) that will be allocated to the scroll
+                      -- bar. This determines how much space the widgets
+                      -- of the scroll bar elements can take up. If they
+                      -- use less than this amount, padding will be
+                      -- applied between the scroll bar and the viewport
+                      -- contents.
                       }
 
 data VisibilityRequest =
