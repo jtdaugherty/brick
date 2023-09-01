@@ -1669,7 +1669,9 @@ verticalScrollbar' :: (Ord n)
                    -- ^ The viewport name associated with this scroll
                    -- bar.
                    -> Maybe (ClickableScrollbarElement -> n -> n)
-                   -- ^ Constructor for clickable scroll bar element names.
+                   -- ^ Constructor for clickable scroll bar element
+                   -- names. Will be given the element name and the
+                   -- viewport name.
                    -> Int
                    -- ^ The total viewport height in effect.
                    -> Int
@@ -1745,7 +1747,8 @@ horizontalScrollbar :: (Ord n)
                     -- bar.
                     -> Maybe (ClickableScrollbarElement -> n -> n)
                     -- ^ Constructor for clickable scroll bar element
-                    -- names.
+                    -- names. Will be given the element name and the
+                    -- viewport name.
                     -> Bool
                     -- ^ Whether to show handles.
                     -> Int
