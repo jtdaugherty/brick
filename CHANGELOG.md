@@ -2,6 +2,35 @@
 Brick changelog
 ---------------
 
+1.10
+----
+
+API changes:
+* The `ScrollbarRenderer` type got split up into vertical and horizontal
+  versions, `VScrollbarRenderer` and `HScrollbarRenderer`, respectively.
+  Their fields are nearly identical to the original `ScrollbarRenderer`
+  fields except that many fields now have a `V` or `H` in them as
+  appropriate. As part of this change, the various `Brick.Widgets.Core`
+  functions that deal with the renderers got their types updated, and
+  the types of the default scroll bar renderers changed, too.
+* The scroll bar renderers now have a field to control how much space
+  is allocated to a scroll bar. Previously, all scroll bars were
+  assumed to be exactly one row in height or one column in width. This
+  change is motivated by a desire to be able to control how scroll
+  bars are rendered adjacent to viewport contents. It isn't always
+  desirable to render them right up against the contents; sometimes,
+  spacing would be nice between the bar and contents, for example.
+  As part of this change, `VScrollbarRenderer` got a field called
+  `scrollbarWidthAllocation` and `HScrollbarRenderer` got a field called
+  `scrollbarHeightAllocation`. The fields specify the height (for
+  horizontal scroll bars) or width (for vertical ones) of the region
+  in which the bar is rendered, allowing scroll bar element widgets
+  to take up more than one row in height (for horizontal scroll bars)
+  or more than one column in width (for vertical ones) as desired. If
+  the widgets take up less space, padding is added between the scroll
+  bar and the viewport contents to pad the scroll bar to take up the
+  specified allocation.
+
 1.9
 ---
 
