@@ -13,7 +13,9 @@ pattern-matching on incoming events and updating your application state.
 
 Under the hood, this library builds upon
 [vty](http://hackage.haskell.org/package/vty), so some knowledge of Vty
-will be necessary to use this library.
+will be necessary to use this library. Brick depends on
+`vty-crossplatform`, so Brick should work anywhere Vty works (Unix and
+Windows).
 
 Example
 -------
@@ -185,8 +187,8 @@ Reporting bugs
 Please file bug reports as GitHub issues.  For best results:
 
  - Include the versions of relevant software packages: your terminal
-   emulator, `brick`, `ghc`, and `vty` will be the most important
-   ones.
+   emulator, `brick`, `ghc`, `vty`, and Vty platform packages will be
+   the most important ones.
 
  - Clearly describe the behavior you expected ...
 

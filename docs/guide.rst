@@ -53,6 +53,13 @@ To clone and build locally::
    $ cd brick
    $ cabal new-build
 
+Your package will need some dependencies:
+
+* ``brick``,
+* ``vty >= 6.0``, and
+* ``vty-crossplatform`` or ``vty-unix`` or ``vty-windows``, depending
+  on which platform(s) your application supports.
+
 Building the Demonstration Programs
 -----------------------------------
 
@@ -403,7 +410,7 @@ our events over that channel. Once we've created the channel with
    main :: IO ()
    main = do
        eventChan <- Brick.BChan.newBChan 10
-       let buildVty = Graphics.Vty.mkVty Graphics.Vty.defaultConfig
+       let buildVty = Graphics.Vty.CrossPlatform.mkVty Graphics.Vty.Config.defaultConfig
        initialVty <- buildVty
        finalState <- customMain initialVty buildVty
                        (Just eventChan) app initialState
