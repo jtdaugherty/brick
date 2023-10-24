@@ -42,22 +42,34 @@ import Brick.Widgets.Core
   , withVScrollBars
   , withHScrollBars
   , withHScrollBarRenderer
+  , withVScrollBarRenderer
   , withVScrollBarHandles
   , withHScrollBarHandles
   , withClickableHScrollBars
   , withClickableVScrollBars
-  , ScrollbarRenderer(..)
+  , VScrollbarRenderer(..)
+  , HScrollbarRenderer(..)
   , scrollbarAttr
   , scrollbarHandleAttr
   )
 
-customScrollbars :: ScrollbarRenderer n
-customScrollbars =
-    ScrollbarRenderer { renderScrollbar = fill '^'
-                      , renderScrollbarTrough = fill ' '
-                      , renderScrollbarHandleBefore = str "<<"
-                      , renderScrollbarHandleAfter = str ">>"
-                      }
+customHScrollbars :: HScrollbarRenderer n
+customHScrollbars =
+    HScrollbarRenderer { renderHScrollbar = vLimit 1 $ fill '^'
+                       , renderHScrollbarTrough = vLimit 1 $ fill ' '
+                       , renderHScrollbarHandleBefore = str "<<"
+                       , renderHScrollbarHandleAfter = str ">>"
+                       , scrollbarHeightAllocation = 2
+                       }
+
+customVScrollbars :: VScrollbarRenderer n
+customVScrollbars =
+    VScrollbarRenderer { renderVScrollbar = C.hCenter $ hLimit 1 $ fill '*'
+                       , renderVScrollbarTrough = fill ' '
+                       , renderVScrollbarHandleBefore = C.hCenter $ str "-^-"
+                       , renderVScrollbarHandleAfter = C.hCenter $ str "-v-"
+                       , scrollbarWidthAllocation = 5
+                       }
 
 data Name = VP1 | VP2 | SBClick T.ClickableScrollbarElement Name
           deriving (Ord, Show, Eq)
@@ -69,7 +81,7 @@ makeLenses ''St
 drawUi :: St -> [Widget Name]
 drawUi st = [ui]
     where
-        ui = C.center $ hLimit 70 $ vLimit 21 $
+        ui = C.center $ hLimit 80 $ vLimit 21 $
              (vBox [ pair
                    , C.hCenter (str "Last clicked scroll bar element:")
                    , str $ show $ _lastClickedElement st
@@ -78,7 +90,7 @@ drawUi st = [ui]
                       B.border $
                       withClickableHScrollBars SBClick $
                       withHScrollBars OnBottom $
-                      withHScrollBarRenderer customScrollbars $
+                      withHScrollBarRenderer customHScrollbars $
                       withHScrollBarHandles $
                       viewport VP1 Horizontal $
                       str $ "Press left and right arrow keys to scroll this viewport.\n" <>
@@ -87,9 +99,18 @@ drawUi st = [ui]
                     , B.border $
                       withClickableVScrollBars SBClick $
                       withVScrollBars OnLeft $
+                      withVScrollBarRenderer customVScrollbars $
                       withVScrollBarHandles $
                       viewport VP2 Both $
-                      vBox $ str "Press ctrl-arrow keys to scroll this viewport horizontally and vertically."
+                      vBox $
+                      (str $ unlines $
+                       [ "Press up and down arrow keys to"
+                       , "scroll this viewport vertically."
+                       , "This viewport uses a custom"
+                       , "scroll bar renderer with"
+                       , "a larger space allocation and"
+                       , "even more fancy rendering."
+                       ])
                       : (str <$> [ "Line " <> show i | i <- [2..55::Int] ])
                     ]
 
@@ -106,6 +127,7 @@ appEvent (T.VtyEvent (V.EvKey V.KDown []))   = M.vScrollBy vp2Scroll 1
 appEvent (T.VtyEvent (V.EvKey V.KUp []))     = M.vScrollBy vp2Scroll (-1)
 appEvent (T.VtyEvent (V.EvKey V.KEsc []))    = M.halt
 appEvent (T.MouseDown (SBClick el n) _ _ _) = do
+    lastClickedElement .= Just (el, n)
     case n of
         VP1 -> do
             let vp = M.viewportScroll VP1
@@ -125,8 +147,6 @@ appEvent (T.MouseDown (SBClick el n) _ _ _) = do
                 T.SBBar          -> return ()
         _ ->
             return ()
-
-    lastClickedElement .= Just (el, n)
 appEvent _ = return ()
 
 theme :: AttrMap
