@@ -181,6 +181,16 @@ can get with a pure function to specify the interface.
 packages and widgets. If you use that, you'll also be helping to test
 whether the exported interface is usable and complete!
 
+A note on Windows support
+-------------------------
+
+Brick supports Windows implicitly by way of Vty's Windows support.
+While I don't (and can't) personally test Brick on Windows hosts,
+it should be possible to use Brick on Windows. If you have any
+trouble, report any issues here. If needed, we'll migrate them to the
+[vty-windows](https://github.com/chhackett/vty-windows) repository if
+they need to be fixed there.
+
 Reporting bugs
 --------------
 
