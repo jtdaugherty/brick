@@ -2,6 +2,21 @@
 Brick changelog
 ---------------
 
+2.0
+---
+
+This release updates Brick to support Vty 6, which includes support for
+Windows.
+
+Package changes:
+* Increased lower bound on `vty` to 6.0.
+* Added dependency on `vty-crossplatform`.
+* Migrated from `unix` dependency to `unix-compat`.
+
+Other changes:
+* Update core library and demo programs to use `vty-crossplatform` to
+  initialize the terminal.
+
 1.10
 ----
 
