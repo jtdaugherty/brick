@@ -419,7 +419,11 @@ our events over that channel. Once we've created the channel with
 The ``customMain`` function lets us have control over how the ``vty``
 library is initialized *and* how ``brick`` gets custom events to give to
 our event handler. ``customMain`` is the entry point into ``brick`` when
-you need to use your own event type as shown here.
+you need to use your own event type as shown here. In this example we're
+using ``mkVty`` provided by the ``vty-crossplatform`` package, which
+provides build-time support for both Unix and Windows. If you prefer,
+you can use either the ``vty-unix`` package or the ``vty-windows``
+package directly instead if you only want to support one platform.
 
 With all of this in place, sending our custom events to the event
 handler is straightforward:
