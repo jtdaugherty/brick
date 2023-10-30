@@ -95,7 +95,7 @@ library
     Brick.Widgets.Internal
 
   build-depends:       base >= 4.9.0.0 && < 4.19.0.0,
-                       vty >= 5.36,
+                       vty >= 6.0,
                        vty-crossplatform,
                        bimap >= 0.5 && < 0.6,
                        data-clist >= 0.1,
