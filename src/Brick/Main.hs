@@ -5,6 +5,7 @@ module Brick.Main
   , defaultMain
   , customMain
   , customMainWithVty
+  , customMainWithDefaultVty
   , simpleMain
   , resizeOrQuit
   , simpleApp
@@ -130,10 +131,8 @@ defaultMain :: (Ord n)
             -> s
             -- ^ The initial application state.
             -> IO s
-defaultMain app st = do
-    let builder = mkVty defaultConfig
-    initialVty <- builder
-    customMain initialVty builder Nothing app st
+defaultMain app st =
+    fst <$> customMainWithDefaultVty Nothing app st
 
 -- | A simple main entry point which takes a widget and renders it. This
 -- event loop terminates when the user presses any key, but terminal
@@ -234,6 +233,25 @@ customMain initialVty buildVty mUserChan app initialAppState = do
     shutdown vty
     restoreInitialState
     return s
+
+-- | Like 'customMainWithVty', except that Vty is initialized with the
+-- default configuration.
+customMainWithDefaultVty :: (Ord n)
+                         => Maybe (BChan e)
+                         -- ^ An event channel for sending custom
+                         -- events to the event loop (you write to this
+                         -- channel, the event loop reads from it).
+                         -- Provide 'Nothing' if you don't plan on
+                         -- sending custom events.
+                         -> App s e n
+                         -- ^ The application.
+                         -> s
+                         -- ^ The initial application state.
+                         -> IO (s, Vty)
+customMainWithDefaultVty mUserChan app initialAppState = do
+    let builder = mkVty defaultConfig
+    vty <- builder
+    customMainWithVty vty builder mUserChan app initialAppState
 
 -- | Like 'customMain', except the last 'Vty' handle used by the
 -- application is returned without being shut down with 'shutdown'. This

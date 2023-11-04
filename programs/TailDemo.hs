@@ -143,10 +143,9 @@ randomVal as = do
 
 main :: IO ()
 main = do
-    vty <- mkVty V.defaultConfig
     chan <- newBChan 10
 
     -- Run thread to simulate incoming data
     void $ forkIO $ generateLines chan
 
-    void $ customMain vty (mkVty V.defaultConfig) (Just chan) app initialState
+    void $ customMainWithDefaultVty (Just chan) app initialState
