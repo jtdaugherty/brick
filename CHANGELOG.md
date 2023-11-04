@@ -2,6 +2,14 @@
 Brick changelog
 ---------------
 
+2.1
+---
+
+API changes:
+
+* Added `Brick.Main.customMainWithDefaultVty` as an alternative way to
+  initialize Brick.
+
 2.0
 ---
 
