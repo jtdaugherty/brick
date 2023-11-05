@@ -15,7 +15,7 @@ Under the hood, this library builds upon
 [vty](http://hackage.haskell.org/package/vty), so some knowledge of Vty
 will be necessary to use this library. Brick depends on
 `vty-crossplatform`, so Brick should work anywhere Vty works (Unix and
-Windows).
+Windows). Brick releases prior to 2.0 only support Unix-based systems.
 
 Example
 -------
