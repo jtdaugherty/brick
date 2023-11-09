@@ -131,8 +131,10 @@ defaultMain :: (Ord n)
             -> s
             -- ^ The initial application state.
             -> IO s
-defaultMain app st =
-    fst <$> customMainWithDefaultVty Nothing app st
+defaultMain app st = do
+    let builder = mkVty defaultConfig
+    initialVty <- builder
+    customMain initialVty builder Nothing app st
 
 -- | A simple main entry point which takes a widget and renders it. This
 -- event loop terminates when the user presses any key, but terminal
