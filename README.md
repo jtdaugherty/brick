@@ -97,6 +97,7 @@ it, get in touch!
 | [`Giter`](https://gitlab.com/refaelsh/giter) | A UI wrapper around Git CLI inspired by [Magit](https://magit.vc/). |
 | [`Brickudoku`](https://github.com/Thecentury/brickudoku) | A hybrid of Tetris and Sudoku |
 | [`timeloop`](https://github.com/cdupont/timeloop) | A time-travelling demonstrator |
+| [`brick-trading-journal`](https://codeberg.org/amano.kenji/brick-trading-journal) | A TUI program that calculates basic statistics from trades |
 
 These third-party packages also extend `brick`:
 
