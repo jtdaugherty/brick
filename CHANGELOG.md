@@ -2,6 +2,14 @@
 Brick changelog
 ---------------
 
+2.1.1
+-----
+
+Bug fixes:
+* `defaultMain` now properly shuts down Vty before it returns, fixing
+  a bug where the terminal would be in an unclean state on return from
+  `defaultMain`.
+
 2.1
 ---
 
