@@ -123,8 +123,8 @@ data App s e n =
         }
 
 -- | The default main entry point which takes an application and an
--- initial state and returns the final state returned by a 'halt'
--- operation.
+-- initial state and returns the final state from 'EventM' once the
+-- program exits.
 defaultMain :: (Ord n)
             => App s e n
             -- ^ The application.
