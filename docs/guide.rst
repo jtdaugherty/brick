@@ -298,7 +298,7 @@ An example application state using an editor might look like this:
 
 .. code:: haskell
 
-   data MyState = MyState { _editor :: Editor Text n }
+   data MyState n = MyState { _editor :: Editor Text n }
    makeLenses ''MyState
 
 This declares the ``MyState`` type with an ``Editor`` contained within
