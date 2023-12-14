@@ -16,7 +16,6 @@ import Brick
 import Brick.BChan
 import Brick.Widgets.Border
 import qualified Graphics.Vty as V
-import Graphics.Vty.CrossPlatform (mkVty)
 
 data AppState =
     AppState { _textAreaHeight :: Int
