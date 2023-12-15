@@ -575,5 +575,5 @@ test-suite brick-tests
                        microlens,
                        vector,
                        vty,
-                       vty-unix,
+                       vty-crossplatform,
                        QuickCheck

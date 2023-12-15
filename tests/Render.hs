@@ -10,8 +10,7 @@ import Control.Monad (when)
 import Data.Monoid
 #endif
 import qualified Graphics.Vty as V
-import qualified Graphics.Vty.Platform.Unix.Output as VU
-import qualified Graphics.Vty.Platform.Unix.Settings as VU
+import qualified Graphics.Vty.CrossPlatform.Testing as V
 import Brick.Widgets.Border (hBorder)
 import Control.Exception (SomeException, try)
 
@@ -20,7 +19,7 @@ region = (30, 10)
 
 renderDisplay :: Ord n => [Widget n] -> IO ()
 renderDisplay ws = do
-    outp <- VU.buildOutput =<< VU.defaultSettings
+    outp <- V.mkDefaultOutput
     ctx <- V.displayContext outp region
     V.outputPicture ctx (renderWidget Nothing ws region)
     V.releaseDisplay outp
