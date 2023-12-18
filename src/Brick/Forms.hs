@@ -903,7 +903,10 @@ entryBefore as a =
         i' = if i == 0 then length as - 1 else i - 1
     in as !! i'
 
-withFocusAndGrouping :: (Eq n) => BrickEvent n e -> (n -> [n] -> EventM n (Form s e n) ()) -> EventM n (Form s e n) ()
+withFocusAndGrouping :: (Eq n)
+                     => BrickEvent n e
+                     -> (n -> [n] -> EventM n (Form s e n) ())
+                     -> EventM n (Form s e n) ()
 withFocusAndGrouping e act = do
     foc <- gets formFocus
     case focusGetCurrent foc of
