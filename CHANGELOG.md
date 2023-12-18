@@ -2,6 +2,18 @@
 Brick changelog
 ---------------
 
+2.2
+---
+
+Enhancements:
+* `Brick.Forms` got a new `FormFieldVisibilityMode` type and a
+  `setFieldVisibilityMode` function to allow greater control over
+  how form field collections are brought into view when forms are
+  rendered in viewports. Form fields will default to using the
+  `ShowFocusedFieldOnly` mode which preserves functionality prior to
+  this release. To get the new behavior, set a field's visibility mode
+  to `ShowAugmentedField`.
+
 2.1.1
 -----
 
