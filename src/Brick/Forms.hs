@@ -49,6 +49,7 @@ module Brick.Forms
     Form
   , FormFieldState(..)
   , FormField(..)
+  , FormFieldVisibilityMode(..)
 
   -- * Creating and using forms
   , newForm
@@ -65,6 +66,7 @@ module Brick.Forms
   , setFieldConcat
   , setFormFocus
   , updateFormState
+  , setFieldVisibilityMode
 
   -- * Simple form field constructors
   , editTextField
@@ -145,6 +147,18 @@ data FormField a b e n =
               -- ^ An event handler for this field.
               }
 
+-- | How to bring form fields into view when a form is rendered in a
+-- viewport with 'viewport'.
+data FormFieldVisibilityMode =
+    ShowFocusedFieldOnly
+    -- ^ Make only the focused field's selected input visible. For
+    -- composite fields this will not bring all options into view.
+    | ShowAugmentedField
+    -- ^ Make all inputs in the focused field visible. For composite
+    -- fields this will bring all options into view as long as the
+    -- viewport is large enough to show them all.
+    deriving (Eq, Show)
+
 -- | A form field state accompanied by the fields that manipulate that
 -- state. The idea is that some record field in your form state has
 -- one or more form fields that manipulate that value. This data type
@@ -189,6 +203,9 @@ data FormFieldState s e n where
                       , formFieldConcat :: [Widget n] -> Widget n
                       -- ^ Concatenation function for this field's input
                       -- renderings.
+                      , formFieldVisibilityMode :: FormFieldVisibilityMode
+                      -- ^ This field's visibility mode for use in
+                      -- viewports.
                       } -> FormFieldState s e n
 
 -- | A form: a sequence of input fields that manipulate the fields of an
@@ -250,8 +267,8 @@ infixr 5 @@=
 updateFormState :: s -> Form s e n -> Form s e n
 updateFormState newState f =
     let updateField fs = case fs of
-            FormFieldState st l upd s rh concatAll ->
-                FormFieldState (upd (newState^.l) st) l upd s rh concatAll
+            FormFieldState st l upd s rh concatAll visMode ->
+                FormFieldState (upd (newState^.l) st) l upd s rh concatAll visMode
     in f { formState = newState
          , formFieldStates = updateField <$> formFieldStates f
          }
@@ -287,7 +304,7 @@ newForm mkEs s =
             }
 
 formFieldNames :: FormFieldState s e n -> [n]
-formFieldNames (FormFieldState _ _ _ fields _ _) = formFieldName <$> fields
+formFieldNames (FormFieldState _ _ _ fields _ _ _) = formFieldName <$> fields
 
 -- | A form field for manipulating a boolean value. This represents
 -- 'True' as @[X] label@ and 'False' as @[ ] label@.
@@ -345,6 +362,7 @@ checkboxCustomField lb check rb stLens name label initialState =
                           \val _ -> val
                       , formFieldRenderHelper = id
                       , formFieldConcat = vBox
+                      , formFieldVisibilityMode = ShowFocusedFieldOnly
                       }
 
 renderCheckbox :: (Ord n) => Char -> Char -> Char -> T.Text -> n -> Bool -> Bool -> Widget n
@@ -406,7 +424,9 @@ listField options stLens renderItem itemHeight name initialState =
                                Just (_, e) -> listMoveToElement e l
                       , formFieldRenderHelper = id
                       , formFieldConcat = vBox
+                      , formFieldVisibilityMode = ShowFocusedFieldOnly
                       }
+
 -- | A form field for selecting a single choice from a set of possible
 -- choices. Each choice has an associated value and text label.
 --
@@ -474,6 +494,7 @@ radioCustomField lb check rb stLens options initialState =
                       , formFieldUpdate = \val _ -> val
                       , formFieldRenderHelper = id
                       , formFieldConcat = vBox
+                      , formFieldVisibilityMode = ShowFocusedFieldOnly
                       }
 
 renderRadio :: (Eq a, Ord n) => Char -> Char -> Char -> a -> n -> T.Text -> Bool -> a -> Widget n
@@ -548,6 +569,7 @@ editField stLens n limit ini val renderText wrapEditor initialState =
                              else applyEdit (Z.insertMany newTxt . Z.clearZipper) e
                       , formFieldRenderHelper = id
                       , formFieldConcat = vBox
+                      , formFieldVisibilityMode = ShowFocusedFieldOnly
                       }
 
 -- | A form field using a single-line editor to edit the 'Show'
@@ -691,6 +713,46 @@ allFieldsValid = null . invalidFields
 invalidFields :: Form s e n -> [n]
 invalidFields f = concatMap getInvalidFields (formFieldStates f)
 
+-- | Set the visibility mode of the specified form field's collection
+-- when the form is rendered in viewport. This is used to change how
+-- focused fields are brought into view when they're outside of view
+-- in a viewport and gain focus. In practice, this means this function
+-- need only be called on one form field name in a collection in order
+-- to affect the visibility behavior of that field's entire input
+-- collection.
+--
+-- There are two visibility modes:
+--
+-- * 'ShowFocusedFieldOnly' - this is the default behavior. In this
+--   mode, when a field receives focus, it is brought into view but
+--   other inputs in the same field collection (e.g. a set of radio
+--   buttons) will not be brought into view along with it.
+--
+-- * 'ShowAugmentedField' - in this mode, when a field receives focus,
+--   all of the inputs in its collection (e.g. a set of radio buttons)
+--   are brought into view as long as the viewport is large enough to
+--   show them all. If it isn't, the viewport will show as many as space
+--   allows.
+setFieldVisibilityMode :: (Eq n)
+                       => n
+                       -- ^ The name of the form field whose visibility mode is to be set.
+                       -> FormFieldVisibilityMode
+                       -- ^ The mode to set.
+                       -> Form s e n
+                       -- ^ The form to modify.
+                       -> Form s e n
+setFieldVisibilityMode n mode form =
+    let go1 [] = []
+        go1 (s:ss) =
+            let s' = case s of
+                       FormFieldState st l upd fs rh concatAll _ ->
+                           if n `elem` formFieldNames s
+                           then FormFieldState st l upd fs rh concatAll mode
+                           else s
+            in s' : go1 ss
+
+    in form { formFieldStates = go1 (formFieldStates form) }
+
 -- | Manually indicate that a field has invalid contents. This can be
 -- useful in situations where validation beyond the form element's
 -- validator needs to be performed and the result of that validation
@@ -707,18 +769,18 @@ setFieldValid v n form =
     let go1 [] = []
         go1 (s:ss) =
             let s' = case s of
-                       FormFieldState st l upd fs rh concatAll ->
+                       FormFieldState st l upd fs rh concatAll visMode ->
                            let go2 [] = []
                                go2 (f@(FormField fn val _ r h):ff)
                                    | n == fn = FormField fn val v r h : ff
                                    | otherwise = f : go2 ff
-                           in FormFieldState st l upd (go2 fs) rh concatAll
+                           in FormFieldState st l upd (go2 fs) rh concatAll visMode
             in s' : go1 ss
 
     in form { formFieldStates = go1 (formFieldStates form) }
 
 getInvalidFields :: FormFieldState s e n -> [n]
-getInvalidFields (FormFieldState st _ _ fs _ _) =
+getInvalidFields (FormFieldState st _ _ fs _ _ _) =
     let gather (FormField n validate extValid _ _) =
             if not extValid || isNothing (validate st) then [n] else []
     in concatMap gather fs
@@ -750,16 +812,22 @@ renderFormFieldState :: (Eq n)
                      => FocusRing n
                      -> FormFieldState s e n
                      -> Widget n
-renderFormFieldState fr (FormFieldState st _ _ fields helper concatFields) =
-    let renderFields [] = []
+renderFormFieldState fr (FormFieldState st _ _ fields helper concatFields visMode) =
+    let curFocus = focusGetCurrent fr
+        foc = case curFocus of
+                  Nothing -> False
+                  Just n -> n `elem` fieldNames
+        maybeVisible = if foc && visMode == ShowAugmentedField then visible else id
+        renderFields [] = []
         renderFields ((FormField n validate extValid renderField _):fs) =
             let maybeInvalid = if (isJust $ validate st) && extValid
                                then id
                                else forceAttr invalidFormInputAttr
-                foc = Just n == focusGetCurrent fr
-                maybeVisible = if foc then visible else id
-            in (maybeVisible $ maybeInvalid $ renderField foc st) : renderFields fs
-    in helper $ concatFields $ renderFields fields
+                fieldFoc = Just n == curFocus
+                maybeFieldVisible = if fieldFoc && visMode == ShowFocusedFieldOnly then visible else id
+            in (n, maybeFieldVisible $ maybeInvalid $ renderField fieldFoc st) : renderFields fs
+        (fieldNames, renderedFields) = unzip $ renderFields fields
+    in helper $ maybeVisible $ concatFields renderedFields
 
 -- | Dispatch an event to the currently focused form field. This handles
 -- the following events in this order:
@@ -862,7 +930,7 @@ handleFormFieldEvent ev n = do
     let findFieldState _ [] = return ()
         findFieldState prev (e:es) =
             case e of
-                FormFieldState st stLens upd fields helper concatAll -> do
+                FormFieldState st stLens upd fields helper concatAll visMode -> do
                     let findField [] = return Nothing
                         findField (field:rest) =
                             case field of
@@ -879,7 +947,7 @@ handleFormFieldEvent ev n = do
                     case result of
                         Nothing -> findFieldState (prev <> [e]) es
                         Just (newSt, maybeSt) -> do
-                            let newFieldState = FormFieldState newSt stLens upd fields helper concatAll
+                            let newFieldState = FormFieldState newSt stLens upd fields helper concatAll visMode
                             formFieldStatesL .= prev <> [newFieldState] <> es
                             case maybeSt of
                               Nothing -> return ()
