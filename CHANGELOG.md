@@ -2,6 +2,15 @@
 Brick changelog
 ---------------
 
+2.3
+---
+
+API changes:
+* `FormFieldVisibilityMode`'s `ShowAugmentedField` was renamed to
+  `ShowCompositeField` to be clearer about what it does, and a new
+  `ShowAugmentedField` constructor was added to support a mode where
+  field augmentations applied with `@@=` are made visible as well.
+
 2.2
 ---
 
