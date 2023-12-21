@@ -157,6 +157,9 @@ data FormFieldVisibilityMode =
     -- ^ Make all inputs in the focused field visible. For composite
     -- fields this will bring all options into view as long as the
     -- viewport is large enough to show them all.
+    | ShowAugmentedField
+    -- ^ Like 'ShowCompositeField' but includes rendering augmentations
+    -- applied with '@@='.
     deriving (Eq, Show)
 
 -- | A form field state accompanied by the fields that manipulate that
@@ -733,6 +736,11 @@ invalidFields f = concatMap getInvalidFields (formFieldStates f)
 --   are brought into view as long as the viewport is large enough to
 --   show them all. If it isn't, the viewport will show as many as space
 --   allows.
+--
+-- * 'ShowAugmentedField' - in this mode, when a field receives focus,
+--   all of the inputs in its collection (e.g. a set of radio buttons)
+--   and its rendering augmentations (as applied with '@@=') are brought
+--   into view as long as the viewport is large enough to show them all.
 setFieldVisibilityMode :: (Eq n)
                        => n
                        -- ^ The name of the form field whose visibility mode is to be set.
@@ -827,7 +835,9 @@ renderFormFieldState fr (FormFieldState st _ _ fields helper concatFields visMod
                 maybeFieldVisible = if fieldFoc && visMode == ShowFocusedFieldOnly then visible else id
             in (n, maybeFieldVisible $ maybeInvalid $ renderField fieldFoc st) : renderFields fs
         (fieldNames, renderedFields) = unzip $ renderFields fields
-    in helper $ maybeVisible $ concatFields renderedFields
+        maybeHelperVisible =
+            if visMode == ShowAugmentedField then visible else id
+    in maybeHelperVisible $ helper $ maybeVisible $ concatFields renderedFields
 
 -- | Dispatch an event to the currently focused form field. This handles
 -- the following events in this order:
