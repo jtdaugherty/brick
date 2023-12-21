@@ -2,6 +2,13 @@
 Brick changelog
 ---------------
 
+2.3.1
+-----
+
+Bug fixes:
+* Form field rendering now correctly checks for form field focus when
+  its visibility mode is `ShowAugmentedField`.
+
 2.3
 ---
 
