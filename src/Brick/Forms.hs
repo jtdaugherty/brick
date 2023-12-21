@@ -836,7 +836,7 @@ renderFormFieldState fr (FormFieldState st _ _ fields helper concatFields visMod
             in (n, maybeFieldVisible $ maybeInvalid $ renderField fieldFoc st) : renderFields fs
         (fieldNames, renderedFields) = unzip $ renderFields fields
         maybeHelperVisible =
-            if visMode == ShowAugmentedField then visible else id
+            if foc && visMode == ShowAugmentedField then visible else id
     in maybeHelperVisible $ helper $ maybeVisible $ concatFields renderedFields
 
 -- | Dispatch an event to the currently focused form field. This handles
