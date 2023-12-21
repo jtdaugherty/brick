@@ -153,7 +153,7 @@ data FormFieldVisibilityMode =
     ShowFocusedFieldOnly
     -- ^ Make only the focused field's selected input visible. For
     -- composite fields this will not bring all options into view.
-    | ShowAugmentedField
+    | ShowCompositeField
     -- ^ Make all inputs in the focused field visible. For composite
     -- fields this will bring all options into view as long as the
     -- viewport is large enough to show them all.
@@ -728,7 +728,7 @@ invalidFields f = concatMap getInvalidFields (formFieldStates f)
 --   other inputs in the same field collection (e.g. a set of radio
 --   buttons) will not be brought into view along with it.
 --
--- * 'ShowAugmentedField' - in this mode, when a field receives focus,
+-- * 'ShowCompositeField' - in this mode, when a field receives focus,
 --   all of the inputs in its collection (e.g. a set of radio buttons)
 --   are brought into view as long as the viewport is large enough to
 --   show them all. If it isn't, the viewport will show as many as space
@@ -817,7 +817,7 @@ renderFormFieldState fr (FormFieldState st _ _ fields helper concatFields visMod
         foc = case curFocus of
                   Nothing -> False
                   Just n -> n `elem` fieldNames
-        maybeVisible = if foc && visMode == ShowAugmentedField then visible else id
+        maybeVisible = if foc && visMode == ShowCompositeField then visible else id
         renderFields [] = []
         renderFields ((FormField n validate extValid renderField _):fs) =
             let maybeInvalid = if (isJust $ validate st) && extValid
