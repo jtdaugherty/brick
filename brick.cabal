@@ -32,13 +32,22 @@ license:             BSD3
 license-file:        LICENSE
 author:              Jonathan Daugherty <cygnus@foobox.com>
 maintainer:          Jonathan Daugherty <cygnus@foobox.com>
-copyright:           (c) Jonathan Daugherty 2015-2023
+copyright:           (c) Jonathan Daugherty 2015-2024
 category:            Graphics
 build-type:          Simple
 cabal-version:       1.18
 Homepage:            https://github.com/jtdaugherty/brick/
 Bug-reports:         https://github.com/jtdaugherty/brick/issues
-tested-with:         GHC == 8.2.2, GHC == 8.4.4, GHC == 8.6.5, GHC == 8.8.4, GHC == 8.10.7, GHC == 9.0.2, GHC == 9.2.4, GHC == 9.4.2
+tested-with:         GHC == 8.2.2
+                      || == 8.4.4
+                      || == 8.6.5
+                      || == 8.8.4
+                      || == 8.10.7
+                      || == 9.0.2
+                      || == 9.2.8
+                      || == 9.4.8
+                      || == 9.6.3
+                      || == 9.8.1
 
 extra-doc-files:     README.md,
                      docs/guide.rst,
