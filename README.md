@@ -98,6 +98,7 @@ it, get in touch!
 | [`Brickudoku`](https://github.com/Thecentury/brickudoku) | A hybrid of Tetris and Sudoku |
 | [`timeloop`](https://github.com/cdupont/timeloop) | A time-travelling demonstrator |
 | [`brick-trading-journal`](https://codeberg.org/amano.kenji/brick-trading-journal) | A TUI program that calculates basic statistics from trades |
+| [`homodoro`](https://github.com/c0nradLC/homodoro) | A terminal application to use the pomodoro technique and keep track of daily tasks |
 
 These third-party packages also extend `brick`:
 
