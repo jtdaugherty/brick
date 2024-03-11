@@ -51,19 +51,18 @@ it, get in touch!
 | Project | Description |
 | ------- | ----------- |
 | [`2048Haskell`](https://github.com/8Gitbrix/2048Haskell) | An implementation of the 2048 game |
-| [`Brickudoku`](https://github.com/Thecentury/brickudoku) | A hybrid of Tetris and Sudoku |
-| [`Giter`](https://gitlab.com/refaelsh/giter) | A UI wrapper around Git CLI inspired by [Magit](https://magit.vc/). |
-| [`VOIDSPACE`](https://github.com/ChrisPenner/void-space) | A space-themed typing-tutor game |
 | [`babel-cards`](https://github.com/srhoulam/babel-cards) | A TUI spaced-repetition memorization tool. Similar to Anki. |
 | [`bhoogle`](https://github.com/andrevdm/bhoogle) | A [Hoogle](https://www.haskell.org/hoogle/) client |
 | [`brewsage`](https://github.com/gerdreiss/brewsage#readme) | A TUI for Homebrew |
 | [`brick-trading-journal`](https://codeberg.org/amano.kenji/brick-trading-journal) | A TUI program that calculates basic statistics from trades |
+| [`Brickudoku`](https://github.com/Thecentury/brickudoku) | A hybrid of Tetris and Sudoku |
 | [`cbookview`](https://github.com/mlang/chessIO) | A TUI for exploring polyglot chess opening book files |
 | [`clifm`](https://github.com/pasqu4le/clifm) | A file manager |
 | [`codenames-haskell`](https://github.com/VigneshN1997/codenames-haskell) | An implementation of the Codenames game |
 | [`fifteen`](https://github.com/benjaminselfridge/fifteen) | An implementation of the [15 puzzle](https://en.wikipedia.org/wiki/15_puzzle) |
 | [`ghcup`](https://www.haskell.org/ghcup/) | A TUI for `ghcup`, the Haskell toolchain manager |
 | [`git-brunch`](https://github.com/andys8/git-brunch) | A git branch checkout utility |
+| [`Giter`](https://gitlab.com/refaelsh/giter) | A UI wrapper around Git CLI inspired by [Magit](https://magit.vc/). |
 | [`gotta-go-fast`](https://github.com/callum-oakley/gotta-go-fast) | A typing tutor |
 | [`haradict`](https://github.com/srhoulam/haradict) | A TUI Arabic dictionary powered by [ElixirFM](https://github.com/otakar-smrz/elixir-fm) |
 | [`hascard`](https://github.com/Yvee1/hascard) | A program for reviewing "flash card" notes |
@@ -96,6 +95,7 @@ it, get in touch!
 | [`ttyme`](https://github.com/evuez/ttyme) | A TUI for [Harvest](https://www.getharvest.com/) |
 | [`ullekha`](https://github.com/ajithnn/ullekha) | An interactive terminal notes/todo app with file/redis persistence |
 | [`viewprof`](https://github.com/maoe/viewprof) | A GHC profile viewer |
+| [`VOIDSPACE`](https://github.com/ChrisPenner/void-space) | A space-themed typing-tutor game |
 | [`wordle`](https://github.com/ivanjermakov/wordle) | An implementation of the Wordle game |
 | [`wrapping-editor`](https://github.com/ta0kira/wrapping-editor) | An embeddable editor with support for Brick |
 | [`youbrick`](https://github.com/florentc/youbrick) | A feed aggregator and launcher for Youtube channels |
