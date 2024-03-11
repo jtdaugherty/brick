@@ -50,55 +50,55 @@ it, get in touch!
 
 | Project | Description |
 | ------- | ----------- |
-| [`tetris`](https://github.com/SamTay/tetris) | An implementation of the Tetris game |
-| [`gotta-go-fast`](https://github.com/callum-oakley/gotta-go-fast) | A typing tutor |
-| [`haskell-player`](https://github.com/potomak/haskell-player) | An `afplay` frontend |
-| [`mushu`](https://github.com/elaye/mushu) | An `MPD` client |
-| [`matterhorn`](https://github.com/matterhorn-chat/matterhorn) | A client for [Mattermost](https://about.mattermost.com/) |
-| [`viewprof`](https://github.com/maoe/viewprof) | A GHC profile viewer |
-| [`tart`](https://github.com/jtdaugherty/tart) | A mouse-driven ASCII art drawing program |
-| [`silly-joy`](https://github.com/rootmos/silly-joy) | An interpreter for Joy |
-| [`herms`](https://github.com/jackkiefer/herms) | A command-line tool for managing kitchen recipes |
-| [`purebred`](https://github.com/purebred-mua/purebred) | A mail user agent |
 | [`2048Haskell`](https://github.com/8Gitbrix/2048Haskell) | An implementation of the 2048 game |
-| [`bhoogle`](https://github.com/andrevdm/bhoogle) | A [Hoogle](https://www.haskell.org/hoogle/) client |
-| [`clifm`](https://github.com/pasqu4le/clifm) | A file manager |
-| [`towerHanoi`](https://github.com/shajenM/projects/tree/master/towerHanoi) | Animated solutions to The Tower of Hanoi |
+| [`Brickudoku`](https://github.com/Thecentury/brickudoku) | A hybrid of Tetris and Sudoku |
+| [`Giter`](https://gitlab.com/refaelsh/giter) | A UI wrapper around Git CLI inspired by [Magit](https://magit.vc/). |
 | [`VOIDSPACE`](https://github.com/ChrisPenner/void-space) | A space-themed typing-tutor game |
+| [`babel-cards`](https://github.com/srhoulam/babel-cards) | A TUI spaced-repetition memorization tool. Similar to Anki. |
+| [`bhoogle`](https://github.com/andrevdm/bhoogle) | A [Hoogle](https://www.haskell.org/hoogle/) client |
+| [`brewsage`](https://github.com/gerdreiss/brewsage#readme) | A TUI for Homebrew |
+| [`brick-trading-journal`](https://codeberg.org/amano.kenji/brick-trading-journal) | A TUI program that calculates basic statistics from trades |
+| [`cbookview`](https://github.com/mlang/chessIO) | A TUI for exploring polyglot chess opening book files |
+| [`clifm`](https://github.com/pasqu4le/clifm) | A file manager |
+| [`codenames-haskell`](https://github.com/VigneshN1997/codenames-haskell) | An implementation of the Codenames game |
+| [`fifteen`](https://github.com/benjaminselfridge/fifteen) | An implementation of the [15 puzzle](https://en.wikipedia.org/wiki/15_puzzle) |
+| [`ghcup`](https://www.haskell.org/ghcup/) | A TUI for `ghcup`, the Haskell toolchain manager |
+| [`git-brunch`](https://github.com/andys8/git-brunch) | A git branch checkout utility |
+| [`gotta-go-fast`](https://github.com/callum-oakley/gotta-go-fast) | A typing tutor |
+| [`haradict`](https://github.com/srhoulam/haradict) | A TUI Arabic dictionary powered by [ElixirFM](https://github.com/otakar-smrz/elixir-fm) |
+| [`hascard`](https://github.com/Yvee1/hascard) | A program for reviewing "flash card" notes |
+| [`haskell-player`](https://github.com/potomak/haskell-player) | An `afplay` frontend |
+| [`herms`](https://github.com/jackkiefer/herms) | A command-line tool for managing kitchen recipes |
+| [`hic-hac-hoe`](https://github.com/blastwind/hic-hac-hoe) | Play tic tac toe in terminal! |
+| [`hledger-iadd`](http://github.com/rootzlevel/hledger-iadd) | An interactive terminal UI for adding hledger journal entries |
+| [`hledger-ui`](https://github.com/simonmichael/hledger) | A terminal UI for the hledger accounting system. |
+| [`homodoro`](https://github.com/c0nradLC/homodoro) | A terminal application to use the pomodoro technique and keep track of daily tasks |
+| [`htyper`](https://github.com/Simon-Hostettler/htyper) | A typing speed test program |
+| [`hyahtzee2`](https://github.com/DamienCassou/hyahtzee2#readme) | Famous Yahtzee dice game |
+| [`kpxhs`](https://github.com/akazukin5151/kpxhs) | An interactive [Keepass](https://github.com/keepassxreboot/keepassxc/) database viewer |
+| [`matterhorn`](https://github.com/matterhorn-chat/matterhorn) | A client for [Mattermost](https://about.mattermost.com/) |
+| [`maze`](https://github.com/benjaminselfridge/maze) | A Brick-based maze game |
+| [`mushu`](https://github.com/elaye/mushu) | An `MPD` client |
+| [`mywork`](https://github.com/kquick/mywork) [[Hackage]](https://hackage.haskell.org/package/mywork) | A tool to keep track of the projects you are working on |
+| [`pboy`](https://github.com/2mol/pboy) | A tiny PDF organizer |
+| [`purebred`](https://github.com/purebred-mua/purebred) | A mail user agent |
+| [`sandwich`](https://codedownio.github.io/sandwich/) | A test framework with a TUI interface |
+| [`silly-joy`](https://github.com/rootmos/silly-joy) | An interpreter for Joy |
 | [`solitaire`](https://github.com/ambuc/solitaire) | The card game |
 | [`sudoku-tui`](https://github.com/evanrelf/sudoku-tui) | A Sudoku implementation |
 | [`summoner-tui`](https://github.com/kowainik/summoner/tree/master/summoner-tui) | An interactive frontend to the Summoner tool |
-| [`wrapping-editor`](https://github.com/ta0kira/wrapping-editor) | An embeddable editor with support for Brick |
-| [`git-brunch`](https://github.com/andys8/git-brunch) | A git branch checkout utility |
-| [`hascard`](https://github.com/Yvee1/hascard) | A program for reviewing "flash card" notes |
-| [`ttyme`](https://github.com/evuez/ttyme) | A TUI for [Harvest](https://www.getharvest.com/) |
-| [`ghcup`](https://www.haskell.org/ghcup/) | A TUI for `ghcup`, the Haskell toolchain manager |
-| [`cbookview`](https://github.com/mlang/chessIO) | A TUI for exploring polyglot chess opening book files |
-| [`thock`](https://github.com/rmehri01/thock) | A modern TUI typing game featuring online racing against friends |
-| [`fifteen`](https://github.com/benjaminselfridge/fifteen) | An implementation of the [15 puzzle](https://en.wikipedia.org/wiki/15_puzzle) |
-| [`maze`](https://github.com/benjaminselfridge/maze) | A Brick-based maze game |
-| [`pboy`](https://github.com/2mol/pboy) | A tiny PDF organizer |
-| [`hyahtzee2`](https://github.com/DamienCassou/hyahtzee2#readme) | Famous Yahtzee dice game |
-| [`brewsage`](https://github.com/gerdreiss/brewsage#readme) | A TUI for Homebrew |
-| [`sandwich`](https://codedownio.github.io/sandwich/) | A test framework with a TUI interface |
-| [`youbrick`](https://github.com/florentc/youbrick) | A feed aggregator and launcher for Youtube channels |
 | [`swarm`](https://github.com/byorgey/swarm/) | A 2D programming and resource gathering game |
-| [`hledger-ui`](https://github.com/simonmichael/hledger) | A terminal UI for the hledger accounting system. |
-| [`hledger-iadd`](http://github.com/rootzlevel/hledger-iadd) | An interactive terminal UI for adding hledger journal entries |
-| [`wordle`](https://github.com/ivanjermakov/wordle) | An implementation of the Wordle game |
-| [`kpxhs`](https://github.com/akazukin5151/kpxhs) | An interactive [Keepass](https://github.com/keepassxreboot/keepassxc/) database viewer |
-| [`htyper`](https://github.com/Simon-Hostettler/htyper) | A typing speed test program |
-| [`ullekha`](https://github.com/ajithnn/ullekha) | An interactive terminal notes/todo app with file/redis persistence |
-| [`mywork`](https://github.com/kquick/mywork) [[Hackage]](https://hackage.haskell.org/package/mywork) | A tool to keep track of the projects you are working on |
-| [`hic-hac-hoe`](https://github.com/blastwind/hic-hac-hoe) | Play tic tac toe in terminal! |
-| [`babel-cards`](https://github.com/srhoulam/babel-cards) | A TUI spaced-repetition memorization tool. Similar to Anki. |
-| [`codenames-haskell`](https://github.com/VigneshN1997/codenames-haskell) | An implementation of the Codenames game |
-| [`haradict`](https://github.com/srhoulam/haradict) | A TUI Arabic dictionary powered by [ElixirFM](https://github.com/otakar-smrz/elixir-fm) |
-| [`Giter`](https://gitlab.com/refaelsh/giter) | A UI wrapper around Git CLI inspired by [Magit](https://magit.vc/). |
-| [`Brickudoku`](https://github.com/Thecentury/brickudoku) | A hybrid of Tetris and Sudoku |
+| [`tart`](https://github.com/jtdaugherty/tart) | A mouse-driven ASCII art drawing program |
+| [`tetris`](https://github.com/SamTay/tetris) | An implementation of the Tetris game |
+| [`thock`](https://github.com/rmehri01/thock) | A modern TUI typing game featuring online racing against friends |
 | [`timeloop`](https://github.com/cdupont/timeloop) | A time-travelling demonstrator |
-| [`brick-trading-journal`](https://codeberg.org/amano.kenji/brick-trading-journal) | A TUI program that calculates basic statistics from trades |
-| [`homodoro`](https://github.com/c0nradLC/homodoro) | A terminal application to use the pomodoro technique and keep track of daily tasks |
+| [`towerHanoi`](https://github.com/shajenM/projects/tree/master/towerHanoi) | Animated solutions to The Tower of Hanoi |
+| [`ttyme`](https://github.com/evuez/ttyme) | A TUI for [Harvest](https://www.getharvest.com/) |
+| [`ullekha`](https://github.com/ajithnn/ullekha) | An interactive terminal notes/todo app with file/redis persistence |
+| [`viewprof`](https://github.com/maoe/viewprof) | A GHC profile viewer |
+| [`wordle`](https://github.com/ivanjermakov/wordle) | An implementation of the Wordle game |
+| [`wrapping-editor`](https://github.com/ta0kira/wrapping-editor) | An embeddable editor with support for Brick |
+| [`youbrick`](https://github.com/florentc/youbrick) | A feed aggregator and launcher for Youtube channels |
 
 These third-party packages also extend `brick`:
 
