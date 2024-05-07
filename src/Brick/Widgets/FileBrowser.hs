@@ -154,7 +154,7 @@ import qualified Data.Text as T
 import Data.Monoid
 #endif
 import Data.Int (Int64)
-import Data.List (sortBy, isSuffixOf)
+import Data.List (sortBy, isSuffixOf, dropWhileEnd)
 import qualified Data.Set as Set
 import qualified Data.Vector as V
 import Lens.Micro
@@ -282,7 +282,7 @@ newFileBrowser :: (FileInfo -> Bool)
                -> IO (FileBrowser n)
 newFileBrowser selPredicate name mCwd = do
     initialCwd <- FP.normalise <$> case mCwd of
-        Just path -> return path
+        Just path -> return $ removeTrailingSlash path
         Nothing -> D.getCurrentDirectory
 
     let b = FileBrowser { fileBrowserWorkingDirectory = initialCwd
@@ -297,6 +297,22 @@ newFileBrowser selPredicate name mCwd = do
                         }
 
     setWorkingDirectory initialCwd b
+
+-- | Removes any trailing slash(es) from the supplied FilePath (which should
+-- indicate a directory).  This does not remove a sole slash indicating the root
+-- directory.
+--
+-- This is done because if the FileBrowser is initialized with an initial working
+-- directory that ends in a slash, then selecting the "../" entry to move to the
+-- parent directory will cause the removal of the trailing slash, but it will not
+-- otherwise cause any change, misleading the user into thinking no action was
+-- taken (the disappearance of the trailing slash is unlikely to be noticed).
+-- All subsequent parent directory selection operations are processed normally,
+-- and the 'fileBrowserWorkingDirectory' never ends in a trailing slash
+-- thereafter (except at the root directory).
+removeTrailingSlash :: FilePath -> FilePath
+removeTrailingSlash "/" = "/"
+removeTrailingSlash d = dropWhileEnd (== '/') d
 
 -- | A file entry selector that permits selection of all file entries
 -- except directories. Use this if you want users to be able to navigate
