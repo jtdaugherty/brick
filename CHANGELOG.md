@@ -2,6 +2,20 @@
 Brick changelog
 ---------------
 
+2.3.2
+-----
+
+Bug fixes:
+* `FileBrowser`: if the `FileBrowser` was initialized with a `FilePath`
+  that ended in a slash, then if the user hit `Enter` on the `../` entry
+  to move to the parent directory, the only effect was the removal of
+  that trailing slash. This change trims the trailing slash so that the
+  expected move occurs whenever the `../` entry is selected.
+* `Brick.Keybindings.Pretty.keybindingHelpWidget`: fixed a problem where
+  a key event with no name in a `KeyEvents` would cause a `fromJust`
+  exception. The pretty-printer now falls back to a placeholder
+  representation for such unnamed key events.
+
 2.3.1
 -----
 
