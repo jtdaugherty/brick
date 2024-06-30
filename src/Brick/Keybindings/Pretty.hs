@@ -163,8 +163,8 @@ keybindEventHelpWidget (evName, desc, evs) =
         getText (Comment s) = s
         getText (Verbatim s) = s
         label = withDefAttr eventNameAttr $ case evName of
-            Comment s -> txt s -- TODO: was "; " <> s
-            Verbatim s -> txt s -- TODO: was: emph $ txt s
+            Comment s -> txt s
+            Verbatim s -> txt s
     in vBox [ withDefAttr eventDescriptionAttr $ txt desc
             , label <+> txt " = " <+> withDefAttr keybindingAttr (txt evText)
             ]
