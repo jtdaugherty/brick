@@ -25,7 +25,6 @@ where
 
 import Brick
 import Data.List (sort, intersperse)
-import Data.Maybe (fromJust)
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid ((<>))
 #endif
@@ -124,19 +123,19 @@ mkKeybindEventHelp kc h =
           ByKey b ->
               (Comment "(non-customizable key)", [Verbatim $ ppBinding b])
           ByEvent ev ->
-              let name = fromJust $ keyEventName (keyConfigEvents kc) ev
+              let name = maybe (Comment "(unnamed)") Verbatim $ keyEventName (keyConfigEvents kc) ev
               in case lookupKeyConfigBindings kc ev of
                   Nothing ->
                       if not (null (allDefaultBindings kc ev))
-                      then (Verbatim name, Verbatim <$> ppBinding <$> allDefaultBindings kc ev)
-                      else (Verbatim name, unbound)
+                      then (name, Verbatim <$> ppBinding <$> allDefaultBindings kc ev)
+                      else (name, unbound)
                   Just Unbound ->
-                      (Verbatim name, unbound)
+                      (name, unbound)
                   Just (BindingList bs) ->
                       let result = if not (null bs)
                                    then Verbatim <$> ppBinding <$> bs
                                    else unbound
-                      in (Verbatim name, result)
+                      in (name, result)
   in (label, handlerDescription $ kehHandler h, evText)
 
 -- | Build a 'Widget' displaying key binding information for a single
