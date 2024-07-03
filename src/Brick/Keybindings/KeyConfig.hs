@@ -47,6 +47,7 @@ import Data.Maybe (fromMaybe, listToMaybe, catMaybes)
 import qualified Graphics.Vty as Vty
 
 import Brick.Keybindings.KeyEvents
+import Brick.Keybindings.Normalize
 
 -- | A key binding.
 --
@@ -67,10 +68,12 @@ data Binding =
             -- ^ The set of modifiers.
             } deriving (Eq, Show, Ord)
 
--- | Construct a 'Binding'. Modifier order is ignored.
+-- | Construct a 'Binding'. Modifier order is ignored. If modifiers
+-- are given and the binding is for a character key, it is forced to
+-- lowercase.
 binding :: Vty.Key -> [Vty.Modifier] -> Binding
 binding k mods =
-    Binding { kbKey = k
+    Binding { kbKey = normalizeKey mods k
             , kbMods = S.fromList mods
             }
 
@@ -230,17 +233,23 @@ instance ToBinding Binding where
 addModifier :: (ToBinding a) => Vty.Modifier -> a -> Binding
 addModifier m val =
     let b = bind val
-    in b { kbMods = S.insert m (kbMods b) }
+        newMods = S.insert m $ kbMods b
+    in b { kbMods = newMods
+         , kbKey = normalizeKey (S.toList newMods) $ kbKey b
+         }
 
--- | Add Meta to a binding.
+-- | Add Meta to a binding. If the binding is for a character key, force
+-- it to lowercase.
 meta :: (ToBinding a) => a -> Binding
 meta = addModifier Vty.MMeta
 
--- | Add Ctrl to a binding.
+-- | Add Ctrl to a binding. If the binding is for a character key, force
+-- it to lowercase.
 ctrl :: (ToBinding a) => a -> Binding
 ctrl = addModifier Vty.MCtrl
 
--- | Add Shift to a binding.
+-- | Add Shift to a binding. If the binding is for a character key, force
+-- it to lowercase.
 shift :: (ToBinding a) => a -> Binding
 shift = addModifier Vty.MShift
 

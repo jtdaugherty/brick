@@ -5,6 +5,7 @@
 module Brick.Keybindings.Parse
   ( parseBinding
   , parseBindingList
+  , normalizeKey
 
   , keybindingsFromIni
   , keybindingsFromFile
@@ -14,7 +15,6 @@ where
 
 import Control.Monad (forM)
 import Data.Maybe (catMaybes)
-import qualified Data.Set as S
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Graphics.Vty as Vty
@@ -23,6 +23,7 @@ import qualified Data.Ini.Config as Ini
 
 import Brick.Keybindings.KeyEvents
 import Brick.Keybindings.KeyConfig
+import Brick.Keybindings.Normalize
 
 -- | Parse a key binding list into a 'BindingState'.
 --
@@ -83,7 +84,7 @@ parseBinding :: T.Text -> Either String Binding
 parseBinding s = go (T.splitOn "-" $ T.toLower s) []
   where go [k] mods = do
           k' <- pKey k
-          return Binding { kbMods = S.fromList mods, kbKey = k' }
+          return $ binding k' mods
         go (k:ks) mods = do
           m <- case k of
             "s"       -> return Vty.MShift
