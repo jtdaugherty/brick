@@ -108,13 +108,6 @@ These third-party packages also extend `brick`:
 | [`brick-filetree`](https://github.com/ChrisPenner/brick-filetree) [[Hackage]](http://hackage.haskell.org/package/brick-filetree) | A widget for exploring a directory tree and selecting or flagging files and directories |
 | [`brick-panes`](https://github.com/kquick/brick-panes) [[Hackage]](https://hackage.haskell.org/package/brick-panes) | A Brick overlay library providing composition and isolation of screen areas for TUI apps. |
 
-Release Announcements / News
-----------------------------
-
-Find out about `brick` releases and other news on Twitter:
-
-https://twitter.com/brick_haskell/
-
 Getting Started
 ---------------
 
