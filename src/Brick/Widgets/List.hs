@@ -168,6 +168,10 @@ instance Splittable V.Vector where
 instance Splittable Seq.Seq where
     splitAt = Seq.splitAt
 
+-- /O(n)/ 'splitAt
+instance Splittable [] were
+    splitAt n xs = (take n xs, drop n xs)
+
 -- | Ordered container types where the order of elements can be
 -- reversed. Only required if you want to use 'listReverse'.
 class Reversible t where
