@@ -168,7 +168,7 @@ instance Splittable V.Vector where
 instance Splittable Seq.Seq where
     splitAt = Seq.splitAt
 
--- /O(n)/ 'splitAt
+-- /O(n)/ 'splitAt'
 instance Splittable [] were
     splitAt n xs = (take n xs, drop n xs)
 
