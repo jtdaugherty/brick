@@ -1,7 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE FlexibleInstances #-}
-
 -- | This module provides a progress bar widget.
 module Brick.Widgets.ProgressBar
   ( progressBar
@@ -12,15 +10,16 @@ module Brick.Widgets.ProgressBar
   )
 where
 
-import Data.Maybe (fromMaybe)
 import Lens.Micro ((^.))
+import Data.Maybe (fromMaybe)
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid
 #endif
-import Brick.AttrMap
-import Brick.Types
-import Brick.Widgets.Core
 import Graphics.Vty (safeWcswidth)
+
+import Brick.Types
+import Brick.AttrMap
+import Brick.Widgets.Core
 
 -- | The attribute of the completed portion of the progress bar.
 progressCompleteAttr :: AttrName
@@ -59,7 +58,7 @@ progressBar' :: Maybe String
 progressBar' mLabel progress (completeChar, uncompleteChar) =
     Widget Greedy Fixed $ do
         c <- getContext
-        let barWidth = c ^. availWidthL
+        let barWidth = c^.availWidthL
             label = fromMaybe "" mLabel
             labelWidth = safeWcswidth label
             spacesWidth = barWidth - labelWidth
