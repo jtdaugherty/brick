@@ -21,6 +21,7 @@ import Brick.Types
 import Brick.Widgets.Core
   ( (<+>), (<=>)
   , str
+  , strWrap
   , updateAttrMap
   , overrideAttr
   )
@@ -51,62 +52,26 @@ drawUI p = [ui]
       -- custom bars
       cBar1 = overrideAttr P.progressCompleteAttr cDoneAttr1 $
               overrideAttr P.progressIncompleteAttr cToDoAttr1 
-              $ bar' (_x p) ('━', '━')
+              $ bar' '▰' '▱' $ _x p
       cBar2 = overrideAttr P.progressCompleteAttr cDoneAttr2 $
               overrideAttr P.progressIncompleteAttr cToDoAttr2
-              $ bar' (_y p) ('▰', '▰')
+              $ bar' '|' '─' $ _y p
       cBar3 = overrideAttr P.progressCompleteAttr cDoneAttr $
               overrideAttr P.progressIncompleteAttr cToDoAttr 
-              $ bar' (_z p) ('━', '─')
-      cBar4 = overrideAttr P.progressCompleteAttr cDoneAttr $
-              overrideAttr P.progressIncompleteAttr cToDoAttr 
-              $ bar' (_x p) ('▰', '▱')
-      cBar5 = overrideAttr P.progressCompleteAttr cDoneAttr $
-              overrideAttr P.progressIncompleteAttr cToDoAttr 
-              $ bar' (_y p) ('━', '=')
-      cBar6 = overrideAttr P.progressCompleteAttr cDoneAttr $
-              overrideAttr P.progressIncompleteAttr cToDoAttr 
-              $ bar' (_z p) ('█', '▁')
-      cBar7 = overrideAttr P.progressCompleteAttr cDoneAttr $
-              overrideAttr P.progressIncompleteAttr cToDoAttr 
-              $ bar' (_x p) ('■', '□')
-      cBar8 = overrideAttr P.progressCompleteAttr cDoneAttr $
-              overrideAttr P.progressIncompleteAttr cToDoAttr 
-              $ bar' (_y p) ('▪', '▫')
-      cBar9 = overrideAttr P.progressCompleteAttr cDoneAttr $
-              overrideAttr P.progressIncompleteAttr cToDoAttr 
-              $ bar' (_z p) ('▸', '▹')
-      cBar10 = overrideAttr P.progressCompleteAttr cDoneAttr $
-               overrideAttr P.progressIncompleteAttr cToDoAttr 
-               $ bar' (_x p) ('⣿', '⠶')
-      cBar11 = overrideAttr P.progressCompleteAttr cDoneAttr $
-               overrideAttr P.progressIncompleteAttr cToDoAttr 
-               $ bar' (_y p) ('|', '=')
-      cBar12 = overrideAttr P.progressCompleteAttr cDoneAttr $
-               overrideAttr P.progressIncompleteAttr cToDoAttr 
-               $ bar' (_z p) ('●', '⊙')
+              $ bar' '⣿' '⠶' $ _z p
       lbl c = if _showLabel p 
               then Just $ " " ++ (show $ fromEnum $ c * 100) ++ " " 
               else Nothing
       bar v = P.progressBar (lbl v) v
-      bar' v chars = P.progressBar' (lbl v) v chars
+      bar' cc ic v = P.customProgressBar cc ic (lbl v) v
       ui = (str "X: " <+> xBar) <=>
            (str "Y: " <+> yBar) <=>
            (str "Z: " <+> zBar) <=>
            (str "X: " <+> cBar1) <=>
            (str "Y: " <+> cBar2) <=>
            (str "Z: " <+> cBar3) <=>
-           (str "X: " <+> cBar4) <=>
-           (str "Y: " <+> cBar5) <=>
-           (str "Z: " <+> cBar6) <=>
-           (str "X: " <+> cBar7) <=>
-           (str "Y: " <+> cBar8) <=>
-           (str "Z: " <+> cBar9) <=>
-           (str "X: " <+> cBar10) <=>
-           (str "Y: " <+> cBar11) <=>
-           (str "Z: " <+> cBar12) <=>
            str "" <=>
-           str "Hit 'x', 'y', or 'z' to advance progress, 'r' to revert values, 'cmd + r' to reset values or 'q' to quit"
+           strWrap "Hit 'x', 'y', or 'z' to advance progress, 't' to toggle labels, 'r' to revert values, 'cmd + r' to reset values or 'q' to quit"
 
 appEvent :: T.BrickEvent () e -> T.EventM () (MyAppState ()) ()
 appEvent (T.VtyEvent e) =
@@ -165,10 +130,10 @@ theMap = A.attrMap V.defAttr
          , (zToDoAttr,                 V.blue `on` V.red)
          , (cDoneAttr,                 fg V.blue)
          , (cToDoAttr,                 fg V.blue)
-         , (cDoneAttr1,                fg V.white)
-         , (cToDoAttr1,                fg V.black)
-         , (cDoneAttr2,                fg V.yellow)
-         , (cToDoAttr2,                fg V.black)
+         , (cDoneAttr1,                fg V.red)
+         , (cToDoAttr1,                fg V.brightWhite)
+         , (cDoneAttr2,                fg V.green)
+         , (cToDoAttr2,                fg V.brightGreen)
          , (P.progressIncompleteAttr,  fg V.yellow)
          ]
 
