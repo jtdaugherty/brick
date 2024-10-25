@@ -21,12 +21,13 @@ import Brick.Types
 import Brick.Widgets.Core
   ( (<+>), (<=>)
   , str
+  , strWrap
   , updateAttrMap
   , overrideAttr
   )
 import Brick.Util (fg, bg, on, clamp)
 
-data MyAppState n = MyAppState { _x, _y, _z :: Float }
+data MyAppState n = MyAppState { _x, _y, _z :: Float, _showLabel :: Bool }
 
 makeLenses ''MyAppState
 
@@ -48,13 +49,29 @@ drawUI p = [ui]
       zBar = overrideAttr P.progressCompleteAttr zDoneAttr $
              overrideAttr P.progressIncompleteAttr zToDoAttr $
              bar $ _z p
-      lbl c = Just $ show $ fromEnum $ c * 100
+      -- custom bars
+      cBar1 = overrideAttr P.progressCompleteAttr cDoneAttr1 $
+              overrideAttr P.progressIncompleteAttr cToDoAttr1 
+              $ bar' '▰' '▱' $ _x p
+      cBar2 = overrideAttr P.progressCompleteAttr cDoneAttr2 $
+              overrideAttr P.progressIncompleteAttr cToDoAttr2
+              $ bar' '|' '─' $ _y p
+      cBar3 = overrideAttr P.progressCompleteAttr cDoneAttr $
+              overrideAttr P.progressIncompleteAttr cToDoAttr 
+              $ bar' '⣿' '⠶' $ _z p
+      lbl c = if _showLabel p 
+              then Just $ " " ++ (show $ fromEnum $ c * 100) ++ " " 
+              else Nothing
       bar v = P.progressBar (lbl v) v
+      bar' cc ic v = P.customProgressBar cc ic (lbl v) v
       ui = (str "X: " <+> xBar) <=>
            (str "Y: " <+> yBar) <=>
            (str "Z: " <+> zBar) <=>
+           (str "X: " <+> cBar1) <=>
+           (str "Y: " <+> cBar2) <=>
+           (str "Z: " <+> cBar3) <=>
            str "" <=>
-           str "Hit 'x', 'y', or 'z' to advance progress, or 'q' to quit"
+           strWrap "Hit 'x', 'y', or 'z' to advance progress, 't' to toggle labels, 'r' to revert values, 'cmd + r' to reset values or 'q' to quit"
 
 appEvent :: T.BrickEvent () e -> T.EventM () (MyAppState ()) ()
 appEvent (T.VtyEvent e) =
@@ -63,12 +80,18 @@ appEvent (T.VtyEvent e) =
          V.EvKey (V.KChar 'x') [] -> x %= valid . (+ 0.05)
          V.EvKey (V.KChar 'y') [] -> y %= valid . (+ 0.03)
          V.EvKey (V.KChar 'z') [] -> z %= valid . (+ 0.02)
+         V.EvKey (V.KChar 't') [] -> showLabel %= not
+         V.EvKey (V.KChar 'r') [V.MCtrl] -> do
+           x .= 0
+           y .= 0
+           z .= 0
+         V.EvKey (V.KChar 'r') [] -> T.put initialState
          V.EvKey (V.KChar 'q') [] -> M.halt
          _ -> return ()
 appEvent _ = return ()
 
 initialState :: MyAppState ()
-initialState = MyAppState 0.25 0.18 0.63
+initialState = MyAppState 0.25 0.18 0.63 True
 
 theBaseAttr :: A.AttrName
 theBaseAttr = A.attrName "theBase"
@@ -85,6 +108,18 @@ zDoneAttr, zToDoAttr :: A.AttrName
 zDoneAttr = theBaseAttr <> A.attrName "Z:done"
 zToDoAttr = theBaseAttr <> A.attrName "Z:remaining"
 
+cDoneAttr, cToDoAttr :: A.AttrName
+cDoneAttr = A.attrName "C:done"
+cToDoAttr = A.attrName "C:remaining"
+
+cDoneAttr1, cToDoAttr1 :: A.AttrName
+cDoneAttr1 = A.attrName "C1:done"
+cToDoAttr1 = A.attrName "C1:remaining"
+
+cDoneAttr2, cToDoAttr2 :: A.AttrName
+cDoneAttr2 = A.attrName "C2:done"
+cToDoAttr2 = A.attrName "C2:remaining"
+
 theMap :: A.AttrMap
 theMap = A.attrMap V.defAttr
          [ (theBaseAttr,               bg V.brightBlack)
@@ -93,6 +128,12 @@ theMap = A.attrMap V.defAttr
          , (yDoneAttr,                 V.magenta `on` V.yellow)
          , (zDoneAttr,                 V.blue `on` V.green)
          , (zToDoAttr,                 V.blue `on` V.red)
+         , (cDoneAttr,                 fg V.blue)
+         , (cToDoAttr,                 fg V.blue)
+         , (cDoneAttr1,                fg V.red)
+         , (cToDoAttr1,                fg V.brightWhite)
+         , (cDoneAttr2,                fg V.green)
+         , (cToDoAttr2,                fg V.brightGreen)
          , (P.progressIncompleteAttr,  fg V.yellow)
          ]
 
