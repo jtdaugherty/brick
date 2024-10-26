@@ -51,16 +51,16 @@ drawUI p = [ui]
              bar $ _z p
       -- custom bars
       cBar1 = overrideAttr P.progressCompleteAttr cDoneAttr1 $
-              overrideAttr P.progressIncompleteAttr cToDoAttr1 
+              overrideAttr P.progressIncompleteAttr cToDoAttr1
               $ bar' '▰' '▱' $ _x p
       cBar2 = overrideAttr P.progressCompleteAttr cDoneAttr2 $
               overrideAttr P.progressIncompleteAttr cToDoAttr2
               $ bar' '|' '─' $ _y p
       cBar3 = overrideAttr P.progressCompleteAttr cDoneAttr $
-              overrideAttr P.progressIncompleteAttr cToDoAttr 
+              overrideAttr P.progressIncompleteAttr cToDoAttr
               $ bar' '⣿' '⠶' $ _z p
-      lbl c = if _showLabel p 
-              then Just $ " " ++ (show $ fromEnum $ c * 100) ++ " " 
+      lbl c = if _showLabel p
+              then Just $ " " ++ (show $ fromEnum $ c * 100) ++ " "
               else Nothing
       bar v = P.progressBar (lbl v) v
       bar' cc ic v = P.customProgressBar cc ic (lbl v) v
