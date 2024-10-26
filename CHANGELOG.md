@@ -2,6 +2,14 @@
 Brick changelog
 ---------------
 
+2.5
+---
+
+New features:
+* `Brick.Widgets.ProgressBar` got a new function, `customProgressBar`,
+  which allows the customization of the fill characters used to draw a
+  progress bar. (Thanks @sectore)
+
 2.4
 ---
 
