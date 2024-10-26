@@ -71,7 +71,10 @@ drawUI p = [ui]
            (str "Y: " <+> cBar2) <=>
            (str "Z: " <+> cBar3) <=>
            str "" <=>
-           strWrap "Hit 'x', 'y', or 'z' to advance progress, 't' to toggle labels, 'r' to revert values, 'cmd + r' to reset values or 'q' to quit"
+           (strWrap $ concat [ "Hit 'x', 'y', or 'z' to advance progress,"
+                             , "'t' to toggle labels, 'r' to revert values, "
+                             , "'Ctrl + r' to reset values or 'q' to quit"
+                             ])
 
 appEvent :: T.BrickEvent () e -> T.EventM () (MyAppState ()) ()
 appEvent (T.VtyEvent e) =
