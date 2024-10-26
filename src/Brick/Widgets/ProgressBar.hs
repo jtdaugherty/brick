@@ -65,14 +65,14 @@ customProgressBar completeChar incompleteChar mLabel progress =
             leftWidth = spacesWidth `div` 2
             rightWidth = barWidth - labelWidth - leftWidth
             completeWidth = round $ progress * toEnum barWidth
-            
+
             leftCompleteWidth = min leftWidth completeWidth
             leftIncompleteWidth = leftWidth - leftCompleteWidth
             leftPart = replicate leftCompleteWidth completeChar ++ replicate leftIncompleteWidth incompleteChar
             rightCompleteWidth = max 0 (completeWidth - labelWidth - leftWidth)
             rightIncompleteWidth = rightWidth - rightCompleteWidth
             rightPart = replicate rightCompleteWidth completeChar ++ replicate rightIncompleteWidth incompleteChar
-    
+
             fullBar = leftPart <> label <> rightPart
             adjustedCompleteWidth = if completeWidth == length fullBar && progress < 1.0
                                     then completeWidth - 1
