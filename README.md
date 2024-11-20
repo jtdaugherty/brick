@@ -89,6 +89,7 @@ it, get in touch!
 | [`summoner-tui`](https://github.com/kowainik/summoner/tree/master/summoner-tui) | An interactive frontend to the Summoner tool |
 | [`swarm`](https://github.com/byorgey/swarm/) | A 2D programming and resource gathering game |
 | [`tart`](https://github.com/jtdaugherty/tart) | A mouse-driven ASCII art drawing program |
+| [`tick-tock-tui`](https://github.com/sectore/tick-tock-tui) | A stylish TUI app to handle Bitcoin data provided by [Mempool REST API](https://mempool.space/docs/api/rest) incl. blocks, fees and price converter. |
 | [`tetris`](https://github.com/SamTay/tetris) | An implementation of the Tetris game |
 | [`thock`](https://github.com/rmehri01/thock) | A modern TUI typing game featuring online racing against friends |
 | [`timeloop`](https://github.com/cdupont/timeloop) | A time-travelling demonstrator |
