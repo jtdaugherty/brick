@@ -169,7 +169,7 @@ editorText :: n
            -> Editor T.Text n
 editorText = editor
 
--- | Construct an editor over 'String' values
+-- | Construct an editor over generic text values
 editor :: Z.GenericTextZipper a
        => n
        -- ^ The editor's name (must be unique)
