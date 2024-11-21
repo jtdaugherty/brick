@@ -1089,11 +1089,11 @@ translateBy off p =
 --
 -- This is only useful for positioning something in a higher layer
 -- relative to a reported extent in a lower layer. Any other use is
--- likely to result in the specified widget being rendered as-is with
--- no translation. This is because this function relies on information
--- about lower layer renderings in order to work; using it with a
--- resource name that wasn't rendered in a lower layer will result in
--- this being equivalent to @id@.
+-- likely to result in the specified widget not being rendered. This
+-- is because this function relies on information about lower layer
+-- renderings in order to work; using it with a resource name that
+-- wasn't rendered in a lower layer will result in this being equivalent
+-- to @emptyWidget@.
 --
 -- For example, if you have two layers @topLayer@ and @bottomLayer@,
 -- then a widget drawn in @bottomLayer@ with @reportExtent Foo@ can be
