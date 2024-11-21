@@ -46,8 +46,8 @@ drawUi st =
     [ C.centerLayer $
       B.border $ str "This layer is centered but other\nlayers are placed underneath it."
     , arrowLayer
-    , middleLayer st
-    , bottomLayer st
+    , middleLayer (st^.middleLayerLocation)
+    , bottomLayer (st^.bottomLayerLocation)
     ]
 
 arrowLayer :: Widget Name
@@ -59,15 +59,15 @@ arrowLayer =
        withDefAttr arrowAttr $
        str msg
 
-middleLayer :: St -> Widget Name
-middleLayer st =
-    translateBy (st^.middleLayerLocation) $
+middleLayer :: Location -> Widget Name
+middleLayer l =
+    translateBy l $
     reportExtent MiddleLayerElement $
     B.border $ str "Middle layer\n(Arrow keys move)"
 
-bottomLayer :: St -> Widget Name
-bottomLayer st =
-    translateBy (st^.bottomLayerLocation) $
+bottomLayer :: Location -> Widget Name
+bottomLayer l =
+    translateBy l $
     B.border $ str "Bottom layer\n(Ctrl-arrow keys move)"
 
 appEvent :: T.BrickEvent Name e -> T.EventM Name St ()
