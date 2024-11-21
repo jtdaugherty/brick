@@ -1255,7 +1255,6 @@ cached n w =
             allClickables <- use clickableNamesL
             return [extentName e | e <- renderResult^.extentsL, extentName e `elem` allClickables]
 
-
 cacheLookup :: (Ord n) => n -> RenderM n (Maybe ([n], Result n))
 cacheLookup n = do
     cache <- lift $ gets (^.renderCacheL)
