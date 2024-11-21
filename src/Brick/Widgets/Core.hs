@@ -1084,7 +1084,8 @@ translateBy off p =
 -- | Given a widget, translate it to position it relative to the
 -- upper-left coordinates of a reported extent with the specified
 -- positioning offset. If the specified name has no reported extent,
--- this just draws the specified widget with no special positioning.
+-- this draws nothing on the basis that it only makes sense to draw what
+-- was requested when the relative position can be known.
 --
 -- This is only useful for positioning something in a higher layer
 -- relative to a reported extent in a lower layer. Any other use is
@@ -1103,7 +1104,7 @@ relativeTo n off w =
     Widget (hSize w) (vSize w) $ do
         mExt <- lookupReportedExtent n
         case mExt of
-            Nothing -> render w
+            Nothing -> render emptyWidget
             Just ext -> render $ translateBy (extentUpperLeft ext <> off) w
 
 -- | Crop the specified widget on the left by the specified number of
