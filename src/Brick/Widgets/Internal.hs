@@ -8,7 +8,7 @@ module Brick.Widgets.Internal
   )
 where
 
-import Lens.Micro ((^.), (&), (%~))
+import Lens.Micro ((^.), (&), (%~), (.~))
 import Lens.Micro.Mtl ((%=))
 import Control.Monad
 import Control.Monad.State.Strict
@@ -35,7 +35,14 @@ renderFinal :: (Ord n)
 renderFinal aMap layerRenders (w, h) chooseCursor rs =
     (newRS, picWithBg, theCursor, concat layerExtents)
     where
-        (layerResults, !newRS) = flip runState rs $ sequence $
+        -- Reset various fields from the last rendering state so they
+        -- don't accumulate or affect this rendering.
+        resetRs = rs & reportedExtentsL .~ mempty
+                     & observedNamesL .~ mempty
+                     & clickableNamesL .~ mempty
+                     & requestedVisibleNames_L .~ mempty
+
+        (layerResults, !newRS) = flip runState resetRs $ sequence $
             (\p -> runReaderT p ctx) <$>
             (\layerWidget -> do
                 result <- render $ cropToContext layerWidget
