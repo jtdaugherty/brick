@@ -188,7 +188,6 @@ animationManagerThreadBody inChan outChan mkEvent =
                     advanced <- checkForFrames tickTime
                     when (not $ null advanced) $
                         liftIO $ writeBChan outChan $ mkEvent $ return ()
-
                     run
 
                 Shutdown ->
