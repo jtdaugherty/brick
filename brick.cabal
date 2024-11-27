@@ -469,7 +469,8 @@ executable brick-animation-demo
                        microlens-mtl,
                        stm,
                        unordered-containers,
-                       hashable
+                       hashable,
+                       time
 
 executable brick-custom-event-demo
   if !flag(demos)
