@@ -3,6 +3,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module Main where
 
 import Lens.Micro ((^.), Traversal')
@@ -10,6 +11,7 @@ import Lens.Micro.TH (makeLenses)
 import Lens.Micro.Mtl
 import Control.Monad (void, forever, when)
 import Control.Concurrent (threadDelay, forkIO, ThreadId, killThread)
+import Control.Monad.State.Strict
 import Data.Hashable (Hashable)
 import Data.Time.Clock (UTCTime, NominalDiffTime, addUTCTime, getCurrentTime)
 import qualified Data.HashMap.Strict as HM
@@ -152,42 +154,40 @@ animationManagerThreadBody :: STM.TChan (AnimationManagerRequest s)
                            -> (EventM n s () -> e)
                            -> IO ()
 animationManagerThreadBody inChan outChan mkEvent =
-    let initialState :: HM.HashMap AnimationID (Animation s)
-        initialState = mempty
-
-        loop st = do
-            req <- STM.atomically $ STM.readTChan inChan
+    let run = do
+            req <- liftIO $ STM.atomically $ STM.readTChan inChan
             case req of
                 StartAnimation a -> do
                     -- Schedule the animation, setting its next frame time.
-                    now <- getCurrentTime
+                    now <- liftIO getCurrentTime
                     let next = addUTCTime frameOffset now
                         frameOffset = nominalDiffFromMs (animationFrameMilliseconds a)
-                    loop $ HM.insert (animationID a) (setNextFrameTime next a) st
+                    modify $ HM.insert (animationID a) (setNextFrameTime next a)
+                    run
 
-                StopAnimation aId ->
+                StopAnimation aId -> do
                     -- TODO: update the application state here
-                    loop $ HM.delete aId st
+                    modify $ HM.delete aId
+                    run
 
                 Tick tickTime -> do
                     -- Check all animation states for frame advances
                     -- based on the relationship between the tick time
                     -- and each animation's next frame time
-                    let (advanced, st') = checkForFrames tickTime st
+                    advanced <- checkForFrames tickTime
                     when (not $ null advanced) $
-                        writeBChan outChan $ mkEvent $ return ()
+                        liftIO $ writeBChan outChan $ mkEvent $ return ()
 
-                    loop st'
+                    run
 
                 Shutdown ->
                     return ()
 
-    in loop initialState
+    in evalStateT run mempty
 
 checkForFrames :: UTCTime
-               -> HM.HashMap AnimationID (Animation s)
-               -> ([AnimationID], HM.HashMap AnimationID (Animation s))
-checkForFrames _ m = ([], m)
+               -> StateT (HM.HashMap AnimationID (Animation s)) IO [AnimationID]
+checkForFrames _ = return []
 
 -- When a tick occurs:
 --  for each currently-running animation,
