@@ -222,12 +222,18 @@ runManager = forever $ do
             -- Check all animation states for frame advances
             -- based on the relationship between the tick time
             -- and each animation's next frame time
-            advanced <- checkForFrames tickTime
-            when (not $ null advanced) $
-                sendApplicationEvent $ return ()
+            mUpdateAct <- checkForFrames tickTime
+            case mUpdateAct of
+                Nothing -> return ()
+                Just act -> sendApplicationEvent act
 
-checkForFrames :: UTCTime -> ManagerM s e n [AnimationID]
-checkForFrames _ = return []
+checkForFrames :: UTCTime -> ManagerM s e n (Maybe (EventM n s ()))
+checkForFrames _ = do
+    -- For each active animation, check to see if the animation's next
+    -- frame time has passed. If it has, advance its frame counter as
+    -- appropriate and schedule its frame counter to be updated in the
+    -- application state.
+    return Nothing
 
 -- When a tick occurs:
 --  for each currently-running animation,
