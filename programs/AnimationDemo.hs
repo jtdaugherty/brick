@@ -86,7 +86,6 @@ data AnimationManagerRequest s =
     Tick UTCTime
     | StartAnimation (Animation s)
     | StopAnimation AnimationID
-    | Shutdown
 
 data Duration =
     Infinite
@@ -189,9 +188,6 @@ animationManagerThreadBody inChan outChan mkEvent =
                     when (not $ null advanced) $
                         liftIO $ writeBChan outChan $ mkEvent $ return ()
                     run
-
-                Shutdown ->
-                    return ()
 
     in evalStateT run mempty
 
