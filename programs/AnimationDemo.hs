@@ -166,8 +166,19 @@ animationManagerThreadBody inChan outChan mkEvent =
                     run
 
                 StopAnimation aId -> do
-                    -- TODO: update the application state here
-                    modify $ HM.delete aId
+                    mA <- gets (HM.lookup aId)
+                    case mA of
+                        Nothing -> return ()
+                        Just a -> do
+                            -- Remove the animation from the manager
+                            modify $ HM.delete aId
+
+                            -- Set the current frame in the application
+                            -- state to none
+                            liftIO $ writeBChan outChan $
+                                mkEvent $ do
+                                    animationFrameUpdater a .= Nothing
+
                     run
 
                 Tick tickTime -> do
