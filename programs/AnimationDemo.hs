@@ -148,51 +148,85 @@ setNextFrameTime t a = a { animationNextFrameTime = t }
 nominalDiffFromMs :: Integer -> NominalDiffTime
 nominalDiffFromMs i = realToFrac (fromIntegral i / (100.0::Float))
 
+data ManagerState s e n =
+    ManagerState { managerStateInChan :: STM.TChan (AnimationManagerRequest s)
+                 , managerStateOutChan :: BChan e
+                 , managerStateEventBuilder :: EventM n s () -> e
+                 , managerStateAnimations :: HM.HashMap AnimationID (Animation s)
+                 }
+
 animationManagerThreadBody :: STM.TChan (AnimationManagerRequest s)
                            -> BChan e
                            -> (EventM n s () -> e)
                            -> IO ()
 animationManagerThreadBody inChan outChan mkEvent =
-    let run = do
-            req <- liftIO $ STM.atomically $ STM.readTChan inChan
-            case req of
-                StartAnimation a -> do
-                    -- Schedule the animation, setting its next frame time.
-                    now <- liftIO getCurrentTime
-                    let next = addUTCTime frameOffset now
-                        frameOffset = nominalDiffFromMs (animationFrameMilliseconds a)
-                    modify $ HM.insert (animationID a) (setNextFrameTime next a)
-                    run
+    let initial = ManagerState { managerStateInChan = inChan
+                               , managerStateOutChan = outChan
+                               , managerStateEventBuilder = mkEvent
+                               , managerStateAnimations = mempty
+                               }
+    in evalStateT runManager initial
 
-                StopAnimation aId -> do
-                    mA <- gets (HM.lookup aId)
-                    case mA of
-                        Nothing -> return ()
-                        Just a -> do
-                            -- Remove the animation from the manager
-                            modify $ HM.delete aId
+type ManagerM s e n a = StateT (ManagerState s e n) IO a
 
-                            -- Set the current frame in the application
-                            -- state to none
-                            liftIO $ writeBChan outChan $
-                                mkEvent $ do
-                                    animationFrameUpdater a .= Nothing
+getNextManagerRequest :: ManagerM s e n (AnimationManagerRequest s)
+getNextManagerRequest = do
+    inChan <- gets managerStateInChan
+    liftIO $ STM.atomically $ STM.readTChan inChan
 
-                    run
+sendApplicationEvent :: EventM n s () -> ManagerM s e n ()
+sendApplicationEvent act = do
+    outChan <- gets managerStateOutChan
+    mkEvent <- gets managerStateEventBuilder
+    liftIO $ writeBChan outChan $ mkEvent act
 
-                Tick tickTime -> do
-                    -- Check all animation states for frame advances
-                    -- based on the relationship between the tick time
-                    -- and each animation's next frame time
-                    advanced <- checkForFrames tickTime
-                    when (not $ null advanced) $
-                        liftIO $ writeBChan outChan $ mkEvent $ return ()
-                    run
+removeAnimation :: AnimationID -> ManagerM s e n ()
+removeAnimation aId =
+    modify $ \s ->
+        s { managerStateAnimations = HM.delete aId (managerStateAnimations s) }
 
-    in evalStateT run mempty
+lookupAnimation :: AnimationID -> ManagerM s e n (Maybe (Animation s))
+lookupAnimation aId =
+    gets (HM.lookup aId . managerStateAnimations)
 
-checkForFrames :: UTCTime
-               -> StateT (HM.HashMap AnimationID (Animation s)) IO [AnimationID]
+insertAnimation :: Animation s -> ManagerM s e n ()
+insertAnimation a =
+    modify $ \s ->
+        s { managerStateAnimations = HM.insert (animationID a) a (managerStateAnimations s) }
+
+runManager :: ManagerM s e n ()
+runManager = forever $ do
+    req <- getNextManagerRequest
+    case req of
+        StartAnimation a -> do
+            -- Schedule the animation, setting its next frame time.
+            now <- liftIO getCurrentTime
+            let next = addUTCTime frameOffset now
+                frameOffset = nominalDiffFromMs (animationFrameMilliseconds a)
+            insertAnimation $ setNextFrameTime next a
+
+        StopAnimation aId -> do
+            mA <- lookupAnimation aId
+            case mA of
+                Nothing -> return ()
+                Just a -> do
+                    -- Remove the animation from the manager
+                    removeAnimation aId
+
+                    -- Set the current frame in the application
+                    -- state to none
+                    sendApplicationEvent $ do
+                        animationFrameUpdater a .= Nothing
+
+        Tick tickTime -> do
+            -- Check all animation states for frame advances
+            -- based on the relationship between the tick time
+            -- and each animation's next frame time
+            advanced <- checkForFrames tickTime
+            when (not $ null advanced) $
+                sendApplicationEvent $ return ()
+
+checkForFrames :: UTCTime -> ManagerM s e n [AnimationID]
 checkForFrames _ = return []
 
 -- When a tick occurs:
