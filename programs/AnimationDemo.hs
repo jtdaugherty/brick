@@ -8,9 +8,10 @@ module Main where
 import Lens.Micro ((^.), Traversal')
 import Lens.Micro.TH (makeLenses)
 import Lens.Micro.Mtl
-import Control.Monad (void, forever)
-import Control.Concurrent (threadDelay, forkIO, ThreadId)
+import Control.Monad (void, forever, when)
+import Control.Concurrent (threadDelay, forkIO, ThreadId, killThread)
 import Data.Hashable (Hashable)
+import Data.Time.Clock (UTCTime, NominalDiffTime, addUTCTime, getCurrentTime)
 import qualified Data.HashMap.Strict as HM
 import qualified Control.Concurrent.STM as STM
 #if !(MIN_VERSION_base(4,11,0))
@@ -80,7 +81,7 @@ theApp =
         }
 
 data AnimationManagerRequest s =
-    Tick
+    Tick UTCTime
     | StartAnimation (Animation s)
     | StopAnimation AnimationID
     | Shutdown
@@ -102,6 +103,7 @@ data Animation s =
               , animationNumFrames :: Int
               , animationCurrentFrame :: Int
               , animationPreviousFrame :: Maybe Int
+              , animationFrameMilliseconds :: Integer
               -- what about tracking that an animation is currently
               -- moving backward when it sometimes moves forward? Just
               -- track the previous frame always, and use that? that
@@ -110,6 +112,7 @@ data Animation s =
               , animationMode :: AnimationMode
               , animationDuration :: Duration
               , animationFrameUpdater :: Traversal' s (Maybe Int)
+              , animationNextFrameTime :: UTCTime
               }
 
 newtype AnimationID = AnimationID Int
@@ -121,17 +124,28 @@ data AnimationManager s e n =
                      , animationMgrOutputChan :: BChan e
                      , animationMgrInputChan :: STM.TChan (AnimationManagerRequest s)
                      , animationMgrEventConstructor :: EventM n s () -> e
-                     , animationMgrMillisecondsPerTick :: Int
                      , animationMgrNextAnimationID :: STM.TVar AnimationID
+                     , animationMgrRunning :: STM.TVar Bool
                      }
 
-tickThreadBody :: Int
-               -> STM.TChan (AnimationManagerRequest s)
+-- NOTE: should figure out if this should be configurable and, if so,
+-- whether it should be bounded in any way to avoid pitfalls.
+tickMilliseconds :: Int
+tickMilliseconds = 100
+
+tickThreadBody :: STM.TChan (AnimationManagerRequest s)
                -> IO ()
-tickThreadBody msPerTick outChan =
+tickThreadBody outChan =
     forever $ do
-        threadDelay $ msPerTick * 1000
-        STM.atomically $ STM.writeTChan outChan Tick
+        threadDelay $ tickMilliseconds * 1000
+        now <- getCurrentTime
+        STM.atomically $ STM.writeTChan outChan $ Tick now
+
+setNextFrameTime :: UTCTime -> Animation s -> Animation s
+setNextFrameTime t a = a { animationNextFrameTime = t }
+
+nominalDiffFromMs :: Integer -> NominalDiffTime
+nominalDiffFromMs i = realToFrac (fromIntegral i / (100.0::Float))
 
 animationManagerThreadBody :: STM.TChan (AnimationManagerRequest s)
                            -> BChan e
@@ -144,21 +158,36 @@ animationManagerThreadBody inChan outChan mkEvent =
         loop st = do
             req <- STM.atomically $ STM.readTChan inChan
             case req of
-                StartAnimation a ->
-                    loop $ HM.insert (animationID a) a st
+                StartAnimation a -> do
+                    -- Schedule the animation, setting its next frame time.
+                    now <- getCurrentTime
+                    let next = addUTCTime frameOffset now
+                        frameOffset = nominalDiffFromMs (animationFrameMilliseconds a)
+                    loop $ HM.insert (animationID a) (setNextFrameTime next a) st
 
                 StopAnimation aId ->
                     -- TODO: update the application state here
                     loop $ HM.delete aId st
 
-                Tick ->
+                Tick tickTime -> do
                     -- Check all animation states for frame advances
-                    return ()
+                    -- based on the relationship between the tick time
+                    -- and each animation's next frame time
+                    let (advanced, st') = checkForFrames tickTime st
+                    when (not $ null advanced) $
+                        writeBChan outChan $ mkEvent $ return ()
+
+                    loop st'
 
                 Shutdown ->
                     return ()
 
     in loop initialState
+
+checkForFrames :: UTCTime
+               -> HM.HashMap AnimationID (Animation s)
+               -> ([AnimationID], HM.HashMap AnimationID (Animation s))
+checkForFrames _ m = ([], m)
 
 -- When a tick occurs:
 --  for each currently-running animation,
@@ -174,23 +203,35 @@ animationManagerThreadBody inChan outChan mkEvent =
 -- * remove an animation (effectively stopping it)
 -- * shut down entirely
 
-startAnimationManager :: Int -> BChan e -> (EventM n s () -> e) -> IO (AnimationManager s e n)
-startAnimationManager msPerTick outChan mkEvent = do
+startAnimationManager :: BChan e -> (EventM n s () -> e) -> IO (AnimationManager s e n)
+startAnimationManager outChan mkEvent = do
     inChan <- STM.newTChanIO
     reqTid <- forkIO $ animationManagerThreadBody inChan outChan mkEvent
-    tickTid <- forkIO $ tickThreadBody msPerTick inChan
+    tickTid <- forkIO $ tickThreadBody inChan
+    runningVar <- STM.newTVarIO True
     idVar <- STM.newTVarIO $ AnimationID 1
     return $ AnimationManager { animationMgrRequestThreadId = reqTid
                               , animationMgrTickThreadId = tickTid
                               , animationMgrEventConstructor = mkEvent
                               , animationMgrOutputChan = outChan
                               , animationMgrInputChan = inChan
-                              , animationMgrMillisecondsPerTick = msPerTick
                               , animationMgrNextAnimationID = idVar
+                              , animationMgrRunning = runningVar
                               }
 
+whenRunning :: AnimationManager s e n -> IO () -> IO ()
+whenRunning mgr act = do
+    running <- STM.atomically $ STM.readTVar (animationMgrRunning mgr)
+    when running act
+
 stopAnimationManager :: AnimationManager s e n -> IO ()
-stopAnimationManager mgr = tellAnimationManager mgr Shutdown
+stopAnimationManager mgr =
+    whenRunning mgr $ do
+        let reqTid = animationMgrRequestThreadId mgr
+            tickTid = animationMgrTickThreadId mgr
+        killThread reqTid
+        killThread tickTid
+        STM.atomically $ STM.writeTVar (animationMgrRunning mgr) False
 
 tellAnimationManager :: AnimationManager s e n -> AnimationManagerRequest s -> IO ()
 tellAnimationManager mgr req =
