@@ -470,7 +470,8 @@ executable brick-animation-demo
                        stm,
                        unordered-containers,
                        hashable,
-                       time
+                       time,
+                       mtl
 
 executable brick-custom-event-demo
   if !flag(demos)
