@@ -460,4 +460,5 @@ main = do
                , _animation3Frame = Nothing
                }
 
-    void $ customMainWithDefaultVty (Just chan) theApp initialState
+    (_, vty) <- customMainWithDefaultVty (Just chan) theApp initialState
+    V.shutdown vty
