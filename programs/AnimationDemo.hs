@@ -13,7 +13,7 @@ import Control.Monad (void, forever, when)
 import Control.Concurrent (threadDelay, forkIO, ThreadId, killThread)
 import Control.Monad.State.Strict
 import Data.Hashable (Hashable)
-import Data.Time.Clock (UTCTime, NominalDiffTime, addUTCTime, getCurrentTime)
+import Data.Time.Clock
 import qualified Data.HashMap.Strict as HM
 import qualified Control.Concurrent.STM as STM
 #if !(MIN_VERSION_base(4,11,0))
@@ -87,9 +87,7 @@ data AnimationManagerRequest s =
     | StartAnimation (Animation s)
     | StopAnimation AnimationID
 
-data Duration =
-    Infinite
-    | Loop Int
+data Duration = Once | Loop
     deriving (Eq, Show, Ord)
 
 data AnimationMode =
@@ -147,6 +145,11 @@ setNextFrameTime t a = a { animationNextFrameTime = t }
 
 nominalDiffFromMs :: Integer -> NominalDiffTime
 nominalDiffFromMs i = realToFrac (fromIntegral i / (100.0::Float))
+
+nominalDiffToMs :: NominalDiffTime -> Integer
+nominalDiffToMs t =
+    -- NOTE: probably wrong, but we'll have to find out what this gives us
+    (round $ nominalDiffTimeToSeconds t)
 
 data ManagerState s e n =
     ManagerState { managerStateInChan :: STM.TChan (AnimationManagerRequest s)
@@ -228,12 +231,69 @@ runManager = forever $ do
                 Just act -> sendApplicationEvent act
 
 checkForFrames :: UTCTime -> ManagerM s e n (Maybe (EventM n s ()))
-checkForFrames _ = do
+checkForFrames now = do
     -- For each active animation, check to see if the animation's next
     -- frame time has passed. If it has, advance its frame counter as
     -- appropriate and schedule its frame counter to be updated in the
     -- application state.
-    return Nothing
+    let addUpdate a Nothing = Just $ updateFor a
+        addUpdate a (Just updater) = Just $ updater >> updateFor a
+
+        updateFor a = animationFrameUpdater a .= Just (animationCurrentFrame a)
+
+        go :: Maybe (EventM n s ()) -> [Animation s] -> ManagerM s e n (Maybe (EventM n s ()))
+        go mUpdater [] = return mUpdater
+        go mUpdater (a:as) = do
+            -- Determine whether the next animation needs to have its
+            -- frame index advanced.
+            newUpdater <- if now < animationNextFrameTime a
+                          then return mUpdater
+                          else do
+                              -- Determine how many frames have elapsed
+                              -- for this animation, then advance the
+                              -- frame index based the elapsed time.
+                              -- Also set its next frame time.
+                              let differenceMs = nominalDiffToMs $
+                                                 diffUTCTime now (animationNextFrameTime a)
+                                  numFrames = 1 + (differenceMs `div` animationFrameMilliseconds a)
+                                  newNextTime = addUTCTime (nominalDiffFromMs $ numFrames * (animationFrameMilliseconds a))
+                                                           (animationNextFrameTime a)
+
+                                  -- The new frame is obtained by
+                                  -- advancing from the current frame by
+                                  -- numFrames.
+                                  a' = setNextFrameTime newNextTime $
+                                       advanceBy numFrames a
+
+                              modify $ \s ->
+                                  s { managerStateAnimations = HM.insert (animationID a') a' $
+                                                               managerStateAnimations s
+                                    }
+
+                              return $ addUpdate a' mUpdater
+            go newUpdater as
+
+    as <- gets (HM.elems . managerStateAnimations)
+    go Nothing as
+
+advanceBy :: Integer -> Animation s -> Animation s
+advanceBy n a
+    | n <= 0 = a
+    | otherwise =
+        advanceBy (n - 1) $
+        advanceByOne a
+
+advanceByOne :: Animation s -> Animation s
+advanceByOne a =
+    case animationMode a of
+        Forward ->
+            if animationCurrentFrame a == animationNumFrames a - 1
+            then case animationDuration a of
+                Loop -> a { animationCurrentFrame = 0
+                          }
+                Once -> a
+            else a { animationCurrentFrame = animationCurrentFrame a + 1
+                   }
 
 -- When a tick occurs:
 --  for each currently-running animation,
