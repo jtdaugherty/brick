@@ -38,6 +38,7 @@ import Brick.Types
   )
 import Brick.Widgets.Core
   ( str
+  , vBox
   )
 
 data AnimationManagerRequest s =
@@ -361,17 +362,47 @@ data CustomEvent =
 
 data St =
     St { _stAnimationManager :: AnimationManager St CustomEvent ()
+       , _animation1ID :: Maybe AnimationID
+       , _animation2ID :: Maybe AnimationID
+       , _animation3ID :: Maybe AnimationID
+       , _animation1Frame :: Maybe Int
+       , _animation2Frame :: Maybe Int
+       , _animation3Frame :: Maybe Int
        }
 
 makeLenses ''St
 
 drawUI :: St -> [Widget ()]
-drawUI _st = [str "Hello"]
+drawUI st = [drawAnimations st]
+
+drawAnimations :: St -> Widget ()
+drawAnimations st =
+    vBox [ drawAnimation $ st^.animation1Frame
+         , drawAnimation $ st^.animation2Frame
+         , drawAnimation $ st^.animation3Frame
+         ]
+
+frames :: [String]
+frames = [".", "o", "O", "^", " "]
+
+drawAnimation :: Maybe Int -> Widget ()
+drawAnimation Nothing = str " "
+drawAnimation (Just i) = str $ frames !! i
 
 appEvent :: BrickEvent () CustomEvent -> EventM () St ()
-appEvent e =
+appEvent e = do
+    mgr <- use stAnimationManager
     case e of
         VtyEvent (V.EvKey V.KEsc []) -> halt
+        VtyEvent (V.EvKey (V.KChar '1') []) -> do
+            mOld <- use animation1ID
+            case mOld of
+                Nothing -> return ()
+                Just i -> stopAnimation mgr i
+
+            aId <- startAnimation mgr (length frames) 250 Forward Loop animation1Frame
+            animation1ID .= Just aId
+
         AppEvent (AnimationUpdate act) -> act
         _ -> return ()
 
@@ -391,6 +422,12 @@ main = do
 
     let initialState =
             St { _stAnimationManager = mgr
+               , _animation1ID = Nothing
+               , _animation2ID = Nothing
+               , _animation3ID = Nothing
+               , _animation1Frame = Nothing
+               , _animation2Frame = Nothing
+               , _animation3Frame = Nothing
                }
 
     void $ customMainWithDefaultVty (Just chan) theApp initialState
