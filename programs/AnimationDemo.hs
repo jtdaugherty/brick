@@ -390,18 +390,18 @@ drawAnimations st =
                 ]
          ]
 
-frames1 :: [String]
-frames1 = [".", "o", "O", "^", " "]
+frames1 :: [Widget ()]
+frames1 = str <$> [".", "o", "O", "^", " "]
 
-frames2 :: [String]
-frames2 = ["|", "/", "-", "\\"]
+frames2 :: [Widget ()]
+frames2 = str <$> ["|", "/", "-", "\\"]
 
-frames3 :: [String]
-frames3 = ["v", "-", "^", "-"]
+frames3 :: [Widget ()]
+frames3 = str <$> ["v", "-", "^", "-"]
 
-drawAnimation :: [String] -> Maybe Int -> Widget ()
+drawAnimation :: [Widget n] -> Maybe Int -> Widget n
 drawAnimation _ Nothing = str " "
-drawAnimation frames (Just i) = str $ frames !! i
+drawAnimation frames (Just i) = frames !! i
 
 appEvent :: BrickEvent () CustomEvent -> EventM () St ()
 appEvent e = do
