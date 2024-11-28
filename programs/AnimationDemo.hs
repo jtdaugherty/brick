@@ -173,8 +173,7 @@ getNextAnimationID mgr = do
 
 runManager :: ManagerM s e n ()
 runManager = forever $ do
-    req <- getNextManagerRequest
-    handleManagerRequest req
+    getNextManagerRequest >>= handleManagerRequest
 
 handleManagerRequest :: AnimationManagerRequest s -> ManagerM s e n ()
 handleManagerRequest (StartAnimation aId numFrames frameMs mode dur updater) = do
