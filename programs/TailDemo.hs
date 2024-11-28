@@ -147,4 +147,5 @@ main = do
     -- Run thread to simulate incoming data
     void $ forkIO $ generateLines chan
 
-    void $ customMainWithDefaultVty (Just chan) app initialState
+    (_, vty) <- customMainWithDefaultVty (Just chan) app initialState
+    V.shutdown vty
