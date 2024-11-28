@@ -174,46 +174,46 @@ getNextAnimationID mgr = do
 runManager :: ManagerM s e n ()
 runManager = forever $ do
     req <- getNextManagerRequest
-    case req of
-        StartAnimation aId numFrames frameMs mode dur updater -> do
-            now <- liftIO getCurrentTime
-            let next = addUTCTime frameOffset now
-                frameOffset = nominalDiffFromMs frameMs
-                a = Animation { _animationID = aId
-                              , _animationNumFrames = numFrames
-                              , _animationCurrentFrame = 0
-                              , _animationPreviousFrame = Nothing
-                              , _animationFrameMilliseconds = frameMs
-                              , _animationMode = mode
-                              , _animationDuration = dur
-                              , animationFrameUpdater = updater
-                              , _animationNextFrameTime = next
-                              }
+    handleManagerRequest req
 
-            insertAnimation a
-            sendApplicationEvent $ updater .= Just 0
+handleManagerRequest :: AnimationManagerRequest s -> ManagerM s e n ()
+handleManagerRequest (StartAnimation aId numFrames frameMs mode dur updater) = do
+    now <- liftIO getCurrentTime
+    let next = addUTCTime frameOffset now
+        frameOffset = nominalDiffFromMs frameMs
+        a = Animation { _animationID = aId
+                      , _animationNumFrames = numFrames
+                      , _animationCurrentFrame = 0
+                      , _animationPreviousFrame = Nothing
+                      , _animationFrameMilliseconds = frameMs
+                      , _animationMode = mode
+                      , _animationDuration = dur
+                      , animationFrameUpdater = updater
+                      , _animationNextFrameTime = next
+                      }
 
-        StopAnimation aId -> do
-            mA <- lookupAnimation aId
-            case mA of
-                Nothing -> return ()
-                Just a -> do
-                    -- Remove the animation from the manager
-                    removeAnimation aId
+    insertAnimation a
+    sendApplicationEvent $ updater .= Just 0
+handleManagerRequest (StopAnimation aId) = do
+    mA <- lookupAnimation aId
+    case mA of
+        Nothing -> return ()
+        Just a -> do
+            -- Remove the animation from the manager
+            removeAnimation aId
 
-                    -- Set the current frame in the application
-                    -- state to none
-                    sendApplicationEvent $ do
-                        animationFrameUpdater a .= Nothing
-
-        Tick tickTime -> do
-            -- Check all animation states for frame advances
-            -- based on the relationship between the tick time
-            -- and each animation's next frame time
-            mUpdateAct <- checkForFrames tickTime
-            case mUpdateAct of
-                Nothing -> return ()
-                Just act -> sendApplicationEvent act
+            -- Set the current frame in the application
+            -- state to none
+            sendApplicationEvent $ do
+                animationFrameUpdater a .= Nothing
+handleManagerRequest (Tick tickTime) = do
+    -- Check all animation states for frame advances
+    -- based on the relationship between the tick time
+    -- and each animation's next frame time
+    mUpdateAct <- checkForFrames tickTime
+    case mUpdateAct of
+        Nothing -> return ()
+        Just act -> sendApplicationEvent act
 
 checkForFrames :: UTCTime -> ManagerM s e n (Maybe (EventM n s ()))
 checkForFrames now = do
