@@ -421,7 +421,7 @@ appEvent e = do
             case mOld of
                 Just i -> stopAnimation mgr i >> animation2ID .= Nothing
                 Nothing -> do
-                    aId <- startAnimation mgr (length frames2) 500 Forward Loop animation2Frame
+                    aId <- startAnimation mgr (length frames2) 100 Forward Loop animation2Frame
                     animation2ID .= Just aId
 
         VtyEvent (V.EvKey (V.KChar '3') []) -> do
