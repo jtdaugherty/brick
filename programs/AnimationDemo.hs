@@ -379,11 +379,11 @@ drawUI st = [drawAnimations st]
 
 drawAnimations :: St -> Widget ()
 drawAnimations st =
-    vBox [ hBox [ drawAnimation $ st^.animation1Frame
+    vBox [ hBox [ drawAnimation frames1 $ st^.animation1Frame
                 , str " "
-                , drawAnimation $ st^.animation2Frame
+                , drawAnimation frames2 $ st^.animation2Frame
                 , str " "
-                , drawAnimation $ st^.animation3Frame
+                , drawAnimation frames3 $ st^.animation3Frame
                 ]
          , vBox [ maybe (str " ") (const $ str "Animation #1 running") $ st^.animation1ID
                 , maybe (str " ") (const $ str "Animation #2 running") $ st^.animation2ID
@@ -391,12 +391,18 @@ drawAnimations st =
                 ]
          ]
 
-frames :: [String]
-frames = [".", "o", "O", "^", " "]
+frames1 :: [String]
+frames1 = [".", "o", "O", "^", " "]
 
-drawAnimation :: Maybe Int -> Widget ()
-drawAnimation Nothing = str " "
-drawAnimation (Just i) = str $ frames !! i
+frames2 :: [String]
+frames2 = ["|", "/", "-", "\\"]
+
+frames3 :: [String]
+frames3 = ["v", "-", "^", "-"]
+
+drawAnimation :: [String] -> Maybe Int -> Widget ()
+drawAnimation _ Nothing = str " "
+drawAnimation frames (Just i) = str $ frames !! i
 
 appEvent :: BrickEvent () CustomEvent -> EventM () St ()
 appEvent e = do
@@ -408,7 +414,7 @@ appEvent e = do
             case mOld of
                 Just i -> stopAnimation mgr i >> animation1ID .= Nothing
                 Nothing -> do
-                    aId <- startAnimation mgr (length frames) 1000 Forward Loop animation1Frame
+                    aId <- startAnimation mgr (length frames1) 1000 Forward Loop animation1Frame
                     animation1ID .= Just aId
 
         VtyEvent (V.EvKey (V.KChar '2') []) -> do
@@ -416,7 +422,7 @@ appEvent e = do
             case mOld of
                 Just i -> stopAnimation mgr i >> animation2ID .= Nothing
                 Nothing -> do
-                    aId <- startAnimation mgr (length frames) 500 Forward Loop animation2Frame
+                    aId <- startAnimation mgr (length frames2) 500 Forward Loop animation2Frame
                     animation2ID .= Just aId
 
         VtyEvent (V.EvKey (V.KChar '3') []) -> do
@@ -424,7 +430,7 @@ appEvent e = do
             case mOld of
                 Just i -> stopAnimation mgr i >> animation3ID .= Nothing
                 Nothing -> do
-                    aId <- startAnimation mgr (length frames) 100 Forward Loop animation3Frame
+                    aId <- startAnimation mgr (length frames3) 100 Forward Loop animation3Frame
                     animation3ID .= Just aId
 
         AppEvent (AnimationUpdate act) -> act
