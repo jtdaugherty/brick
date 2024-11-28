@@ -36,10 +36,14 @@ import Brick.Types
   , EventM
   , BrickEvent(..)
   )
+import Brick.Widgets.Border (border)
+import Brick.Widgets.Center (center)
 import Brick.Widgets.Core
   ( str
   , vBox
   , hBox
+  , hLimit
+  , vLimit
   )
 
 data AnimationManagerRequest s =
@@ -397,7 +401,12 @@ frames2 :: [Widget ()]
 frames2 = str <$> ["|", "/", "-", "\\"]
 
 frames3 :: [Widget ()]
-frames3 = str <$> ["v", "-", "^", "-"]
+frames3 =
+    (hLimit 9 . vLimit 9 . border . center) <$>
+    [ border $ str " "
+    , border $ vBox $ replicate 3 $ str $ replicate 3 ' '
+    , border $ vBox $ replicate 5 $ str $ replicate 5 ' '
+    ]
 
 drawAnimation :: [Widget n] -> Maybe Int -> Widget n
 drawAnimation _ Nothing = str " "
@@ -429,7 +438,7 @@ appEvent e = do
             case mOld of
                 Just i -> stopAnimation mgr i >> animation3ID .= Nothing
                 Nothing -> do
-                    aId <- startAnimation mgr (length frames3) 100 Forward Loop animation3Frame
+                    aId <- startAnimation mgr (length frames3) 300 Forward Loop animation3Frame
                     animation3ID .= Just aId
 
         AppEvent (AnimationUpdate act) -> act
