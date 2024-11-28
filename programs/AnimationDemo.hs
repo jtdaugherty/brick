@@ -88,6 +88,8 @@ data AnimationManagerRequest s =
     -- ^ Frame count, frame duration in milliseconds, mode, duration, updater
     | StopAnimation AnimationID
 
+-- Is this a good name for this type? If we added a 'manual' option
+-- where the application does frame updates, would it go here?
 data Duration = Once | Loop
     deriving (Eq, Show, Ord)
 
