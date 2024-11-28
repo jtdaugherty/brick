@@ -295,6 +295,19 @@ checkForFrames now = do
                                                                managerStateAnimations s
                                     }
 
+                              -- NOTE!
+                              --
+                              --
+                              -- This always advances each animation
+                              -- without regard for the loop mode. This
+                              -- needs to be updated to account for the
+                              -- Once mode where an animation reaches
+                              -- its last frame and stays there.
+                              --
+                              -- A related question: if something
+                              -- animates once, should it terminate by
+                              -- staying in its last frame? Or should it
+                              -- be unscheduled?
                               return $ addUpdate a' mUpdater
             go newUpdater as
 
