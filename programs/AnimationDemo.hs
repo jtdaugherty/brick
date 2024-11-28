@@ -155,12 +155,14 @@ nominalDiffToMs t =
     (round $ nominalDiffTimeToSeconds t)
 
 data ManagerState s e n =
-    ManagerState { managerStateInChan :: STM.TChan (AnimationManagerRequest s)
-                 , managerStateOutChan :: BChan e
-                 , managerStateEventBuilder :: EventM n s () -> e
-                 , managerStateAnimations :: HM.HashMap AnimationID (Animation s)
-                 , managerStateIDVar :: STM.TVar AnimationID
+    ManagerState { _managerStateInChan :: STM.TChan (AnimationManagerRequest s)
+                 , _managerStateOutChan :: BChan e
+                 , _managerStateEventBuilder :: EventM n s () -> e
+                 , _managerStateAnimations :: HM.HashMap AnimationID (Animation s)
+                 , _managerStateIDVar :: STM.TVar AnimationID
                  }
+
+makeLenses ''ManagerState
 
 animationManagerThreadBody :: STM.TChan (AnimationManagerRequest s)
                            -> BChan e
@@ -168,11 +170,11 @@ animationManagerThreadBody :: STM.TChan (AnimationManagerRequest s)
                            -> STM.TVar AnimationID
                            -> IO ()
 animationManagerThreadBody inChan outChan mkEvent idVar =
-    let initial = ManagerState { managerStateInChan = inChan
-                               , managerStateOutChan = outChan
-                               , managerStateEventBuilder = mkEvent
-                               , managerStateAnimations = mempty
-                               , managerStateIDVar = idVar
+    let initial = ManagerState { _managerStateInChan = inChan
+                               , _managerStateOutChan = outChan
+                               , _managerStateEventBuilder = mkEvent
+                               , _managerStateAnimations = mempty
+                               , _managerStateIDVar = idVar
                                }
     in evalStateT runManager initial
 
@@ -180,32 +182,30 @@ type ManagerM s e n a = StateT (ManagerState s e n) IO a
 
 getNextManagerRequest :: ManagerM s e n (AnimationManagerRequest s)
 getNextManagerRequest = do
-    inChan <- gets managerStateInChan
+    inChan <- use managerStateInChan
     liftIO $ STM.atomically $ STM.readTChan inChan
 
 sendApplicationEvent :: EventM n s () -> ManagerM s e n ()
 sendApplicationEvent act = do
-    outChan <- gets managerStateOutChan
-    mkEvent <- gets managerStateEventBuilder
+    outChan <- use managerStateOutChan
+    mkEvent <- use managerStateEventBuilder
     liftIO $ writeBChan outChan $ mkEvent act
 
 removeAnimation :: AnimationID -> ManagerM s e n ()
 removeAnimation aId =
-    modify $ \s ->
-        s { managerStateAnimations = HM.delete aId (managerStateAnimations s) }
+    managerStateAnimations %= HM.delete aId
 
 lookupAnimation :: AnimationID -> ManagerM s e n (Maybe (Animation s))
 lookupAnimation aId =
-    gets (HM.lookup aId . managerStateAnimations)
+    HM.lookup aId <$> use managerStateAnimations
 
 insertAnimation :: Animation s -> ManagerM s e n ()
 insertAnimation a =
-    modify $ \s ->
-        s { managerStateAnimations = HM.insert (animationID a) a (managerStateAnimations s) }
+    managerStateAnimations %= HM.insert (animationID a) a
 
 getNextAnimationID :: ManagerM s e n AnimationID
 getNextAnimationID = do
-    var <- gets managerStateIDVar
+    var <- use managerStateIDVar
     liftIO $ STM.atomically $ do
         AnimationID i <- STM.readTVar var
         let next = AnimationID $ i + 1
@@ -292,10 +292,7 @@ checkForFrames now = do
                                   a' = setNextFrameTime newNextTime $
                                        advanceBy numFrames a
 
-                              modify $ \s ->
-                                  s { managerStateAnimations = HM.insert (animationID a') a' $
-                                                               managerStateAnimations s
-                                    }
+                              managerStateAnimations %= HM.insert (animationID a') a'
 
                               -- NOTE!
                               --
@@ -313,7 +310,7 @@ checkForFrames now = do
                               return $ addUpdate a' mUpdater
             go newUpdater as
 
-    as <- gets (HM.elems . managerStateAnimations)
+    as <- HM.elems <$> use managerStateAnimations
     go Nothing as
 
 advanceBy :: Integer -> Animation s -> Animation s
