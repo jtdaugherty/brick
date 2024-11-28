@@ -6,7 +6,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Main where
 
-import Lens.Micro ((^.), Traversal')
+import Lens.Micro ((^.), (%~), (.~), (&), Traversal')
 import Lens.Micro.TH (makeLenses)
 import Lens.Micro.Mtl
 import Control.Monad (void, forever, when)
@@ -100,25 +100,27 @@ data AnimationMode =
     -- | Random
     deriving (Eq, Show, Ord)
 
+newtype AnimationID = AnimationID Int
+                    deriving (Eq, Ord, Show, Hashable)
+
 data Animation s =
-    Animation { animationID :: AnimationID
-              , animationNumFrames :: Int
-              , animationCurrentFrame :: Int
-              , animationPreviousFrame :: Maybe Int
-              , animationFrameMilliseconds :: Integer
+    Animation { _animationID :: AnimationID
+              , _animationNumFrames :: Int
+              , _animationCurrentFrame :: Int
+              , _animationPreviousFrame :: Maybe Int
+              , _animationFrameMilliseconds :: Integer
               -- what about tracking that an animation is currently
               -- moving backward when it sometimes moves forward? Just
               -- track the previous frame always, and use that? that
               -- works in general (can be ignored in the random case but
               -- is used in all others)
-              , animationMode :: AnimationMode
-              , animationDuration :: Duration
+              , _animationMode :: AnimationMode
+              , _animationDuration :: Duration
               , animationFrameUpdater :: Traversal' s (Maybe Int)
-              , animationNextFrameTime :: UTCTime
+              , _animationNextFrameTime :: UTCTime
               }
 
-newtype AnimationID = AnimationID Int
-                    deriving (Eq, Ord, Show, Hashable)
+makeLenses ''Animation
 
 data AnimationManager s e n =
     AnimationManager { animationMgrRequestThreadId :: ThreadId
@@ -144,7 +146,7 @@ tickThreadBody outChan =
         STM.atomically $ STM.writeTChan outChan $ Tick now
 
 setNextFrameTime :: UTCTime -> Animation s -> Animation s
-setNextFrameTime t a = a { animationNextFrameTime = t }
+setNextFrameTime t a = a & animationNextFrameTime .~ t
 
 nominalDiffFromMs :: Integer -> NominalDiffTime
 nominalDiffFromMs i = realToFrac (fromIntegral i / (100.0::Float))
@@ -201,7 +203,7 @@ lookupAnimation aId =
 
 insertAnimation :: Animation s -> ManagerM s e n ()
 insertAnimation a =
-    managerStateAnimations %= HM.insert (animationID a) a
+    managerStateAnimations %= HM.insert (a^.animationID) a
 
 getNextAnimationID :: ManagerM s e n AnimationID
 getNextAnimationID = do
@@ -221,16 +223,16 @@ runManager = forever $ do
 
             now <- liftIO getCurrentTime
             let next = addUTCTime frameOffset now
-                frameOffset = nominalDiffFromMs (animationFrameMilliseconds a)
-                a = Animation { animationID = aId
-                              , animationNumFrames = numFrames
-                              , animationCurrentFrame = 0
-                              , animationPreviousFrame = Nothing
-                              , animationFrameMilliseconds = frameMs
-                              , animationMode = mode
-                              , animationDuration = dur
+                frameOffset = nominalDiffFromMs frameMs
+                a = Animation { _animationID = aId
+                              , _animationNumFrames = numFrames
+                              , _animationCurrentFrame = 0
+                              , _animationPreviousFrame = Nothing
+                              , _animationFrameMilliseconds = frameMs
+                              , _animationMode = mode
+                              , _animationDuration = dur
                               , animationFrameUpdater = updater
-                              , animationNextFrameTime = next
+                              , _animationNextFrameTime = next
                               }
 
             insertAnimation a
@@ -266,14 +268,14 @@ checkForFrames now = do
     let addUpdate a Nothing = Just $ updateFor a
         addUpdate a (Just updater) = Just $ updater >> updateFor a
 
-        updateFor a = animationFrameUpdater a .= Just (animationCurrentFrame a)
+        updateFor a = animationFrameUpdater a .= Just (a^.animationCurrentFrame)
 
         go :: Maybe (EventM n s ()) -> [Animation s] -> ManagerM s e n (Maybe (EventM n s ()))
         go mUpdater [] = return mUpdater
         go mUpdater (a:as) = do
             -- Determine whether the next animation needs to have its
             -- frame index advanced.
-            newUpdater <- if now < animationNextFrameTime a
+            newUpdater <- if now < a^.animationNextFrameTime
                           then return mUpdater
                           else do
                               -- Determine how many frames have elapsed
@@ -281,10 +283,10 @@ checkForFrames now = do
                               -- frame index based the elapsed time.
                               -- Also set its next frame time.
                               let differenceMs = nominalDiffToMs $
-                                                 diffUTCTime now (animationNextFrameTime a)
-                                  numFrames = 1 + (differenceMs `div` animationFrameMilliseconds a)
-                                  newNextTime = addUTCTime (nominalDiffFromMs $ numFrames * (animationFrameMilliseconds a))
-                                                           (animationNextFrameTime a)
+                                                 diffUTCTime now (a^.animationNextFrameTime)
+                                  numFrames = 1 + (differenceMs `div` (a^.animationFrameMilliseconds))
+                                  newNextTime = addUTCTime (nominalDiffFromMs $ numFrames * (a^.animationFrameMilliseconds))
+                                                           (a^.animationNextFrameTime)
 
                                   -- The new frame is obtained by
                                   -- advancing from the current frame by
@@ -292,7 +294,7 @@ checkForFrames now = do
                                   a' = setNextFrameTime newNextTime $
                                        advanceBy numFrames a
 
-                              managerStateAnimations %= HM.insert (animationID a') a'
+                              managerStateAnimations %= HM.insert (a'^.animationID) a'
 
                               -- NOTE!
                               --
@@ -322,15 +324,13 @@ advanceBy n a
 
 advanceByOne :: Animation s -> Animation s
 advanceByOne a =
-    case animationMode a of
+    case a^.animationMode of
         Forward ->
-            if animationCurrentFrame a == animationNumFrames a - 1
-            then case animationDuration a of
-                Loop -> a { animationCurrentFrame = 0
-                          }
+            if a^.animationCurrentFrame == a^.animationNumFrames - 1
+            then case a^.animationDuration of
+                Loop -> a & animationCurrentFrame .~ 0
                 Once -> a
-            else a { animationCurrentFrame = animationCurrentFrame a + 1
-                   }
+            else a & animationCurrentFrame %~ (+ 1)
 
 -- When a tick occurs:
 --  for each currently-running animation,
