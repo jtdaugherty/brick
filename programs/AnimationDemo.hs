@@ -108,7 +108,7 @@ setNextFrameTime :: UTCTime -> Animation s -> Animation s
 setNextFrameTime t a = a & animationNextFrameTime .~ t
 
 nominalDiffFromMs :: Integer -> NominalDiffTime
-nominalDiffFromMs i = realToFrac (fromIntegral i / (100.0::Float))
+nominalDiffFromMs i = realToFrac (fromIntegral i / (1000.0::Float))
 
 nominalDiffToMs :: NominalDiffTime -> Integer
 nominalDiffToMs t =
