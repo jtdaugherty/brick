@@ -190,6 +190,7 @@ runManager = forever $ do
                               }
 
             insertAnimation a
+            sendApplicationEvent $ updater .= Just 0
 
         StopAnimation aId -> do
             mA <- lookupAnimation aId
