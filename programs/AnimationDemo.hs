@@ -39,6 +39,7 @@ import Brick.Types
 import Brick.Widgets.Core
   ( str
   , vBox
+  , hBox
   )
 
 data AnimationManagerRequest s =
@@ -378,9 +379,16 @@ drawUI st = [drawAnimations st]
 
 drawAnimations :: St -> Widget ()
 drawAnimations st =
-    vBox [ drawAnimation $ st^.animation1Frame
-         , drawAnimation $ st^.animation2Frame
-         , drawAnimation $ st^.animation3Frame
+    vBox [ hBox [ drawAnimation $ st^.animation1Frame
+                , str " "
+                , drawAnimation $ st^.animation2Frame
+                , str " "
+                , drawAnimation $ st^.animation3Frame
+                ]
+         , vBox [ maybe (str " ") (const $ str "Animation #1 running") $ st^.animation1ID
+                , maybe (str " ") (const $ str "Animation #2 running") $ st^.animation2ID
+                , maybe (str " ") (const $ str "Animation #3 running") $ st^.animation3ID
+                ]
          ]
 
 frames :: [String]
@@ -398,11 +406,26 @@ appEvent e = do
         VtyEvent (V.EvKey (V.KChar '1') []) -> do
             mOld <- use animation1ID
             case mOld of
-                Nothing -> return ()
-                Just i -> stopAnimation mgr i
+                Just i -> stopAnimation mgr i >> animation1ID .= Nothing
+                Nothing -> do
+                    aId <- startAnimation mgr (length frames) 1000 Forward Loop animation1Frame
+                    animation1ID .= Just aId
 
-            aId <- startAnimation mgr (length frames) 250 Forward Loop animation1Frame
-            animation1ID .= Just aId
+        VtyEvent (V.EvKey (V.KChar '2') []) -> do
+            mOld <- use animation2ID
+            case mOld of
+                Just i -> stopAnimation mgr i >> animation2ID .= Nothing
+                Nothing -> do
+                    aId <- startAnimation mgr (length frames) 500 Forward Loop animation2Frame
+                    animation2ID .= Just aId
+
+        VtyEvent (V.EvKey (V.KChar '3') []) -> do
+            mOld <- use animation3ID
+            case mOld of
+                Just i -> stopAnimation mgr i >> animation3ID .= Nothing
+                Nothing -> do
+                    aId <- startAnimation mgr (length frames) 100 Forward Loop animation3Frame
+                    animation3ID .= Just aId
 
         AppEvent (AnimationUpdate act) -> act
         _ -> return ()
