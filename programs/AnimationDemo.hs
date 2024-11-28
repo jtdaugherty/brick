@@ -388,6 +388,12 @@ startAnimation mgr numFrames frameMs mode duration updater = do
     tellAnimationManager mgr $ StartAnimation aId numFrames frameMs mode duration updater
     return aId
 
+stopAnimation :: AnimationManager s e n
+              -> AnimationID
+              -> IO ()
+stopAnimation mgr aId =
+    tellAnimationManager mgr $ StopAnimation aId
+
 main :: IO ()
 main = do
     chan <- newBChan 10
