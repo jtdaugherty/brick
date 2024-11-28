@@ -84,7 +84,8 @@ theApp =
 
 data AnimationManagerRequest s =
     Tick UTCTime
-    | StartAnimation (Animation s)
+    | StartAnimation Int Integer AnimationMode Duration (Traversal' s (Maybe Int))
+    -- ^ Frame count, frame duration in milliseconds, mode, duration, updater
     | StopAnimation AnimationID
 
 data Duration = Once | Loop
@@ -156,17 +157,20 @@ data ManagerState s e n =
                  , managerStateOutChan :: BChan e
                  , managerStateEventBuilder :: EventM n s () -> e
                  , managerStateAnimations :: HM.HashMap AnimationID (Animation s)
+                 , managerStateIDVar :: STM.TVar AnimationID
                  }
 
 animationManagerThreadBody :: STM.TChan (AnimationManagerRequest s)
                            -> BChan e
                            -> (EventM n s () -> e)
+                           -> STM.TVar AnimationID
                            -> IO ()
-animationManagerThreadBody inChan outChan mkEvent =
+animationManagerThreadBody inChan outChan mkEvent idVar =
     let initial = ManagerState { managerStateInChan = inChan
                                , managerStateOutChan = outChan
                                , managerStateEventBuilder = mkEvent
                                , managerStateAnimations = mempty
+                               , managerStateIDVar = idVar
                                }
     in evalStateT runManager initial
 
@@ -197,16 +201,37 @@ insertAnimation a =
     modify $ \s ->
         s { managerStateAnimations = HM.insert (animationID a) a (managerStateAnimations s) }
 
+getNextAnimationID :: ManagerM s e n AnimationID
+getNextAnimationID = do
+    var <- gets managerStateIDVar
+    liftIO $ STM.atomically $ do
+        AnimationID i <- STM.readTVar var
+        let next = AnimationID $ i + 1
+        STM.writeTVar var next
+        return next
+
 runManager :: ManagerM s e n ()
 runManager = forever $ do
     req <- getNextManagerRequest
     case req of
-        StartAnimation a -> do
-            -- Schedule the animation, setting its next frame time.
+        StartAnimation numFrames frameMs mode dur updater -> do
+            aId <- getNextAnimationID
+
             now <- liftIO getCurrentTime
             let next = addUTCTime frameOffset now
                 frameOffset = nominalDiffFromMs (animationFrameMilliseconds a)
-            insertAnimation $ setNextFrameTime next a
+                a = Animation { animationID = aId
+                              , animationNumFrames = numFrames
+                              , animationCurrentFrame = 0
+                              , animationPreviousFrame = Nothing
+                              , animationFrameMilliseconds = frameMs
+                              , animationMode = mode
+                              , animationDuration = dur
+                              , animationFrameUpdater = updater
+                              , animationNextFrameTime = next
+                              }
+
+            insertAnimation a
 
         StopAnimation aId -> do
             mA <- lookupAnimation aId
@@ -312,10 +337,10 @@ advanceByOne a =
 startAnimationManager :: BChan e -> (EventM n s () -> e) -> IO (AnimationManager s e n)
 startAnimationManager outChan mkEvent = do
     inChan <- STM.newTChanIO
-    reqTid <- forkIO $ animationManagerThreadBody inChan outChan mkEvent
+    idVar <- STM.newTVarIO $ AnimationID 1
+    reqTid <- forkIO $ animationManagerThreadBody inChan outChan mkEvent idVar
     tickTid <- forkIO $ tickThreadBody inChan
     runningVar <- STM.newTVarIO True
-    idVar <- STM.newTVarIO $ AnimationID 1
     return $ AnimationManager { animationMgrRequestThreadId = reqTid
                               , animationMgrTickThreadId = tickTid
                               , animationMgrEventConstructor = mkEvent
@@ -343,6 +368,16 @@ tellAnimationManager :: AnimationManager s e n -> AnimationManagerRequest s -> I
 tellAnimationManager mgr req =
     STM.atomically $
     STM.writeTChan (animationMgrInputChan mgr) req
+
+startAnimation :: AnimationManager s e n
+               -> Int
+               -> Integer
+               -> AnimationMode
+               -> Duration
+               -> Traversal' s (Maybe Int)
+               -> IO ()
+startAnimation mgr numFrames frameMs mode duration updater =
+    tellAnimationManager mgr $ StartAnimation numFrames frameMs mode duration updater
 
 main :: IO ()
 main = do
