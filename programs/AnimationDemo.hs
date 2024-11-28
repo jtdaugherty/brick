@@ -84,8 +84,8 @@ theApp =
 
 data AnimationManagerRequest s =
     Tick UTCTime
-    | StartAnimation Int Integer AnimationMode Duration (Traversal' s (Maybe Int))
-    -- ^ Frame count, frame duration in milliseconds, mode, duration, updater
+    | StartAnimation AnimationID Int Integer AnimationMode Duration (Traversal' s (Maybe Int))
+    -- ^ ID, frame count, frame duration in milliseconds, mode, duration, updater
     | StopAnimation AnimationID
 
 -- Is this a good name for this type? If we added a 'manual' option
@@ -161,7 +161,6 @@ data ManagerState s e n =
                  , _managerStateOutChan :: BChan e
                  , _managerStateEventBuilder :: EventM n s () -> e
                  , _managerStateAnimations :: HM.HashMap AnimationID (Animation s)
-                 , _managerStateIDVar :: STM.TVar AnimationID
                  }
 
 makeLenses ''ManagerState
@@ -169,14 +168,12 @@ makeLenses ''ManagerState
 animationManagerThreadBody :: STM.TChan (AnimationManagerRequest s)
                            -> BChan e
                            -> (EventM n s () -> e)
-                           -> STM.TVar AnimationID
                            -> IO ()
-animationManagerThreadBody inChan outChan mkEvent idVar =
+animationManagerThreadBody inChan outChan mkEvent =
     let initial = ManagerState { _managerStateInChan = inChan
                                , _managerStateOutChan = outChan
                                , _managerStateEventBuilder = mkEvent
                                , _managerStateAnimations = mempty
-                               , _managerStateIDVar = idVar
                                }
     in evalStateT runManager initial
 
@@ -205,10 +202,10 @@ insertAnimation :: Animation s -> ManagerM s e n ()
 insertAnimation a =
     managerStateAnimations %= HM.insert (a^.animationID) a
 
-getNextAnimationID :: ManagerM s e n AnimationID
-getNextAnimationID = do
-    var <- use managerStateIDVar
-    liftIO $ STM.atomically $ do
+getNextAnimationID :: AnimationManager s e n -> IO AnimationID
+getNextAnimationID mgr = do
+    let var = animationMgrNextAnimationID mgr
+    STM.atomically $ do
         AnimationID i <- STM.readTVar var
         let next = AnimationID $ i + 1
         STM.writeTVar var next
@@ -218,9 +215,7 @@ runManager :: ManagerM s e n ()
 runManager = forever $ do
     req <- getNextManagerRequest
     case req of
-        StartAnimation numFrames frameMs mode dur updater -> do
-            aId <- getNextAnimationID
-
+        StartAnimation aId numFrames frameMs mode dur updater -> do
             now <- liftIO getCurrentTime
             let next = addUTCTime frameOffset now
                 frameOffset = nominalDiffFromMs frameMs
@@ -350,7 +345,7 @@ startAnimationManager :: BChan e -> (EventM n s () -> e) -> IO (AnimationManager
 startAnimationManager outChan mkEvent = do
     inChan <- STM.newTChanIO
     idVar <- STM.newTVarIO $ AnimationID 1
-    reqTid <- forkIO $ animationManagerThreadBody inChan outChan mkEvent idVar
+    reqTid <- forkIO $ animationManagerThreadBody inChan outChan mkEvent
     tickTid <- forkIO $ tickThreadBody inChan
     runningVar <- STM.newTVarIO True
     return $ AnimationManager { animationMgrRequestThreadId = reqTid
@@ -387,9 +382,11 @@ startAnimation :: AnimationManager s e n
                -> AnimationMode
                -> Duration
                -> Traversal' s (Maybe Int)
-               -> IO ()
-startAnimation mgr numFrames frameMs mode duration updater =
-    tellAnimationManager mgr $ StartAnimation numFrames frameMs mode duration updater
+               -> IO AnimationID
+startAnimation mgr numFrames frameMs mode duration updater = do
+    aId <- getNextAnimationID mgr
+    tellAnimationManager mgr $ StartAnimation aId numFrames frameMs mode duration updater
+    return aId
 
 main :: IO ()
 main = do
