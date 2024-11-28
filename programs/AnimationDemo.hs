@@ -394,6 +394,9 @@ drawAnimations st =
                 ]
          ]
 
+-- NOTE:
+-- Perhaps introduce a Frames type here with a Vector to store frames
+-- for more efficient indexing
 frames1 :: [Widget ()]
 frames1 = str <$> [".", "o", "O", "^", " "]
 
