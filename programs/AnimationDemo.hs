@@ -37,50 +37,8 @@ import Brick.Types
   , BrickEvent(..)
   )
 import Brick.Widgets.Core
-  ( (<=>)
-  , str
+  ( str
   )
-
-data CustomEvent = Counter deriving Show
-
-data St =
-    St { _stLastBrickEvent :: Maybe (BrickEvent () CustomEvent)
-       , _stCounter :: Int
-       }
-
-makeLenses ''St
-
-drawUI :: St -> [Widget ()]
-drawUI st = [a]
-    where
-        a = (str $ "Last event: " <> (show $ st^.stLastBrickEvent))
-            <=>
-            (str $ "Counter value is: " <> (show $ st^.stCounter))
-
-appEvent :: BrickEvent () CustomEvent -> EventM () St ()
-appEvent e =
-    case e of
-        VtyEvent (V.EvKey V.KEsc []) -> halt
-        VtyEvent _ -> stLastBrickEvent .= (Just e)
-        AppEvent Counter -> do
-            stCounter %= (+1)
-            stLastBrickEvent .= (Just e)
-        _ -> return ()
-
-initialState :: St
-initialState =
-    St { _stLastBrickEvent = Nothing
-       , _stCounter = 0
-       }
-
-theApp :: App St CustomEvent ()
-theApp =
-    App { appDraw = drawUI
-        , appChooseCursor = showFirstCursor
-        , appHandleEvent = appEvent
-        , appStartEvent = return ()
-        , appAttrMap = const $ attrMap V.defAttr []
-        }
 
 data AnimationManagerRequest s =
     Tick UTCTime
@@ -202,10 +160,10 @@ insertAnimation :: Animation s -> ManagerM s e n ()
 insertAnimation a =
     managerStateAnimations %= HM.insert (a^.animationID) a
 
-getNextAnimationID :: AnimationManager s e n -> IO AnimationID
+getNextAnimationID :: (MonadIO m) => AnimationManager s e n -> m AnimationID
 getNextAnimationID mgr = do
     let var = animationMgrNextAnimationID mgr
-    STM.atomically $ do
+    liftIO $ STM.atomically $ do
         AnimationID i <- STM.readTVar var
         let next = AnimationID $ i + 1
         STM.writeTVar var next
@@ -371,35 +329,68 @@ stopAnimationManager mgr =
         killThread tickTid
         STM.atomically $ STM.writeTVar (animationMgrRunning mgr) False
 
-tellAnimationManager :: AnimationManager s e n -> AnimationManagerRequest s -> IO ()
+tellAnimationManager :: (MonadIO m)
+                     => AnimationManager s e n -> AnimationManagerRequest s -> m ()
 tellAnimationManager mgr req =
+    liftIO $
     STM.atomically $
     STM.writeTChan (animationMgrInputChan mgr) req
 
-startAnimation :: AnimationManager s e n
+startAnimation :: (MonadIO m)
+               => AnimationManager s e n
                -> Int
                -> Integer
                -> AnimationMode
                -> Duration
                -> Traversal' s (Maybe Int)
-               -> IO AnimationID
+               -> m AnimationID
 startAnimation mgr numFrames frameMs mode duration updater = do
     aId <- getNextAnimationID mgr
     tellAnimationManager mgr $ StartAnimation aId numFrames frameMs mode duration updater
     return aId
 
-stopAnimation :: AnimationManager s e n
+stopAnimation :: (MonadIO m)
+              => AnimationManager s e n
               -> AnimationID
-              -> IO ()
+              -> m ()
 stopAnimation mgr aId =
     tellAnimationManager mgr $ StopAnimation aId
+
+data CustomEvent =
+    AnimationUpdate (EventM () St ())
+
+data St =
+    St { _stAnimationManager :: AnimationManager St CustomEvent ()
+       }
+
+makeLenses ''St
+
+drawUI :: St -> [Widget ()]
+drawUI _st = [str "Hello"]
+
+appEvent :: BrickEvent () CustomEvent -> EventM () St ()
+appEvent e =
+    case e of
+        VtyEvent (V.EvKey V.KEsc []) -> halt
+        AppEvent (AnimationUpdate act) -> act
+        _ -> return ()
+
+theApp :: App St CustomEvent ()
+theApp =
+    App { appDraw = drawUI
+        , appChooseCursor = showFirstCursor
+        , appHandleEvent = appEvent
+        , appStartEvent = return ()
+        , appAttrMap = const $ attrMap V.defAttr []
+        }
 
 main :: IO ()
 main = do
     chan <- newBChan 10
+    mgr <- startAnimationManager chan AnimationUpdate
 
-    void $ forkIO $ forever $ do
-        writeBChan chan Counter
-        threadDelay 1000000
+    let initialState =
+            St { _stAnimationManager = mgr
+               }
 
     void $ customMainWithDefaultVty (Just chan) theApp initialState
