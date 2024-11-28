@@ -118,7 +118,7 @@ data Animation s =
               }
 
 newtype AnimationID = AnimationID Int
-           deriving (Eq, Ord, Show, Hashable)
+                    deriving (Eq, Ord, Show, Hashable)
 
 data AnimationManager s e n =
     AnimationManager { animationMgrRequestThreadId :: ThreadId
