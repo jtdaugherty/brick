@@ -9,7 +9,7 @@ module Main where
 import Lens.Micro ((^.), (%~), (.~), (&), Traversal')
 import Lens.Micro.TH (makeLenses)
 import Lens.Micro.Mtl
-import Control.Monad (void, forever, when)
+import Control.Monad (forever, when)
 import Control.Concurrent (threadDelay, forkIO, ThreadId, killThread)
 import Control.Monad.State.Strict
 import Data.Hashable (Hashable)
