@@ -63,24 +63,24 @@ data AnimationMode =
 newtype AnimationID = AnimationID Int
                     deriving (Eq, Ord, Show, Hashable)
 
-data Animation s =
-    Animation { _animationID :: AnimationID
-              , _animationNumFrames :: Int
-              , _animationCurrentFrame :: Int
-              , _animationPreviousFrame :: Maybe Int
-              , _animationFrameMilliseconds :: Integer
-              -- what about tracking that an animation is currently
-              -- moving backward when it sometimes moves forward? Just
-              -- track the previous frame always, and use that? that
-              -- works in general (can be ignored in the random case but
-              -- is used in all others)
-              , _animationMode :: AnimationMode
-              , _animationDuration :: Duration
-              , animationFrameUpdater :: Traversal' s (Maybe Int)
-              , _animationNextFrameTime :: UTCTime
-              }
+data AnimationState s =
+    AnimationState { _animationID :: AnimationID
+                   , _animationNumFrames :: Int
+                   , _animationCurrentFrame :: Int
+                   , _animationPreviousFrame :: Maybe Int
+                   , _animationFrameMilliseconds :: Integer
+                   -- what about tracking that an animation is currently
+                   -- moving backward when it sometimes moves forward? Just
+                   -- track the previous frame always, and use that? that
+                   -- works in general (can be ignored in the random case but
+                   -- is used in all others)
+                   , _animationMode :: AnimationMode
+                   , _animationDuration :: Duration
+                   , animationFrameUpdater :: Traversal' s (Maybe Int)
+                   , _animationNextFrameTime :: UTCTime
+                   }
 
-makeLenses ''Animation
+makeLenses ''AnimationState
 
 data AnimationManager s e n =
     AnimationManager { animationMgrRequestThreadId :: ThreadId
@@ -105,7 +105,7 @@ tickThreadBody outChan =
         now <- getCurrentTime
         STM.atomically $ STM.writeTChan outChan $ Tick now
 
-setNextFrameTime :: UTCTime -> Animation s -> Animation s
+setNextFrameTime :: UTCTime -> AnimationState s -> AnimationState s
 setNextFrameTime t a = a & animationNextFrameTime .~ t
 
 nominalDiffFromMs :: Integer -> NominalDiffTime
@@ -120,7 +120,7 @@ data ManagerState s e n =
     ManagerState { _managerStateInChan :: STM.TChan (AnimationManagerRequest s)
                  , _managerStateOutChan :: BChan e
                  , _managerStateEventBuilder :: EventM n s () -> e
-                 , _managerStateAnimations :: HM.HashMap AnimationID (Animation s)
+                 , _managerStateAnimations :: HM.HashMap AnimationID (AnimationState s)
                  }
 
 makeLenses ''ManagerState
@@ -154,11 +154,11 @@ removeAnimation :: AnimationID -> ManagerM s e n ()
 removeAnimation aId =
     managerStateAnimations %= HM.delete aId
 
-lookupAnimation :: AnimationID -> ManagerM s e n (Maybe (Animation s))
+lookupAnimation :: AnimationID -> ManagerM s e n (Maybe (AnimationState s))
 lookupAnimation aId =
     HM.lookup aId <$> use managerStateAnimations
 
-insertAnimation :: Animation s -> ManagerM s e n ()
+insertAnimation :: AnimationState s -> ManagerM s e n ()
 insertAnimation a =
     managerStateAnimations %= HM.insert (a^.animationID) a
 
@@ -180,16 +180,16 @@ handleManagerRequest (StartAnimation aId numFrames frameMs mode dur updater) = d
     now <- liftIO getCurrentTime
     let next = addUTCTime frameOffset now
         frameOffset = nominalDiffFromMs frameMs
-        a = Animation { _animationID = aId
-                      , _animationNumFrames = numFrames
-                      , _animationCurrentFrame = 0
-                      , _animationPreviousFrame = Nothing
-                      , _animationFrameMilliseconds = frameMs
-                      , _animationMode = mode
-                      , _animationDuration = dur
-                      , animationFrameUpdater = updater
-                      , _animationNextFrameTime = next
-                      }
+        a = AnimationState { _animationID = aId
+                           , _animationNumFrames = numFrames
+                           , _animationCurrentFrame = 0
+                           , _animationPreviousFrame = Nothing
+                           , _animationFrameMilliseconds = frameMs
+                           , _animationMode = mode
+                           , _animationDuration = dur
+                           , animationFrameUpdater = updater
+                           , _animationNextFrameTime = next
+                           }
 
     insertAnimation a
     sendApplicationEvent $ updater .= Just 0
@@ -225,7 +225,7 @@ checkForFrames now = do
 
         updateFor a = animationFrameUpdater a .= Just (a^.animationCurrentFrame)
 
-        go :: Maybe (EventM n s ()) -> [Animation s] -> ManagerM s e n (Maybe (EventM n s ()))
+        go :: Maybe (EventM n s ()) -> [AnimationState s] -> ManagerM s e n (Maybe (EventM n s ()))
         go mUpdater [] = return mUpdater
         go mUpdater (a:as) = do
             -- Determine whether the next animation needs to have its
@@ -270,14 +270,14 @@ checkForFrames now = do
     as <- HM.elems <$> use managerStateAnimations
     go Nothing as
 
-advanceBy :: Integer -> Animation s -> Animation s
+advanceBy :: Integer -> AnimationState s -> AnimationState s
 advanceBy n a
     | n <= 0 = a
     | otherwise =
         advanceBy (n - 1) $
         advanceByOne a
 
-advanceByOne :: Animation s -> Animation s
+advanceByOne :: AnimationState s -> AnimationState s
 advanceByOne a =
     case a^.animationMode of
         Forward ->
