@@ -60,9 +60,8 @@ hCenterWith mChar p =
            c <- getContext
            let rWidth = result^.imageL.to imageWidth
                rHeight = result^.imageL.to imageHeight
-               remainder = max 0 $ c^.availWidthL - (leftPaddingAmount * 2)
                leftPaddingAmount = max 0 $ (c^.availWidthL - rWidth) `div` 2
-               rightPaddingAmount = max 0 $ leftPaddingAmount + remainder
+               rightPaddingAmount = max 0 $ c^.availWidthL - leftPaddingAmount - rWidth
                leftPadding = charFill (c^.attrL) ch leftPaddingAmount rHeight
                rightPadding = charFill (c^.attrL) ch rightPaddingAmount rHeight
                paddedImage = horizCat [ leftPadding
