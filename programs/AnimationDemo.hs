@@ -6,7 +6,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Main where
 
-import Lens.Micro ((^.), (%~), (.~), (&), Traversal')
+import Lens.Micro ((^.), (%~), (.~), (&), Traversal', _Just)
 import Lens.Micro.TH (makeLenses)
 import Lens.Micro.Mtl
 import Control.Monad (forever, when)
@@ -48,7 +48,7 @@ import Brick.Widgets.Core
 
 data AnimationManagerRequest s =
     Tick UTCTime
-    | StartAnimation AnimationID Int Integer AnimationMode Duration (Traversal' s (Maybe Int))
+    | StartAnimation Int Integer AnimationMode Duration (Traversal' s (Maybe Animation))
     -- ^ ID, frame count, frame duration in milliseconds, mode, duration, updater
     | StopAnimation AnimationID
 
@@ -67,8 +67,15 @@ data AnimationMode =
 newtype AnimationID = AnimationID Int
                     deriving (Eq, Ord, Show, Hashable)
 
+data Animation =
+    Animation { _animationFrame :: Int
+              , _animationID :: AnimationID
+              }
+
+makeLenses ''Animation
+
 data AnimationState s =
-    AnimationState { _animationID :: AnimationID
+    AnimationState { _animationStateID :: AnimationID
                    , _animationNumFrames :: Int
                    , _animationCurrentFrame :: Int
                    , _animationPreviousFrame :: Maybe Int
@@ -80,7 +87,7 @@ data AnimationState s =
                    -- is used in all others)
                    , _animationMode :: AnimationMode
                    , _animationDuration :: Duration
-                   , animationFrameUpdater :: Traversal' s (Maybe Int)
+                   , animationFrameUpdater :: Traversal' s (Maybe Animation)
                    , _animationNextFrameTime :: UTCTime
                    }
 
@@ -92,7 +99,6 @@ data AnimationManager s e n =
                      , animationMgrOutputChan :: BChan e
                      , animationMgrInputChan :: STM.TChan (AnimationManagerRequest s)
                      , animationMgrEventConstructor :: EventM n s () -> e
-                     , animationMgrNextAnimationID :: STM.TVar AnimationID
                      , animationMgrRunning :: STM.TVar Bool
                      }
 
@@ -125,6 +131,7 @@ data ManagerState s e n =
                  , _managerStateOutChan :: BChan e
                  , _managerStateEventBuilder :: EventM n s () -> e
                  , _managerStateAnimations :: HM.HashMap AnimationID (AnimationState s)
+                 , _managerStateIDVar :: STM.TVar AnimationID
                  }
 
 makeLenses ''ManagerState
@@ -133,13 +140,15 @@ animationManagerThreadBody :: STM.TChan (AnimationManagerRequest s)
                            -> BChan e
                            -> (EventM n s () -> e)
                            -> IO ()
-animationManagerThreadBody inChan outChan mkEvent =
+animationManagerThreadBody inChan outChan mkEvent = do
+    idVar <- STM.newTVarIO $ AnimationID 1
     let initial = ManagerState { _managerStateInChan = inChan
                                , _managerStateOutChan = outChan
                                , _managerStateEventBuilder = mkEvent
                                , _managerStateAnimations = mempty
+                               , _managerStateIDVar = idVar
                                }
-    in evalStateT runManager initial
+    evalStateT runManager initial
 
 type ManagerM s e n a = StateT (ManagerState s e n) IO a
 
@@ -164,11 +173,11 @@ lookupAnimation aId =
 
 insertAnimation :: AnimationState s -> ManagerM s e n ()
 insertAnimation a =
-    managerStateAnimations %= HM.insert (a^.animationID) a
+    managerStateAnimations %= HM.insert (a^.animationStateID) a
 
-getNextAnimationID :: (MonadIO m) => AnimationManager s e n -> m AnimationID
-getNextAnimationID mgr = do
-    let var = animationMgrNextAnimationID mgr
+getNextAnimationID :: ManagerM s e n AnimationID
+getNextAnimationID = do
+    var <- use managerStateIDVar
     liftIO $ STM.atomically $ do
         AnimationID i <- STM.readTVar var
         let next = AnimationID $ i + 1
@@ -180,11 +189,12 @@ runManager = forever $ do
     getNextManagerRequest >>= handleManagerRequest
 
 handleManagerRequest :: AnimationManagerRequest s -> ManagerM s e n ()
-handleManagerRequest (StartAnimation aId numFrames frameMs mode dur updater) = do
+handleManagerRequest (StartAnimation numFrames frameMs mode dur updater) = do
+    aId <- getNextAnimationID
     now <- liftIO getCurrentTime
     let next = addUTCTime frameOffset now
         frameOffset = nominalDiffFromMs frameMs
-        a = AnimationState { _animationID = aId
+        a = AnimationState { _animationStateID = aId
                            , _animationNumFrames = numFrames
                            , _animationCurrentFrame = 0
                            , _animationPreviousFrame = Nothing
@@ -196,7 +206,9 @@ handleManagerRequest (StartAnimation aId numFrames frameMs mode dur updater) = d
                            }
 
     insertAnimation a
-    sendApplicationEvent $ updater .= Just 0
+    sendApplicationEvent $ updater .= Just (Animation { _animationID = aId
+                                                      , _animationFrame = 0
+                                                      })
 handleManagerRequest (StopAnimation aId) = do
     mA <- lookupAnimation aId
     case mA of
@@ -205,8 +217,8 @@ handleManagerRequest (StopAnimation aId) = do
             -- Remove the animation from the manager
             removeAnimation aId
 
-            -- Set the current frame in the application
-            -- state to none
+            -- Set the current animation state in the application state
+            -- to none
             sendApplicationEvent $ do
                 animationFrameUpdater a .= Nothing
 handleManagerRequest (Tick tickTime) = do
@@ -227,7 +239,7 @@ checkForFrames now = do
     let addUpdate a Nothing = Just $ updateFor a
         addUpdate a (Just updater) = Just $ updater >> updateFor a
 
-        updateFor a = animationFrameUpdater a .= Just (a^.animationCurrentFrame)
+        updateFor a = animationFrameUpdater a._Just.animationFrame .= (a^.animationCurrentFrame)
 
         go :: Maybe (EventM n s ()) -> [AnimationState s] -> ManagerM s e n (Maybe (EventM n s ()))
         go mUpdater [] = return mUpdater
@@ -253,7 +265,7 @@ checkForFrames now = do
                                   a' = setNextFrameTime newNextTime $
                                        advanceBy numFrames a
 
-                              managerStateAnimations %= HM.insert (a'^.animationID) a'
+                              managerStateAnimations %= HM.insert (a'^.animationStateID) a'
 
                               -- NOTE!
                               --
@@ -308,7 +320,6 @@ advanceByOne a =
 startAnimationManager :: BChan e -> (EventM n s () -> e) -> IO (AnimationManager s e n)
 startAnimationManager outChan mkEvent = do
     inChan <- STM.newTChanIO
-    idVar <- STM.newTVarIO $ AnimationID 1
     reqTid <- forkIO $ animationManagerThreadBody inChan outChan mkEvent
     tickTid <- forkIO $ tickThreadBody inChan
     runningVar <- STM.newTVarIO True
@@ -317,7 +328,6 @@ startAnimationManager outChan mkEvent = do
                               , animationMgrEventConstructor = mkEvent
                               , animationMgrOutputChan = outChan
                               , animationMgrInputChan = inChan
-                              , animationMgrNextAnimationID = idVar
                               , animationMgrRunning = runningVar
                               }
 
@@ -348,12 +358,10 @@ startAnimation :: (MonadIO m)
                -> Integer
                -> AnimationMode
                -> Duration
-               -> Traversal' s (Maybe Int)
-               -> m AnimationID
+               -> Traversal' s (Maybe Animation)
+               -> m ()
 startAnimation mgr numFrames frameMs mode duration updater = do
-    aId <- getNextAnimationID mgr
-    tellAnimationManager mgr $ StartAnimation aId numFrames frameMs mode duration updater
-    return aId
+    tellAnimationManager mgr $ StartAnimation numFrames frameMs mode duration updater
 
 stopAnimation :: (MonadIO m)
               => AnimationManager s e n
@@ -367,12 +375,9 @@ data CustomEvent =
 
 data St =
     St { _stAnimationManager :: AnimationManager St CustomEvent ()
-       , _animation1ID :: Maybe AnimationID
-       , _animation2ID :: Maybe AnimationID
-       , _animation3ID :: Maybe AnimationID
-       , _animation1Frame :: Maybe Int
-       , _animation2Frame :: Maybe Int
-       , _animation3Frame :: Maybe Int
+       , _animation1 :: Maybe Animation
+       , _animation2 :: Maybe Animation
+       , _animation3 :: Maybe Animation
        }
 
 makeLenses ''St
@@ -382,15 +387,15 @@ drawUI st = [drawAnimations st]
 
 drawAnimations :: St -> Widget ()
 drawAnimations st =
-    vBox [ hBox [ drawAnimation frames1 $ st^.animation1Frame
+    vBox [ hBox [ drawAnimation frames1 $ st^.animation1
                 , str " "
-                , drawAnimation frames2 $ st^.animation2Frame
+                , drawAnimation frames2 $ st^.animation2
                 , str " "
-                , drawAnimation frames3 $ st^.animation3Frame
+                , drawAnimation frames3 $ st^.animation3
                 ]
-         , vBox [ maybe (str " ") (const $ str "Animation #1 running") $ st^.animation1ID
-                , maybe (str " ") (const $ str "Animation #2 running") $ st^.animation2ID
-                , maybe (str " ") (const $ str "Animation #3 running") $ st^.animation3ID
+         , vBox [ maybe (str " ") (const $ str "Animation #1 running") $ st^.animation1
+                , maybe (str " ") (const $ str "Animation #2 running") $ st^.animation2
+                , maybe (str " ") (const $ str "Animation #3 running") $ st^.animation3
                 ]
          ]
 
@@ -411,9 +416,9 @@ frames3 =
     , border $ vBox $ replicate 5 $ str $ replicate 5 ' '
     ]
 
-drawAnimation :: [Widget n] -> Maybe Int -> Widget n
+drawAnimation :: [Widget n] -> Maybe Animation -> Widget n
 drawAnimation _ Nothing = str " "
-drawAnimation frames (Just i) = frames !! i
+drawAnimation frames (Just (Animation i _)) = frames !! i
 
 appEvent :: BrickEvent () CustomEvent -> EventM () St ()
 appEvent e = do
@@ -421,28 +426,22 @@ appEvent e = do
     case e of
         VtyEvent (V.EvKey V.KEsc []) -> halt
         VtyEvent (V.EvKey (V.KChar '1') []) -> do
-            mOld <- use animation1ID
+            mOld <- preuse (animation1._Just.animationID)
             case mOld of
-                Just i -> stopAnimation mgr i >> animation1ID .= Nothing
-                Nothing -> do
-                    aId <- startAnimation mgr (length frames1) 1000 Forward Loop animation1Frame
-                    animation1ID .= Just aId
+                Just i -> stopAnimation mgr i
+                Nothing -> startAnimation mgr (length frames1) 1000 Forward Loop animation1
 
         VtyEvent (V.EvKey (V.KChar '2') []) -> do
-            mOld <- use animation2ID
+            mOld <- preuse (animation2._Just.animationID)
             case mOld of
-                Just i -> stopAnimation mgr i >> animation2ID .= Nothing
-                Nothing -> do
-                    aId <- startAnimation mgr (length frames2) 100 Forward Loop animation2Frame
-                    animation2ID .= Just aId
+                Just i -> stopAnimation mgr i
+                Nothing -> startAnimation mgr (length frames2) 100 Forward Loop animation2
 
         VtyEvent (V.EvKey (V.KChar '3') []) -> do
-            mOld <- use animation3ID
+            mOld <- preuse (animation3._Just.animationID)
             case mOld of
-                Just i -> stopAnimation mgr i >> animation3ID .= Nothing
-                Nothing -> do
-                    aId <- startAnimation mgr (length frames3) 300 Forward Loop animation3Frame
-                    animation3ID .= Just aId
+                Just i -> stopAnimation mgr i
+                Nothing -> startAnimation mgr (length frames3) 300 Forward Loop animation3
 
         AppEvent (AnimationUpdate act) -> act
         _ -> return ()
@@ -463,12 +462,9 @@ main = do
 
     let initialState =
             St { _stAnimationManager = mgr
-               , _animation1ID = Nothing
-               , _animation2ID = Nothing
-               , _animation3ID = Nothing
-               , _animation1Frame = Nothing
-               , _animation2Frame = Nothing
-               , _animation3Frame = Nothing
+               , _animation1 = Nothing
+               , _animation2 = Nothing
+               , _animation3 = Nothing
                }
 
     (_, vty) <- customMainWithDefaultVty (Just chan) theApp initialState
