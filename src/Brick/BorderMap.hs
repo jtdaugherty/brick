@@ -17,7 +17,7 @@ module Brick.BorderMap
     ) where
 
 import Brick.Types.Common (Edges(..), Location(..), eTopL, eBottomL, eRightL, eLeftL, origin)
-#if !(MIN_VERSION_base(4,10,0))
+#if !(MIN_VERSION_base(4,18,0))
 import Control.Applicative (liftA2)
 #endif
 import Data.IMap (IMap, Run(Run))
