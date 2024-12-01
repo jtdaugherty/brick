@@ -50,7 +50,7 @@ data AnimationManagerRequest s =
     Tick UTCTime
     | StartAnimation Int Integer AnimationMode Duration (Traversal' s (Maybe Animation))
     -- ^ ID, frame count, frame duration in milliseconds, mode, duration, updater
-    | StopAnimation AnimationID
+    | StopAnimation Animation
 
 -- Is this a good name for this type? If we added a 'manual' option
 -- where the application does frame updates, would it go here?
@@ -209,18 +209,19 @@ handleManagerRequest (StartAnimation numFrames frameMs mode dur updater) = do
     sendApplicationEvent $ updater .= Just (Animation { _animationID = aId
                                                       , _animationFrame = 0
                                                       })
-handleManagerRequest (StopAnimation aId) = do
+handleManagerRequest (StopAnimation a) = do
+    let aId = a^.animationID
     mA <- lookupAnimation aId
     case mA of
         Nothing -> return ()
-        Just a -> do
+        Just aState -> do
             -- Remove the animation from the manager
             removeAnimation aId
 
             -- Set the current animation state in the application state
             -- to none
             sendApplicationEvent $ do
-                animationFrameUpdater a .= Nothing
+                animationFrameUpdater aState .= Nothing
 handleManagerRequest (Tick tickTime) = do
     -- Check all animation states for frame advances
     -- based on the relationship between the tick time
@@ -365,10 +366,10 @@ startAnimation mgr numFrames frameMs mode duration updater = do
 
 stopAnimation :: (MonadIO m)
               => AnimationManager s e n
-              -> AnimationID
+              -> Animation
               -> m ()
-stopAnimation mgr aId =
-    tellAnimationManager mgr $ StopAnimation aId
+stopAnimation mgr a =
+    tellAnimationManager mgr $ StopAnimation a
 
 data CustomEvent =
     AnimationUpdate (EventM () St ())
@@ -426,21 +427,21 @@ appEvent e = do
     case e of
         VtyEvent (V.EvKey V.KEsc []) -> halt
         VtyEvent (V.EvKey (V.KChar '1') []) -> do
-            mOld <- preuse (animation1._Just.animationID)
+            mOld <- use animation1
             case mOld of
-                Just i -> stopAnimation mgr i
+                Just a -> stopAnimation mgr a
                 Nothing -> startAnimation mgr (length frames1) 1000 Forward Loop animation1
 
         VtyEvent (V.EvKey (V.KChar '2') []) -> do
-            mOld <- preuse (animation2._Just.animationID)
+            mOld <- use animation2
             case mOld of
-                Just i -> stopAnimation mgr i
+                Just a -> stopAnimation mgr a
                 Nothing -> startAnimation mgr (length frames2) 100 Forward Loop animation2
 
         VtyEvent (V.EvKey (V.KChar '3') []) -> do
-            mOld <- preuse (animation3._Just.animationID)
+            mOld <- use animation3
             case mOld of
-                Just i -> stopAnimation mgr i
+                Just a -> stopAnimation mgr a
                 Nothing -> startAnimation mgr (length frames3) 300 Forward Loop animation3
 
         AppEvent (AnimationUpdate act) -> act
