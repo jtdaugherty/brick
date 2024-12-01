@@ -162,7 +162,7 @@ getNextAnimationID = do
         AnimationID i <- STM.readTVar var
         let next = AnimationID $ i + 1
         STM.writeTVar var next
-        return next
+        return $ AnimationID i
 
 runManager :: ManagerM s e n ()
 runManager = forever $ do
