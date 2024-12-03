@@ -2,6 +2,24 @@
 Brick changelog
 ---------------
 
+2.6
+---
+
+Behavior changes:
+ * `Brick.Widgets.Core.relativeTo` now draws nothing if the requested
+   extent is not found. Previously it would draw the specified widget in
+   the upper-left corner of the layer.
+
+Bug fixes:
+ * Fixed the conditional import in `BorderMap` (#519)
+ * `Brick.Widgets.Center.hCenterWith` now properly accounts for centered
+   image width when computing additional right padding (#520)
+ * The Brick renderer now properly resets some render-specific state
+   in between renderings that was previously kept around, avoiding
+   preservation of stale extents across renderings
+ * `brick-tail-demo` and `brick-custom-event-demo` now shut down Vty
+   properly
+
 2.5
 ---
 
