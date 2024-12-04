@@ -56,7 +56,7 @@ it, get in touch!
 | [`brewsage`](https://github.com/gerdreiss/brewsage#readme) | A TUI for Homebrew |
 | [`brick-trading-journal`](https://codeberg.org/amano.kenji/brick-trading-journal) | A TUI program that calculates basic statistics from trades |
 | [`Brickudoku`](https://github.com/Thecentury/brickudoku) | A hybrid of Tetris and Sudoku |
-| [`cbookview`](https://github.com/mlang/chessIO) | A TUI for exploring polyglot chess opening book files |
+| [`cbookview`](https://github.com/mlang/cbookview) | A TUI for exploring polyglot chess opening book files |
 | [`clifm`](https://github.com/pasqu4le/clifm) | A file manager |
 | [`codenames-haskell`](https://github.com/VigneshN1997/codenames-haskell) | An implementation of the Codenames game |
 | [`fifteen`](https://github.com/benjaminselfridge/fifteen) | An implementation of the [15 puzzle](https://en.wikipedia.org/wiki/15_puzzle) |
