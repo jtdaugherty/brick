@@ -4,13 +4,16 @@
 module Brick.Animation
   ( AnimationManager
   , Animation
-  , animationFrame
+  , animationFrameIndex
   , Duration(..)
   , AnimationMode(..)
   , startAnimationManager
   , stopAnimationManager
   , startAnimation
   , stopAnimation
+  , drawAnimation
+  , Frames
+  , newFrames
   )
 where
 
@@ -20,19 +23,26 @@ import Control.Monad (forever, when)
 import Control.Monad.State.Strict
 import Data.Hashable (Hashable)
 import qualified Data.HashMap.Strict as HM
+import Data.Maybe (fromMaybe)
+import qualified Data.Vector as V
 import Data.Time.Clock
 import Lens.Micro ((^.), (%~), (.~), (&), Traversal', _Just)
 import Lens.Micro.TH (makeLenses)
 import Lens.Micro.Mtl
 
 import Brick.BChan
-import Brick.Types (EventM)
+import Brick.Types (EventM, Widget)
 
-data AnimationManagerRequest s =
+newtype Frames s n = Frames (V.Vector (s -> Widget n))
+
+newFrames :: [s -> Widget n] -> Frames s n
+newFrames = Frames . V.fromList
+
+data AnimationManagerRequest s n =
     Tick UTCTime
-    | StartAnimation Int Integer AnimationMode Duration (Traversal' s (Maybe Animation))
+    | StartAnimation (Frames s n) Integer AnimationMode Duration (Traversal' s (Maybe (Animation s n)))
     -- ^ ID, frame count, frame duration in milliseconds, mode, duration, updater
-    | StopAnimation Animation
+    | StopAnimation (Animation s n)
 
 -- Is this a good name for this type? If we added a 'manual' option
 -- where the application does frame updates, would it go here?
@@ -49,12 +59,23 @@ data AnimationMode =
 newtype AnimationID = AnimationID Int
                     deriving (Eq, Ord, Show, Hashable)
 
-data Animation =
-    Animation { animationFrame :: Int
+data Animation s n =
+    Animation { animationFrameIndex :: Int
               , animationID :: AnimationID
+              , animationFrames :: Frames s n
               }
 
-data AnimationState s =
+drawAnimation :: Widget n -> s -> Maybe (Animation s n) -> Widget n
+drawAnimation fallback input mAnim =
+    draw input
+    where
+        draw = fromMaybe (const fallback) $ do
+            a <- mAnim
+            let idx = animationFrameIndex a
+                Frames fs = animationFrames a
+            fs V.!? idx
+
+data AnimationState s n =
     AnimationState { _animationStateID :: AnimationID
                    , _animationNumFrames :: Int
                    , _animationCurrentFrame :: Int
@@ -67,7 +88,7 @@ data AnimationState s =
                    -- is used in all others)
                    , _animationMode :: AnimationMode
                    , _animationDuration :: Duration
-                   , animationFrameUpdater :: Traversal' s (Maybe Animation)
+                   , animationFrameUpdater :: Traversal' s (Maybe (Animation s n))
                    , _animationNextFrameTime :: UTCTime
                    }
 
@@ -77,7 +98,7 @@ data AnimationManager s e n =
     AnimationManager { animationMgrRequestThreadId :: ThreadId
                      , animationMgrTickThreadId :: ThreadId
                      , animationMgrOutputChan :: BChan e
-                     , animationMgrInputChan :: STM.TChan (AnimationManagerRequest s)
+                     , animationMgrInputChan :: STM.TChan (AnimationManagerRequest s n)
                      , animationMgrEventConstructor :: EventM n s () -> e
                      , animationMgrRunning :: STM.TVar Bool
                      }
@@ -87,7 +108,7 @@ data AnimationManager s e n =
 tickMilliseconds :: Int
 tickMilliseconds = 100
 
-tickThreadBody :: STM.TChan (AnimationManagerRequest s)
+tickThreadBody :: STM.TChan (AnimationManagerRequest s n)
                -> IO ()
 tickThreadBody outChan =
     forever $ do
@@ -95,7 +116,7 @@ tickThreadBody outChan =
         now <- getCurrentTime
         STM.atomically $ STM.writeTChan outChan $ Tick now
 
-setNextFrameTime :: UTCTime -> AnimationState s -> AnimationState s
+setNextFrameTime :: UTCTime -> AnimationState s n -> AnimationState s n
 setNextFrameTime t a = a & animationNextFrameTime .~ t
 
 nominalDiffFromMs :: Integer -> NominalDiffTime
@@ -107,16 +128,16 @@ nominalDiffToMs t =
     (round $ nominalDiffTimeToSeconds t)
 
 data ManagerState s e n =
-    ManagerState { _managerStateInChan :: STM.TChan (AnimationManagerRequest s)
+    ManagerState { _managerStateInChan :: STM.TChan (AnimationManagerRequest s n)
                  , _managerStateOutChan :: BChan e
                  , _managerStateEventBuilder :: EventM n s () -> e
-                 , _managerStateAnimations :: HM.HashMap AnimationID (AnimationState s)
+                 , _managerStateAnimations :: HM.HashMap AnimationID (AnimationState s n)
                  , _managerStateIDVar :: STM.TVar AnimationID
                  }
 
 makeLenses ''ManagerState
 
-animationManagerThreadBody :: STM.TChan (AnimationManagerRequest s)
+animationManagerThreadBody :: STM.TChan (AnimationManagerRequest s n)
                            -> BChan e
                            -> (EventM n s () -> e)
                            -> IO ()
@@ -132,7 +153,7 @@ animationManagerThreadBody inChan outChan mkEvent = do
 
 type ManagerM s e n a = StateT (ManagerState s e n) IO a
 
-getNextManagerRequest :: ManagerM s e n (AnimationManagerRequest s)
+getNextManagerRequest :: ManagerM s e n (AnimationManagerRequest s n)
 getNextManagerRequest = do
     inChan <- use managerStateInChan
     liftIO $ STM.atomically $ STM.readTChan inChan
@@ -147,11 +168,11 @@ removeAnimation :: AnimationID -> ManagerM s e n ()
 removeAnimation aId =
     managerStateAnimations %= HM.delete aId
 
-lookupAnimation :: AnimationID -> ManagerM s e n (Maybe (AnimationState s))
+lookupAnimation :: AnimationID -> ManagerM s e n (Maybe (AnimationState s n))
 lookupAnimation aId =
     HM.lookup aId <$> use managerStateAnimations
 
-insertAnimation :: AnimationState s -> ManagerM s e n ()
+insertAnimation :: AnimationState s n -> ManagerM s e n ()
 insertAnimation a =
     managerStateAnimations %= HM.insert (a^.animationStateID) a
 
@@ -168,14 +189,14 @@ runManager :: ManagerM s e n ()
 runManager = forever $ do
     getNextManagerRequest >>= handleManagerRequest
 
-handleManagerRequest :: AnimationManagerRequest s -> ManagerM s e n ()
-handleManagerRequest (StartAnimation numFrames frameMs mode dur updater) = do
+handleManagerRequest :: AnimationManagerRequest s n -> ManagerM s e n ()
+handleManagerRequest (StartAnimation frames@(Frames fs) frameMs mode dur updater) = do
     aId <- getNextAnimationID
     now <- liftIO getCurrentTime
     let next = addUTCTime frameOffset now
         frameOffset = nominalDiffFromMs frameMs
         a = AnimationState { _animationStateID = aId
-                           , _animationNumFrames = numFrames
+                           , _animationNumFrames = V.length fs
                            , _animationCurrentFrame = 0
                            , _animationPreviousFrame = Nothing
                            , _animationFrameMilliseconds = frameMs
@@ -187,7 +208,8 @@ handleManagerRequest (StartAnimation numFrames frameMs mode dur updater) = do
 
     insertAnimation a
     sendApplicationEvent $ updater .= Just (Animation { animationID = aId
-                                                      , animationFrame = 0
+                                                      , animationFrameIndex = 0
+                                                      , animationFrames = frames
                                                       })
 handleManagerRequest (StopAnimation a) = do
     let aId = animationID a
@@ -220,9 +242,9 @@ checkForFrames now = do
     let addUpdate a Nothing = Just $ updateFor a
         addUpdate a (Just updater) = Just $ updater >> updateFor a
 
-        updateFor a = animationFrameUpdater a._Just %= (\an -> an { animationFrame = a^.animationCurrentFrame })
+        updateFor a = animationFrameUpdater a._Just %= (\an -> an { animationFrameIndex = a^.animationCurrentFrame })
 
-        go :: Maybe (EventM n s ()) -> [AnimationState s] -> ManagerM s e n (Maybe (EventM n s ()))
+        go :: Maybe (EventM n s ()) -> [AnimationState s n] -> ManagerM s e n (Maybe (EventM n s ()))
         go mUpdater [] = return mUpdater
         go mUpdater (a:as) = do
             -- Determine whether the next animation needs to have its
@@ -267,14 +289,14 @@ checkForFrames now = do
     as <- HM.elems <$> use managerStateAnimations
     go Nothing as
 
-advanceBy :: Integer -> AnimationState s -> AnimationState s
+advanceBy :: Integer -> AnimationState s n -> AnimationState s n
 advanceBy n a
     | n <= 0 = a
     | otherwise =
         advanceBy (n - 1) $
         advanceByOne a
 
-advanceByOne :: AnimationState s -> AnimationState s
+advanceByOne :: AnimationState s n -> AnimationState s n
 advanceByOne a =
     case a^.animationMode of
         Forward ->
@@ -327,7 +349,7 @@ stopAnimationManager mgr =
         STM.atomically $ STM.writeTVar (animationMgrRunning mgr) False
 
 tellAnimationManager :: (MonadIO m)
-                     => AnimationManager s e n -> AnimationManagerRequest s -> m ()
+                     => AnimationManager s e n -> AnimationManagerRequest s n -> m ()
 tellAnimationManager mgr req =
     liftIO $
     STM.atomically $
@@ -335,18 +357,18 @@ tellAnimationManager mgr req =
 
 startAnimation :: (MonadIO m)
                => AnimationManager s e n
-               -> Int
+               -> Frames s n
                -> Integer
                -> AnimationMode
                -> Duration
-               -> Traversal' s (Maybe Animation)
+               -> Traversal' s (Maybe (Animation s n))
                -> m ()
-startAnimation mgr numFrames frameMs mode duration updater = do
-    tellAnimationManager mgr $ StartAnimation numFrames frameMs mode duration updater
+startAnimation mgr frames frameMs mode duration updater = do
+    tellAnimationManager mgr $ StartAnimation frames frameMs mode duration updater
 
 stopAnimation :: (MonadIO m)
               => AnimationManager s e n
-              -> Animation
+              -> Animation s n
               -> m ()
 stopAnimation mgr a =
     tellAnimationManager mgr $ StopAnimation a
