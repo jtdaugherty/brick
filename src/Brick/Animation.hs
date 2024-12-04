@@ -11,7 +11,7 @@ module Brick.Animation
   , stopAnimationManager
   , startAnimation
   , stopAnimation
-  , drawAnimation
+  , renderAnimation
   , Frames
   , newFrames
   )
@@ -65,8 +65,8 @@ data Animation s n =
               , animationFrames :: Frames s n
               }
 
-drawAnimation :: Widget n -> s -> Maybe (Animation s n) -> Widget n
-drawAnimation fallback input mAnim =
+renderAnimation :: Widget n -> s -> Maybe (Animation s n) -> Widget n
+renderAnimation fallback input mAnim =
     draw input
     where
         draw = fromMaybe (const fallback) $ do
