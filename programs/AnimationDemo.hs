@@ -60,11 +60,11 @@ drawAnimations st =
     in vBox [ animStatus "Animation #1" (st^.animation1)
             , animStatus "Animation #2" (st^.animation2)
             , animStatus "Animation #3" (st^.animation3)
-            , hBox [ A.drawAnimation (str " ") st $ st^.animation1
+            , hBox [ A.renderAnimation (str " ") st $ st^.animation1
                    , str " "
-                   , A.drawAnimation (str " ") st $ st^.animation2
+                   , A.renderAnimation (str " ") st $ st^.animation2
                    , str " "
-                   , A.drawAnimation (str " ") st $ st^.animation3
+                   , A.renderAnimation (str " ") st $ st^.animation3
                    ]
             ]
 
