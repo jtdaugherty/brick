@@ -28,7 +28,8 @@ import Brick.Types
 import Brick.Widgets.Border (border)
 import Brick.Widgets.Center (center)
 import Brick.Widgets.Core
-  ( str
+  ( (<+>)
+  , str
   , vBox
   , hBox
   , hLimit
@@ -53,17 +54,19 @@ drawUI st = [drawAnimations st]
 
 drawAnimations :: St -> Widget ()
 drawAnimations st =
-    vBox [ hBox [ drawAnimation frames1 $ st^.animation1
-                , str " "
-                , drawAnimation frames2 $ st^.animation2
-                , str " "
-                , drawAnimation frames3 $ st^.animation3
-                ]
-         , vBox [ maybe (str " ") (const $ str "Animation #1 running") $ st^.animation1
-                , maybe (str " ") (const $ str "Animation #2 running") $ st^.animation2
-                , maybe (str " ") (const $ str "Animation #3 running") $ st^.animation3
-                ]
-         ]
+    let animStatus label a =
+            str (label <> ": ") <+>
+            maybe (str "Not running") (const $ str "Running") a
+    in vBox [ animStatus "Animation #1" (st^.animation1)
+            , animStatus "Animation #2" (st^.animation2)
+            , animStatus "Animation #3" (st^.animation3)
+            , hBox [ drawAnimation frames1 $ st^.animation1
+                   , str " "
+                   , drawAnimation frames2 $ st^.animation2
+                   , str " "
+                   , drawAnimation frames3 $ st^.animation3
+                   ]
+            ]
 
 -- NOTE:
 -- Perhaps introduce a Frames type here with a Vector to store frames
