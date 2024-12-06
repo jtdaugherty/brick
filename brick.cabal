@@ -46,8 +46,10 @@ tested-with:         GHC == 8.2.2
                       || == 9.0.2
                       || == 9.2.8
                       || == 9.4.8
-                      || == 9.6.3
-                      || == 9.8.1
+                      || == 9.6.6
+                      || == 9.8.4
+                      || == 9.10.1
+                      || == 9.12.1
 
 extra-doc-files:     README.md,
                      docs/guide.rst,
@@ -104,7 +106,7 @@ library
     Brick.Types.Internal
     Brick.Widgets.Internal
 
-  build-depends:       base >= 4.9.0.0 && < 4.21.0.0,
+  build-depends:       base >= 4.9.0.0 && < 4.22.0.0,
                        vty >= 6.0,
                        vty-crossplatform,
                        bimap >= 0.5 && < 0.6,
