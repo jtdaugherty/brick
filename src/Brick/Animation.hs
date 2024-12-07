@@ -14,6 +14,7 @@ module Brick.Animation
   , renderAnimation
   , Frames
   , newFrames
+  , pingPong
   )
 where
 
@@ -37,6 +38,14 @@ newtype Frames s n = Frames (V.Vector (s -> Widget n))
 
 newFrames :: [s -> Widget n] -> Frames s n
 newFrames = Frames . V.fromList
+
+-- | Given a frame sequence, extend it so that when the original
+-- sequence end is reached, it reverses order.
+--
+-- For example, if this is given frames A, B, C, and D, then this
+-- returns a frame sequence A, B, C, D, C, B.
+pingPong :: Frames s n -> Frames s n
+pingPong (Frames fs) = Frames $ fs <> V.reverse (V.init $ V.tail fs)
 
 data AnimationManagerRequest s n =
     Tick UTCTime
