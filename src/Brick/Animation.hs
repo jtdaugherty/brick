@@ -14,7 +14,7 @@ module Brick.Animation
   , renderAnimation
   , Frames
   , newFrames
-  , pingPong
+  , pingPongFrames
   )
 where
 
@@ -47,10 +47,10 @@ newFrames = Frames . V.fromList
 --
 -- If the given 'Frames' contains less than two frames, this is
 -- equivalent to 'id'.
-pingPong :: Frames s n -> Frames s n
-pingPong (Frames fs) | V.length fs >= 2 =
+pingPongFrames :: Frames s n -> Frames s n
+pingPongFrames (Frames fs) | V.length fs >= 2 =
     Frames $ fs <> V.reverse (V.init $ V.tail fs)
-pingPong fs = fs
+pingPongFrames fs = fs
 
 reverseFrames :: Frames s n -> Frames s n
 reverseFrames (Frames fs) = Frames $ V.reverse fs
