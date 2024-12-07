@@ -61,7 +61,6 @@ data Duration = Once | Loop
 data AnimationMode =
     Forward
     -- | Backward
-    -- | PingPong
     -- | Random
     deriving (Eq, Show, Ord)
 
