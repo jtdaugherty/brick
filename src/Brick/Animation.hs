@@ -44,8 +44,16 @@ newFrames = Frames . V.fromList
 --
 -- For example, if this is given frames A, B, C, and D, then this
 -- returns a frame sequence A, B, C, D, C, B.
+--
+-- If the given 'Frames' contains less than two frames, this is
+-- equivalent to 'id'.
 pingPong :: Frames s n -> Frames s n
-pingPong (Frames fs) = Frames $ fs <> V.reverse (V.init $ V.tail fs)
+pingPong (Frames fs) | V.length fs >= 2 =
+    Frames $ fs <> V.reverse (V.init $ V.tail fs)
+pingPong fs = fs
+
+reverseFrames :: Frames s n -> Frames s n
+reverseFrames (Frames fs) = Frames $ V.reverse fs
 
 data AnimationManagerRequest s n =
     Tick UTCTime
@@ -60,7 +68,6 @@ data Duration = Once | Loop
 
 data AnimationMode =
     Forward
-    -- | Backward
     -- | Random
     deriving (Eq, Show, Ord)
 
