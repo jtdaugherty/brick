@@ -15,6 +15,7 @@ module Brick.Animation
   , Frames
   , newFrames
   , pingPongFrames
+  , reverseFrames
   )
 where
 
