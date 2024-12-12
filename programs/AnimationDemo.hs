@@ -93,19 +93,19 @@ appEvent e = do
             mOld <- use animation1
             case mOld of
                 Just a -> A.stopAnimation mgr a
-                Nothing -> A.startAnimation mgr frames1 1000 A.Forward A.Loop animation1
+                Nothing -> A.startAnimation mgr frames1 1000 A.Loop animation1
 
         VtyEvent (V.EvKey (V.KChar '2') []) -> do
             mOld <- use animation2
             case mOld of
                 Just a -> A.stopAnimation mgr a
-                Nothing -> A.startAnimation mgr frames2 100 A.Forward A.Loop animation2
+                Nothing -> A.startAnimation mgr frames2 100 A.Loop animation2
 
         VtyEvent (V.EvKey (V.KChar '3') []) -> do
             mOld <- use animation3
             case mOld of
                 Just a -> A.stopAnimation mgr a
-                Nothing -> A.startAnimation mgr frames3 300 A.Forward A.Loop animation3
+                Nothing -> A.startAnimation mgr frames3 300 A.Loop animation3
 
         AppEvent (AnimationUpdate act) -> act
         _ -> return ()
