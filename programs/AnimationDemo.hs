@@ -54,12 +54,13 @@ drawUI st = [drawAnimations st]
 
 drawAnimations :: St -> Widget ()
 drawAnimations st =
-    let animStatus label a =
+    let animStatus label key a =
             str (label <> ": ") <+>
-            maybe (str "Not running") (const $ str "Running") a
-    in vBox [ animStatus "Animation #1" (st^.animation1)
-            , animStatus "Animation #2" (st^.animation2)
-            , animStatus "Animation #3" (st^.animation3)
+            maybe (str "Not running") (const $ str "Running") a <+>
+            str (" (Press " <> key <> " to toggle)")
+    in vBox [ animStatus "Animation #1" "1" (st^.animation1)
+            , animStatus "Animation #2" "2" (st^.animation2)
+            , animStatus "Animation #3" "3" (st^.animation3)
             , hBox [ A.renderAnimation (str " ") st $ st^.animation1
                    , str " "
                    , A.renderAnimation (str " ") st $ st^.animation2
