@@ -96,11 +96,6 @@ data AnimationState s n =
                    , _animationNumFrames :: Int
                    , _animationCurrentFrame :: Int
                    , _animationFrameMilliseconds :: Integer
-                   -- what about tracking that an animation is currently
-                   -- moving backward when it sometimes moves forward? Just
-                   -- track the previous frame always, and use that? that
-                   -- works in general (can be ignored in the random case but
-                   -- is used in all others)
                    , _animationMode :: AnimationMode
                    , _animationDuration :: Duration
                    , animationFrameUpdater :: Traversal' s (Maybe (Animation s n))
