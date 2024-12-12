@@ -26,7 +26,7 @@ import Data.Hashable (Hashable)
 import qualified Data.HashMap.Strict as HM
 import Data.Maybe (fromMaybe)
 import qualified Data.Vector as V
-import Data.Time.Clock
+import qualified Data.Time.Clock as C
 import Lens.Micro ((^.), (%~), (.~), (&), Traversal', _Just)
 import Lens.Micro.TH (makeLenses)
 import Lens.Micro.Mtl
@@ -56,7 +56,7 @@ reverseFrames :: Frames s n -> Frames s n
 reverseFrames (Frames fs) = Frames $ V.reverse fs
 
 data AnimationManagerRequest s n =
-    Tick UTCTime
+    Tick C.UTCTime
     | StartAnimation (Frames s n) Integer Duration (Traversal' s (Maybe (Animation s n)))
     -- ^ ID, frame count, frame duration in milliseconds, duration, updater
     | StopAnimation (Animation s n)
@@ -92,7 +92,7 @@ data AnimationState s n =
                    , _animationFrameMilliseconds :: Integer
                    , _animationDuration :: Duration
                    , animationFrameUpdater :: Traversal' s (Maybe (Animation s n))
-                   , _animationNextFrameTime :: UTCTime
+                   , _animationNextFrameTime :: C.UTCTime
                    }
 
 makeLenses ''AnimationState
@@ -116,19 +116,19 @@ tickThreadBody :: STM.TChan (AnimationManagerRequest s n)
 tickThreadBody outChan =
     forever $ do
         threadDelay $ tickMilliseconds * 1000
-        now <- getCurrentTime
+        now <- C.getCurrentTime
         STM.atomically $ STM.writeTChan outChan $ Tick now
 
-setNextFrameTime :: UTCTime -> AnimationState s n -> AnimationState s n
+setNextFrameTime :: C.UTCTime -> AnimationState s n -> AnimationState s n
 setNextFrameTime t a = a & animationNextFrameTime .~ t
 
-nominalDiffFromMs :: Integer -> NominalDiffTime
+nominalDiffFromMs :: Integer -> C.NominalDiffTime
 nominalDiffFromMs i = realToFrac (fromIntegral i / (1000.0::Float))
 
-nominalDiffToMs :: NominalDiffTime -> Integer
+nominalDiffToMs :: C.NominalDiffTime -> Integer
 nominalDiffToMs t =
     -- NOTE: probably wrong, but we'll have to find out what this gives us
-    (round $ nominalDiffTimeToSeconds t)
+    (round $ C.nominalDiffTimeToSeconds t)
 
 data ManagerState s e n =
     ManagerState { _managerStateInChan :: STM.TChan (AnimationManagerRequest s n)
@@ -195,8 +195,8 @@ runManager = forever $ do
 handleManagerRequest :: AnimationManagerRequest s n -> ManagerM s e n ()
 handleManagerRequest (StartAnimation frames@(Frames fs) frameMs dur updater) = do
     aId <- getNextAnimationID
-    now <- liftIO getCurrentTime
-    let next = addUTCTime frameOffset now
+    now <- liftIO C.getCurrentTime
+    let next = C.addUTCTime frameOffset now
         frameOffset = nominalDiffFromMs frameMs
         a = AnimationState { _animationStateID = aId
                            , _animationNumFrames = V.length fs
@@ -234,7 +234,7 @@ handleManagerRequest (Tick tickTime) = do
         Nothing -> return ()
         Just act -> sendApplicationEvent act
 
-checkForFrames :: UTCTime -> ManagerM s e n (Maybe (EventM n s ()))
+checkForFrames :: C.UTCTime -> ManagerM s e n (Maybe (EventM n s ()))
 checkForFrames now = do
     -- For each active animation, check to see if the animation's next
     -- frame time has passed. If it has, advance its frame counter as
@@ -258,10 +258,10 @@ checkForFrames now = do
                               -- frame index based the elapsed time.
                               -- Also set its next frame time.
                               let differenceMs = nominalDiffToMs $
-                                                 diffUTCTime now (a^.animationNextFrameTime)
+                                                 C.diffUTCTime now (a^.animationNextFrameTime)
                                   numFrames = 1 + (differenceMs `div` (a^.animationFrameMilliseconds))
-                                  newNextTime = addUTCTime (nominalDiffFromMs $ numFrames * (a^.animationFrameMilliseconds))
-                                                           (a^.animationNextFrameTime)
+                                  newNextTime = C.addUTCTime (nominalDiffFromMs $ numFrames * (a^.animationFrameMilliseconds))
+                                                             (a^.animationNextFrameTime)
 
                                   -- The new frame is obtained by
                                   -- advancing from the current frame by
