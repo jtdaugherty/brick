@@ -467,10 +467,10 @@ executable brick-animation-demo
   build-depends:       base,
                        brick,
                        vty,
+                       vty-crossplatform,
+                       containers,
                        text,
-                       microlens >= 0.3.0.0,
-                       microlens-th,
-                       microlens-mtl,
+                       microlens-platform,
                        stm,
                        mtl
 

@@ -2,19 +2,20 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Main where
 
-import Lens.Micro ((^.))
-import Lens.Micro.TH (makeLenses)
-import Lens.Micro.Mtl
+import Control.Monad (void)
+import Lens.Micro.Platform
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid
 #endif
+import qualified Data.Map as M
 import qualified Graphics.Vty as V
+import Graphics.Vty.CrossPlatform (mkVty)
 
 import Brick.BChan
 import Brick.Main
   ( App(..)
   , showFirstCursor
-  , customMainWithDefaultVty
+  , customMain
   , halt
   )
 import Brick.AttrMap
@@ -24,6 +25,7 @@ import Brick.Types
   ( Widget
   , EventM
   , BrickEvent(..)
+  , Location(..)
   )
 import Brick.Widgets.Border (border)
 import Brick.Widgets.Center (center)
@@ -34,6 +36,7 @@ import Brick.Widgets.Core
   , hBox
   , hLimit
   , vLimit
+  , translateBy
   )
 import qualified Brick.Animation as A
 
@@ -45,12 +48,22 @@ data St =
        , _animation1 :: Maybe (A.Animation St ())
        , _animation2 :: Maybe (A.Animation St ())
        , _animation3 :: Maybe (A.Animation St ())
+       , _clickAnimations :: M.Map Location (A.Animation St ())
        }
 
 makeLenses ''St
 
 drawUI :: St -> [Widget ()]
-drawUI st = [drawAnimations st]
+drawUI st = drawClickAnimations st <> [drawAnimations st]
+
+drawClickAnimations :: St -> [Widget ()]
+drawClickAnimations st =
+    drawClickAnimation st <$> M.toList (st^.clickAnimations)
+
+drawClickAnimation :: St -> (Location, A.Animation St ()) -> Widget ()
+drawClickAnimation st (l, a) =
+    translateBy l $
+    A.renderAnimation (str " ") st (Just a)
 
 drawAnimations :: St -> Widget ()
 drawAnimations st =
@@ -69,13 +82,13 @@ drawAnimations st =
                    ]
             ]
 
-frames1 :: A.Frames St ()
+frames1 :: A.Frames a ()
 frames1 = A.newFrames $ (const . str) <$> [".", "o", "O", "^", " "]
 
-frames2 :: A.Frames St ()
+frames2 :: A.Frames a ()
 frames2 = A.newFrames $ (const . str) <$> ["|", "/", "-", "\\"]
 
-frames3 :: A.Frames St ()
+frames3 :: A.Frames a ()
 frames3 =
     A.newFrames $
     (const . hLimit 9 . vLimit 9 . border . center) <$>
@@ -88,6 +101,14 @@ appEvent :: BrickEvent () CustomEvent -> EventM () St ()
 appEvent e = do
     mgr <- use stAnimationManager
     case e of
+        VtyEvent (V.EvMouseDown col row _ _) -> do
+            -- If an animation is already running here, stop it; else
+            -- start a new one.
+            let l = Location (col, row)
+            mA <- use (clickAnimations.at l)
+            case mA of
+                Nothing -> A.startAnimation mgr frames2 100 A.Loop (clickAnimations.at l)
+                Just a -> A.stopAnimation mgr a
         VtyEvent (V.EvKey V.KEsc []) -> halt
         VtyEvent (V.EvKey (V.KChar '1') []) -> do
             mOld <- use animation1
@@ -129,7 +150,12 @@ main = do
                , _animation1 = Nothing
                , _animation2 = Nothing
                , _animation3 = Nothing
+               , _clickAnimations = mempty
                }
+        buildVty = do
+            v <- mkVty V.defaultConfig
+            V.setMode (V.outputIface v) V.Mouse True
+            return v
 
-    (_, vty) <- customMainWithDefaultVty (Just chan) theApp initialState
-    V.shutdown vty
+    initialVty <- buildVty
+    void $ customMain initialVty buildVty (Just chan) theApp initialState
