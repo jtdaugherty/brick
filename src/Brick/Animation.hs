@@ -95,7 +95,6 @@ data AnimationState s n =
     AnimationState { _animationStateID :: AnimationID
                    , _animationNumFrames :: Int
                    , _animationCurrentFrame :: Int
-                   , _animationPreviousFrame :: Maybe Int
                    , _animationFrameMilliseconds :: Integer
                    -- what about tracking that an animation is currently
                    -- moving backward when it sometimes moves forward? Just
@@ -214,7 +213,6 @@ handleManagerRequest (StartAnimation frames@(Frames fs) frameMs mode dur updater
         a = AnimationState { _animationStateID = aId
                            , _animationNumFrames = V.length fs
                            , _animationCurrentFrame = 0
-                           , _animationPreviousFrame = Nothing
                            , _animationFrameMilliseconds = frameMs
                            , _animationMode = mode
                            , _animationDuration = dur
