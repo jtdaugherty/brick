@@ -2,19 +2,24 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE RankNTypes #-}
 module Brick.Animation
-  ( AnimationManager
+  ( -- * Animation managers
+    AnimationManager
   , startAnimationManager
   , stopAnimationManager
+  , minTickTime
 
   , Animation
   , animationFrameIndex
 
+  -- * Starting and stopping animations
   , RunMode(..)
   , startAnimation
   , stopAnimation
-  , minTickTime
+
+  -- * Rendering animation frames
   , renderAnimation
 
+  -- * Building and transforming frame sequences
   , FrameSeq
   , newFrameSeq
   , pingPongFrames
@@ -42,14 +47,20 @@ import Brick.Types (EventM, Widget)
 newtype FrameSeq s n = FrameSeq (V.Vector (s -> Widget n))
                      deriving (Semigroup)
 
--- | Build a new frame sequence. If the provided list is empty, this
--- calls 'error'.
+-- | Build a new frame sequence.
+--
+-- Each entry in a frame sequence is a function from a state to a
+-- 'Widget'. This allows applications to determine on a per-frame basis
+-- what should be drawn in an animation based on application state, if
+-- desired, in the same style as 'appDraw'.
+--
+-- If the provided list is empty, this calls 'error'.
 newFrameSeq :: [s -> Widget n] -> FrameSeq s n
 newFrameSeq [] = error "newFrameSeq: got an empty list"
 newFrameSeq fs = FrameSeq $ V.fromList fs
 
--- | Extend a frame sequence so that when the original sequence end is
--- reached, it reverses order.
+-- | Extend a frame sequence so that when the end of the original
+-- sequence is reached, it continues in reverse order to create a loop.
 --
 -- For example, if this is given frames A, B, C, and D, then this
 -- returns a frame sequence A, B, C, D, C, B.
@@ -72,7 +83,12 @@ data AnimationManagerRequest s n =
     | StopAnimation (Animation s n)
     | Shutdown
 
-data RunMode = Once | Loop
+-- | The running mode for an animation.
+data RunMode =
+    Once
+    -- ^ Run the animation once and then end
+    | Loop
+    -- ^ Run the animation in a loop forever
     deriving (Eq, Show, Ord)
 
 newtype AnimationID = AnimationID Int
@@ -121,6 +137,9 @@ data AnimationState s n =
 
 makeLenses ''AnimationState
 
+-- | A manager for animations.
+--
+-- Create one of these for your application.
 data AnimationManager s e n =
     AnimationManager { animationMgrRequestThreadId :: ThreadId
                      , animationMgrTickThreadId :: ThreadId
@@ -339,16 +358,37 @@ minTickTime = 25
 
 -- | Start a new animation manager.
 --
--- If the specifie tick duration is less than 'minTickTime', this will
--- call 'error'.
+-- The animation manager internally runs at a tick rate, specified here
+-- as a tick duration in milliseconds. The tick duration determines how
+-- often the manager will check for animation updates and send them to
+-- the application, so the smaller the tick duration, the more often the
+-- manager will trigger screen redraws and application state updates.
+-- Not only does this mean that this should be taken into consideration
+-- when thinking about the performance and animation needs of your
+-- application, but it also means that if an animation has a shorter
+-- tick duration than the manager, that animation may skip frames.
+--
+-- When the manager needs to send state updates, it does so by using
+-- the provided custom event constructor here. This allows the manager
+-- to schedule a state update which the application is responsible for
+-- evaluating. The state updates are built from the traversals provided
+-- to 'startAnimation'.
+--
+-- If the specified tick duration is less than 'minTickTime', this will
+-- call 'error'. This bound is in place to prevent API misuse leading to
+-- ticking so fast that the terminal can't keep up with redraws.
 startAnimationManager :: Int
                       -- ^ The tick duration for this manager in milliseconds
                       -> BChan e
                       -- ^ The event channel to use to send updates to
                       -- the application
                       -> (EventM n s () -> e)
-                      -- ^ A constructor for building custom events that
-                      -- perform application state updates
+                      -- ^ A constructor for building custom events
+                      -- that perform application state updates. The
+                      -- application must evaluate the provided 'EventM'
+                      -- action given by these events in order to get
+                      -- animation updates made to the application
+                      -- state.
                       -> IO (AnimationManager s e n)
 startAnimationManager tickMilliseconds _ _ | tickMilliseconds < minTickTime =
     error $ "startAnimationManager: tick delay too small (minimum is " <> show minTickTime <> ")"
