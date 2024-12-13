@@ -37,6 +37,7 @@ import Brick.BChan
 import Brick.Types (EventM, Widget)
 
 newtype FrameSeq s n = FrameSeq (V.Vector (s -> Widget n))
+                     deriving (Semigroup)
 
 newFrameSeq :: [s -> Widget n] -> FrameSeq s n
 newFrameSeq [] = error "newFrameSeq: got an empty list"
