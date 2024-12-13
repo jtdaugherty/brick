@@ -38,6 +38,8 @@ import Brick.Types (EventM, Widget)
 newtype FrameSeq s n = FrameSeq (V.Vector (s -> Widget n))
                      deriving (Semigroup)
 
+-- | Build a new frame sequence. If the provided list is empty, this
+-- calls 'error'.
 newFrameSeq :: [s -> Widget n] -> FrameSeq s n
 newFrameSeq [] = error "newFrameSeq: got an empty list"
 newFrameSeq fs = FrameSeq $ V.fromList fs
@@ -72,13 +74,28 @@ data RunMode = Once | Loop
 newtype AnimationID = AnimationID Int
                     deriving (Eq, Ord, Show, Hashable)
 
+-- | The state of a running animation.
 data Animation s n =
     Animation { animationFrameIndex :: Int
+              -- ^ The animation's current frame index. Applications
+              -- won't need to access this in most situations; use
+              -- 'renderAnimation' instead.
               , animationID :: AnimationID
+              -- ^ The animation's internally-managed ID
               , animationFrames :: FrameSeq s n
+              -- ^ The animation's frame sequence
               }
 
-renderAnimation :: Widget n -> s -> Maybe (Animation s n) -> Widget n
+-- | Render an animation.
+renderAnimation :: Widget n
+                -- ^ The fallback drawing to render if the animation is
+                -- not running
+                -> s
+                -- ^ The state to provide when constructing the
+                -- animation's current frame
+                -> Maybe (Animation s n)
+                -- ^ The animation state itself
+                -> Widget n
 renderAnimation fallback input mAnim =
     draw input
     where
@@ -365,16 +382,30 @@ tellAnimationManager mgr req =
     STM.atomically $
     STM.writeTChan (animationMgrInputChan mgr) req
 
+-- | Start a new animation at its first frame.
+--
+-- This will result in an application state update to initialize the
+-- animation.
 startAnimation :: (MonadIO m)
                => AnimationManager s e n
+               -- ^ The manager to run the animation
                -> FrameSeq s n
+               -- ^ The frames for the animation
                -> Integer
+               -- ^ The animation's tick duration in milliseconds
                -> RunMode
+               -- ^ The animation's run mode
                -> Traversal' s (Maybe (Animation s n))
+               -- ^ Where in the application state to manage this
+               -- animation
                -> m ()
 startAnimation mgr frames frameMs runMode updater =
     tellAnimationManager mgr $ StartAnimation frames frameMs runMode updater
 
+-- | Stop an animation.
+--
+-- This will result in an application state update to remove the
+-- animation state.
 stopAnimation :: (MonadIO m)
               => AnimationManager s e n
               -> Animation s n
