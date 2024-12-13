@@ -303,20 +303,6 @@ advanceByOne a =
         Once -> a
     else a & animationCurrentFrame %~ (+ 1)
 
--- When a tick occurs:
---  for each currently-running animation,
---    check to see if the animation should advance and if so by how much
---      if it advances at all, schedule that animation state to be updated
--- if any animations have advanced, send an event to the application to
---   update the animation states involved and redraw
---
--- Meanwhile, we can also receive requests from the application to:
---
--- * start a new free-running animation
--- * start a manually-controlled animation
--- * remove an animation (effectively stopping it)
--- * shut down entirely
-
 minTickDelay :: Int
 minTickDelay = 25
 
