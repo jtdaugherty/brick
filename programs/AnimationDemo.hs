@@ -107,7 +107,7 @@ appEvent e = do
             let l = Location (col, row)
             mA <- use (clickAnimations.at l)
             case mA of
-                Nothing -> A.startAnimation mgr frames2 100 A.Loop (clickAnimations.at l)
+                Nothing -> A.startAnimation mgr frames2 100 A.Once (clickAnimations.at l)
                 Just a -> A.stopAnimation mgr a
         VtyEvent (V.EvKey V.KEsc []) -> halt
         VtyEvent (V.EvKey (V.KChar '1') []) -> do
@@ -126,7 +126,7 @@ appEvent e = do
             mOld <- use animation3
             case mOld of
                 Just a -> A.stopAnimation mgr a
-                Nothing -> A.startAnimation mgr frames3 300 A.Loop animation3
+                Nothing -> A.startAnimation mgr frames3 300 A.Once animation3
 
         AppEvent (AnimationUpdate act) -> act
         _ -> return ()
