@@ -54,6 +54,7 @@ pingPongFrames (FrameSeq fs) | V.length fs >= 2 =
     FrameSeq $ fs <> V.reverse (V.init $ V.tail fs)
 pingPongFrames fs = fs
 
+-- | Reverse a frame sequence.
 reverseFrames :: FrameSeq s n -> FrameSeq s n
 reverseFrames (FrameSeq fs) = FrameSeq $ V.reverse fs
 
