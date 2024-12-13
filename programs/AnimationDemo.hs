@@ -46,7 +46,7 @@ drawClickAnimations st =
 drawClickAnimation :: St -> (Location, A.Animation St ()) -> Widget ()
 drawClickAnimation st (l, a) =
     translateBy l $
-    A.renderAnimation (str " ") st (Just a)
+    A.renderAnimation (const $ str " ") st (Just a)
 
 drawAnimations :: St -> Widget ()
 drawAnimations st =
@@ -61,7 +61,7 @@ drawAnimations st =
         animationDrawings = hBox $ intersperse (str " ") $
                             drawSingleAnimation <$> animations
         drawSingleAnimation (_, config) =
-            A.renderAnimation (str " ") st (st^.(animationTarget config))
+            A.renderAnimation (const $ str " ") st (st^.(animationTarget config))
     in vBox $
        str "Click and drag the mouse or press keys to start animations." :
        str " " :

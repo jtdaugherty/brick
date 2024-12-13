@@ -113,9 +113,9 @@ data Animation s n =
               }
 
 -- | Render an animation.
-renderAnimation :: Widget n
-                -- ^ The fallback drawing to render if the animation is
-                -- not running
+renderAnimation :: (s -> Widget n)
+                -- ^ The fallback function to use for drawing if the
+                -- animation is not running
                 -> s
                 -- ^ The state to provide when constructing the
                 -- animation's current frame
@@ -125,7 +125,7 @@ renderAnimation :: Widget n
 renderAnimation fallback input mAnim =
     draw input
     where
-        draw = fromMaybe (const fallback) $ do
+        draw = fromMaybe fallback $ do
             a <- mAnim
             let idx = animationFrameIndex a
                 FrameSeq fs = animationFrames a
