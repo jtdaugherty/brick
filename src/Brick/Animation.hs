@@ -302,6 +302,8 @@ advanceByOne a =
         Once -> a
     else a & animationCurrentFrame %~ (+ 1)
 
+-- | The minimum tick duration in milliseconds allowed by
+-- 'startAnimationManager'.
 minTickTime :: Int
 minTickTime = 25
 
@@ -321,18 +323,18 @@ startAnimationManager tickMilliseconds outChan mkEvent = do
                               , animationMgrRunning = runningVar
                               }
 
-whenRunning :: AnimationManager s e n -> IO () -> IO ()
+-- | Execute the specified action only when this manager is running.
+whenRunning :: (MonadIO m) => AnimationManager s e n -> IO () -> m ()
 whenRunning mgr act = do
-    running <- STM.atomically $ STM.readTVar (animationMgrRunning mgr)
-    when running act
+    running <- liftIO $ STM.atomically $ STM.readTVar (animationMgrRunning mgr)
+    when running $ liftIO act
 
-stopAnimationManager :: AnimationManager s e n -> IO ()
+-- | Stop the animation manager, ending all animations.
+stopAnimationManager :: (MonadIO m) => AnimationManager s e n -> m ()
 stopAnimationManager mgr =
     whenRunning mgr $ do
-        let reqTid = animationMgrRequestThreadId mgr
-            tickTid = animationMgrTickThreadId mgr
-        killThread reqTid
-        killThread tickTid
+        tellAnimationManager mgr Shutdown
+        killThread $ animationMgrTickThreadId mgr
         STM.atomically $ STM.writeTVar (animationMgrRunning mgr) False
 
 tellAnimationManager :: (MonadIO m)
