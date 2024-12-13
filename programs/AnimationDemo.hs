@@ -82,15 +82,15 @@ drawAnimations st =
                    ]
             ]
 
-frames1 :: A.Frames a ()
-frames1 = A.newFrames $ (const . str) <$> [".", "o", "O", "^", " "]
+frames1 :: A.FrameSeq a ()
+frames1 = A.newFrameSeq $ (const . str) <$> [".", "o", "O", "^", " "]
 
-frames2 :: A.Frames a ()
-frames2 = A.newFrames $ (const . str) <$> ["|", "/", "-", "\\"]
+frames2 :: A.FrameSeq a ()
+frames2 = A.newFrameSeq $ (const . str) <$> ["|", "/", "-", "\\"]
 
-frames3 :: A.Frames a ()
+frames3 :: A.FrameSeq a ()
 frames3 =
-    A.newFrames $
+    A.newFrameSeq $
     (const . hLimit 9 . vLimit 9 . border . center) <$>
     [ border $ str " "
     , border $ vBox $ replicate 3 $ str $ replicate 3 ' '

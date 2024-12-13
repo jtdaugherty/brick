@@ -11,8 +11,8 @@ module Brick.Animation
   , startAnimation
   , stopAnimation
   , renderAnimation
-  , Frames
-  , newFrames
+  , FrameSeq
+  , newFrameSeq
   , pingPongFrames
   , reverseFrames
   )
@@ -34,11 +34,11 @@ import Lens.Micro.Mtl
 import Brick.BChan
 import Brick.Types (EventM, Widget)
 
-newtype Frames s n = Frames (V.Vector (s -> Widget n))
+newtype FrameSeq s n = FrameSeq (V.Vector (s -> Widget n))
 
-newFrames :: [s -> Widget n] -> Frames s n
-newFrames [] = error "newFrames: got an empty list"
-newFrames fs = Frames $ V.fromList fs
+newFrameSeq :: [s -> Widget n] -> FrameSeq s n
+newFrameSeq [] = error "newFrameSeq: got an empty list"
+newFrameSeq fs = FrameSeq $ V.fromList fs
 
 -- | Given a frame sequence, extend it so that when the original
 -- sequence end is reached, it reverses order.
@@ -48,17 +48,17 @@ newFrames fs = Frames $ V.fromList fs
 --
 -- If the given 'Frames' contains less than two frames, this is
 -- equivalent to 'id'.
-pingPongFrames :: Frames s n -> Frames s n
-pingPongFrames (Frames fs) | V.length fs >= 2 =
-    Frames $ fs <> V.reverse (V.init $ V.tail fs)
+pingPongFrames :: FrameSeq s n -> FrameSeq s n
+pingPongFrames (FrameSeq fs) | V.length fs >= 2 =
+    FrameSeq $ fs <> V.reverse (V.init $ V.tail fs)
 pingPongFrames fs = fs
 
-reverseFrames :: Frames s n -> Frames s n
-reverseFrames (Frames fs) = Frames $ V.reverse fs
+reverseFrames :: FrameSeq s n -> FrameSeq s n
+reverseFrames (FrameSeq fs) = FrameSeq $ V.reverse fs
 
 data AnimationManagerRequest s n =
     Tick C.UTCTime
-    | StartAnimation (Frames s n) Integer Duration (Traversal' s (Maybe (Animation s n)))
+    | StartAnimation (FrameSeq s n) Integer Duration (Traversal' s (Maybe (Animation s n)))
     -- ^ ID, frame count, frame duration in milliseconds, duration, updater
     | StopAnimation (Animation s n)
 
@@ -73,7 +73,7 @@ newtype AnimationID = AnimationID Int
 data Animation s n =
     Animation { animationFrameIndex :: Int
               , animationID :: AnimationID
-              , animationFrames :: Frames s n
+              , animationFrames :: FrameSeq s n
               }
 
 renderAnimation :: Widget n -> s -> Maybe (Animation s n) -> Widget n
@@ -83,7 +83,7 @@ renderAnimation fallback input mAnim =
         draw = fromMaybe (const fallback) $ do
             a <- mAnim
             let idx = animationFrameIndex a
-                Frames fs = animationFrames a
+                FrameSeq fs = animationFrames a
             fs V.!? idx
 
 data AnimationState s n =
@@ -194,7 +194,7 @@ runManager = forever $ do
     getNextManagerRequest >>= handleManagerRequest
 
 handleManagerRequest :: AnimationManagerRequest s n -> ManagerM s e n ()
-handleManagerRequest (StartAnimation frames@(Frames fs) frameMs dur updater) = do
+handleManagerRequest (StartAnimation frames@(FrameSeq fs) frameMs dur updater) = do
     aId <- getNextAnimationID
     now <- liftIO C.getCurrentTime
     let next = C.addUTCTime frameOffset now
@@ -357,7 +357,7 @@ tellAnimationManager mgr req =
 
 startAnimation :: (MonadIO m)
                => AnimationManager s e n
-               -> Frames s n
+               -> FrameSeq s n
                -> Integer
                -> Duration
                -> Traversal' s (Maybe (Animation s n))
