@@ -1,9 +1,11 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE RankNTypes #-}
 module Main where
 
 import Control.Monad (void)
 import Lens.Micro.Platform
+import Data.List (intersperse)
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid
 #endif
@@ -71,16 +73,15 @@ drawAnimations st =
             str (label <> ": ") <+>
             maybe (str "Not running") (const $ str "Running") a <+>
             str (" (Press " <> key <> " to toggle)")
-    in vBox [ animStatus "Animation #1" "1" (st^.animation1)
-            , animStatus "Animation #2" "2" (st^.animation2)
-            , animStatus "Animation #3" "3" (st^.animation3)
-            , hBox [ A.renderAnimation (str " ") st $ st^.animation1
-                   , str " "
-                   , A.renderAnimation (str " ") st $ st^.animation2
-                   , str " "
-                   , A.renderAnimation (str " ") st $ st^.animation3
-                   ]
-            ]
+        statusMessages = statusMessage <$> zip [(0::Int)..] animations
+        statusMessage (i, (c, config)) =
+            animStatus ("Animation #" <> (show $ i + 1)) [c]
+                       (st^.(animationTarget config))
+        animationDrawings = hBox $ intersperse (str " ") $
+                            drawSingle <$> animations
+        drawSingle (_, config) =
+            A.renderAnimation (str " ") st (st^.(animationTarget config))
+    in vBox $ statusMessages <> [animationDrawings]
 
 frames1 :: A.FrameSeq a ()
 frames1 = A.newFrameSeq $ (const . str) <$> [".", "o", "O", "^", " "]
@@ -104,33 +105,48 @@ toggleMouseClickAnimation l = do
     mgr <- use stAnimationManager
     mA <- use (clickAnimations.at l)
     case mA of
-        Nothing -> A.startAnimation mgr frames2 100 A.Once (clickAnimations.at l)
+        Nothing -> A.startAnimation mgr (frames2 <> frames2) 100 A.Once (clickAnimations.at l)
         Just a -> A.stopAnimation mgr a
+
+data AnimationConfig =
+    AnimationConfig { animationTarget :: Lens' St (Maybe (A.Animation St ()))
+                    , animationFrames :: A.FrameSeq St ()
+                    , animationFrameTime :: Integer
+                    , animationMode :: A.RunMode
+                    }
+
+animations :: [(Char, AnimationConfig)]
+animations =
+    [ ('1', AnimationConfig animation1 frames1 1000 A.Loop)
+    , ('2', AnimationConfig animation2 frames2 100 A.Loop)
+    , ('3', AnimationConfig animation3 frames3 100 A.Once)
+    ]
+
+startAnimationFromConfig :: AnimationConfig -> EventM () St ()
+startAnimationFromConfig config = do
+    mgr <- use stAnimationManager
+    A.startAnimation mgr (animationFrames config)
+                         (animationFrameTime config)
+                         (animationMode config)
+                         (animationTarget config)
+
+toggleAnimationFromConfig :: AnimationConfig -> EventM () St ()
+toggleAnimationFromConfig config = do
+    mgr <- use stAnimationManager
+    mOld <- use (animationTarget config)
+    case mOld of
+        Just a -> A.stopAnimation mgr a
+        Nothing -> startAnimationFromConfig config
 
 appEvent :: BrickEvent () CustomEvent -> EventM () St ()
 appEvent e = do
-    mgr <- use stAnimationManager
     case e of
         VtyEvent (V.EvMouseDown col row _ _) -> do
             toggleMouseClickAnimation (Location (col, row))
 
-        VtyEvent (V.EvKey (V.KChar '1') []) -> do
-            mOld <- use animation1
-            case mOld of
-                Just a -> A.stopAnimation mgr a
-                Nothing -> A.startAnimation mgr frames1 1000 A.Loop animation1
-
-        VtyEvent (V.EvKey (V.KChar '2') []) -> do
-            mOld <- use animation2
-            case mOld of
-                Just a -> A.stopAnimation mgr a
-                Nothing -> A.startAnimation mgr frames2 100 A.Loop animation2
-
-        VtyEvent (V.EvKey (V.KChar '3') []) -> do
-            mOld <- use animation3
-            case mOld of
-                Just a -> A.stopAnimation mgr a
-                Nothing -> A.startAnimation mgr frames3 300 A.Once animation3
+        VtyEvent (V.EvKey (V.KChar c) [])
+            | Just aConfig <- lookup c animations ->
+                toggleAnimationFromConfig aConfig
 
         AppEvent (AnimationUpdate act) -> act
 
