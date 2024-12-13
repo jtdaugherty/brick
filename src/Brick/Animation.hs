@@ -103,9 +103,9 @@ newtype AnimationID = AnimationID Int
 -- | The state of a running animation.
 data Animation s n =
     Animation { animationFrameIndex :: Int
-              -- ^ The animation's current frame index. Applications
-              -- won't need to access this in most situations; use
-              -- 'renderAnimation' instead.
+              -- ^ The animation's current frame index, provided for
+              -- convenience. Applications won't need to access this in
+              -- most situations; use 'renderAnimation' instead.
               , animationID :: AnimationID
               -- ^ The animation's internally-managed ID
               , animationFrames :: FrameSeq s n
