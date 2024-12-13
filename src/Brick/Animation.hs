@@ -22,6 +22,7 @@ module Brick.Animation
   -- * Building and transforming frame sequences
   , FrameSeq
   , newFrameSeq
+  , newFrameSeq_
   , pingPongFrames
   , reverseFrames
   )
@@ -58,6 +59,11 @@ newtype FrameSeq s n = FrameSeq (V.Vector (s -> Widget n))
 newFrameSeq :: [s -> Widget n] -> FrameSeq s n
 newFrameSeq [] = error "newFrameSeq: got an empty list"
 newFrameSeq fs = FrameSeq $ V.fromList fs
+
+-- | Like 'newFrameSeq' but allows state to be ignored when building
+-- frames.
+newFrameSeq_ :: [Widget n] -> FrameSeq s n
+newFrameSeq_ ws = newFrameSeq $ const <$> ws
 
 -- | Extend a frame sequence so that when the end of the original
 -- sequence is reached, it continues in reverse order to create a loop.
