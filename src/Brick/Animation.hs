@@ -253,37 +253,37 @@ updateAnimationState now a =
 
 checkForFrames :: C.UTCTime -> ManagerM s e n (Maybe (EventM n s ()))
 checkForFrames now = do
-    -- For each active animation, check to see if the animation's next
-    -- frame time has passed. If it has, advance its frame counter as
-    -- appropriate and schedule its frame counter to be updated in the
-    -- application state.
-    let getUpdater :: AnimationState s n -> ManagerM s e n (Maybe (EventM n s ()))
-        getUpdater a
-            | (now < a^.animationNextFrameTime) =
-                -- This animation is not due for an
-                -- update, so don't do anything.
-                return Nothing
-            | isFinished a = do
-                -- This animation has completed, so
-                -- clear it from the manager and the
-                -- application state.
-                removeAnimation (a^.animationStateID)
-                return $ Just $ clearStateAction a
-            | otherwise = do
-                -- This animation is still running,
-                -- so determine how many frames have
-                -- elapsed for it and then advance the
-                -- frame index based the elapsed time.
-                -- Also set its next frame time.
-                let a' = updateAnimationState now a
-                managerStateAnimations %= HM.insert (a'^.animationStateID) a'
-                return $ Just $ frameUpdateAction a'
-
     as <- HM.elems <$> use managerStateAnimations
-    updaters <- catMaybes <$> mapM getUpdater as
+    updaters <- catMaybes <$> mapM (checkAnimation now) as
     case updaters of
         [] -> return Nothing
         _ -> return $ Just $ sequence_ updaters
+
+-- For each active animation, check to see if the animation's next
+-- frame time has passed. If it has, advance its frame counter as
+-- appropriate and schedule its frame counter to be updated in the
+-- application state.
+checkAnimation :: C.UTCTime -> AnimationState s n -> ManagerM s e n (Maybe (EventM n s ()))
+checkAnimation now a
+    | (now < a^.animationNextFrameTime) =
+        -- This animation is not due for an
+        -- update, so don't do anything.
+        return Nothing
+    | isFinished a = do
+        -- This animation has completed, so
+        -- clear it from the manager and the
+        -- application state.
+        removeAnimation (a^.animationStateID)
+        return $ Just $ clearStateAction a
+    | otherwise = do
+        -- This animation is still running,
+        -- so determine how many frames have
+        -- elapsed for it and then advance the
+        -- frame index based the elapsed time.
+        -- Also set its next frame time.
+        let a' = updateAnimationState now a
+        managerStateAnimations %= HM.insert (a'^.animationStateID) a'
+        return $ Just $ frameUpdateAction a'
 
 isFinished :: AnimationState s n -> Bool
 isFinished a =
