@@ -97,18 +97,22 @@ frames3 =
     , border $ vBox $ replicate 5 $ str $ replicate 5 ' '
     ]
 
+toggleMouseClickAnimation :: Location -> EventM () St ()
+toggleMouseClickAnimation l = do
+    -- If an animation is already running at this location, stop it;
+    -- else start a new one.
+    mgr <- use stAnimationManager
+    mA <- use (clickAnimations.at l)
+    case mA of
+        Nothing -> A.startAnimation mgr frames2 100 A.Once (clickAnimations.at l)
+        Just a -> A.stopAnimation mgr a
+
 appEvent :: BrickEvent () CustomEvent -> EventM () St ()
 appEvent e = do
     mgr <- use stAnimationManager
     case e of
         VtyEvent (V.EvMouseDown col row _ _) -> do
-            -- If an animation is already running here, stop it; else
-            -- start a new one.
-            let l = Location (col, row)
-            mA <- use (clickAnimations.at l)
-            case mA of
-                Nothing -> A.startAnimation mgr frames2 100 A.Once (clickAnimations.at l)
-                Just a -> A.stopAnimation mgr a
+            toggleMouseClickAnimation (Location (col, row))
         VtyEvent (V.EvKey V.KEsc []) -> halt
         VtyEvent (V.EvKey (V.KChar '1') []) -> do
             mOld <- use animation1
