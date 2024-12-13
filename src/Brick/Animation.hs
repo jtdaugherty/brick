@@ -1,7 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE MultiWayIf #-}
 module Brick.Animation
   ( AnimationManager
   , Animation
@@ -259,26 +258,26 @@ checkForFrames now = do
     -- appropriate and schedule its frame counter to be updated in the
     -- application state.
     let getUpdater :: AnimationState s n -> ManagerM s e n (Maybe (EventM n s ()))
-        getUpdater a =
-            if | (now < a^.animationNextFrameTime) ->
-                   -- This animation is not due for an
-                   -- update, so don't do anything.
-                   return Nothing
-               | isFinished a -> do
-                   -- This animation has completed, so
-                   -- clear it from the manager and the
-                   -- application state.
-                   removeAnimation (a^.animationStateID)
-                   return $ Just $ clearStateAction a
-               | otherwise -> do
-                   -- This animation is still running,
-                   -- so determine how many frames have
-                   -- elapsed for it and then advance the
-                   -- frame index based the elapsed time.
-                   -- Also set its next frame time.
-                   let a' = updateAnimationState now a
-                   managerStateAnimations %= HM.insert (a'^.animationStateID) a'
-                   return $ Just $ frameUpdateAction a'
+        getUpdater a
+            | (now < a^.animationNextFrameTime) =
+                -- This animation is not due for an
+                -- update, so don't do anything.
+                return Nothing
+            | isFinished a = do
+                -- This animation has completed, so
+                -- clear it from the manager and the
+                -- application state.
+                removeAnimation (a^.animationStateID)
+                return $ Just $ clearStateAction a
+            | otherwise = do
+                -- This animation is still running,
+                -- so determine how many frames have
+                -- elapsed for it and then advance the
+                -- frame index based the elapsed time.
+                -- Also set its next frame time.
+                let a' = updateAnimationState now a
+                managerStateAnimations %= HM.insert (a'^.animationStateID) a'
+                return $ Just $ frameUpdateAction a'
 
     as <- HM.elems <$> use managerStateAnimations
     updaters <- catMaybes <$> mapM getUpdater as
