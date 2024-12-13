@@ -41,13 +41,13 @@ newFrameSeq :: [s -> Widget n] -> FrameSeq s n
 newFrameSeq [] = error "newFrameSeq: got an empty list"
 newFrameSeq fs = FrameSeq $ V.fromList fs
 
--- | Given a frame sequence, extend it so that when the original
--- sequence end is reached, it reverses order.
+-- | Extend a frame sequence so that when the original sequence end is
+-- reached, it reverses order.
 --
 -- For example, if this is given frames A, B, C, and D, then this
 -- returns a frame sequence A, B, C, D, C, B.
 --
--- If the given 'Frames' contains less than two frames, this is
+-- If the given sequence contains less than two frames, this is
 -- equivalent to 'id'.
 pingPongFrames :: FrameSeq s n -> FrameSeq s n
 pingPongFrames (FrameSeq fs) | V.length fs >= 2 =
