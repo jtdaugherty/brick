@@ -226,7 +226,7 @@ handleManagerRequest (Tick tickTime) = do
     -- Check all animation states for frame advances
     -- based on the relationship between the tick time
     -- and each animation's next frame time
-    mUpdateAct <- checkForFrames tickTime
+    mUpdateAct <- checkAnimations tickTime
     case mUpdateAct of
         Nothing -> return ()
         Just act -> sendApplicationEvent act
@@ -251,8 +251,8 @@ updateAnimationState now a =
     -- numFrames.
     in setNextFrameTime newNextTime $ advanceBy numFrames a
 
-checkForFrames :: C.UTCTime -> ManagerM s e n (Maybe (EventM n s ()))
-checkForFrames now = do
+checkAnimations :: C.UTCTime -> ManagerM s e n (Maybe (EventM n s ()))
+checkAnimations now = do
     as <- HM.elems <$> use managerStateAnimations
     updaters <- catMaybes <$> mapM (checkAnimation now) as
     case updaters of
