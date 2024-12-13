@@ -68,15 +68,15 @@ drawAnimations st =
        statusMessages <> [animationDrawings]
 
 frames1 :: A.FrameSeq a ()
-frames1 = A.newFrameSeq $ (const . str) <$> [".", "o", "O", "^", " "]
+frames1 = A.newFrameSeq_ $ str <$> [".", "o", "O", "^", " "]
 
 frames2 :: A.FrameSeq a ()
-frames2 = A.newFrameSeq $ (const . str) <$> ["|", "/", "-", "\\"]
+frames2 = A.newFrameSeq_ $ str <$> ["|", "/", "-", "\\"]
 
 frames3 :: A.FrameSeq a ()
 frames3 =
-    A.newFrameSeq $
-    (const . hLimit 9 . vLimit 9 . border . center) <$>
+    A.newFrameSeq_ $
+    (hLimit 9 . vLimit 9 . border . center) <$>
     [ border $ str " "
     , border $ vBox $ replicate 3 $ str $ replicate 3 ' '
     , border $ vBox $ replicate 5 $ str $ replicate 5 ' '
