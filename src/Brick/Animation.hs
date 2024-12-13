@@ -316,7 +316,19 @@ advanceByOne a =
 minTickTime :: Int
 minTickTime = 25
 
-startAnimationManager :: Int -> BChan e -> (EventM n s () -> e) -> IO (AnimationManager s e n)
+-- | Start a new animation manager.
+--
+-- If the specifie tick duration is less than 'minTickTime', this will
+-- call 'error'.
+startAnimationManager :: Int
+                      -- ^ The tick duration for this manager in milliseconds
+                      -> BChan e
+                      -- ^ The event channel to use to send updates to
+                      -- the application
+                      -> (EventM n s () -> e)
+                      -- ^ A constructor for building custom events that
+                      -- perform application state updates
+                      -> IO (AnimationManager s e n)
 startAnimationManager tickMilliseconds _ _ | tickMilliseconds < minTickTime =
     error $ "startAnimationManager: tick delay too small (minimum is " <> show minTickTime <> ")"
 startAnimationManager tickMilliseconds outChan mkEvent = do
