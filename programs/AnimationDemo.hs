@@ -160,7 +160,7 @@ startMouseClickAnimation l = do
 appEvent :: BrickEvent () CustomEvent -> EventM () St ()
 appEvent e = do
     case e of
-        VtyEvent (V.EvMouseDown col row _ _) -> do
+        VtyEvent (V.EvMouseDown col row _ _) ->
             startMouseClickAnimation (Location (col, row))
 
         VtyEvent (V.EvKey (V.KChar c) [])
