@@ -62,7 +62,10 @@ drawAnimations st =
                             drawSingleAnimation <$> animations
         drawSingleAnimation (_, config) =
             A.renderAnimation (str " ") st (st^.(animationTarget config))
-    in vBox $ statusMessages <> [animationDrawings]
+    in vBox $
+       str "Click and drag the mouse or press keys to start animations." :
+       str " " :
+       statusMessages <> [animationDrawings]
 
 frames1 :: A.FrameSeq a ()
 frames1 = A.newFrameSeq $ (const . str) <$> [".", "o", "O", "^", " "]
