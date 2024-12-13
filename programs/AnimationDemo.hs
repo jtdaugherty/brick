@@ -143,7 +143,7 @@ theApp =
 main :: IO ()
 main = do
     chan <- newBChan 10
-    mgr <- A.startAnimationManager chan AnimationUpdate
+    mgr <- A.startAnimationManager 100 chan AnimationUpdate
 
     let initialState =
             St { _stAnimationManager = mgr

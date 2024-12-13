@@ -10,6 +10,7 @@ module Brick.Animation
   , stopAnimationManager
   , startAnimation
   , stopAnimation
+  , minTickDelay
   , renderAnimation
   , FrameSeq
   , newFrameSeq
@@ -107,14 +108,10 @@ data AnimationManager s e n =
                      , animationMgrRunning :: STM.TVar Bool
                      }
 
--- NOTE: should figure out if this should be configurable and, if so,
--- whether it should be bounded in any way to avoid pitfalls.
-tickMilliseconds :: Int
-tickMilliseconds = 100
-
-tickThreadBody :: STM.TChan (AnimationManagerRequest s n)
+tickThreadBody :: Int
+               -> STM.TChan (AnimationManagerRequest s n)
                -> IO ()
-tickThreadBody outChan =
+tickThreadBody tickMilliseconds outChan =
     forever $ do
         threadDelay $ tickMilliseconds * 1000
         now <- C.getCurrentTime
@@ -320,11 +317,16 @@ advanceByOne a =
 -- * remove an animation (effectively stopping it)
 -- * shut down entirely
 
-startAnimationManager :: BChan e -> (EventM n s () -> e) -> IO (AnimationManager s e n)
-startAnimationManager outChan mkEvent = do
+minTickDelay :: Int
+minTickDelay = 25
+
+startAnimationManager :: Int -> BChan e -> (EventM n s () -> e) -> IO (AnimationManager s e n)
+startAnimationManager tickMilliseconds _ _ | tickMilliseconds < minTickDelay =
+    error $ "startAnimationManager: tick delay too small (minimum is " <> show minTickDelay <> ")"
+startAnimationManager tickMilliseconds outChan mkEvent = do
     inChan <- STM.newTChanIO
     reqTid <- forkIO $ animationManagerThreadBody inChan outChan mkEvent
-    tickTid <- forkIO $ tickThreadBody inChan
+    tickTid <- forkIO $ tickThreadBody tickMilliseconds inChan
     runningVar <- STM.newTVarIO True
     return $ AnimationManager { animationMgrRequestThreadId = reqTid
                               , animationMgrTickThreadId = tickTid
