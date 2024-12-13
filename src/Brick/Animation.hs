@@ -37,7 +37,8 @@ import Brick.Types (EventM, Widget)
 newtype Frames s n = Frames (V.Vector (s -> Widget n))
 
 newFrames :: [s -> Widget n] -> Frames s n
-newFrames = Frames . V.fromList
+newFrames [] = error "newFrames: got an empty list"
+newFrames fs = Frames $ V.fromList fs
 
 -- | Given a frame sequence, extend it so that when the original
 -- sequence end is reached, it reverses order.
