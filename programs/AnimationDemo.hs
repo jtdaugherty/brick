@@ -106,11 +106,19 @@ frames3 =
 mouseClickFrames :: A.FrameSeq a ()
 mouseClickFrames =
     A.newFrameSeq $ const <$>
-    [ withDefAttr attr4 $ str "O"
-    , withDefAttr attr3 $ str "o"
-    , withDefAttr attr2 $ str "*"
+    [ withDefAttr attr6 $ str "0"
+    , withDefAttr attr5 $ str "O"
+    , withDefAttr attr4 $ str "o"
+    , withDefAttr attr3 $ str "*"
+    , withDefAttr attr2 $ str "~"
     , withDefAttr attr1 $ str "."
     ]
+
+attr6 :: AttrName
+attr6 = attrName "attr6"
+
+attr5 :: AttrName
+attr5 = attrName "attr5"
 
 attr4 :: AttrName
 attr4 = attrName "attr4"
@@ -127,7 +135,9 @@ attr1 = attrName "attr1"
 attrs :: AttrMap
 attrs =
     attrMap V.defAttr
-        [ (attr4, fg V.white)
+        [ (attr6, fg V.white)
+        , (attr5, fg V.brightYellow)
+        , (attr4, fg V.brightGreen)
         , (attr3, fg V.cyan)
         , (attr2, fg V.blue)
         , (attr1, fg V.black)
