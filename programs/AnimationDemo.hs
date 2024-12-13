@@ -14,6 +14,7 @@ import qualified Graphics.Vty as V
 import Graphics.Vty.CrossPlatform (mkVty)
 
 import Brick.BChan
+import Brick.Util (fg)
 import Brick.Main
   ( App(..)
   , showFirstCursor
@@ -21,7 +22,10 @@ import Brick.Main
   , halt
   )
 import Brick.AttrMap
-  ( attrMap
+  ( AttrName
+  , AttrMap
+  , attrMap
+  , attrName
   )
 import Brick.Types
   ( Widget
@@ -39,6 +43,7 @@ import Brick.Widgets.Core
   , hLimit
   , vLimit
   , translateBy
+  , withDefAttr
   )
 import qualified Brick.Animation as A
 
@@ -98,6 +103,36 @@ frames3 =
     , border $ vBox $ replicate 5 $ str $ replicate 5 ' '
     ]
 
+mouseClickFrames :: A.FrameSeq a ()
+mouseClickFrames =
+    A.newFrameSeq $ const <$>
+    [ withDefAttr attr4 $ str "|"
+    , withDefAttr attr3 $ str "/"
+    , withDefAttr attr2 $ str "-"
+    , withDefAttr attr1 $ str "\\"
+    ]
+
+attr4 :: AttrName
+attr4 = attrName "attr4"
+
+attr3 :: AttrName
+attr3 = attrName "attr3"
+
+attr2 :: AttrName
+attr2 = attrName "attr2"
+
+attr1 :: AttrName
+attr1 = attrName "attr1"
+
+attrs :: AttrMap
+attrs =
+    attrMap V.defAttr
+        [ (attr4, fg V.white)
+        , (attr3, fg V.cyan)
+        , (attr2, fg V.blue)
+        , (attr1, fg V.black)
+        ]
+
 toggleMouseClickAnimation :: Location -> EventM () St ()
 toggleMouseClickAnimation l = do
     -- If an animation is already running at this location, stop it;
@@ -105,7 +140,7 @@ toggleMouseClickAnimation l = do
     mgr <- use stAnimationManager
     mA <- use (clickAnimations.at l)
     case mA of
-        Nothing -> A.startAnimation mgr (frames2 <> frames2) 100 A.Once (clickAnimations.at l)
+        Nothing -> A.startAnimation mgr mouseClickFrames 100 A.Once (clickAnimations.at l)
         Just a -> A.stopAnimation mgr a
 
 data AnimationConfig =
@@ -160,7 +195,7 @@ theApp =
         , appChooseCursor = showFirstCursor
         , appHandleEvent = appEvent
         , appStartEvent = return ()
-        , appAttrMap = const $ attrMap V.defAttr []
+        , appAttrMap = const attrs
         }
 
 main :: IO ()
