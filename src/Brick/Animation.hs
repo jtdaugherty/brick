@@ -38,6 +38,7 @@ import Lens.Micro.Mtl
 import Brick.BChan
 import Brick.Types (EventM, Widget)
 
+-- | A sequence of a animation frames.
 newtype FrameSeq s n = FrameSeq (V.Vector (s -> Widget n))
                      deriving (Semigroup)
 
