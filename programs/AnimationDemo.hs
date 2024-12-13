@@ -143,16 +143,6 @@ attrs =
         , (attr1, fg V.black)
         ]
 
-toggleMouseClickAnimation :: Location -> EventM () St ()
-toggleMouseClickAnimation l = do
-    -- If an animation is already running at this location, stop it;
-    -- else start a new one.
-    mgr <- use stAnimationManager
-    mA <- use (clickAnimations.at l)
-    case mA of
-        Nothing -> A.startAnimation mgr mouseClickFrames 100 A.Once (clickAnimations.at l)
-        Just a -> A.stopAnimation mgr a
-
 data AnimationConfig =
     AnimationConfig { animationTarget :: Lens' St (Maybe (A.Animation St ()))
                     , animationFrames :: A.FrameSeq St ()
@@ -183,11 +173,16 @@ toggleAnimationFromConfig config = do
         Just a -> A.stopAnimation mgr a
         Nothing -> startAnimationFromConfig config
 
+startMouseClickAnimation :: Location -> EventM () St ()
+startMouseClickAnimation l = do
+    mgr <- use stAnimationManager
+    A.startAnimation mgr mouseClickFrames 100 A.Once (clickAnimations.at l)
+
 appEvent :: BrickEvent () CustomEvent -> EventM () St ()
 appEvent e = do
     case e of
         VtyEvent (V.EvMouseDown col row _ _) -> do
-            toggleMouseClickAnimation (Location (col, row))
+            startMouseClickAnimation (Location (col, row))
 
         VtyEvent (V.EvKey (V.KChar c) [])
             | Just aConfig <- lookup c animations ->
