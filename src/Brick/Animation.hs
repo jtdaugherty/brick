@@ -372,7 +372,8 @@ minTickTime = 25
 -- Not only does this mean that this should be taken into consideration
 -- when thinking about the performance and animation needs of your
 -- application, but it also means that if an animation has a shorter
--- tick duration than the manager, that animation may skip frames.
+-- frame duration than the manager's tick duration, that animation may
+-- skip frames.
 --
 -- When the manager needs to send state updates, it does so by using
 -- the provided custom event constructor here. This allows the manager
@@ -442,7 +443,7 @@ startAnimation :: (MonadIO m)
                -> FrameSeq s n
                -- ^ The frames for the animation
                -> Integer
-               -- ^ The animation's tick duration in milliseconds
+               -- ^ The animation's frame duration in milliseconds
                -> RunMode
                -- ^ The animation's run mode
                -> Traversal' s (Maybe (Animation s n))
