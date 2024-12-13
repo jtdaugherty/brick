@@ -366,7 +366,7 @@ startAnimation :: (MonadIO m)
                -> RunMode
                -> Traversal' s (Maybe (Animation s n))
                -> m ()
-startAnimation mgr frames frameMs runMode updater = do
+startAnimation mgr frames frameMs runMode updater =
     tellAnimationManager mgr $ StartAnimation frames frameMs runMode updater
 
 stopAnimation :: (MonadIO m)
