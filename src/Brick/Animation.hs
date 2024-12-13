@@ -10,7 +10,7 @@ module Brick.Animation
   , stopAnimationManager
   , startAnimation
   , stopAnimation
-  , minTickDelay
+  , minTickTime
   , renderAnimation
   , FrameSeq
   , newFrameSeq
@@ -303,12 +303,12 @@ advanceByOne a =
         Once -> a
     else a & animationCurrentFrame %~ (+ 1)
 
-minTickDelay :: Int
-minTickDelay = 25
+minTickTime :: Int
+minTickTime = 25
 
 startAnimationManager :: Int -> BChan e -> (EventM n s () -> e) -> IO (AnimationManager s e n)
-startAnimationManager tickMilliseconds _ _ | tickMilliseconds < minTickDelay =
-    error $ "startAnimationManager: tick delay too small (minimum is " <> show minTickDelay <> ")"
+startAnimationManager tickMilliseconds _ _ | tickMilliseconds < minTickTime =
+    error $ "startAnimationManager: tick delay too small (minimum is " <> show minTickTime <> ")"
 startAnimationManager tickMilliseconds outChan mkEvent = do
     inChan <- STM.newTChanIO
     reqTid <- forkIO $ animationManagerThreadBody inChan outChan mkEvent
