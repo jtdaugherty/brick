@@ -3,15 +3,18 @@
 {-# LANGUAGE RankNTypes #-}
 module Brick.Animation
   ( AnimationManager
-  , Animation
-  , animationFrameIndex
-  , RunMode(..)
   , startAnimationManager
   , stopAnimationManager
+
+  , Animation
+  , animationFrameIndex
+
+  , RunMode(..)
   , startAnimation
   , stopAnimation
   , minTickTime
   , renderAnimation
+
   , FrameSeq
   , newFrameSeq
   , pingPongFrames
