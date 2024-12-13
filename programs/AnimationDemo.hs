@@ -15,36 +15,12 @@ import Graphics.Vty.CrossPlatform (mkVty)
 
 import Brick.BChan
 import Brick.Util (fg)
-import Brick.Main
-  ( App(..)
-  , showFirstCursor
-  , customMain
-  , halt
-  )
-import Brick.AttrMap
-  ( AttrName
-  , AttrMap
-  , attrMap
-  , attrName
-  )
-import Brick.Types
-  ( Widget
-  , EventM
-  , BrickEvent(..)
-  , Location(..)
-  )
+import Brick.Main (App(..), showFirstCursor, customMain, halt)
+import Brick.AttrMap (AttrName, AttrMap, attrMap, attrName)
+import Brick.Types (Widget, EventM, BrickEvent(..), Location(..))
 import Brick.Widgets.Border (border)
 import Brick.Widgets.Center (center)
-import Brick.Widgets.Core
-  ( (<+>)
-  , str
-  , vBox
-  , hBox
-  , hLimit
-  , vLimit
-  , translateBy
-  , withDefAttr
-  )
+import Brick.Widgets.Core ((<+>), str, vBox, hBox, hLimit, vLimit, translateBy, withDefAttr)
 import qualified Brick.Animation as A
 
 data CustomEvent =
