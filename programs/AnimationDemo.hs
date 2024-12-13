@@ -113,7 +113,7 @@ appEvent e = do
     case e of
         VtyEvent (V.EvMouseDown col row _ _) -> do
             toggleMouseClickAnimation (Location (col, row))
-        VtyEvent (V.EvKey V.KEsc []) -> halt
+
         VtyEvent (V.EvKey (V.KChar '1') []) -> do
             mOld <- use animation1
             case mOld of
@@ -133,6 +133,9 @@ appEvent e = do
                 Nothing -> A.startAnimation mgr frames3 300 A.Once animation3
 
         AppEvent (AnimationUpdate act) -> act
+
+        VtyEvent (V.EvKey V.KEsc []) -> halt
+
         _ -> return ()
 
 theApp :: App St CustomEvent ()
