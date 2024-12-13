@@ -270,7 +270,7 @@ checkForFrames now = do
                                  -- This animation is not due for an
                                  -- update, so don't do anything.
                                  return mUpdater
-                             | finished a -> do
+                             | isFinished a -> do
                                  -- This animation has completed, so
                                  -- clear it from the manager and the
                                  -- application state.
@@ -290,8 +290,8 @@ checkForFrames now = do
     as <- HM.elems <$> use managerStateAnimations
     go Nothing as
 
-finished :: AnimationState s n -> Bool
-finished a =
+isFinished :: AnimationState s n -> Bool
+isFinished a =
     a^.animationRunMode == Once &&
     a^.animationCurrentFrame == a^.animationNumFrames - 1
 
