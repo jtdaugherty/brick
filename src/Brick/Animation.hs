@@ -19,7 +19,7 @@ module Brick.Animation
   )
 where
 
-import Control.Concurrent (threadDelay, forkIO, ThreadId, killThread)
+import Control.Concurrent (threadDelay, forkIO, ThreadId, killThread, myThreadId)
 import qualified Control.Concurrent.STM as STM
 import Control.Monad (forever, when)
 import Control.Monad.State.Strict
@@ -64,6 +64,7 @@ data AnimationManagerRequest s n =
     | StartAnimation (FrameSeq s n) Integer RunMode (Traversal' s (Maybe (Animation s n)))
     -- ^ ID, frame count, frame duration in milliseconds, run mode, updater
     | StopAnimation (Animation s n)
+    | Shutdown
 
 data RunMode = Once | Loop
     deriving (Eq, Show, Ord)
@@ -222,6 +223,14 @@ handleManagerRequest (StopAnimation a) = do
             -- Set the current animation state in the application state
             -- to none
             sendApplicationEvent $ clearStateAction aState
+handleManagerRequest Shutdown = do
+    as <- HM.elems <$> use managerStateAnimations
+
+    let updater = sequence_ $ clearStateAction <$> as
+    when (length as > 0) $ do
+        sendApplicationEvent updater
+
+    liftIO $ myThreadId >>= killThread
 handleManagerRequest (Tick tickTime) = do
     -- Check all animation states for frame advances
     -- based on the relationship between the tick time
