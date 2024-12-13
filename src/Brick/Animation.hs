@@ -1,6 +1,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE MultiWayIf #-}
 module Brick.Animation
   ( AnimationManager
   , Animation
@@ -220,8 +221,7 @@ handleManagerRequest (StopAnimation a) = do
 
             -- Set the current animation state in the application state
             -- to none
-            sendApplicationEvent $ do
-                animationFrameUpdater aState .= Nothing
+            sendApplicationEvent $ clearStateAction aState
 handleManagerRequest (Tick tickTime) = do
     -- Check all animation states for frame advances
     -- based on the relationship between the tick time
@@ -231,14 +231,17 @@ handleManagerRequest (Tick tickTime) = do
         Nothing -> return ()
         Just act -> sendApplicationEvent act
 
+clearStateAction :: AnimationState s n -> EventM n s ()
+clearStateAction a = animationFrameUpdater a .= Nothing
+
 checkForFrames :: C.UTCTime -> ManagerM s e n (Maybe (EventM n s ()))
 checkForFrames now = do
     -- For each active animation, check to see if the animation's next
     -- frame time has passed. If it has, advance its frame counter as
     -- appropriate and schedule its frame counter to be updated in the
     -- application state.
-    let addUpdate a Nothing = Just $ updateFor a
-        addUpdate a (Just updater) = Just $ updater >> updateFor a
+    let addUpdate act Nothing = Just act
+        addUpdate act (Just updater) = Just $ updater >> act
 
         updateFor a = animationFrameUpdater a._Just %= (\an -> an { animationFrameIndex = a^.animationCurrentFrame })
 
@@ -247,45 +250,59 @@ checkForFrames now = do
         go mUpdater (a:as) = do
             -- Determine whether the next animation needs to have its
             -- frame index advanced.
-            newUpdater <- if now < a^.animationNextFrameTime
-                          then return mUpdater
-                          else do
-                              -- Determine how many frames have elapsed
-                              -- for this animation, then advance the
-                              -- frame index based the elapsed time.
-                              -- Also set its next frame time.
-                              let differenceMs = nominalDiffToMs $
-                                                 C.diffUTCTime now (a^.animationNextFrameTime)
-                                  numFrames = 1 + (differenceMs `div` (a^.animationFrameMilliseconds))
-                                  newNextTime = C.addUTCTime (nominalDiffFromMs $ numFrames * (a^.animationFrameMilliseconds))
-                                                             (a^.animationNextFrameTime)
+            newUpdater <- if | (now < a^.animationNextFrameTime) ->
+                                 -- This animation is not due for an
+                                 -- update, so don't do anything.
+                                 return mUpdater
+                             | finished a -> do
+                                 -- This animation has completed, so
+                                 -- clear it from the manager and the
+                                 -- application state.
+                                 removeAnimation (a^.animationStateID)
+                                 return $ addUpdate (clearStateAction a) mUpdater
+                             | otherwise -> do
+                                 -- This animation is still running,
+                                 -- so determine how many frames have
+                                 -- elapsed for it and then advance the
+                                 -- frame index based the elapsed time.
+                                 -- Also set its next frame time.
+                                 let differenceMs = nominalDiffToMs $
+                                                    C.diffUTCTime now (a^.animationNextFrameTime)
+                                     numFrames = 1 + (differenceMs `div` (a^.animationFrameMilliseconds))
+                                     newNextTime = C.addUTCTime (nominalDiffFromMs $ numFrames * (a^.animationFrameMilliseconds))
+                                                                (a^.animationNextFrameTime)
 
-                                  -- The new frame is obtained by
-                                  -- advancing from the current frame by
-                                  -- numFrames.
-                                  a' = setNextFrameTime newNextTime $
-                                       advanceBy numFrames a
+                                     -- The new frame is obtained by
+                                     -- advancing from the current frame by
+                                     -- numFrames.
+                                     a' = setNextFrameTime newNextTime $
+                                          advanceBy numFrames a
 
-                              managerStateAnimations %= HM.insert (a'^.animationStateID) a'
+                                 managerStateAnimations %= HM.insert (a'^.animationStateID) a'
 
-                              -- NOTE!
-                              --
-                              --
-                              -- This always advances each animation
-                              -- without regard for the run mode. This
-                              -- needs to be updated to account for the
-                              -- Once mode where an animation reaches
-                              -- its last frame and stays there.
-                              --
-                              -- A related question: if something
-                              -- animates once, should it terminate by
-                              -- staying in its last frame? Or should it
-                              -- be unscheduled?
-                              return $ addUpdate a' mUpdater
+                                 -- NOTE!
+                                 --
+                                 --
+                                 -- This always advances each animation
+                                 -- without regard for the run mode. This
+                                 -- needs to be updated to account for the
+                                 -- Once mode where an animation reaches
+                                 -- its last frame and stays there.
+                                 --
+                                 -- A related question: if something
+                                 -- animates once, should it terminate by
+                                 -- staying in its last frame? Or should it
+                                 -- be unscheduled?
+                                 return $ addUpdate (updateFor a') mUpdater
             go newUpdater as
 
     as <- HM.elems <$> use managerStateAnimations
     go Nothing as
+
+finished :: AnimationState s n -> Bool
+finished a =
+    a^.animationRunMode == Once &&
+    a^.animationCurrentFrame == a^.animationNumFrames - 1
 
 advanceBy :: Integer -> AnimationState s n -> AnimationState s n
 advanceBy n a
