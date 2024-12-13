@@ -5,7 +5,7 @@ module Brick.Animation
   ( AnimationManager
   , Animation
   , animationFrameIndex
-  , Duration(..)
+  , RunMode(..)
   , startAnimationManager
   , stopAnimationManager
   , startAnimation
@@ -60,13 +60,11 @@ reverseFrames (FrameSeq fs) = FrameSeq $ V.reverse fs
 
 data AnimationManagerRequest s n =
     Tick C.UTCTime
-    | StartAnimation (FrameSeq s n) Integer Duration (Traversal' s (Maybe (Animation s n)))
-    -- ^ ID, frame count, frame duration in milliseconds, duration, updater
+    | StartAnimation (FrameSeq s n) Integer RunMode (Traversal' s (Maybe (Animation s n)))
+    -- ^ ID, frame count, frame duration in milliseconds, run mode, updater
     | StopAnimation (Animation s n)
 
--- Is this a good name for this type? If we added a 'manual' option
--- where the application does frame updates, would it go here?
-data Duration = Once | Loop
+data RunMode = Once | Loop
     deriving (Eq, Show, Ord)
 
 newtype AnimationID = AnimationID Int
@@ -93,7 +91,7 @@ data AnimationState s n =
                    , _animationNumFrames :: Int
                    , _animationCurrentFrame :: Int
                    , _animationFrameMilliseconds :: Integer
-                   , _animationDuration :: Duration
+                   , _animationRunMode :: RunMode
                    , animationFrameUpdater :: Traversal' s (Maybe (Animation s n))
                    , _animationNextFrameTime :: C.UTCTime
                    }
@@ -192,7 +190,7 @@ runManager = forever $ do
     getNextManagerRequest >>= handleManagerRequest
 
 handleManagerRequest :: AnimationManagerRequest s n -> ManagerM s e n ()
-handleManagerRequest (StartAnimation frames@(FrameSeq fs) frameMs dur updater) = do
+handleManagerRequest (StartAnimation frames@(FrameSeq fs) frameMs runMode updater) = do
     aId <- getNextAnimationID
     now <- liftIO C.getCurrentTime
     let next = C.addUTCTime frameOffset now
@@ -201,7 +199,7 @@ handleManagerRequest (StartAnimation frames@(FrameSeq fs) frameMs dur updater) =
                            , _animationNumFrames = V.length fs
                            , _animationCurrentFrame = 0
                            , _animationFrameMilliseconds = frameMs
-                           , _animationDuration = dur
+                           , _animationRunMode = runMode
                            , animationFrameUpdater = updater
                            , _animationNextFrameTime = next
                            }
@@ -274,7 +272,7 @@ checkForFrames now = do
                               --
                               --
                               -- This always advances each animation
-                              -- without regard for the loop mode. This
+                              -- without regard for the run mode. This
                               -- needs to be updated to account for the
                               -- Once mode where an animation reaches
                               -- its last frame and stays there.
@@ -299,7 +297,7 @@ advanceBy n a
 advanceByOne :: AnimationState s n -> AnimationState s n
 advanceByOne a =
     if a^.animationCurrentFrame == a^.animationNumFrames - 1
-    then case a^.animationDuration of
+    then case a^.animationRunMode of
         Loop -> a & animationCurrentFrame .~ 0
         Once -> a
     else a & animationCurrentFrame %~ (+ 1)
@@ -348,11 +346,11 @@ startAnimation :: (MonadIO m)
                => AnimationManager s e n
                -> FrameSeq s n
                -> Integer
-               -> Duration
+               -> RunMode
                -> Traversal' s (Maybe (Animation s n))
                -> m ()
-startAnimation mgr frames frameMs duration updater = do
-    tellAnimationManager mgr $ StartAnimation frames frameMs duration updater
+startAnimation mgr frames frameMs runMode updater = do
+    tellAnimationManager mgr $ StartAnimation frames frameMs runMode updater
 
 stopAnimation :: (MonadIO m)
               => AnimationManager s e n
