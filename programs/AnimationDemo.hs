@@ -78,8 +78,8 @@ drawAnimations st =
             animStatus ("Animation #" <> (show $ i + 1)) [c]
                        (st^.(animationTarget config))
         animationDrawings = hBox $ intersperse (str " ") $
-                            drawSingle <$> animations
-        drawSingle (_, config) =
+                            drawSingleAnimation <$> animations
+        drawSingleAnimation (_, config) =
             A.renderAnimation (str " ") st (st^.(animationTarget config))
     in vBox $ statusMessages <> [animationDrawings]
 
