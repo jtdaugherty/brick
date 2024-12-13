@@ -235,6 +235,11 @@ handleManagerRequest (Tick tickTime) = do
 clearStateAction :: AnimationState s n -> EventM n s ()
 clearStateAction a = animationFrameUpdater a .= Nothing
 
+frameUpdateAction :: AnimationState s n -> EventM n s ()
+frameUpdateAction a =
+    animationFrameUpdater a._Just %=
+        (\an -> an { animationFrameIndex = a^.animationCurrentFrame })
+
 checkForFrames :: C.UTCTime -> ManagerM s e n (Maybe (EventM n s ()))
 checkForFrames now = do
     -- For each active animation, check to see if the animation's next
@@ -243,8 +248,6 @@ checkForFrames now = do
     -- application state.
     let addUpdate act Nothing = Just act
         addUpdate act (Just updater) = Just $ updater >> act
-
-        updateFor a = animationFrameUpdater a._Just %= (\an -> an { animationFrameIndex = a^.animationCurrentFrame })
 
         go :: Maybe (EventM n s ()) -> [AnimationState s n] -> ManagerM s e n (Maybe (EventM n s ()))
         go mUpdater [] = return mUpdater
@@ -294,7 +297,7 @@ checkForFrames now = do
                                  -- animates once, should it terminate by
                                  -- staying in its last frame? Or should it
                                  -- be unscheduled?
-                                 return $ addUpdate (updateFor a') mUpdater
+                                 return $ addUpdate (frameUpdateAction a') mUpdater
             go newUpdater as
 
     as <- HM.elems <$> use managerStateAnimations
