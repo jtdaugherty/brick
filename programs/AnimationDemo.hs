@@ -84,7 +84,7 @@ frames3 =
 
 mouseClickFrames :: A.FrameSeq a ()
 mouseClickFrames =
-    A.newFrameSeq $ const <$>
+    A.newFrameSeq_ $
     [ withDefAttr attr6 $ str "0"
     , withDefAttr attr5 $ str "O"
     , withDefAttr attr4 $ str "o"
