@@ -84,7 +84,7 @@ clip3 =
 
 mouseClickClip :: A.Clip a ()
 mouseClickClip =
-    A.newClip_ $
+    A.newClip_
     [ withDefAttr attr6 $ str "0"
     , withDefAttr attr5 $ str "O"
     , withDefAttr attr4 $ str "o"
