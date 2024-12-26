@@ -72,8 +72,8 @@ newClip_ ws = newClip $ const <$> ws
 -- | Extend a clip so that when the end of the original clip is reached,
 -- it continues in reverse order to create a loop.
 --
--- For example, if this is given frames A, B, C, and D, then this
--- returns a clip with frames A, B, C, D, C, B.
+-- For example, if this is given a clip with frames A, B, C, and D, then
+-- this returns a clip with frames A, B, C, D, C, and B.
 --
 -- If the given clip contains less than two frames, this is equivalent
 -- to 'id'.
