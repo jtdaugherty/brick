@@ -1,6 +1,52 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE RankNTypes #-}
+-- | This module provides some infrastructure for adding animations to
+-- Brick applications. See @programs/AnimationDemo.hs@ for a complete
+-- working example of this API.
+--
+-- At a high level, this works as follows:
+--
+-- This module provides a threaded animation manager that manages a set
+-- of running animations. The application creates the manager and starts
+-- animations, which automatically loop or run once, depending on their
+-- configuration. Each animation has some state in the application's
+-- state that is automatically managed by the animation manager using a
+-- lens-based API. Whenever animations need to be redrawn, the animation
+-- manager sends a custom event with a state update to the application,
+-- which must be evaluated by the main event loop to update animation
+-- states. Each animation is associated with a 'Clip', or sequence of
+-- frames, which may be static or may be built from the application
+-- state at rendering time.
+--
+-- To use this module:
+--
+-- * Use a custom event type @e@ and give the event type a constructor
+--   @EventM n s () -> e@. This will require the use of
+--   'Brick.Main.customMain' and will also require the creation of a
+--   'Brick.BChan.BChan' for custom events.
+--
+-- * Add an 'AnimationManager' field to the application state.
+--
+-- * Create an 'AnimationManager' at startup with
+--   'startAnimationManager' and store it in the application state.
+--
+-- * For each animation you want to run at any given time, add a field
+--   to the application state of type @Maybe (Animation s n)@,
+--   initialized to 'Nothing'. A value of 'Nothing' indicates that the
+--   animation is not running.
+--
+-- * Ensure that each animation state field has a lens, usually by using
+--   'Lens.Micro.TH.makeLenses'.
+--
+-- * Create clips with 'newClip', 'newClip_', and the clip
+--   transformation functions.
+--
+-- * Start new animations with 'startAnimation'; stop them with
+--   'stopAnimation'.
+--
+-- * Call 'renderAnimation' in 'appDraw' for each animation in the
+--   application state.
 module Brick.Animation
   ( -- * Animation managers
     AnimationManager
@@ -105,6 +151,9 @@ newtype AnimationID = AnimationID Int
                     deriving (Eq, Ord, Show, Hashable)
 
 -- | The state of a running animation.
+--
+-- Put one of these (wrapped in 'Maybe') in your application state for
+-- each animation that you'd like to run concurrently.
 data Animation s n =
     Animation { animationFrameIndex :: Int
               -- ^ The animation's current frame index, provided for
@@ -149,7 +198,55 @@ makeLenses ''AnimationState
 
 -- | A manager for animations.
 --
--- Create one of these for your application.
+-- This asynchronously manages a set of running animations, advancing
+-- each one over time. When a running animation's current frame needs
+-- to be changed, the manager sends an 'EventM' update for that
+-- animation to the application's event loop to perform the update to
+-- the animation in the application state. The manager will batch such
+-- updates if more than one animation needs to be changed at a time.
+--
+-- The manager has a /tick duration/ in milliseconds which is the
+-- resolution at which animations are checked to see if they should
+-- be updated. Animations also have their own frame duration in
+-- milliseconds. For example, if a manager has a tick duration of 50
+-- milliseconds and is running an animation with a frame duration of 100
+-- milliseconds, then the manager will advance that animation by one
+-- frame every two ticks. On the other hand, if a manager has a tick
+-- duration of 100 milliseconds and is running an animation with a frame
+-- duration of 50 milliseconds, the manager will advance that animation
+-- by two frames on each tick.
+--
+-- Animation managers are started with 'startAnimationManager' and
+-- stopped with 'stopAnimationManager'.
+--
+-- Animations are started with 'startAnimation' and stopped with
+-- 'stopAnimation'. Each animation must be associated with an
+-- application state field accessible with a traversal given to
+-- 'startAnimation'.
+--
+-- When an animation is started, every time it advances a frame, and
+-- when it is ended, the manager communicates these changes to the
+-- application by using the custom event constructor provided to
+-- 'startAnimationManager'. The manager uses that to schedule a state
+-- update which the application is responsible for evaluating. The state
+-- updates are built from the traversals provided to 'startAnimation'.
+--
+-- The manager-updated 'Animation' values in the application state are
+-- then drawn with 'renderAnimation'.
+--
+-- Animations in 'Loop' mode are run forever until stopped with
+-- 'stopAnimation'; animations in 'Once' mode run once and are removed
+-- from the application state (set to 'Nothing') when they finish. All
+-- state updates to the application state are performed by the manager's
+-- custom event mechanism; the application never needs to directly
+-- modify the 'Animation' application state fields except to initialize
+-- then to 'Nothing'.
+--
+-- There is nothing here to prevent an application from running multiple
+-- managers, each at a different tick rate. That may have performance
+-- consequences, though, due to the loss of batch efficiency in state
+-- updates, so we recommend using only one manager per application at a
+-- sufficiently short tick duration.
 data AnimationManager s e n =
     AnimationManager { animationMgrRequestThreadId :: ThreadId
                      , animationMgrTickThreadId :: ThreadId
@@ -366,24 +463,8 @@ advanceByOne a =
 minTickTime :: Int
 minTickTime = 25
 
--- | Start a new animation manager.
---
--- The animation manager internally runs at a tick rate, specified here
--- as a tick duration in milliseconds. The tick duration determines how
--- often the manager will check for animation updates and send them to
--- the application, so the smaller the tick duration, the more often the
--- manager will trigger screen redraws and application state updates.
--- Not only does this mean that this should be taken into consideration
--- when thinking about the performance and animation needs of your
--- application, but it also means that if an animation has a shorter
--- frame duration than the manager's tick duration, that animation may
--- skip frames.
---
--- When the manager needs to send state updates, it does so by using
--- the provided custom event constructor here. This allows the manager
--- to schedule a state update which the application is responsible for
--- evaluating. The state updates are built from the traversals provided
--- to 'startAnimation'.
+-- | Start a new animation manager. For full details about how managers
+-- work, see 'AnimationManager'.
 --
 -- If the specified tick duration is less than 'minTickTime', this will
 -- call 'error'. This bound is in place to prevent API misuse leading to
@@ -392,7 +473,8 @@ startAnimationManager :: Int
                       -- ^ The tick duration for this manager in milliseconds
                       -> BChan e
                       -- ^ The event channel to use to send updates to
-                      -- the application
+                      -- the application (i.e. the same one given to
+                      -- e.g. 'Brick.Main.customVty')
                       -> (EventM n s () -> e)
                       -- ^ A constructor for building custom events
                       -- that perform application state updates. The
@@ -421,7 +503,7 @@ whenRunning mgr act = do
     running <- liftIO $ STM.atomically $ STM.readTVar (animationMgrRunning mgr)
     when running $ liftIO act
 
--- | Stop the animation manager, ending all animations.
+-- | Stop the animation manager, ending all running animations.
 stopAnimationManager :: (MonadIO m) => AnimationManager s e n -> m ()
 stopAnimationManager mgr =
     whenRunning mgr $ do
@@ -439,7 +521,7 @@ tellAnimationManager mgr req =
 -- | Start a new animation at its first frame.
 --
 -- This will result in an application state update to initialize the
--- animation.
+-- animation state at the provided traversal's location.
 startAnimation :: (MonadIO m)
                => AnimationManager s e n
                -- ^ The manager to run the animation
@@ -451,7 +533,7 @@ startAnimation :: (MonadIO m)
                -- ^ The animation's run mode
                -> Traversal' s (Maybe (Animation s n))
                -- ^ Where in the application state to manage this
-               -- animation
+               -- animation's state
                -> m ()
 startAnimation mgr frames frameMs runMode updater =
     tellAnimationManager mgr $ StartAnimation frames frameMs runMode updater
