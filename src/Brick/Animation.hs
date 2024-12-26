@@ -22,14 +22,15 @@
 -- To use this module:
 --
 -- * Use a custom event type @e@ and give the event type a constructor
---   @EventM n s () -> e@. This will require the use of
---   'Brick.Main.customMain' and will also require the creation of a
---   'Brick.BChan.BChan' for custom events.
+--   @EventM n s () -> e@ (where @s@ is your application state type).
+--   This will require the use of 'Brick.Main.customMain' and will also
+--   require the creation of a 'Brick.BChan.BChan' for custom events.
 --
 -- * Add an 'AnimationManager' field to the application state.
 --
 -- * Create an 'AnimationManager' at startup with
---   'startAnimationManager' and store it in the application state.
+--   'startAnimationManager', providing the custom event constructor and
+--   'BChan' created above. Store the manager in the application state.
 --
 -- * For each animation you want to run at any given time, add a field
 --   to the application state of type @Maybe (Animation s n)@,
@@ -42,11 +43,13 @@
 -- * Create clips with 'newClip', 'newClip_', and the clip
 --   transformation functions.
 --
--- * Start new animations with 'startAnimation'; stop them with
---   'stopAnimation'.
+-- * Start new animations in 'EventM' with 'startAnimation'; stop them
+--   with 'stopAnimation'.
 --
--- * Call 'renderAnimation' in 'appDraw' for each animation in the
+-- * Call 'renderAnimation' in 'Brick.Main.appDraw' for each animation in the
 --   application state.
+--
+-- * If needed, stop the animation manager with 'stopAnimationManager'.
 module Brick.Animation
   ( -- * Animation managers
     AnimationManager
@@ -101,10 +104,10 @@ clipLength (Clip fs) = V.length fs
 
 -- | Build a clip.
 --
--- Each entry in a clip is a function from a state to a 'Widget'. This
--- allows applications to determine on a per-frame basis what should be
--- drawn in an animation based on application state, if desired, in the
--- same style as 'appDraw'.
+-- Each frame in a clip is represented by a function from a state to a
+-- 'Widget'. This allows applications to determine on a per-frame basis
+-- what should be drawn in an animation based on application state, if
+-- desired, in the same style as 'Brick.Main.appDraw'.
 --
 -- If the provided list is empty, this calls 'error'.
 newClip :: [s -> Widget n] -> Clip s n
@@ -240,7 +243,7 @@ makeLenses ''AnimationState
 -- state updates to the application state are performed by the manager's
 -- custom event mechanism; the application never needs to directly
 -- modify the 'Animation' application state fields except to initialize
--- then to 'Nothing'.
+-- them to 'Nothing'.
 --
 -- There is nothing here to prevent an application from running multiple
 -- managers, each at a different tick rate. That may have performance
