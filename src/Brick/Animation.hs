@@ -65,7 +65,7 @@ newClip :: [s -> Widget n] -> Clip s n
 newClip [] = error "clip: got an empty list"
 newClip fs = Clip $ V.fromList fs
 
--- | Like 'newClip' but allows state to be ignored when building frames.
+-- | Like 'newClip' but for static frames.
 newClip_ :: [Widget n] -> Clip s n
 newClip_ ws = newClip $ const <$> ws
 
@@ -121,8 +121,8 @@ renderAnimation :: (s -> Widget n)
                 -- ^ The fallback function to use for drawing if the
                 -- animation is not running
                 -> s
-                -- ^ The state to provide when constructing the
-                -- animation's current frame
+                -- ^ The state to provide when rendering the animation's
+                -- current frame
                 -> Maybe (Animation s n)
                 -- ^ The animation state itself
                 -> Widget n
@@ -396,10 +396,9 @@ startAnimationManager :: Int
                       -> (EventM n s () -> e)
                       -- ^ A constructor for building custom events
                       -- that perform application state updates. The
-                      -- application must evaluate the provided 'EventM'
-                      -- action given by these events in order to get
-                      -- animation updates made to the application
-                      -- state.
+                      -- application must evaluate these custom events'
+                      -- 'EventM' actions in order to record animation
+                      -- updates in the application state.
                       -> IO (AnimationManager s e n)
 startAnimationManager tickMilliseconds _ _ | tickMilliseconds < minTickTime =
     error $ "startAnimationManager: tick delay too small (minimum is " <> show minTickTime <> ")"
