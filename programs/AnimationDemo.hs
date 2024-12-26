@@ -67,24 +67,24 @@ drawAnimations st =
        str " " :
        statusMessages <> [animationDrawings]
 
-frames1 :: A.FrameSeq a ()
-frames1 = A.frameSeq_ $ str <$> [".", "o", "O", "^", " "]
+clip1 :: A.Clip a ()
+clip1 = A.newClip_ $ str <$> [".", "o", "O", "^", " "]
 
-frames2 :: A.FrameSeq a ()
-frames2 = A.frameSeq_ $ str <$> ["|", "/", "-", "\\"]
+clip2 :: A.Clip a ()
+clip2 = A.newClip_ $ str <$> ["|", "/", "-", "\\"]
 
-frames3 :: A.FrameSeq a ()
-frames3 =
-    A.frameSeq_ $
+clip3 :: A.Clip a ()
+clip3 =
+    A.newClip_ $
     (hLimit 9 . vLimit 9 . border . center) <$>
     [ border $ str " "
     , border $ vBox $ replicate 3 $ str $ replicate 3 ' '
     , border $ vBox $ replicate 5 $ str $ replicate 5 ' '
     ]
 
-mouseClickFrames :: A.FrameSeq a ()
-mouseClickFrames =
-    A.frameSeq_ $
+mouseClickClip :: A.Clip a ()
+mouseClickClip =
+    A.newClip_ $
     [ withDefAttr attr6 $ str "0"
     , withDefAttr attr5 $ str "O"
     , withDefAttr attr4 $ str "o"
@@ -124,22 +124,22 @@ attrs =
 
 data AnimationConfig =
     AnimationConfig { animationTarget :: Lens' St (Maybe (A.Animation St ()))
-                    , animationFrames :: A.FrameSeq St ()
+                    , animationClip :: A.Clip St ()
                     , animationFrameTime :: Integer
                     , animationMode :: A.RunMode
                     }
 
 animations :: [(Char, AnimationConfig)]
 animations =
-    [ ('1', AnimationConfig animation1 frames1 1000 A.Loop)
-    , ('2', AnimationConfig animation2 frames2 100 A.Loop)
-    , ('3', AnimationConfig animation3 frames3 100 A.Once)
+    [ ('1', AnimationConfig animation1 clip1 1000 A.Loop)
+    , ('2', AnimationConfig animation2 clip2 100 A.Loop)
+    , ('3', AnimationConfig animation3 clip3 100 A.Once)
     ]
 
 startAnimationFromConfig :: AnimationConfig -> EventM () St ()
 startAnimationFromConfig config = do
     mgr <- use stAnimationManager
-    A.startAnimation mgr (animationFrames config)
+    A.startAnimation mgr (animationClip config)
                          (animationFrameTime config)
                          (animationMode config)
                          (animationTarget config)
@@ -155,7 +155,7 @@ toggleAnimationFromConfig config = do
 startMouseClickAnimation :: Location -> EventM () St ()
 startMouseClickAnimation l = do
     mgr <- use stAnimationManager
-    A.startAnimation mgr mouseClickFrames 100 A.Once (clickAnimations.at l)
+    A.startAnimation mgr mouseClickClip 100 A.Once (clickAnimations.at l)
 
 appEvent :: BrickEvent () CustomEvent -> EventM () St ()
 appEvent e = do
