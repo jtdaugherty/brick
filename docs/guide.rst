@@ -1966,6 +1966,14 @@ When creating new widgets, if you would like ``joinBorders`` and
 so by consulting the ``ctxDynBorders`` field of the rendering context
 before writing to your ``Result``'s ``borders`` field.
 
+Animations
+==========
+
+Brick provides animation support in ``Brick.Animation``. See the Haddock
+documentation in that module for a complete explanation of the API; see
+``programs/AnimationDemo.hs`` (``brick-animation-demo``) for a working
+example.
+
 The Rendering Cache
 ===================
 
