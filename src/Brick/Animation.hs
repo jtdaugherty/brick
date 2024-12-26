@@ -15,8 +15,8 @@
 -- lens-based API. Whenever animations need to be redrawn, the animation
 -- manager sends a custom event with a state update to the application,
 -- which must be evaluated by the main event loop to update animation
--- states. Each animation is associated with a 'Clip', or sequence of
--- frames, which may be static or may be built from the application
+-- states. Each animation is associated with a 'Clip' -- sequence of
+-- frames -- which may be static or may be built from the application
 -- state at rendering time.
 --
 -- To use this module:
