@@ -89,7 +89,7 @@ reverseClip (Clip fs) = Clip $ V.reverse fs
 data AnimationManagerRequest s n =
     Tick C.UTCTime
     | StartAnimation (Clip s n) Integer RunMode (Traversal' s (Maybe (Animation s n)))
-    -- ^ ID, frame count, frame duration in milliseconds, run mode, updater
+    -- ^ Clip, frame duration in milliseconds, run mode, updater
     | StopAnimation (Animation s n)
     | Shutdown
 
