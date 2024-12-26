@@ -19,12 +19,13 @@ module Brick.Animation
   -- * Rendering animation frames
   , renderAnimation
 
-  -- * Building and transforming frame sequences
-  , FrameSeq
-  , frameSeq
-  , frameSeq_
-  , pingPongFrames
-  , reverseFrames
+  -- * Building and transforming clips
+  , Clip
+  , newClip
+  , newClip_
+  , clipLength
+  , pingPongClip
+  , reverseClip
   )
 where
 
@@ -45,46 +46,49 @@ import Brick.BChan
 import Brick.Types (EventM, Widget)
 
 -- | A sequence of a animation frames.
-newtype FrameSeq s n = FrameSeq (V.Vector (s -> Widget n))
+newtype Clip s n = Clip (V.Vector (s -> Widget n))
                      deriving (Semigroup)
 
--- | Build a frame sequence.
+-- | Get the number of frames in a clip.
+clipLength :: Clip s n -> Int
+clipLength (Clip fs) = V.length fs
+
+-- | Build a clip.
 --
--- Each entry in a frame sequence is a function from a state to a
--- 'Widget'. This allows applications to determine on a per-frame basis
--- what should be drawn in an animation based on application state, if
--- desired, in the same style as 'appDraw'.
+-- Each entry in a clip is a function from a state to a 'Widget'. This
+-- allows applications to determine on a per-frame basis what should be
+-- drawn in an animation based on application state, if desired, in the
+-- same style as 'appDraw'.
 --
 -- If the provided list is empty, this calls 'error'.
-frameSeq :: [s -> Widget n] -> FrameSeq s n
-frameSeq [] = error "frameSeq: got an empty list"
-frameSeq fs = FrameSeq $ V.fromList fs
+newClip :: [s -> Widget n] -> Clip s n
+newClip [] = error "clip: got an empty list"
+newClip fs = Clip $ V.fromList fs
 
--- | Like 'frameSeq' but allows state to be ignored when building
--- frames.
-frameSeq_ :: [Widget n] -> FrameSeq s n
-frameSeq_ ws = frameSeq $ const <$> ws
+-- | Like 'newClip' but allows state to be ignored when building frames.
+newClip_ :: [Widget n] -> Clip s n
+newClip_ ws = newClip $ const <$> ws
 
--- | Extend a frame sequence so that when the end of the original
--- sequence is reached, it continues in reverse order to create a loop.
+-- | Extend a clip so that when the end of the original clip is reached,
+-- it continues in reverse order to create a loop.
 --
 -- For example, if this is given frames A, B, C, and D, then this
--- returns a frame sequence A, B, C, D, C, B.
+-- returns a clip with frames A, B, C, D, C, B.
 --
--- If the given sequence contains less than two frames, this is
--- equivalent to 'id'.
-pingPongFrames :: FrameSeq s n -> FrameSeq s n
-pingPongFrames (FrameSeq fs) | V.length fs >= 2 =
-    FrameSeq $ fs <> V.reverse (V.init $ V.tail fs)
-pingPongFrames fs = fs
+-- If the given clip contains less than two frames, this is equivalent
+-- to 'id'.
+pingPongClip :: Clip s n -> Clip s n
+pingPongClip (Clip fs) | V.length fs >= 2 =
+    Clip $ fs <> V.reverse (V.init $ V.tail fs)
+pingPongClip c = c
 
--- | Reverse a frame sequence.
-reverseFrames :: FrameSeq s n -> FrameSeq s n
-reverseFrames (FrameSeq fs) = FrameSeq $ V.reverse fs
+-- | Reverse a clip.
+reverseClip :: Clip s n -> Clip s n
+reverseClip (Clip fs) = Clip $ V.reverse fs
 
 data AnimationManagerRequest s n =
     Tick C.UTCTime
-    | StartAnimation (FrameSeq s n) Integer RunMode (Traversal' s (Maybe (Animation s n)))
+    | StartAnimation (Clip s n) Integer RunMode (Traversal' s (Maybe (Animation s n)))
     -- ^ ID, frame count, frame duration in milliseconds, run mode, updater
     | StopAnimation (Animation s n)
     | Shutdown
@@ -108,8 +112,8 @@ data Animation s n =
               -- most situations; use 'renderAnimation' instead.
               , animationID :: AnimationID
               -- ^ The animation's internally-managed ID
-              , animationFrames :: FrameSeq s n
-              -- ^ The animation's frame sequence
+              , animationClip :: Clip s n
+              -- ^ The animation's clip
               }
 
 -- | Render an animation.
@@ -128,7 +132,7 @@ renderAnimation fallback input mAnim =
         draw = fromMaybe fallback $ do
             a <- mAnim
             let idx = animationFrameIndex a
-                FrameSeq fs = animationFrames a
+                Clip fs = animationClip a
             fs V.!? idx
 
 data AnimationState s n =
@@ -238,13 +242,13 @@ runManager = forever $ do
     getNextManagerRequest >>= handleManagerRequest
 
 handleManagerRequest :: AnimationManagerRequest s n -> ManagerM s e n ()
-handleManagerRequest (StartAnimation frames@(FrameSeq fs) frameMs runMode updater) = do
+handleManagerRequest (StartAnimation clip frameMs runMode updater) = do
     aId <- getNextAnimationID
     now <- liftIO C.getCurrentTime
     let next = C.addUTCTime frameOffset now
         frameOffset = nominalDiffFromMs frameMs
         a = AnimationState { _animationStateID = aId
-                           , _animationNumFrames = V.length fs
+                           , _animationNumFrames = clipLength clip
                            , _animationCurrentFrame = 0
                            , _animationFrameMilliseconds = frameMs
                            , _animationRunMode = runMode
@@ -255,7 +259,7 @@ handleManagerRequest (StartAnimation frames@(FrameSeq fs) frameMs runMode update
     insertAnimation a
     sendApplicationEvent $ updater .= Just (Animation { animationID = aId
                                                       , animationFrameIndex = 0
-                                                      , animationFrames = frames
+                                                      , animationClip = clip
                                                       })
 handleManagerRequest (StopAnimation a) = do
     let aId = animationID a
@@ -440,7 +444,7 @@ tellAnimationManager mgr req =
 startAnimation :: (MonadIO m)
                => AnimationManager s e n
                -- ^ The manager to run the animation
-               -> FrameSeq s n
+               -> Clip s n
                -- ^ The frames for the animation
                -> Integer
                -- ^ The animation's frame duration in milliseconds
