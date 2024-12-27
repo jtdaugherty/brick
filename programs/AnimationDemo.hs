@@ -15,7 +15,7 @@ import Graphics.Vty.CrossPlatform (mkVty)
 
 import Brick.BChan
 import Brick.Util (fg)
-import Brick.Main (App(..), showFirstCursor, customMain, halt)
+import Brick.Main (App(..), neverShowCursor, customMain, halt)
 import Brick.AttrMap (AttrName, AttrMap, attrMap, attrName)
 import Brick.Types (Widget, EventM, BrickEvent(..), Location(..))
 import Brick.Widgets.Border (border)
@@ -176,7 +176,7 @@ appEvent e = do
 theApp :: App St CustomEvent ()
 theApp =
     App { appDraw = drawUI
-        , appChooseCursor = showFirstCursor
+        , appChooseCursor = neverShowCursor
         , appHandleEvent = appEvent
         , appStartEvent = return ()
         , appAttrMap = const attrs
