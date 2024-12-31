@@ -21,12 +21,13 @@
 --
 -- To use this module:
 --
--- * Use a custom event type @e@ and give the event type a constructor
---   @EventM n s () -> e@ (where @s@ is your application state type).
---   This will require the use of 'Brick.Main.customMain' and will also
---   require the creation of a 'Brick.BChan.BChan' for custom events.
+-- * Use a custom event type @e@ in your 'App' and give the event type a
+--   constructor @EventM n s () -> e@ (where @s@ and @n@ are those in
+--   @App s e n@). This will require the use of 'Brick.Main.customMain'
+--   and will also require the creation of a 'Brick.BChan.BChan' for
+--   custom events.
 --
--- * Add an 'AnimationManager' field to the application state.
+-- * Add an 'AnimationManager' field to the application state @s@.
 --
 -- * Create an 'AnimationManager' at startup with
 --   'startAnimationManager', providing the custom event constructor and
@@ -37,19 +38,20 @@
 --   initialized to 'Nothing'. A value of 'Nothing' indicates that the
 --   animation is not running.
 --
--- * Ensure that each animation state field has a lens, usually by using
---   'Lens.Micro.TH.makeLenses'.
---
--- * Create clips with 'newClip', 'newClip_', and the clip
---   transformation functions.
+-- * Ensure that each animation state field in @s@ has a lens, usually
+--   by using 'Lens.Micro.TH.makeLenses'.
 --
 -- * Start new animations in 'EventM' with 'startAnimation'; stop them
---   with 'stopAnimation'.
+--   with 'stopAnimation'. Supply clips for new animations with
+--   'newClip', 'newClip_', and the clip transformation functions.
 --
 -- * Call 'renderAnimation' in 'Brick.Main.appDraw' for each animation in the
 --   application state.
 --
 -- * If needed, stop the animation manager with 'stopAnimationManager'.
+--
+-- See 'AnimationManager' and the docs for the rest of this module for
+-- details.
 module Brick.Animation
   ( -- * Animation managers
     AnimationManager
