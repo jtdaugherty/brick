@@ -59,6 +59,7 @@ module Brick.Animation
   , stopAnimationManager
   , minTickTime
 
+  -- * Animations
   , Animation
   , animationFrameIndex
 
