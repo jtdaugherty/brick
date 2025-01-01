@@ -477,7 +477,8 @@ minTickTime = 25
 -- If the specified tick duration is less than 'minTickTime', this will
 -- call 'error'. This bound is in place to prevent API misuse leading to
 -- ticking so fast that the terminal can't keep up with redraws.
-startAnimationManager :: Int
+startAnimationManager :: (MonadIO m)
+                      => Int
                       -- ^ The tick duration for this manager in milliseconds
                       -> BChan e
                       -- ^ The event channel to use to send updates to
@@ -489,10 +490,10 @@ startAnimationManager :: Int
                       -- application must evaluate these custom events'
                       -- 'EventM' actions in order to record animation
                       -- updates in the application state.
-                      -> IO (AnimationManager s e n)
+                      -> m (AnimationManager s e n)
 startAnimationManager tickMilliseconds _ _ | tickMilliseconds < minTickTime =
     error $ "startAnimationManager: tick delay too small (minimum is " <> show minTickTime <> ")"
-startAnimationManager tickMilliseconds outChan mkEvent = do
+startAnimationManager tickMilliseconds outChan mkEvent = liftIO $ do
     inChan <- STM.newTChanIO
     reqTid <- forkIO $ animationManagerThreadBody inChan outChan mkEvent
     tickTid <- forkIO $ tickThreadBody tickMilliseconds inChan
