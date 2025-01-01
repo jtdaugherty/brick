@@ -25,13 +25,18 @@ import qualified Brick.Animation as A
 
 data CustomEvent =
     AnimationUpdate (EventM () St ())
+    -- ^ The state update constructor required by the animation API
 
 data St =
     St { _stAnimationManager :: A.AnimationManager St CustomEvent ()
+       -- ^ The animation manager that will run all of our animations
        , _animation1 :: Maybe (A.Animation St ())
        , _animation2 :: Maybe (A.Animation St ())
        , _animation3 :: Maybe (A.Animation St ())
        , _clickAnimations :: M.Map Location (A.Animation St ())
+       -- ^ The various fields for storing animation states. For mouse
+       -- animations, we store animations for each screen location that
+       -- was clicked.
        }
 
 makeLenses ''St
@@ -122,6 +127,7 @@ attrs =
         , (attr1, fg V.black)
         ]
 
+-- | Animation settings grouped together for lookup by keystroke.
 data AnimationConfig =
     AnimationConfig { animationTarget :: Lens' St (Maybe (A.Animation St ()))
                     , animationClip :: A.Clip St ()
@@ -136,6 +142,7 @@ animations =
     , ('3', AnimationConfig animation3 clip3 100 A.Once)
     ]
 
+-- | Start the animation specified by this config.
 startAnimationFromConfig :: AnimationConfig -> EventM () St ()
 startAnimationFromConfig config = do
     mgr <- use stAnimationManager
@@ -144,6 +151,8 @@ startAnimationFromConfig config = do
                          (animationMode config)
                          (animationTarget config)
 
+-- | If the animation specified in this config is not running, start it.
+-- Otherwise stop it.
 toggleAnimationFromConfig :: AnimationConfig -> EventM () St ()
 toggleAnimationFromConfig config = do
     mgr <- use stAnimationManager
@@ -152,6 +161,7 @@ toggleAnimationFromConfig config = do
         Just a -> A.stopAnimation mgr a
         Nothing -> startAnimationFromConfig config
 
+-- | Start a new mouse click animation at the specified location.
 startMouseClickAnimation :: Location -> EventM () St ()
 startMouseClickAnimation l = do
     mgr <- use stAnimationManager
@@ -160,13 +170,17 @@ startMouseClickAnimation l = do
 appEvent :: BrickEvent () CustomEvent -> EventM () St ()
 appEvent e = do
     case e of
+        -- A mouse click starts an animation at the click location.
         VtyEvent (V.EvMouseDown col row _ _) ->
             startMouseClickAnimation (Location (col, row))
 
+        -- If we got a character keystroke, see if there is a specific
+        -- animation mapped to that character.
         VtyEvent (V.EvKey (V.KChar c) [])
             | Just aConfig <- lookup c animations ->
                 toggleAnimationFromConfig aConfig
 
+        -- Apply a state update from the animation manager.
         AppEvent (AnimationUpdate act) -> act
 
         VtyEvent (V.EvKey V.KEsc []) -> halt
