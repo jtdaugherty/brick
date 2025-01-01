@@ -383,7 +383,7 @@ handleManagerRequest Shutdown = do
     as <- HM.elems <$> use managerStateAnimations
 
     let updater = sequence_ $ clearStateAction <$> as
-    when (length as > 0) $ do
+    when (not $ null as) $ do
         sendApplicationEvent updater
 
     liftIO $ myThreadId >>= killThread
