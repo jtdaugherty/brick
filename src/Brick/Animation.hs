@@ -317,8 +317,8 @@ getNextManagerRequest = do
     inChan <- use managerStateInChan
     liftIO $ STM.atomically $ STM.readTChan inChan
 
-sendApplicationEvent :: EventM n s () -> ManagerM s e n ()
-sendApplicationEvent act = do
+sendApplicationStateUpdate :: EventM n s () -> ManagerM s e n ()
+sendApplicationStateUpdate act = do
     outChan <- use managerStateOutChan
     mkEvent <- use managerStateEventBuilder
     liftIO $ writeBChan outChan $ mkEvent act
@@ -364,10 +364,10 @@ handleManagerRequest (StartAnimation clip frameMs runMode updater) = do
                            }
 
     insertAnimation a
-    sendApplicationEvent $ updater .= Just (Animation { animationID = aId
-                                                      , animationFrameIndex = 0
-                                                      , animationClip = clip
-                                                      })
+    sendApplicationStateUpdate $ updater .= Just (Animation { animationID = aId
+                                                            , animationFrameIndex = 0
+                                                            , animationClip = clip
+                                                            })
 handleManagerRequest (StopAnimation a) = do
     let aId = animationID a
     mA <- lookupAnimation aId
@@ -379,13 +379,13 @@ handleManagerRequest (StopAnimation a) = do
 
             -- Set the current animation state in the application state
             -- to none
-            sendApplicationEvent $ clearStateAction aState
+            sendApplicationStateUpdate $ clearStateAction aState
 handleManagerRequest Shutdown = do
     as <- HM.elems <$> use managerStateAnimations
 
     let updater = sequence_ $ clearStateAction <$> as
     when (not $ null as) $ do
-        sendApplicationEvent updater
+        sendApplicationStateUpdate updater
 
     liftIO $ myThreadId >>= killThread
 handleManagerRequest (Tick tickTime) = do
@@ -395,7 +395,7 @@ handleManagerRequest (Tick tickTime) = do
     mUpdateAct <- checkAnimations tickTime
     case mUpdateAct of
         Nothing -> return ()
-        Just act -> sendApplicationEvent act
+        Just act -> sendApplicationStateUpdate act
 
 clearStateAction :: AnimationState s n -> EventM n s ()
 clearStateAction a = animationFrameUpdater a .= Nothing
