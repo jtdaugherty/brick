@@ -180,7 +180,8 @@ appEvent e = do
             startMouseClickAnimation (Location (col, row))
 
         -- If we got a character keystroke, see if there is a specific
-        -- animation mapped to that character.
+        -- animation mapped to that character and toggle the resulting
+        -- animation.
         VtyEvent (V.EvKey (V.KChar c) [])
             | Just aConfig <- lookup c animations ->
                 toggleAnimationFromConfig aConfig
