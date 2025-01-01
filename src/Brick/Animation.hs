@@ -423,10 +423,9 @@ checkAnimations now = do
         [] -> return Nothing
         _ -> return $ Just $ sequence_ updaters
 
--- For each active animation, check to see if the animation's next
--- frame time has passed. If it has, advance its frame counter as
--- appropriate and schedule its frame counter to be updated in the
--- application state.
+-- For each active animation, check to see if the animation's next frame
+-- time has passed. If it has, advance its frame counter as appropriate
+-- and schedule its frame index to be updated in the application state.
 checkAnimation :: C.UTCTime -> AnimationState s n -> ManagerM s e n (Maybe (EventM n s ()))
 checkAnimation now a
     | (now < a^.animationNextFrameTime) =
