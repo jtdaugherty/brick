@@ -438,8 +438,8 @@ checkAnimations now = do
 checkAnimation :: C.UTCTime -> AnimationState s n -> ManagerM s e n (Maybe (EventM n s ()))
 checkAnimation now a
     | isFinished a = do
-        -- This animation has completed, so clear it from the manager
-        -- and the application state.
+        -- This animation completed in a previous check, so clear it
+        -- from the manager and the application state.
         removeAnimation (a^.animationStateID)
         return $ Just $ clearStateAction a
     | (now < a^.animationNextFrameTime) =
