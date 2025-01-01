@@ -21,11 +21,11 @@
 --
 -- To use this module:
 --
--- * Use a custom event type @e@ in your 'App' and give the event type a
---   constructor @EventM n s () -> e@ (where @s@ and @n@ are those in
---   @App s e n@). This will require the use of 'Brick.Main.customMain'
---   and will also require the creation of a 'Brick.BChan.BChan' for
---   custom events.
+-- * Use a custom event type @e@ in your 'Brick.Main.App' and give the
+--   event type a constructor @EventM n s () -> e@ (where @s@ and
+--   @n@ are those in @App s e n@). This will require the use of
+--   'Brick.Main.customMain' and will also require the creation of a
+--   'Brick.BChan.BChan' for custom events.
 --
 -- * Add an 'AnimationManager' field to the application state @s@.
 --
@@ -204,7 +204,8 @@ data AnimationState s n =
 
 makeLenses ''AnimationState
 
--- | A manager for animations.
+-- | A manager for animations. The type variables for this type are the
+-- same as those for 'Brick.Main.App'.
 --
 -- This asynchronously manages a set of running animations, advancing
 -- each one over time. When a running animation's current frame needs
