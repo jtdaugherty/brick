@@ -437,15 +437,15 @@ checkAnimations now = do
 -- and schedule its frame index to be updated in the application state.
 checkAnimation :: C.UTCTime -> AnimationState s n -> ManagerM s e n (Maybe (EventM n s ()))
 checkAnimation now a
-    | (now < a^.animationNextFrameTime) =
-        -- This animation is not due for an update, so don't do
-        -- anything.
-        return Nothing
     | isFinished a = do
         -- This animation has completed, so clear it from the manager
         -- and the application state.
         removeAnimation (a^.animationStateID)
         return $ Just $ clearStateAction a
+    | (now < a^.animationNextFrameTime) =
+        -- This animation is not due for an update, so don't do
+        -- anything.
+        return Nothing
     | otherwise = do
         -- This animation is still running, so determine how many frames
         -- have elapsed for it and then advance the frame index based
