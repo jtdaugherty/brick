@@ -87,9 +87,10 @@ import Control.Concurrent (threadDelay, forkIO, ThreadId, killThread, myThreadId
 import qualified Control.Concurrent.STM as STM
 import Control.Monad (forever, when)
 import Control.Monad.State.Strict
+import Data.Foldable (foldrM)
 import Data.Hashable (Hashable)
 import qualified Data.HashMap.Strict as HM
-import Data.Maybe (fromMaybe, catMaybes)
+import Data.Maybe (fromMaybe)
 import qualified Data.Vector as V
 import qualified Data.Time.Clock as C
 import Lens.Micro ((^.), (%~), (.~), (&), Traversal', _Just)
@@ -418,8 +419,15 @@ updateAnimationState now a =
 
 checkAnimations :: C.UTCTime -> ManagerM s e n (Maybe (EventM n s ()))
 checkAnimations now = do
-    as <- HM.elems <$> use managerStateAnimations
-    updaters <- catMaybes <$> mapM (checkAnimation now) as
+    let go a updaters = do
+          result <- checkAnimation now a
+          return $ case result of
+              Nothing -> updaters
+              Just u  -> u : updaters
+
+    anims <- use managerStateAnimations
+    updaters <- foldrM go [] anims
+
     case updaters of
         [] -> return Nothing
         _ -> return $ Just $ sequence_ updaters
