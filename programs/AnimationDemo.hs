@@ -161,11 +161,15 @@ toggleAnimationFromConfig config = do
         Just a -> A.stopAnimation mgr a
         Nothing -> startAnimationFromConfig config
 
--- | Start a new mouse click animation at the specified location.
+-- | Start a new mouse click animation at the specified location if one
+-- is not already running there.
 startMouseClickAnimation :: Location -> EventM () St ()
 startMouseClickAnimation l = do
     mgr <- use stAnimationManager
-    A.startAnimation mgr mouseClickClip 100 A.Once (clickAnimations.at l)
+    a <- use (clickAnimations.at l)
+    case a of
+        Just {} -> return ()
+        Nothing -> A.startAnimation mgr mouseClickClip 100 A.Once (clickAnimations.at l)
 
 appEvent :: BrickEvent () CustomEvent -> EventM () St ()
 appEvent e = do
