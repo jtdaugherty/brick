@@ -448,8 +448,9 @@ checkAnimation now a
 
 isFinished :: AnimationState s n -> Bool
 isFinished a =
-    a^.animationRunMode == Once &&
-    a^.animationCurrentFrame == a^.animationNumFrames - 1
+    case a^.animationRunMode of
+        Once -> a^.animationCurrentFrame == a^.animationNumFrames - 1
+        Loop -> False
 
 advanceBy :: Integer -> AnimationState s n -> AnimationState s n
 advanceBy n a
