@@ -493,7 +493,7 @@ startAnimationManager :: (MonadIO m)
                       -- updates in the application state.
                       -> m (AnimationManager s e n)
 startAnimationManager tickMilliseconds _ _ | tickMilliseconds < minTickTime =
-    error $ "startAnimationManager: tick delay too small (minimum is " <> show minTickTime <> ")"
+    error $ "startAnimationManager: tick duration too small (minimum is " <> show minTickTime <> ")"
 startAnimationManager tickMilliseconds outChan mkEvent = liftIO $ do
     inChan <- STM.newTChanIO
     reqTid <- forkIO $ animationManagerThreadBody inChan outChan mkEvent
