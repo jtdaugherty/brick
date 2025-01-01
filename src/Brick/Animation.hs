@@ -529,8 +529,13 @@ stopAnimationManager mgr =
         killThread $ animationMgrTickThreadId mgr
         STM.atomically $ STM.writeTVar (animationMgrRunning mgr) False
 
+-- | Send a request to an animation manager.
 tellAnimationManager :: (MonadIO m)
-                     => AnimationManager s e n -> AnimationManagerRequest s n -> m ()
+                     => AnimationManager s e n
+                     -- ^ The manager
+                     -> AnimationManagerRequest s n
+                     -- ^ The request to send
+                     -> m ()
 tellAnimationManager mgr req =
     liftIO $
     STM.atomically $
