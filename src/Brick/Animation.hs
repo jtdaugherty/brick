@@ -67,14 +67,16 @@ module Brick.Animation
   , startAnimation
   , stopAnimation
 
-  -- * Rendering animation frames
+  -- * Rendering animations
   , renderAnimation
 
-  -- * Building and transforming clips
+  -- * Creating clips
   , Clip
   , newClip
   , newClip_
   , clipLength
+
+  -- * Transforming clips
   , pingPongClip
   , reverseClip
   )
