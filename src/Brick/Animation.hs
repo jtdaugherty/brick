@@ -442,11 +442,8 @@ checkAnimation now a
         -- have elapsed for it and then advance the frame index based
         -- the elapsed time. Also set its next frame time.
         let a' = updateAnimationState now a
-        if a'^.animationCurrentFrame == a^.animationCurrentFrame
-           then return Nothing
-           else do
-               managerStateAnimations %= HM.insert (a'^.animationStateID) a'
-               return $ Just $ frameUpdateAction a'
+        managerStateAnimations %= HM.insert (a'^.animationStateID) a'
+        return $ Just $ frameUpdateAction a'
 
 isFinished :: AnimationState s n -> Bool
 isFinished a =
