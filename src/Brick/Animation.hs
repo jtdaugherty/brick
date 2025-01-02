@@ -92,13 +92,13 @@ import Data.Hashable (Hashable)
 import qualified Data.HashMap.Strict as HM
 import Data.Maybe (fromMaybe)
 import qualified Data.Vector as V
-import qualified Data.Time.Clock as C
 import Lens.Micro ((^.), (%~), (.~), (&), Traversal', _Just)
 import Lens.Micro.TH (makeLenses)
 import Lens.Micro.Mtl
 
 import Brick.BChan
 import Brick.Types (EventM, Widget)
+import qualified Brick.Animation.Clock as C
 
 -- | A sequence of a animation frames.
 newtype Clip s n = Clip (V.Vector (s -> Widget n))
@@ -142,7 +142,7 @@ reverseClip :: Clip s n -> Clip s n
 reverseClip (Clip fs) = Clip $ V.reverse fs
 
 data AnimationManagerRequest s n =
-    Tick C.UTCTime
+    Tick C.Time
     | StartAnimation (Clip s n) Integer RunMode (Traversal' s (Maybe (Animation s n)))
     -- ^ Clip, frame duration in milliseconds, run mode, updater
     | StopAnimation (Animation s n)
@@ -200,7 +200,7 @@ data AnimationState s n =
                    , _animationFrameMilliseconds :: Integer
                    , _animationRunMode :: RunMode
                    , animationFrameUpdater :: Traversal' s (Maybe (Animation s n))
-                   , _animationNextFrameTime :: C.UTCTime
+                   , _animationNextFrameTime :: C.Time
                    }
 
 makeLenses ''AnimationState
@@ -272,19 +272,11 @@ tickThreadBody :: Int
 tickThreadBody tickMilliseconds outChan =
     forever $ do
         threadDelay $ tickMilliseconds * 1000
-        now <- C.getCurrentTime
+        now <- C.getTime
         STM.atomically $ STM.writeTChan outChan $ Tick now
 
-setNextFrameTime :: C.UTCTime -> AnimationState s n -> AnimationState s n
+setNextFrameTime :: C.Time -> AnimationState s n -> AnimationState s n
 setNextFrameTime t a = a & animationNextFrameTime .~ t
-
-nominalDiffFromMs :: Integer -> C.NominalDiffTime
-nominalDiffFromMs i = realToFrac (fromIntegral i / (1000.0::Float))
-
-nominalDiffToMs :: C.NominalDiffTime -> Integer
-nominalDiffToMs t =
-    -- NOTE: probably wrong, but we'll have to find out what this gives us
-    (round $ C.nominalDiffTimeToSeconds t)
 
 data ManagerState s e n =
     ManagerState { _managerStateInChan :: STM.TChan (AnimationManagerRequest s n)
@@ -351,9 +343,9 @@ runManager = forever $ do
 handleManagerRequest :: AnimationManagerRequest s n -> ManagerM s e n ()
 handleManagerRequest (StartAnimation clip frameMs runMode updater) = do
     aId <- getNextAnimationID
-    now <- liftIO C.getCurrentTime
-    let next = C.addUTCTime frameOffset now
-        frameOffset = nominalDiffFromMs frameMs
+    now <- liftIO C.getTime
+    let next = C.addOffset frameOffset now
+        frameOffset = C.offsetFromMs frameMs
         a = AnimationState { _animationStateID = aId
                            , _animationNumFrames = clipLength clip
                            , _animationCurrentFrame = 0
@@ -405,19 +397,19 @@ frameUpdateAction a =
     animationFrameUpdater a._Just %=
         (\an -> an { animationFrameIndex = a^.animationCurrentFrame })
 
-updateAnimationState :: C.UTCTime -> AnimationState s n -> AnimationState s n
+updateAnimationState :: C.Time -> AnimationState s n -> AnimationState s n
 updateAnimationState now a =
-    let differenceMs = nominalDiffToMs $
-                       C.diffUTCTime now (a^.animationNextFrameTime)
+    let differenceMs = C.offsetToMs $
+                       C.subtractTime now (a^.animationNextFrameTime)
         numFrames = 1 + (differenceMs `div` (a^.animationFrameMilliseconds))
-        newNextTime = C.addUTCTime (nominalDiffFromMs $ numFrames * (a^.animationFrameMilliseconds))
-                                   (a^.animationNextFrameTime)
+        newNextTime = C.addOffset (C.offsetFromMs $ numFrames * (a^.animationFrameMilliseconds))
+                                  (a^.animationNextFrameTime)
 
     -- The new frame is obtained by advancing from the current frame by
     -- numFrames.
     in setNextFrameTime newNextTime $ advanceBy numFrames a
 
-checkAnimations :: C.UTCTime -> ManagerM s e n (Maybe (EventM n s ()))
+checkAnimations :: C.Time -> ManagerM s e n (Maybe (EventM n s ()))
 checkAnimations now = do
     let go a updaters = do
           result <- checkAnimation now a
@@ -435,7 +427,7 @@ checkAnimations now = do
 -- For each active animation, check to see if the animation's next frame
 -- time has passed. If it has, advance its frame counter as appropriate
 -- and schedule its frame index to be updated in the application state.
-checkAnimation :: C.UTCTime -> AnimationState s n -> ManagerM s e n (Maybe (EventM n s ()))
+checkAnimation :: C.Time -> AnimationState s n -> ManagerM s e n (Maybe (EventM n s ()))
 checkAnimation now a
     | isFinished a = do
         -- This animation completed in a previous check, so clear it

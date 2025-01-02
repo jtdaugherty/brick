@@ -99,6 +99,7 @@ library
     Brick.Widgets.Table
     Data.IMap
   other-modules:
+    Brick.Animation.Clock
     Brick.Types.Common
     Brick.Types.TH
     Brick.Types.EventM
