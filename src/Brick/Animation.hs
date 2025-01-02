@@ -292,6 +292,7 @@ tickThreadBody tickMilliseconds outChan = do
                           C.offsetToMs $
                           C.subtractTime nextTickTime now
 
+            -- threadDelay works microseconds.
             threadDelay $ sleepMs * 1000
             go nextTickTime
 
