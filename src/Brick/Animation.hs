@@ -269,11 +269,29 @@ data AnimationManager s e n =
 tickThreadBody :: Int
                -> STM.TChan (AnimationManagerRequest s n)
                -> IO ()
-tickThreadBody tickMilliseconds outChan =
-    forever $ do
-        now <- C.getTime
-        STM.atomically $ STM.writeTChan outChan $ Tick now
-        threadDelay $ tickMilliseconds * 1000
+tickThreadBody tickMilliseconds outChan = do
+    let nextTick = C.addOffset tickOffset
+        tickOffset = C.offsetFromMs $ toInteger tickMilliseconds
+        go targetTime = do
+            now <- C.getTime
+            STM.atomically $ STM.writeTChan outChan $ Tick now
+
+            -- threadDelay does not guarantee that we will wake up on
+            -- time; it only ensures that we won't wake up earlier than
+            -- requested. Since we can therefore oversleep, instead of
+            -- always sleeping for tickMilliseconds (which would cause
+            -- us to drift off of schedule as delays accumulate) we
+            -- determine sleep time by measuring the distance between
+            -- now and the next scheduled tick.
+            let nextTickTime = nextTick targetTime
+                sleepMs = fromInteger $
+                          C.offsetToMs $
+                          C.subtractTime nextTickTime now
+
+            threadDelay $ sleepMs * 1000
+            go nextTickTime
+
+    go =<< C.getTime
 
 setNextFrameTime :: C.Time -> AnimationState s n -> AnimationState s n
 setNextFrameTime t a = a & animationNextFrameTime .~ t
