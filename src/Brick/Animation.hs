@@ -271,9 +271,9 @@ tickThreadBody :: Int
                -> IO ()
 tickThreadBody tickMilliseconds outChan =
     forever $ do
-        threadDelay $ tickMilliseconds * 1000
         now <- C.getTime
         STM.atomically $ STM.writeTChan outChan $ Tick now
+        threadDelay $ tickMilliseconds * 1000
 
 setNextFrameTime :: C.Time -> AnimationState s n -> AnimationState s n
 setNextFrameTime t a = a & animationNextFrameTime .~ t
