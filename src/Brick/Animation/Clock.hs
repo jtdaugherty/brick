@@ -10,6 +10,7 @@ module Brick.Animation.Clock
   )
 where
 
+import Control.Monad.IO.Class (MonadIO, liftIO)
 import qualified Data.Time.Clock.System as C
 
 newtype Time = Time C.SystemTime
@@ -25,8 +26,8 @@ offsetFromMs = Offset
 offsetToMs :: Offset -> Integer
 offsetToMs (Offset ms) = ms
 
-getTime :: IO Time
-getTime = Time <$> C.getSystemTime
+getTime :: (MonadIO m) => m Time
+getTime = Time <$> liftIO C.getSystemTime
 
 addOffset :: Offset -> Time -> Time
 addOffset (Offset ms) (Time (C.MkSystemTime s ns)) =
