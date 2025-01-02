@@ -282,7 +282,11 @@ tickThreadBody tickMilliseconds outChan = do
             -- always sleeping for tickMilliseconds (which would cause
             -- us to drift off of schedule as delays accumulate) we
             -- determine sleep time by measuring the distance between
-            -- now and the next scheduled tick.
+            -- now and the next scheduled tick. This is still unreliable
+            -- as we can still oversleep, but it keeps the oversleeping
+            -- under control over time. It means most ticks may be
+            -- slightly late (about 1-2 milliseconds is common) but this
+            -- will prevent that per-tick error from accumulating.
             let nextTickTime = nextTick targetTime
                 sleepMs = fromInteger $
                           C.offsetToMs $
