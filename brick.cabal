@@ -72,6 +72,7 @@ library
   hs-source-dirs:      src
   exposed-modules:
     Brick
+    Brick.Animation
     Brick.AttrMap
     Brick.BChan
     Brick.BorderMap
@@ -100,6 +101,7 @@ library
     Brick.Widgets.Table
     Data.IMap
   other-modules:
+    Brick.Animation.Clock
     Brick.Types.Common
     Brick.Types.TH
     Brick.Types.EventM
@@ -128,7 +130,10 @@ library
                        deepseq >= 1.3 && < 1.6,
                        unix-compat,
                        bytestring,
-                       word-wrap >= 0.2
+                       word-wrap >= 0.2,
+                       unordered-containers,
+                       hashable,
+                       time
 
 executable brick-custom-keybinding-demo
   if !flag(demos)
@@ -454,6 +459,23 @@ executable brick-list-vi-demo
                        microlens-mtl,
                        mtl,
                        vector
+
+executable brick-animation-demo
+  if !flag(demos)
+    Buildable: False
+  hs-source-dirs:      programs
+  ghc-options:         -threaded -Wall -Wcompat -O2
+  default-language:    Haskell2010
+  main-is:             AnimationDemo.hs
+  build-depends:       base,
+                       brick,
+                       vty,
+                       vty-crossplatform,
+                       containers,
+                       text,
+                       microlens-platform,
+                       stm,
+                       mtl
 
 executable brick-custom-event-demo
   if !flag(demos)
