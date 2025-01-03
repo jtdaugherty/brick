@@ -2,6 +2,14 @@
 Brick changelog
 ---------------
 
+2.7
+---
+
+This release adds `Brick.Animation`, a module providing infrastructure
+for adding animations to Brick interfaces. See the Haddock documentation
+in `Brick.Animation` for full details; see `programs/AnimationDemo.hs`
+for a working example.
+
 2.6
 ---
 
