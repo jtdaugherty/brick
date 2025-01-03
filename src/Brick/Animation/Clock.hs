@@ -1,3 +1,12 @@
+-- | This module provides an API for working with
+-- 'Data.Time.Clock.System.SystemTime' values similar to that of
+-- 'Data.Time.Clock.UTCTime'. @SystemTime@s are more efficient to
+-- obtain than @UTCTime@s, which is important to avoid animation
+-- tick thread delays associated with expensive clock reads. In
+-- addition, the @UTCTime@-based API provides unpleasant @Float@-based
+-- conversions. Since the @SystemTime@-based API doesn't provide some
+-- of the operations we need, and since it is easier to work with at
+-- millisecond granularity, it is extended here for internal use.
 module Brick.Animation.Clock
   ( Time
   , getTime
