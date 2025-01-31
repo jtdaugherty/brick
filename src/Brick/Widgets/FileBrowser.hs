@@ -749,7 +749,9 @@ maybeSelectCurrentEntry = do
 selectCurrentEntry :: EventM n (FileBrowser n) ()
 selectCurrentEntry = do
     b <- get
-    for_ (fileBrowserCursor b) markSelected
+    for_ (fileBrowserCursor b) $ \entry ->
+        when (fileBrowserSelectable b entry) $
+            markSelected entry
 
 -- | Render a file browser. This renders a list of entries in the
 -- working directory, a cursor to select from among the entries, a
