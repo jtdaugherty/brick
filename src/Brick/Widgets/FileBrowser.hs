@@ -158,7 +158,7 @@ import Data.List (sortBy, isSuffixOf, dropWhileEnd)
 import qualified Data.Set as Set
 import qualified Data.Vector as V
 import Lens.Micro
-import Lens.Micro.Mtl ((%=))
+import Lens.Micro.Mtl ((%=), use)
 import Lens.Micro.TH (lensRules, generateUpdateableOptics)
 import qualified Graphics.Vty as Vty
 import qualified System.Directory as D
@@ -728,8 +728,13 @@ handleFileBrowserEventCommon e =
         _ ->
             zoom fileBrowserEntriesL $ handleListEvent e
 
-markSelected :: FileInfo -> EventM n (FileBrowser n) ()
-markSelected e = fileBrowserSelectedFilesL %= Set.insert (fileInfoFilename e)
+toggleSelected :: FileInfo -> EventM n (FileBrowser n) ()
+toggleSelected e = do
+    fs <- use fileBrowserSelectedFilesL
+    let fName = fileInfoFilename e
+    if Set.member fName fs
+       then fileBrowserSelectedFilesL %= Set.delete fName
+       else fileBrowserSelectedFilesL %= Set.insert fName
 
 -- | If the browser's current entry is selectable according to
 -- @fileBrowserSelectable@, add it to the selection set and return.
@@ -742,7 +747,7 @@ maybeSelectCurrentEntry = do
     b <- get
     for_ (fileBrowserCursor b) $ \entry ->
         if fileBrowserSelectable b entry
-        then markSelected entry
+        then toggleSelected entry
         else when (selectDirectories entry) $
             put =<< liftIO (setWorkingDirectory (fileInfoFilePath entry) b)
 
@@ -751,7 +756,7 @@ selectCurrentEntry = do
     b <- get
     for_ (fileBrowserCursor b) $ \entry ->
         when (fileBrowserSelectable b entry) $
-            markSelected entry
+            toggleSelected entry
 
 -- | Render a file browser. This renders a list of entries in the
 -- working directory, a cursor to select from among the entries, a
