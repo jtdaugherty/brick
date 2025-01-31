@@ -1,5 +1,5 @@
 name:                brick
-version:             2.7
+version:             2.8
 synopsis:            A declarative terminal user interface library
 description:
   Write terminal user interfaces (TUIs) painlessly with 'brick'! You

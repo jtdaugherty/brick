@@ -2,6 +2,16 @@
 Brick changelog
 ---------------
 
+2.8
+---
+
+Behavior changes:
+* `FileBrowser` file marking with `Space` now honors the file browser's
+  configured file selector predicate.
+* `FileBrowser` file marking with `Space` and `Enter` now toggles file
+  selection rather than just selecting files, allowing for selected
+  files to be unselected.
+
 2.7
 ---
 
