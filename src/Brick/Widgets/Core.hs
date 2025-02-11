@@ -719,12 +719,11 @@ renderBox br ws =
                             (concatMap extents allTranslatedResults)
                             newBorders
 
-catDynBorder
-    :: Lens' (Edges BorderSegment) BorderSegment
-    -> Lens' (Edges BorderSegment) BorderSegment
-    -> DynBorder
-    -> DynBorder
-    -> Maybe DynBorder
+catDynBorder :: Lens' (Edges BorderSegment) BorderSegment
+             -> Lens' (Edges BorderSegment) BorderSegment
+             -> DynBorder
+             -> DynBorder
+             -> Maybe DynBorder
 catDynBorder towardsA towardsB a b
     -- Currently, we check if the 'BorderStyle's are exactly the same. In the
     -- future, it might be nice to relax this restriction. For example, if a
@@ -742,12 +741,11 @@ catDynBorder towardsA towardsB a b
     = Just (a & dbSegmentsL.towardsB.bsDrawL .~ True)
     | otherwise = Nothing
 
-catDynBorders
-    :: Lens' (Edges BorderSegment) BorderSegment
-    -> Lens' (Edges BorderSegment) BorderSegment
-    -> I.IMap DynBorder
-    -> I.IMap DynBorder
-    -> I.IMap DynBorder
+catDynBorders :: Lens' (Edges BorderSegment) BorderSegment
+              -> Lens' (Edges BorderSegment) BorderSegment
+              -> I.IMap DynBorder
+              -> I.IMap DynBorder
+              -> I.IMap DynBorder
 catDynBorders towardsA towardsB am bm = I.mapMaybe id
     $ I.intersectionWith (catDynBorder towardsA towardsB) am bm
 
@@ -757,9 +755,8 @@ catDynBorders towardsA towardsB am bm = I.mapMaybe id
 -- images to keep the image in sync with the border information.
 --
 -- The input borders are assumed to be disjoint. This property is not checked.
-catBorders
-    :: (border ~ BM.BorderMap DynBorder, rewrite ~ I.IMap V.Image)
-    => BoxRenderer n -> border -> border -> ((rewrite, rewrite), border)
+catBorders :: (border ~ BM.BorderMap DynBorder, rewrite ~ I.IMap V.Image)
+           => BoxRenderer n -> border -> border -> ((rewrite, rewrite), border)
 catBorders br r l = if lCoord + 1 == rCoord
     then ((lRe, rRe), lr')
     else ((I.empty, I.empty), lr)
@@ -788,20 +785,20 @@ catBorders br r l = if lCoord + 1 == rCoord
 -- overlap and are strictly increasing in the primary direction), produce: a
 -- list of rewrites for the lo and hi directions of each border, respectively,
 -- and the borders describing the fully concatenated object.
-catAllBorders ::
-    BoxRenderer n ->
-    [BM.BorderMap DynBorder] ->
-    ([(I.IMap V.Image, I.IMap V.Image)], BM.BorderMap DynBorder)
+catAllBorders :: BoxRenderer n
+              -> [BM.BorderMap DynBorder]
+              -> ([(I.IMap V.Image, I.IMap V.Image)], BM.BorderMap DynBorder)
 catAllBorders _ [] = ([], BM.empty)
 catAllBorders br (bm:bms) = (zip ([I.empty]++los) (his++[I.empty]), bm') where
     (rewrites, bm') = runState (traverse (state . catBorders br) bms) bm
     (his, los) = unzip rewrites
 
-rewriteEdge ::
-    (Int -> V.Image -> V.Image) ->
-    (Int -> V.Image -> V.Image) ->
-    ([V.Image] -> V.Image) ->
-    I.IMap V.Image -> V.Image -> V.Image
+rewriteEdge :: (Int -> V.Image -> V.Image)
+            -> (Int -> V.Image -> V.Image)
+            -> ([V.Image] -> V.Image)
+            -> I.IMap V.Image
+            -> V.Image
+            -> V.Image
 rewriteEdge splitLo splitHi combine = (combine .) . go . offsets 0 . I.unsafeToAscList where
 
     -- convert absolute positions into relative ones
