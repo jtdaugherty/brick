@@ -1112,8 +1112,11 @@ cropLeftBy cols p =
       result <- render p
       let amt = V.imageWidth (result^.imageL) - cols
           cropped img = if amt < 0 then V.emptyImage else V.cropLeft amt img
-      return $ addResultOffset (Location (-1 * cols, 0))
-             $ result & imageL %~ cropped
+      render $ Widget (hSize p) (vSize p) $
+               withReaderT (availWidthL .~ amt) $
+                   cropResultToContext $
+                       addResultOffset (Location (-1 * cols, 0)) $
+                           result & imageL %~ cropped
 
 -- | Crop the specified widget to the specified size from the left.
 -- Defers to the cropped widget for growth policy.
@@ -1135,7 +1138,7 @@ cropRightBy cols p =
       result <- render p
       let amt = V.imageWidth (result^.imageL) - cols
           cropped img = if amt < 0 then V.emptyImage else V.cropRight amt img
-      return $ result & imageL %~ cropped
+      cropResultToContext $ result & imageL %~ cropped
 
 -- | Crop the specified widget to the specified size from the right.
 -- Defers to the cropped widget for growth policy.
@@ -1157,8 +1160,11 @@ cropTopBy rows p =
       result <- render p
       let amt = V.imageHeight (result^.imageL) - rows
           cropped img = if amt < 0 then V.emptyImage else V.cropTop amt img
-      return $ addResultOffset (Location (0, -1 * rows))
-             $ result & imageL %~ cropped
+      render $ Widget (hSize p) (vSize p) $
+               withReaderT (availHeightL .~ amt) $
+                   cropResultToContext $
+                       addResultOffset (Location (0, -1 * rows)) $
+                           result & imageL %~ cropped
 
 -- | Crop the specified widget to the specified size from the top.
 -- Defers to the cropped widget for growth policy.
@@ -1180,7 +1186,7 @@ cropBottomBy rows p =
       result <- render p
       let amt = V.imageHeight (result^.imageL) - rows
           cropped img = if amt < 0 then V.emptyImage else V.cropBottom amt img
-      return $ result & imageL %~ cropped
+      cropResultToContext $ result & imageL %~ cropped
 
 -- | Crop the specified widget to the specified size from the bottom.
 -- Defers to the cropped widget for growth policy.
