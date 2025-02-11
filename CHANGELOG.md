@@ -2,6 +2,14 @@
 Brick changelog
 ---------------
 
+2.8.1
+-----
+
+* Fixed a long-standing bug in `cropToContext` that resulted in some
+  extents getting left around when they should be dropped, possibly
+  leading to application bugs when handling mouse clicks in extent
+  regions that should have been removed from the rendering result.
+
 2.8
 ---
 
