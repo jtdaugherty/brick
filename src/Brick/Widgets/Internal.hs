@@ -114,29 +114,31 @@ cropCursors ctx cs = mapMaybe cropCursor cs
 cropExtents :: Context n -> [Extent n] -> [Extent n]
 cropExtents ctx es = mapMaybe cropExtent es
     where
-        -- An extent is cropped in places where it is not within the
-        -- region described by the context.
-        --
-        -- If its entirety is outside the context region, it is dropped.
-        --
-        -- Otherwise its size is adjusted so that it is contained within
-        -- the context region.
         cropExtent (Extent n (Location (c, r)) (w, h)) =
-            -- Determine the new lower-right corner
-            let endCol = c + w
-                endRow = r + h
-                -- Then clamp the lower-right corner based on the
-                -- context
-                endCol' = min (ctx^.availWidthL) endCol
-                endRow' = min (ctx^.availHeightL) endRow
-                -- Then compute the new width and height from the
-                -- clamped lower-right corner.
-                w' = endCol' - c
-                h' = endRow' - r
-                e = Extent n (Location (c, r)) (w', h')
-            in if w' < 0 || h' < 0
-               then Nothing
-               else Just e
+            -- Clamp the original extent's UL corner to the context.
+            --
+            -- Clamp the original extent's LR corner to the context.
+            --
+            -- Keep the modified extent (i.e. with clamped corners)
+            -- only if the resulting extent has non-zero size in both
+            -- dimensions.
+            let nonEmpty = nonEmptyH && nonEmptyV
+                nonEmptyH = newWidth > 0
+                nonEmptyV = newHeight > 0
+                newWidth = newEndCol - newStartCol
+                newHeight = newEndRow - newStartRow
+                (newStartCol, newStartRow) = clampCorner (c, r)
+                (newEndCol, newEndRow) = clampCorner (c + w, r + h)
+                clampCorner (cols, rows) =
+                    ( clampRange (ctx^.availWidthL) cols
+                    , clampRange (ctx^.availHeightL) rows
+                    )
+                clampRange bound val =
+                    min bound $ max 0 val
+                newExtent = Extent n (Location (newStartCol, newStartRow)) (newWidth, newHeight)
+            in if nonEmpty
+               then Just newExtent
+               else Nothing
 
 cropBorders :: Context n -> BorderMap DynBorder -> BorderMap DynBorder
 cropBorders ctx = BM.crop Edges
