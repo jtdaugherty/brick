@@ -2,6 +2,13 @@
 Brick changelog
 ---------------
 
+2.8.2
+-----
+
+* Updated `Brick.Widgets.Core` functions `cropBottomBy`, `cropToBy`,
+  `cropLeftBy`, and `cropRightBy` to properly perform result cropping to
+  actually address the internal bug fixed in 2.8.1.
+
 2.8.1
 -----
 
