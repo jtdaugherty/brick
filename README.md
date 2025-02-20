@@ -101,6 +101,7 @@ it, get in touch!
 | [`wordle`](https://github.com/ivanjermakov/wordle) | An implementation of the Wordle game |
 | [`wrapping-editor`](https://github.com/ta0kira/wrapping-editor) | An embeddable editor with support for Brick |
 | [`youbrick`](https://github.com/florentc/youbrick) | A feed aggregator and launcher for Youtube channels |
+| [`monad-torrent`](https://github.com/davorluc/monad-torrent) | A simple and minimal torrent client |
 
 These third-party packages also extend `brick`:
 
