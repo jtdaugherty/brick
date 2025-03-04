@@ -77,6 +77,7 @@ it, get in touch!
 | [`kpxhs`](https://github.com/akazukin5151/kpxhs) | An interactive [Keepass](https://github.com/keepassxreboot/keepassxc/) database viewer |
 | [`matterhorn`](https://github.com/matterhorn-chat/matterhorn) | A client for [Mattermost](https://about.mattermost.com/) |
 | [`maze`](https://github.com/benjaminselfridge/maze) | A Brick-based maze game |
+| [`monad-torrent`](https://github.com/davorluc/monad-torrent) | A simple and minimal torrent client |
 | [`monalog`](https://github.com/goosedb/Monalog) | Terminal logs observer |
 | [`mushu`](https://github.com/elaye/mushu) | An `MPD` client |
 | [`mywork`](https://github.com/kquick/mywork) [[Hackage]](https://hackage.haskell.org/package/mywork) | A tool to keep track of the projects you are working on |
@@ -101,7 +102,6 @@ it, get in touch!
 | [`wordle`](https://github.com/ivanjermakov/wordle) | An implementation of the Wordle game |
 | [`wrapping-editor`](https://github.com/ta0kira/wrapping-editor) | An embeddable editor with support for Brick |
 | [`youbrick`](https://github.com/florentc/youbrick) | A feed aggregator and launcher for Youtube channels |
-| [`monad-torrent`](https://github.com/davorluc/monad-torrent) | A simple and minimal torrent client |
 
 These third-party packages also extend `brick`:
 
