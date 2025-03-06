@@ -2,13 +2,13 @@
 {-# LANGUAGE RankNTypes #-}
 module Brick.Main
   ( App(..)
+  , simpleApp
   , defaultMain
   , customMain
   , customMainWithVty
   , customMainWithDefaultVty
   , simpleMain
   , resizeOrQuit
-  , simpleApp
 
   -- * Event handler functions
   , continueWithoutRedraw
@@ -85,6 +85,7 @@ import Brick.BChan (BChan, newBChan, readBChan, readBChan2, writeBChan)
 import Brick.Types.EventM
 import Brick.Types.Internal
 import Brick.Widgets.Internal
+import Brick.Widgets.Core (str)
 import Brick.AttrMap
 
 -- | The library application abstraction. Your application's operations
@@ -122,6 +123,25 @@ data App s e n =
         -- ^ The attribute map that should be used during rendering.
         }
 
+-- | A simple application with reasonable defaults to be overridden as
+-- desired:
+--
+-- * Draws only the specified widget
+-- * Quits on any event other than resizes
+-- * Has no start event handler
+-- * Provides no attribute map
+-- * Never shows any cursors
+--
+-- Try providing it a 'str' widget to try it out.
+simpleApp :: Widget n -> App s e n
+simpleApp w =
+    App { appDraw = const [w]
+        , appHandleEvent = resizeOrQuit
+        , appStartEvent = return ()
+        , appAttrMap = const $ attrMap defAttr []
+        , appChooseCursor = neverShowCursor
+        }
+
 -- | The default main entry point which takes an application and an
 -- initial state and returns the final state from 'EventM' once the
 -- program exits.
@@ -144,23 +164,6 @@ simpleMain :: (Ord n)
            -- ^ The widget to draw.
            -> IO ()
 simpleMain w = defaultMain (simpleApp w) ()
-
--- | A simple application with reasonable defaults to be overridden as
--- desired:
---
--- * Draws only the specified widget
--- * Quits on any event other than resizes
--- * Has no start event handler
--- * Provides no attribute map
--- * Never shows any cursors
-simpleApp :: Widget n -> App s e n
-simpleApp w =
-    App { appDraw = const [w]
-        , appHandleEvent = resizeOrQuit
-        , appStartEvent = return ()
-        , appAttrMap = const $ attrMap defAttr []
-        , appChooseCursor = neverShowCursor
-        }
 
 -- | An event-handling function which continues execution of the event
 -- loop only when resize events occur; all other types of events trigger
