@@ -2,6 +2,15 @@
 Brick changelog
 ---------------
 
+2.8.3
+-----
+
+Bug fixes:
+
+* Fixed a bug that completely broken `makeVisible` that was introduced
+  in brick 2.6.
+* Fixed context cropping in `cropRightBy` and `cropBottomBy`.
+
 2.8.2
 -----
 
