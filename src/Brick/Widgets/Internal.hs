@@ -40,7 +40,6 @@ renderFinal aMap layerRenders (w, h) chooseCursor rs =
         resetRs = rs & reportedExtentsL .~ mempty
                      & observedNamesL .~ mempty
                      & clickableNamesL .~ mempty
-                     & requestedVisibleNames_L .~ mempty
 
         (layerResults, !newRS) = flip runState resetRs $ sequence $
             (\p -> runReaderT p ctx) <$>
