@@ -72,6 +72,7 @@ it, get in touch!
 | [`hledger-iadd`](http://github.com/rootzlevel/hledger-iadd) | An interactive terminal UI for adding hledger journal entries |
 | [`hledger-ui`](https://github.com/simonmichael/hledger) | A terminal UI for the hledger accounting system. |
 | [`homodoro`](https://github.com/c0nradLC/homodoro) | A terminal application to use the pomodoro technique and keep track of daily tasks |
+| [`hskanban`](https://github.com/vincentaxhe/hskanban) | A Kanban organizer |
 | [`htyper`](https://github.com/Simon-Hostettler/htyper) | A typing speed test program |
 | [`hyahtzee2`](https://github.com/DamienCassou/hyahtzee2#readme) | Famous Yahtzee dice game |
 | [`kpxhs`](https://github.com/akazukin5151/kpxhs) | An interactive [Keepass](https://github.com/keepassxreboot/keepassxc/) database viewer |
