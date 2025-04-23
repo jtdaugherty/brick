@@ -110,7 +110,7 @@ These third-party packages also extend `brick`:
 | ------- | ----------- |
 | [`brick-filetree`](https://github.com/ChrisPenner/brick-filetree) [[Hackage]](http://hackage.haskell.org/package/brick-filetree) | A widget for exploring a directory tree and selecting or flagging files and directories |
 | [`brick-panes`](https://github.com/kquick/brick-panes) [[Hackage]](https://hackage.haskell.org/package/brick-panes) | A Brick overlay library providing composition and isolation of screen areas for TUI apps. |
-| [`brick-calendar`](https://github.com/ldgrp/brick-calendar) [[Hackage]](https://hackage.haskell.org/package/brick-calendar) | A Brick library providing a calendar widget. |
+| [`brick-calendar`](https://github.com/ldgrp/brick-calendar) [[Hackage]](https://hackage.haskell.org/package/brick-calendar) | A library providing a calendar widget for Brick-based applications. |
 
 Getting Started
 ---------------
