@@ -107,11 +107,11 @@ it, get in touch!
 
 These third-party packages also extend `brick`:
 
-| Project | Description |
-| ------- | ----------- |
-| [`brick-filetree`](https://github.com/ChrisPenner/brick-filetree) [[Hackage]](http://hackage.haskell.org/package/brick-filetree) | A widget for exploring a directory tree and selecting or flagging files and directories |
-| [`brick-panes`](https://github.com/kquick/brick-panes) [[Hackage]](https://hackage.haskell.org/package/brick-panes) | A Brick overlay library providing composition and isolation of screen areas for TUI apps. |
-| [`brick-calendar`](https://github.com/ldgrp/brick-calendar) [[Hackage]](https://hackage.haskell.org/package/brick-calendar) | A library providing a calendar widget for Brick-based applications. |
+| Project | Description | Hackage |
+| ------- | ----------- | ------- |
+| [`brick-filetree`](https://github.com/ChrisPenner/brick-filetree) | A widget for exploring a directory tree and selecting or flagging files and directories | [Hackage](http://hackage.haskell.org/package/brick-filetree) |
+| [`brick-panes`](https://github.com/kquick/brick-panes) | A Brick overlay library providing composition and isolation of screen areas for TUI apps. | [Hackage](https://hackage.haskell.org/package/brick-panes) |
+| [`brick-calendar`](https://github.com/ldgrp/brick-calendar) | A library providing a calendar widget for Brick-based applications. | [Hackage](https://hackage.haskell.org/package/brick-calendar) |
 
 Getting Started
 ---------------
