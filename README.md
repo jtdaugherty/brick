@@ -53,6 +53,7 @@ it, get in touch!
 | [`2048Haskell`](https://github.com/8Gitbrix/2048Haskell) | An implementation of the 2048 game |
 | [`babel-cards`](https://github.com/srhoulam/babel-cards) | A TUI spaced-repetition memorization tool. Similar to Anki. |
 | [`bhoogle`](https://github.com/andrevdm/bhoogle) | A [Hoogle](https://www.haskell.org/hoogle/) client |
+| [`bollama`](https://github.com/andrevdm/bollama) | A simple [Ollama](https://ollama.com/) TUI |
 | [`brewsage`](https://github.com/gerdreiss/brewsage#readme) | A TUI for Homebrew |
 | [`brick-trading-journal`](https://codeberg.org/amano.kenji/brick-trading-journal) | A TUI program that calculates basic statistics from trades |
 | [`Brickudoku`](https://github.com/Thecentury/brickudoku) | A hybrid of Tetris and Sudoku |
