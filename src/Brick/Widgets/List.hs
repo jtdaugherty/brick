@@ -63,6 +63,9 @@ module Brick.Widgets.List
   , listReverse
   , listModify
 
+  -- * Querying a list
+  , listFindFirst
+
   -- * Attributes
   , listAttr
   , listSelectedAttr
@@ -577,6 +580,20 @@ listMoveToElement :: (Eq e, Foldable t, Splittable t)
                   -> GenericList n t e
                   -> GenericList n t e
 listMoveToElement e = listFindBy (== e) . set listSelectedL Nothing
+
+-- | Find the first element in the list that satisfies the specified
+-- predicate. If such an element is found, return the resulting index
+-- and element.
+--
+-- /O(n)/.
+listFindFirst :: (Semigroup (t e), Splittable t, Traversable t)
+              => (e -> Bool)
+              -> GenericList n t e
+              -> Maybe (Int, e)
+listFindFirst f l =
+    listSelectedElement $
+    listFindBy f $
+    set listSelectedL Nothing l
 
 -- | Starting from the currently-selected position, attempt to find
 -- and select the next element matching the predicate. If there are no

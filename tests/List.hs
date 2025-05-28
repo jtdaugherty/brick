@@ -348,6 +348,15 @@ prop_findByLazy =
     in l' ^. listSelectedL == Just 1 &&
        l'' ^. listSelectedL == Just 3
 
+prop_listFindFirst :: Bool
+prop_listFindFirst =
+    let v = L [1..5] :: L Int
+        l = list () v 1
+        result1 = listFindFirst even l
+        result2 = listFindFirst (> 10) l
+    in result1 == Just (1, 2) &&
+       result2 == Nothing
+
 prop_listSelectedElement_lazy :: Bool
 prop_listSelectedElement_lazy =
     let v = L (1:2:3:4:undefined) :: L Int
