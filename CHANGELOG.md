@@ -2,6 +2,12 @@
 Brick changelog
 ---------------
 
+2.9
+---
+
+API changes:
+* Added `Brick.Widgets.List.listFindFirst` function.
+
 2.8.3
 -----
 
