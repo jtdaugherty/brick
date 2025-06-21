@@ -238,6 +238,10 @@ customMain initialVty buildVty mUserChan app initialAppState = do
 
 -- | Like 'customMainWithVty', except that Vty is initialized with the
 -- default configuration.
+--
+-- The Vty is live when returned to the caller.  Use 'shutdown' to
+-- finalise it.
+--
 customMainWithDefaultVty :: (Ord n)
                          => Maybe (BChan e)
                          -- ^ An event channel for sending custom
