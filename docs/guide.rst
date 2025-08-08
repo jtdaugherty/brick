@@ -1993,8 +1993,8 @@ function:
         border $
         str "This will be cached"
 
-In the example above, the first time the ``border $ str "This will be
-cached"`` widget is rendered, the resulting Vty image will be stored
+In the example above, the first time the ``border $ str "This will be cached"``
+widget is rendered, the resulting Vty image will be stored
 in the rendering cache under the key ``ExpensiveThing``. On subsequent
 renderings the cached Vty image will be used instead of re-rendering the
 widget. This example doesn't need caching to improve performance, but
