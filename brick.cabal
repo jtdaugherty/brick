@@ -46,10 +46,10 @@ tested-with:         GHC == 8.2.2
                       || == 9.0.2
                       || == 9.2.8
                       || == 9.4.8
-                      || == 9.6.6
+                      || == 9.6.7
                       || == 9.8.4
-                      || == 9.10.1
-                      || == 9.12.1
+                      || == 9.10.3
+                      || == 9.12.2
 
 extra-doc-files:     README.md,
                      docs/guide.rst,
@@ -59,7 +59,7 @@ extra-doc-files:     README.md,
 
 Source-Repository head
   type:     git
-  location: git://github.com/jtdaugherty/brick.git
+  location: http://github.com/jtdaugherty/brick
 
 Flag demos
     Description:     Build demonstration programs
@@ -161,9 +161,7 @@ executable brick-table-demo
   default-extensions:  CPP
   main-is:             TableDemo.hs
   build-depends:       base,
-                       brick,
-                       text,
-                       vty
+                       brick
 
 executable brick-tail-demo
   if !flag(demos)
@@ -177,7 +175,6 @@ executable brick-tail-demo
                        brick,
                        text,
                        vty,
-                       vty-crossplatform,
                        random,
                        microlens-th,
                        microlens-mtl
@@ -191,8 +188,7 @@ executable brick-readme-demo
   default-extensions:  CPP
   main-is:             ReadmeDemo.hs
   build-depends:       base,
-                       brick,
-                       text
+                       brick
 
 executable brick-file-browser-demo
   if !flag(demos)
@@ -234,7 +230,6 @@ executable brick-text-wrap-demo
   main-is:             TextWrapDemo.hs
   build-depends:       base,
                        brick,
-                       text,
                        word-wrap
 
 executable brick-cache-demo
@@ -248,9 +243,6 @@ executable brick-cache-demo
   build-depends:       base,
                        brick,
                        vty,
-                       text,
-                       microlens >= 0.3.0.0,
-                       microlens-th,
                        mtl
 
 executable brick-visibility-demo
@@ -263,7 +255,6 @@ executable brick-visibility-demo
   build-depends:       base,
                        brick,
                        vty,
-                       text,
                        microlens >= 0.3.0.0,
                        microlens-th,
                        microlens-mtl
@@ -280,8 +271,6 @@ executable brick-viewport-scrollbars-demo
                        brick,
                        vty,
                        vty-crossplatform,
-                       text,
-                       microlens,
                        microlens-mtl,
                        microlens-th
 
@@ -295,9 +284,7 @@ executable brick-viewport-scroll-demo
   main-is:             ViewportScrollDemo.hs
   build-depends:       base,
                        brick,
-                       vty,
-                       text,
-                       microlens
+                       vty
 
 executable brick-dialog-demo
   if !flag(demos)
@@ -308,9 +295,7 @@ executable brick-dialog-demo
   main-is:             DialogDemo.hs
   build-depends:       base,
                        brick,
-                       vty,
-                       text,
-                       microlens
+                       vty
 
 executable brick-mouse-demo
   if !flag(demos)
@@ -322,11 +307,9 @@ executable brick-mouse-demo
   build-depends:       base,
                        brick,
                        vty,
-                       text,
                        microlens >= 0.3.0.0,
                        microlens-th,
                        microlens-mtl,
-                       text-zipper,
                        mtl
 
 executable brick-layer-demo
@@ -339,7 +322,6 @@ executable brick-layer-demo
   build-depends:       base,
                        brick,
                        vty,
-                       text,
                        microlens >= 0.3.0.0,
                        microlens-th,
                        microlens-mtl
@@ -354,7 +336,6 @@ executable brick-suspend-resume-demo
   build-depends:       base,
                        brick,
                        vty,
-                       text,
                        microlens >= 0.3.0.0,
                        microlens-th
 
@@ -367,9 +348,7 @@ executable brick-cropping-demo
   main-is:             CroppingDemo.hs
   build-depends:       base,
                        brick,
-                       vty,
-                       text,
-                       microlens
+                       vty
 
 executable brick-padding-demo
   if !flag(demos)
@@ -380,9 +359,7 @@ executable brick-padding-demo
   main-is:             PaddingDemo.hs
   build-depends:       base,
                        brick,
-                       vty,
-                       text,
-                       microlens
+                       vty
 
 executable brick-theme-demo
   if !flag(demos)
@@ -394,9 +371,7 @@ executable brick-theme-demo
   build-depends:       base,
                        brick,
                        vty,
-                       text,
-                       mtl,
-                       microlens
+                       mtl
 
 executable brick-attr-demo
   if !flag(demos)
@@ -407,9 +382,7 @@ executable brick-attr-demo
   main-is:             AttrDemo.hs
   build-depends:       base,
                        brick,
-                       vty,
-                       text,
-                       microlens
+                       vty
 
 executable brick-tabular-list-demo
   if !flag(demos)
@@ -421,11 +394,9 @@ executable brick-tabular-list-demo
   build-depends:       base,
                        brick,
                        vty,
-                       text,
                        microlens >= 0.3.0.0,
                        microlens-mtl,
                        microlens-th,
-                       mtl,
                        vector
 
 executable brick-list-demo
@@ -438,7 +409,6 @@ executable brick-list-demo
   build-depends:       base,
                        brick,
                        vty,
-                       text,
                        microlens >= 0.3.0.0,
                        microlens-mtl,
                        mtl,
@@ -454,7 +424,6 @@ executable brick-list-vi-demo
   build-depends:       base,
                        brick,
                        vty,
-                       text,
                        microlens >= 0.3.0.0,
                        microlens-mtl,
                        mtl,
@@ -472,10 +441,7 @@ executable brick-animation-demo
                        vty,
                        vty-crossplatform,
                        containers,
-                       text,
-                       microlens-platform,
-                       stm,
-                       mtl
+                       microlens-platform
 
 executable brick-custom-event-demo
   if !flag(demos)
@@ -487,7 +453,6 @@ executable brick-custom-event-demo
   build-depends:       base,
                        brick,
                        vty,
-                       text,
                        microlens >= 0.3.0.0,
                        microlens-th,
                        microlens-mtl
@@ -500,10 +465,7 @@ executable brick-fill-demo
   default-language:    Haskell2010
   main-is:             FillDemo.hs
   build-depends:       base,
-                       brick,
-                       vty,
-                       text,
-                       microlens
+                       brick
 
 executable brick-hello-world-demo
   if !flag(demos)
@@ -513,10 +475,7 @@ executable brick-hello-world-demo
   default-language:    Haskell2010
   main-is:             HelloWorldDemo.hs
   build-depends:       base,
-                       brick,
-                       vty,
-                       text,
-                       microlens
+                       brick
 
 executable brick-edit-demo
   if !flag(demos)
@@ -528,9 +487,6 @@ executable brick-edit-demo
   build-depends:       base,
                        brick,
                        vty,
-                       text,
-                       vector,
-                       mtl,
                        microlens >= 0.3.0.0,
                        microlens-th,
                        microlens-mtl
@@ -545,9 +501,6 @@ executable brick-editor-line-numbers-demo
   build-depends:       base,
                        brick,
                        vty,
-                       text,
-                       vector,
-                       mtl,
                        microlens >= 0.3.0.0,
                        microlens-th,
                        microlens-mtl
@@ -563,8 +516,7 @@ executable brick-border-demo
   build-depends:       base,
                        brick,
                        vty,
-                       text,
-                       microlens
+                       text
 
 executable brick-dynamic-border-demo
   if !flag(demos)
@@ -575,10 +527,7 @@ executable brick-dynamic-border-demo
   default-language:    Haskell2010
   main-is:             DynamicBorderDemo.hs
   build-depends:       base <= 5,
-                       brick,
-                       vty,
-                       text,
-                       microlens
+                       brick
 
 executable brick-progressbar-demo
   if !flag(demos)
@@ -591,8 +540,6 @@ executable brick-progressbar-demo
   build-depends:       base,
                        brick,
                        vty,
-                       text,
-                       microlens,
                        microlens-mtl,
                        microlens-th
 
