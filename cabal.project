@@ -1,0 +1,42 @@
+packages:
+  .
+
+tests: True
+
+constraints:
+  -- This is requried by `vty` and this constraint is part of
+  -- https://github.com/jtdaugherty/vty/pulls
+  , parsec >= 3.1.18
+
+-- cabal-allow-newer
+if impl (ghc >= 9.14)
+  allow-newer:
+    , binary:containers
+    , config-ini:base
+    , config-ini:containers
+    , config-ini:text
+    , hashable:base
+    , hashable:bytestring
+    , hashable:containers
+    , hashable:ghc-bignum
+    , hashable:ghc-prim
+    , integer-logarithms:base
+    , integer-logarithms:ghc-bignum
+    , megaparsec:scientific
+    , microlens-th:template-haskell
+    , microlens-th:th-abstraction
+    , parsec:base
+    , parsec:text
+    , primitive:base
+    , scientific:base
+    , scientific:integer-logarithms
+    , scientific:template-haskell
+    , splitmix:base
+    , template-haskell:base
+    , text:base
+    , text:bytestring
+    , text:ghc-prim
+    , text:template-haskell
+    , th-abstraction:containers
+    , th-abstraction:template-haskell
+    , unordered-containers:template-haskell
