@@ -3,6 +3,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE CPP #-}
 module Brick.Types.Common
   ( Location(..)
   , locL
@@ -16,7 +17,11 @@ import qualified Data.Semigroup as Sem
 import GHC.Generics
 import Control.DeepSeq
 import Lens.Micro (_1, _2)
+#if MIN_VERSION_microlens(0,5,0)
+import Lens.Micro.FieldN (Field1, Field2)
+#else
 import Lens.Micro.Internal (Field1, Field2)
+#endif
 
 -- | A terminal screen location.
 data Location = Location { loc :: (Int, Int)
