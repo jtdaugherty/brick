@@ -2,6 +2,12 @@
 Brick changelog
 ---------------
 
+2.10
+----
+
+* Updated `brick` to build with `microlens == 0.5.0.0` which moved its
+  Field* classes to `Lens.Micro.FieldN`.
+
 2.9
 ---
 
