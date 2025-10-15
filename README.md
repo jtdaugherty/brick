@@ -105,13 +105,14 @@ it, get in touch!
 | [`wrapping-editor`](https://github.com/ta0kira/wrapping-editor) | An embeddable editor with support for Brick |
 | [`youbrick`](https://github.com/florentc/youbrick) | A feed aggregator and launcher for Youtube channels |
 
-These third-party packages also extend `brick`:
+These additional packages also extend `brick`:
 
 | Project | Description | Hackage |
 | ------- | ----------- | ------- |
 | [`brick-filetree`](https://github.com/ChrisPenner/brick-filetree) | A widget for exploring a directory tree and selecting or flagging files and directories | [Hackage](https://hackage.haskell.org/package/brick-filetree) |
 | [`brick-panes`](https://github.com/kquick/brick-panes) | A Brick overlay library providing composition and isolation of screen areas for TUI apps. | [Hackage](https://hackage.haskell.org/package/brick-panes) |
 | [`brick-calendar`](https://github.com/ldgrp/brick-calendar) | A library providing a calendar widget for Brick-based applications. | [Hackage](https://hackage.haskell.org/package/brick-calendar) |
+| [`brick-skylighting`](https://github.com/jtdaugherty/brick-skylighting) | A library providing integration support for [Skylighting](https://hackage.haskell.org/package/skylighting)-based syntax highlighting. | [Hackage](https://hackage.haskell.org/package/brick-skylighting) |
 
 Getting Started
 ---------------
