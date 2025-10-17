@@ -24,7 +24,7 @@ import Lens.Micro.Internal (Field1, Field2)
 #endif
 
 -- | A terminal screen location.
-data Location = Location { loc :: (Int, Int)
+data Location = Location { loc :: !(Int, Int)
                          -- ^ (Column, Row)
                          }
                 deriving (Show, Eq, Ord, Read, Generic, NFData)
@@ -48,7 +48,7 @@ instance Monoid Location where
     mempty = origin
     mappend = (Sem.<>)
 
-data Edges a = Edges { eTop, eBottom, eLeft, eRight :: a }
+data Edges a = Edges { eTop, eBottom, eLeft, eRight :: !a }
     deriving (Eq, Ord, Read, Show, Functor, Generic, NFData)
 
 suffixLenses ''Edges

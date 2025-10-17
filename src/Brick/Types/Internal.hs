@@ -103,16 +103,16 @@ import Brick.Types.TH
 import Brick.AttrMap (AttrName, AttrMap)
 import Brick.Widgets.Border.Style (BorderStyle)
 
-data ScrollRequest = HScrollBy Int
-                   | HScrollPage Direction
+data ScrollRequest = HScrollBy !Int
+                   | HScrollPage !Direction
                    | HScrollToBeginning
                    | HScrollToEnd
-                   | VScrollBy Int
-                   | VScrollPage Direction
+                   | VScrollBy !Int
+                   | VScrollPage !Direction
                    | VScrollToBeginning
                    | VScrollToEnd
-                   | SetTop Int
-                   | SetLeft Int
+                   | SetTop !Int
+                   | SetLeft !Int
                    deriving (Read, Show, Generic, NFData)
 
 -- | Widget size policies. These policies communicate how a widget uses
@@ -131,9 +131,9 @@ data Size = Fixed
 
 -- | The type of widgets.
 data Widget n =
-    Widget { hSize :: Size
+    Widget { hSize :: !Size
            -- ^ This widget's horizontal growth policy
-           , vSize :: Size
+           , vSize :: !Size
            -- ^ This widget's vertical growth policy
            , render :: RenderM n (Result n)
            -- ^ This widget's rendering function
@@ -230,21 +230,21 @@ data HScrollbarRenderer n =
                        }
 
 data VisibilityRequest =
-    VR { vrPosition :: Location
-       , vrSize :: DisplayRegion
+    VR { vrPosition :: !Location
+       , vrSize :: !DisplayRegion
        }
        deriving (Show, Eq, Read, Generic, NFData)
 
 -- | Describes the state of a viewport as it appears as its most recent
 -- rendering.
 data Viewport =
-    VP { _vpLeft :: Int
+    VP { _vpLeft :: !Int
        -- ^ The column offset of left side of the viewport.
-       , _vpTop :: Int
+       , _vpTop :: !Int
        -- ^ The row offset of the top of the viewport.
-       , _vpSize :: DisplayRegion
+       , _vpSize :: !DisplayRegion
        -- ^ The size of the viewport.
-       , _vpContentSize :: DisplayRegion
+       , _vpContentSize :: !DisplayRegion
        -- ^ The size of the contents of the viewport.
        }
        deriving (Show, Read, Generic, NFData)
@@ -274,9 +274,9 @@ data EventState n =
        }
 
 data VtyContext =
-    VtyContext { vtyContextBuilder :: IO Vty
-               , vtyContextHandle :: Vty
-               , vtyContextThread :: ThreadId
+    VtyContext { vtyContextBuilder :: !(IO Vty)
+               , vtyContextHandle :: !Vty
+               , vtyContextThread :: !ThreadId
                , vtyContextPutEvent :: Event -> IO ()
                }
 
@@ -330,27 +330,27 @@ data CursorLocation n =
 -- | A border character has four segments, one extending in each direction
 -- (horizontally and vertically) from the center of the character.
 data BorderSegment = BorderSegment
-    { bsAccept :: Bool
+    { bsAccept :: !Bool
     -- ^ Would this segment be willing to be drawn if a neighbor wanted to
     -- connect to it?
-    , bsOffer :: Bool
+    , bsOffer :: !Bool
     -- ^ Does this segment want to connect to its neighbor?
-    , bsDraw :: Bool
+    , bsDraw :: !Bool
     -- ^ Should this segment be represented visually?
     } deriving (Eq, Ord, Read, Show, Generic, NFData)
 
 -- | Information about how to redraw a dynamic border character when it abuts
 -- another dynamic border character.
 data DynBorder = DynBorder
-    { dbStyle :: BorderStyle
+    { dbStyle :: !BorderStyle
     -- ^ The 'Char's to use when redrawing the border. Also used to filter
     -- connections: only dynamic borders with equal 'BorderStyle's will connect
     -- to each other.
-    , dbAttr :: Attr
+    , dbAttr :: !Attr
     -- ^ What 'Attr' to use to redraw the border character. Also used to filter
     -- connections: only dynamic borders with equal 'Attr's will connect to
     -- each other.
-    , dbSegments :: Edges BorderSegment
+    , dbSegments :: !(Edges BorderSegment)
     } deriving (Eq, Read, Show, Generic, NFData)
 
 -- | The type of result returned by a widget's rendering function. The
@@ -394,23 +394,23 @@ emptyResult =
            }
 
 -- | The type of events.
-data BrickEvent n e = VtyEvent Event
+data BrickEvent n e = VtyEvent !Event
                     -- ^ The event was a Vty event.
-                    | AppEvent e
+                    | AppEvent !e
                     -- ^ The event was an application event.
-                    | MouseDown n Button [Modifier] Location
+                    | MouseDown !n !Button ![Modifier] !Location
                     -- ^ A mouse-down event on the specified region was
                     -- received. The 'n' value is the resource name of
                     -- the clicked widget (see 'clickable').
-                    | MouseUp n (Maybe Button) Location
+                    | MouseUp !n !(Maybe Button) !Location
                     -- ^ A mouse-up event on the specified region was
                     -- received. The 'n' value is the resource name of
                     -- the clicked widget (see 'clickable').
                     deriving (Show, Eq, Ord)
 
-data EventRO n = EventRO { eventViewportMap :: M.Map n Viewport
-                         , latestExtents :: [Extent n]
-                         , oldState :: RenderState n
+data EventRO n = EventRO { eventViewportMap :: !(M.Map n Viewport)
+                         , latestExtents :: ![Extent n]
+                         , oldState :: !(RenderState n)
                          }
 
 -- | Clickable elements of a scroll bar.
@@ -432,22 +432,22 @@ data ClickableScrollbarElement =
 -- to render, which bordering style should be used, and the attribute map
 -- available for rendering.
 data Context n =
-    Context { ctxAttrName :: AttrName
-            , availWidth :: Int
-            , availHeight :: Int
-            , windowWidth :: Int
-            , windowHeight :: Int
-            , ctxBorderStyle :: BorderStyle
-            , ctxAttrMap :: AttrMap
-            , ctxDynBorders :: Bool
-            , ctxVScrollBarOrientation :: Maybe VScrollBarOrientation
-            , ctxVScrollBarRenderer :: Maybe (VScrollbarRenderer n)
-            , ctxHScrollBarOrientation :: Maybe HScrollBarOrientation
-            , ctxHScrollBarRenderer :: Maybe (HScrollbarRenderer n)
-            , ctxVScrollBarShowHandles :: Bool
-            , ctxHScrollBarShowHandles :: Bool
-            , ctxVScrollBarClickableConstr :: Maybe (ClickableScrollbarElement -> n -> n)
-            , ctxHScrollBarClickableConstr :: Maybe (ClickableScrollbarElement -> n -> n)
+    Context { ctxAttrName :: !AttrName
+            , availWidth :: !Int
+            , availHeight :: !Int
+            , windowWidth :: !Int
+            , windowHeight :: !Int
+            , ctxBorderStyle :: !BorderStyle
+            , ctxAttrMap :: !AttrMap
+            , ctxDynBorders :: !Bool
+            , ctxVScrollBarOrientation :: !(Maybe VScrollBarOrientation)
+            , ctxVScrollBarRenderer :: !(Maybe (VScrollbarRenderer n))
+            , ctxHScrollBarOrientation :: !(Maybe HScrollBarOrientation)
+            , ctxHScrollBarRenderer :: !(Maybe (HScrollbarRenderer n))
+            , ctxVScrollBarShowHandles :: !Bool
+            , ctxHScrollBarShowHandles :: !Bool
+            , ctxVScrollBarClickableConstr :: !(Maybe (ClickableScrollbarElement -> n -> n))
+            , ctxHScrollBarClickableConstr :: !(Maybe (ClickableScrollbarElement -> n -> n))
             }
 
 suffixLenses ''RenderState
