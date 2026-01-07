@@ -117,7 +117,7 @@ library
                        exceptions >= 0.10.0,
                        filepath,
                        containers >= 0.5.7,
-                       microlens >= 0.3.0.0,
+                       microlens >= 0.3.0.0 && < 0.5,
                        microlens-th,
                        microlens-mtl,
                        mtl,
