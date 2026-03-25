@@ -71,6 +71,7 @@ module Brick.Widgets.FileBrowser
   , actionFileBrowserBeginSearch
   , actionFileBrowserSelectEnter
   , actionFileBrowserSelectCurrent
+  , actionFileBrowserToggleCurrent
   , actionFileBrowserListPageUp
   , actionFileBrowserListPageDown
   , actionFileBrowserListHalfPageUp
@@ -602,7 +603,7 @@ fileBrowserCursor b = snd <$> listSelectedElement (b^.fileBrowserEntriesL)
 --
 -- * @/@: 'actionFileBrowserBeginSearch'
 -- * @Enter@: 'actionFileBrowserSelectEnter'
--- * @Space@: 'actionFileBrowserSelectCurrent'
+-- * @Space@: 'actionFileBrowserToggleCurrent'
 -- * @g@: 'actionFileBrowserListTop'
 -- * @G@: 'actionFileBrowserListBottom'
 -- * @j@: 'actionFileBrowserListNext'
@@ -624,6 +625,10 @@ actionFileBrowserSelectEnter =
 actionFileBrowserSelectCurrent :: EventM n (FileBrowser n) ()
 actionFileBrowserSelectCurrent =
     selectCurrentEntry
+
+actionFileBrowserToggleCurrent :: EventM n (FileBrowser n) ()
+actionFileBrowserToggleCurrent =
+    toggleCurrentEntrySelected
 
 actionFileBrowserListPageUp :: Ord n => EventM n (FileBrowser n) ()
 actionFileBrowserListPageUp =
@@ -697,8 +702,8 @@ handleFileBrowserEventNormal e =
             -- Select file or enter directory
             actionFileBrowserSelectEnter
         Vty.EvKey (Vty.KChar ' ') [] ->
-            -- Select entry
-            actionFileBrowserSelectCurrent
+            -- Toggle selected status of current entry
+            actionFileBrowserToggleCurrent
         _ ->
             handleFileBrowserEventCommon e
 
@@ -730,11 +735,26 @@ handleFileBrowserEventCommon e =
 
 toggleSelected :: FileInfo -> EventM n (FileBrowser n) ()
 toggleSelected e = do
+    sel <- fileBrowserIsSelected e
+    if sel
+       then fileBrowserRemoveSelected e
+       else fileBrowserAddSelected e
+
+fileBrowserIsSelected :: FileInfo -> EventM n (FileBrowser n) Bool
+fileBrowserIsSelected e = do
     fs <- use fileBrowserSelectedFilesL
     let fName = fileInfoFilename e
-    if Set.member fName fs
-       then fileBrowserSelectedFilesL %= Set.delete fName
-       else fileBrowserSelectedFilesL %= Set.insert fName
+    return $ Set.member fName fs
+
+fileBrowserAddSelected :: FileInfo -> EventM n (FileBrowser n) ()
+fileBrowserAddSelected e = do
+    let fName = fileInfoFilename e
+    fileBrowserSelectedFilesL %= Set.insert fName
+
+fileBrowserRemoveSelected :: FileInfo -> EventM n (FileBrowser n) ()
+fileBrowserRemoveSelected e = do
+    let fName = fileInfoFilename e
+    fileBrowserSelectedFilesL %= Set.delete fName
 
 -- | If the browser's current entry is selectable according to
 -- @fileBrowserSelectable@, add it to the selection set and return.
@@ -747,12 +767,19 @@ maybeSelectCurrentEntry = do
     b <- get
     for_ (fileBrowserCursor b) $ \entry ->
         if fileBrowserSelectable b entry
-        then toggleSelected entry
+        then fileBrowserAddSelected entry
         else when (selectDirectories entry) $
             put =<< liftIO (setWorkingDirectory (fileInfoFilePath entry) b)
 
 selectCurrentEntry :: EventM n (FileBrowser n) ()
 selectCurrentEntry = do
+    b <- get
+    for_ (fileBrowserCursor b) $ \entry ->
+        when (fileBrowserSelectable b entry) $
+            fileBrowserAddSelected entry
+
+toggleCurrentEntrySelected :: EventM n (FileBrowser n) ()
+toggleCurrentEntrySelected = do
     b <- get
     for_ (fileBrowserCursor b) $ \entry ->
         when (fileBrowserSelectable b entry) $
