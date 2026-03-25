@@ -2,6 +2,23 @@
 Brick changelog
 ---------------
 
+2.11
+----
+
+Bug fixes:
+
+* Fixed a bug in FileBrowser: if a user pressed Enter when the cursor
+  was on a selected entry, it was omitted from the list of
+  selected browser entries. As part of this change, the function
+  `actionFileBrowserSelectCurrent` previously toggled the selection
+  of the entry at the cursor, but should have selected it instead.
+  It now does so, and a new function for toggling was introduced:
+  `actionFileBrowserToggleCurrent`.
+
+Other changes:
+
+* Upper bounds on `base` and `microlens` were adjusted.
+
 2.10
 ----
 
