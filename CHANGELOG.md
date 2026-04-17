@@ -2,6 +2,13 @@
 Brick changelog
 ---------------
 
+2.12
+----
+
+Package changes:
+
+* Raised upper bound on microlens to allow building with 0.5.
+
 2.11
 ----
 
