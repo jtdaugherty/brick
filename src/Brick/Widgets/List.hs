@@ -133,7 +133,6 @@ import Brick.AttrMap
 -- * 'listRemove': 'Semigroup'
 -- * 'listClear': 'Monoid'
 -- * 'listReverse': 'Reversible'
---
 data GenericList n t e =
     List { listElements :: !(t e)
          -- ^ The list's sequence of elements.
@@ -642,7 +641,6 @@ listFindBy test l =
 --                                O(n) -- set, modify, traverse
 -- listSelectedElementL for 'Seq.Seq': O(log(min(i, n - i)))  -- all operations
 -- @
---
 listSelectedElementL :: (Splittable t, Traversable t, Semigroup (t e))
                      => Traversal' (GenericList n t e) e
 listSelectedElementL f l =
@@ -705,7 +703,6 @@ listReverse l =
 -- listModify for 'List': O(n)
 -- listModify for 'Seq.Seq': O(log(min(i, n - i)))
 -- @
---
 listModify :: (Traversable t, Splittable t, Semigroup (t e))
            => (e -> e)
            -> GenericList n t e
