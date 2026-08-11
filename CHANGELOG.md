@@ -2,6 +2,18 @@
 Brick changelog
 ---------------
 
+2.13
+----
+
+New features:
+
+* Brick.Widgets.List: added support for wrapping (thanks Enrico Maria De
+  Angelis). The List API now provides `setScrollWrap` to configure lists
+  to wrap when moving their cursor, and the cursor-movement functions
+  and event handlers now cause selection wrapping when a list has
+  wrapping enabled. The `ListDemo` demo program was also updated to
+  demonstrate the wrapping behavior.
+
 2.12
 ----
 
