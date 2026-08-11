@@ -49,10 +49,10 @@ drawUI l = [ui]
         ui = C.vCenter $ vBox [ C.hCenter box
                               , str " "
                               , C.hCenter $ str "Press +/- to add/remove list elements."
-                              , C.hCenter $ str "Press 'w' to toggle wrapping."
                               , C.hCenter $ str "Press Esc to exit."
                               , str " "
-                              , C.hCenter $ str $ "Wrapping is currently " <> wrapStatus <> "."
+                              , C.hCenter $ str "Press 'w' to toggle selection wrapping."
+                              , C.hCenter $ str $ "Selection wrapping is currently " <> wrapStatus <> "."
                               ]
 
 appEvent :: T.BrickEvent () e -> T.EventM () (L.List () Char) ()
