@@ -691,8 +691,8 @@ listReverse l =
     l & listElementsL %~ reverse
       & listSelectedL %~ fmap (length l - 1 -)
 
--- | Apply a function to the selected element. If no element is selected
--- the list is not modified.
+-- | Apply a function to the selected element. If no element is
+-- selected, the list is not modified.
 --
 -- Complexity: same as 'traverse' for the container type (typically
 -- /O(n)/).
