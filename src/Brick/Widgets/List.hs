@@ -21,6 +21,7 @@ module Brick.Widgets.List
 
   -- * Constructing a list
   , list
+  , setScrollWrap
 
   -- * Rendering a list
   , renderList
@@ -28,7 +29,6 @@ module Brick.Widgets.List
 
   -- * Handling events
   , handleListEvent
-  , setScrollWrap
   , handleListEventVi
 
   -- * Lenses
