@@ -113,11 +113,14 @@ import Brick.AttrMap
 -- * Home/end keys: move cursor of selected item to beginning or end of
 --   list
 --
--- Both up/down and page up/page down movements are subject to wrapping
--- if the given list's 'listScrollWrap' is 'True', i.e. moving "below/above"
--- the first/last element of the list selects the last/first element of
--- the list; otherwise the movements will clamp at @0@ and at @length list - 1@,
--- i.e.  at the indices of the first and last elements of the list.
+-- Movement key behaviors and (their corresponding list transformation
+-- functions) are subject to wrapping if the list's wrapping is enabled;
+-- in that case, attempts to move the selection beyond either end of the
+-- list will wrap the selection to the opposite end of the list. When
+-- wrapping is disabled, attempts to move beyond either end of the list
+-- will move the selection as far as possible without wrapping around
+-- to the opposite end. To control whether wrapping is enabled, see
+-- 'setScrollWrap'.
 --
 -- The 'List' type synonym fixes @t@ to 'V.Vector' for compatibility
 -- with previous versions of this library.
@@ -709,7 +712,7 @@ listModify :: (Traversable t, Splittable t, Semigroup (t e))
            -> GenericList n t e
 listModify f = listSelectedElementL %~ f
 
--- | Sets the 'listScrollWrap' flag to the given 'Bool' for the given
--- @GenericList n t e@.
+-- | Sets the list's wrapping behavior; wrapping is enabled if given
+-- @True@, or disabled if given @False@.
 setScrollWrap :: (Traversable t, Splittable t, Semigroup (t e)) => Bool -> GenericList n t e -> GenericList n t e
 setScrollWrap b = listScrollWrapL .~ b
