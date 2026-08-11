@@ -714,5 +714,6 @@ listModify f = listSelectedElementL %~ f
 
 -- | Sets the list's wrapping behavior; wrapping is enabled if given
 -- @True@, or disabled if given @False@.
-setScrollWrap :: (Traversable t, Splittable t, Semigroup (t e)) => Bool -> GenericList n t e -> GenericList n t e
+setScrollWrap :: (Traversable t, Splittable t, Semigroup (t e))
+              => Bool -> GenericList n t e -> GenericList n t e
 setScrollWrap b = listScrollWrapL .~ b
