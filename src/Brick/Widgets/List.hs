@@ -113,7 +113,7 @@ import Brick.AttrMap
 -- * Home/end keys: move cursor of selected item to beginning or end of
 --   list
 --
--- Movement key behaviors and (their corresponding list transformation
+-- Movement key behaviors (and their corresponding list transformation
 -- functions) are subject to wrapping if the list's wrapping is enabled;
 -- in that case, attempts to move the selection beyond either end of the
 -- list will wrap the selection to the opposite end of the list. When
