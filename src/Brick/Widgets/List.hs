@@ -28,6 +28,7 @@ module Brick.Widgets.List
 
   -- * Handling events
   , handleListEvent
+  , setScrollWrap
   , handleListEventVi
 
   -- * Lenses
@@ -112,6 +113,12 @@ import Brick.AttrMap
 -- * Home/end keys: move cursor of selected item to beginning or end of
 --   list
 --
+-- Both up/down and page up/page down movements are subject to wrapping
+-- if the given list's 'listScrollWrap' is 'True', i.e. moving "below/above"
+-- the first/last element of the list selects the last/first element of
+-- the list; otherwise the movements will clamp at @0@ and at @length list - 1@,
+-- i.e.  at the indices of the first and last elements of the list.
+--
 -- The 'List' type synonym fixes @t@ to 'V.Vector' for compatibility
 -- with previous versions of this library.
 --
@@ -133,6 +140,9 @@ data GenericList n t e =
          -- ^ The list's name.
          , listItemHeight :: Int
          -- ^ The height of an individual item in the list.
+         , listScrollWrap :: Bool
+         -- ^ Whether moving beyond a list's first/last element
+         -- should wrap to the last/first element.
          } deriving (Functor, Foldable, Traversable, Show, Generic)
 
 suffixLenses ''GenericList
@@ -263,7 +273,8 @@ listSelectedAttr = listAttr <> attrName "selected"
 listSelectedFocusedAttr :: AttrName
 listSelectedFocusedAttr = listSelectedAttr <> attrName "focused"
 
--- | Construct a list in terms of container 't' with element type 'e'.
+-- | Construct a list, with wrapping initially disabled, in terms of
+-- container 't' with element type 'e'.
 list :: (Foldable t)
      => n
      -- ^ The list name (must be unique)
@@ -276,7 +287,7 @@ list :: (Foldable t)
 list name es h =
     let selIndex = if null es then Nothing else Just 0
         safeHeight = max 1 h
-    in List es selIndex name safeHeight
+    in List es selIndex name safeHeight False
 
 -- | Render a list using the specified item drawing function.
 --
@@ -465,8 +476,8 @@ listReplace es idx l =
             | otherwise = 0
     in l' & listSelectedL .~ newSel
 
--- | Move the list selected index up by one. (Moves the cursor up,
--- subtracts one from the index.)
+-- | Move the list selected index up by one (moves the cursor up,
+-- subtracts one from the index), subject to wrapping.
 listMoveUp :: (Foldable t, Splittable t)
            => GenericList n t e
            -> GenericList n t e
@@ -477,8 +488,8 @@ listMovePageUp :: (Foldable t, Splittable t, Ord n)
                => EventM n (GenericList n t e) ()
 listMovePageUp = listMoveByPages (-1::Double)
 
--- | Move the list selected index down by one. (Moves the cursor down,
--- adds one to the index.)
+-- | Move the list selected index down by one (moves the cursor down,
+-- adds one to the index), subject to wrapping.
 listMoveDown :: (Foldable t, Splittable t)
              => GenericList n t e
              -> GenericList n t e
@@ -489,7 +500,8 @@ listMovePageDown :: (Foldable t, Splittable t, Ord n)
                  => EventM n (GenericList n t e) ()
 listMovePageDown = listMoveByPages (1::Double)
 
--- | Move the list selected index by some (fractional) number of pages.
+-- | Move the list selected index by some (fractional) number of pages,
+-- subject to wrapping.
 listMoveByPages :: (Foldable t, Splittable t, Ord n, RealFrac m)
                 => m
                 -> EventM n (GenericList n t e) ()
@@ -506,8 +518,9 @@ listMoveByPages pages = do
 -- | Move the list selected index.
 --
 -- If the current selection is @Just x@, the selection is adjusted by
--- the specified amount. The value is clamped to the extents of the list
--- (i.e. the selection does not "wrap").
+-- the specified amount. Whether the value is clamped to the extents of the
+-- list or not (i.e. whether the selection doesn't wrap around the list or it
+-- does), is determined by the list itself (see 'GenericList' for more info).
 --
 -- If the current selection is @Nothing@ (i.e. there is no selection)
 -- and the direction is positive, set to @Just 0@ (first element),
@@ -528,7 +541,10 @@ listMoveBy amt l =
             Nothing
                 | amt > 0 -> 0
                 | otherwise -> length l - 1
-            Just i -> max 0 (amt + i)  -- don't be negative
+            Just i
+                | let wrap = l ^. listScrollWrapL
+                , wrap -> (amt + i) `mod` length l
+                | otherwise -> max 0 (amt + i)  -- don't be negative
     in listMoveTo target l
 
 -- | Set the selected index for a list to the specified index, subject
@@ -692,3 +708,8 @@ listModify :: (Traversable t, Splittable t, Semigroup (t e))
            -> GenericList n t e
            -> GenericList n t e
 listModify f = listSelectedElementL %~ f
+
+-- | Sets the 'listScrollWrap' flag to the given 'Bool' for the given
+-- @GenericList n t e@.
+setScrollWrap :: (Traversable t, Splittable t, Semigroup (t e)) => Bool -> GenericList n t e -> GenericList n t e
+setScrollWrap b = listScrollWrapL .~ b

@@ -220,6 +220,20 @@ prop_moveUp ops l =
         len = length l''
     in maybe (len == 0) (== 0) (l'' ^. listSelectedL)
 
+-- listMoveUp from beginning is the same as listMoveToEnd
+prop_moveBeforeFirst :: Eq a => List n a -> Bool
+prop_moveBeforeFirst l =
+    let l' = setScrollWrap True l
+    in listMoveUp (listMoveToBeginning l') =.= listMoveToEnd l'
+  where (=.=) = (==) `on` (^. listSelectedL)
+
+-- listMoveDown from end is the same as listMoveToBeginning
+prop_moveAfterLast :: Eq a => List n a -> Bool
+prop_moveAfterLast l =
+    let l' = setScrollWrap True l
+    in listMoveDown (listMoveToEnd l') =.= listMoveToBeginning l'
+  where (=.=) = (==) `on` (^. listSelectedL)
+
 -- listMoveDown always reaches end of list (or list is empty)
 prop_moveDown :: (Eq a) => [ListOp a] -> List n a -> Bool
 prop_moveDown ops l =
