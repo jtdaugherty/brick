@@ -21,7 +21,10 @@ module Brick.Widgets.List
 
   -- * Constructing a list
   , list
+
+  -- * Configuring wrapping
   , setScrollWrap
+  , getScrollWrap
 
   -- * Rendering a list
   , renderList
@@ -714,3 +717,8 @@ listModify f = listSelectedElementL %~ f
 setScrollWrap :: (Traversable t, Splittable t, Semigroup (t e))
               => Bool -> GenericList n t e -> GenericList n t e
 setScrollWrap b = listScrollWrapL .~ b
+
+-- | Returns the list's wrapping setting; returns @True@ if wrapping is
+-- enabled or @False@ otherwise.
+getScrollWrap :: GenericList n t e -> Bool
+getScrollWrap = listScrollWrap
