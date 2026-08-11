@@ -104,8 +104,8 @@ import Brick.Util (clamp)
 import Brick.AttrMap
 
 -- | List state. Lists have a container @t@ of element type @e@ that is
--- the data stored by the list. Internally, Lists handle the following
--- events by default:
+-- the data stored by the list. When using the event-handling functions
+-- provided by this module, Lists handle the following events:
 --
 -- * Up/down arrow keys: move cursor of selected item
 -- * Page up / page down keys: move cursor of selected item by one page
