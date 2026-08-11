@@ -43,10 +43,16 @@ drawUI l = [ui]
               hLimit 25 $
               vLimit 15 $
               L.renderList listDrawElement True l
+        wrapStatus = if L.getScrollWrap l
+                     then "enabled"
+                     else "disabled"
         ui = C.vCenter $ vBox [ C.hCenter box
                               , str " "
                               , C.hCenter $ str "Press +/- to add/remove list elements."
+                              , C.hCenter $ str "Press 'w' to toggle wrapping."
                               , C.hCenter $ str "Press Esc to exit."
+                              , str " "
+                              , C.hCenter $ str $ "Wrapping is currently " <> wrapStatus <> "."
                               ]
 
 appEvent :: T.BrickEvent () e -> T.EventM () (L.List () Char) ()
@@ -64,6 +70,9 @@ appEvent (T.VtyEvent e) =
                 Nothing -> return ()
                 Just i -> modify $ L.listRemove i
 
+        V.EvKey (V.KChar 'w') [] ->
+            toggleListWrapping
+
         V.EvKey V.KEsc [] -> M.halt
 
         ev -> L.handleListEvent ev
@@ -71,6 +80,9 @@ appEvent (T.VtyEvent e) =
       nextElement :: Vec.Vector Char -> Char
       nextElement v = fromMaybe '?' $ Vec.find (flip Vec.notElem v) (Vec.fromList ['a' .. 'z'])
 appEvent _ = return ()
+
+toggleListWrapping :: T.EventM () (L.List () Char) ()
+toggleListWrapping = L.listScrollWrapL %= not
 
 listDrawElement :: (Show a) => Bool -> a -> Widget ()
 listDrawElement sel a =
