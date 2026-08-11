@@ -25,6 +25,7 @@ module Brick.Widgets.List
   -- * Configuring wrapping
   , setScrollWrap
   , getScrollWrap
+  , listScrollWrapL
 
   -- * Rendering a list
   , renderList
