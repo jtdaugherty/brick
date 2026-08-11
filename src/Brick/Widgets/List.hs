@@ -5,16 +5,15 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DeriveGeneric #-}
--- | This module provides a scrollable list type and functions for
--- manipulating and rendering it.
+-- | This module provides a scrollable list type.
 --
--- Note that lenses are provided for direct manipulation purposes, but
--- lenses are *not* safe and should be used with care. (For example,
--- 'listElementsL' permits direct manipulation of the list container
--- without performing bounds checking on the selected index.) If you
--- need a safe API, consider one of the various functions for list
--- manipulation. For example, instead of 'listElementsL', consider
--- 'listReplace'.
+-- Note that some lenses are provided for direct manipulation purposes,
+-- but not all lenses are safe to use since misuse can violate
+-- invariants. (For example, 'listElementsL' permits direct manipulation
+-- of the list container without performing bounds checking on the
+-- selected index.) If you need a safe API, consider one of the
+-- various functions for list manipulation. For example, instead of
+-- 'listElementsL', consider 'listReplace'.
 module Brick.Widgets.List
   ( GenericList
   , List
