@@ -73,6 +73,7 @@ library
   exposed-modules:
     Brick
     Brick.Animation
+    Brick.Animation.Transition
     Brick.AttrMap
     Brick.BChan
     Brick.BorderMap
