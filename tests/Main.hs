@@ -1,10 +1,9 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
 
-import Control.Applicative
 import Data.Bool (bool)
-import Data.Traversable (sequenceA)
 import System.Exit (exitFailure, exitSuccess)
 
 import Data.IMap (IMap, Run(Run))
@@ -15,6 +14,10 @@ import qualified Data.IntMap as IntMap
 
 import qualified List
 import qualified Render
+
+#if !(MIN_VERSION_base(4,18,0))
+import Control.Applicative (liftA2)
+#endif
 
 instance Arbitrary v => Arbitrary (Run v) where
     arbitrary = liftA2 (\(Positive n) -> Run n) arbitrary arbitrary
