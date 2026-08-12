@@ -20,40 +20,49 @@ import Brick.AttrMap (AttrName, AttrMap, attrMap, attrName)
 import Brick.Types (Widget, EventM, BrickEvent(..), Location(..))
 import Brick.Widgets.Border (border)
 import Brick.Widgets.Center (center)
-import Brick.Widgets.Core ((<+>), str, vBox, hBox, hLimit, vLimit, translateBy, withDefAttr)
+import Brick.Widgets.Core ((<+>), str, vBox, hBox, hLimit, vLimit, translateBy, withDefAttr, emptyWidget, fill,
+                           reportExtent, (<=>), relativeTo)
 import qualified Brick.Animation as A
+import qualified Brick.Animation.Transition as A
+
+data Name =
+    Anchor
+    deriving (Eq, Show, Ord)
 
 data CustomEvent =
-    AnimationUpdate (EventM () St ())
+    AnimationUpdate (EventM Name St ())
     -- ^ The state update constructor required by the animation API
 
 data St =
-    St { _stAnimationManager :: A.AnimationManager St CustomEvent ()
+    St { _stAnimationManager :: A.AnimationManager St CustomEvent Name
        -- ^ The animation manager that will run all of our animations
-       , _animation1 :: Maybe (A.Animation St ())
-       , _animation2 :: Maybe (A.Animation St ())
-       , _animation3 :: Maybe (A.Animation St ())
-       , _clickAnimations :: M.Map Location (A.Animation St ())
+       , _animation1 :: Maybe (A.Animation St Name)
+       , _animation2 :: Maybe (A.Animation St Name)
+       , _animation3 :: Maybe (A.Animation St Name)
+       , _clickAnimations :: M.Map Location (A.Animation St Name)
        -- ^ The various fields for storing animation states. For mouse
        -- animations, we store animations for each screen location that
        -- was clicked.
+       , _transition :: Maybe (A.Transition St Name)
        }
 
 makeLenses ''St
 
-drawUI :: St -> [Widget ()]
-drawUI st = drawClickAnimations st <> [drawAnimations st]
+drawUI :: St -> [Widget Name]
+drawUI st =
+    [A.renderTransition (const emptyWidget) st (st^.transition)] <>
+    drawClickAnimations st <> [drawAnimations st, fill ' ']
 
-drawClickAnimations :: St -> [Widget ()]
+drawClickAnimations :: St -> [Widget Name]
 drawClickAnimations st =
     drawClickAnimation st <$> M.toList (st^.clickAnimations)
 
-drawClickAnimation :: St -> (Location, A.Animation St ()) -> Widget ()
+drawClickAnimation :: St -> (Location, A.Animation St Name) -> Widget Name
 drawClickAnimation st (l, a) =
     translateBy l $
     A.renderAnimation (const $ str " ") st (Just a)
 
-drawAnimations :: St -> Widget ()
+drawAnimations :: St -> Widget Name
 drawAnimations st =
     let animStatus label key a =
             str (label <> ": ") <+>
@@ -73,13 +82,13 @@ drawAnimations st =
             , animationDrawings
             ]
 
-clip1 :: A.Clip a ()
+clip1 :: A.Clip a Name
 clip1 = A.newClip_ $ str <$> [".", "o", "O", "^", " "]
 
-clip2 :: A.Clip a ()
+clip2 :: A.Clip a Name
 clip2 = A.newClip_ $ str <$> ["|", "/", "-", "\\"]
 
-clip3 :: A.Clip a ()
+clip3 :: A.Clip a Name
 clip3 =
     A.newClip_ $
     (hLimit 9 . vLimit 9 . border . center) <$>
@@ -88,7 +97,7 @@ clip3 =
     , border $ vBox $ replicate 5 $ str $ replicate 5 ' '
     ]
 
-mouseClickClip :: A.Clip a ()
+mouseClickClip :: A.Clip a Name
 mouseClickClip =
     A.newClip_
     [ withDefAttr attr6 $ str "0"
@@ -130,8 +139,8 @@ attrs =
 
 -- | Animation settings grouped together for lookup by keystroke.
 data AnimationConfig =
-    AnimationConfig { animationTarget :: Lens' St (Maybe (A.Animation St ()))
-                    , animationClip :: A.Clip St ()
+    AnimationConfig { animationTarget :: Lens' St (Maybe (A.Animation St Name))
+                    , animationClip :: A.Clip St Name
                     , animationFrameTime :: Integer
                     , animationMode :: A.RunMode
                     }
@@ -144,7 +153,7 @@ animations =
     ]
 
 -- | Start the animation specified by this config.
-startAnimationFromConfig :: AnimationConfig -> EventM () St ()
+startAnimationFromConfig :: AnimationConfig -> EventM Name St ()
 startAnimationFromConfig config = do
     mgr <- use stAnimationManager
     A.startAnimation mgr (animationClip config)
@@ -154,7 +163,7 @@ startAnimationFromConfig config = do
 
 -- | If the animation specified in this config is not running, start it.
 -- Otherwise stop it.
-toggleAnimationFromConfig :: AnimationConfig -> EventM () St ()
+toggleAnimationFromConfig :: AnimationConfig -> EventM Name St ()
 toggleAnimationFromConfig config = do
     mgr <- use stAnimationManager
     mOld <- use (animationTarget config)
@@ -164,7 +173,7 @@ toggleAnimationFromConfig config = do
 
 -- | Start a new mouse click animation at the specified location if one
 -- is not already running there.
-startMouseClickAnimation :: Location -> EventM () St ()
+startMouseClickAnimation :: Location -> EventM Name St ()
 startMouseClickAnimation l = do
     mgr <- use stAnimationManager
     a <- use (clickAnimations.at l)
@@ -172,7 +181,13 @@ startMouseClickAnimation l = do
         Just {} -> return ()
         Nothing -> A.startAnimation mgr mouseClickClip 100 A.Once (clickAnimations.at l)
 
-appEvent :: BrickEvent () CustomEvent -> EventM () St ()
+slideUpBox :: Widget Name
+slideUpBox =
+    border $
+    vBox $
+    str <$> ["line " <> show i | i <- [1..20::Int]]
+
+appEvent :: BrickEvent Name CustomEvent -> EventM Name St ()
 appEvent e = do
     case e of
         -- A mouse click starts an animation at the click location.
@@ -186,6 +201,11 @@ appEvent e = do
             | Just aConfig <- lookup c animations ->
                 toggleAnimationFromConfig aConfig
 
+        VtyEvent (V.EvKey (V.KChar 't') []) -> do
+            mgr <- use stAnimationManager
+            A.stopTransition mgr transition
+            A.startTransition mgr (const slideUpBox) 20 10 A.slideUp transition
+
         -- Apply a state update from the animation manager.
         AppEvent (AnimationUpdate act) -> act
 
@@ -193,7 +213,7 @@ appEvent e = do
 
         _ -> return ()
 
-theApp :: App St CustomEvent ()
+theApp :: App St CustomEvent Name
 theApp =
     App { appDraw = drawUI
         , appChooseCursor = neverShowCursor
@@ -205,7 +225,7 @@ theApp =
 main :: IO ()
 main = do
     chan <- newBChan 10
-    mgr <- A.startAnimationManager 50 chan AnimationUpdate
+    mgr <- A.startAnimationManager 30 chan AnimationUpdate
 
     let initialState =
             St { _stAnimationManager = mgr
@@ -213,6 +233,7 @@ main = do
                , _animation2 = Nothing
                , _animation3 = Nothing
                , _clickAnimations = mempty
+               , _transition = Nothing
                }
         buildVty = do
             v <- mkVty V.defaultConfig
