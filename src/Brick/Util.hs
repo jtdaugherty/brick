@@ -9,13 +9,13 @@ module Brick.Util
   )
 where
 
-import Lens.Micro ((&), (%~))
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid ((<>))
 #endif
 import Graphics.Vty
 
-import Brick.Types.Internal (Location(..), CursorLocation(..), cursorLocationL)
+-- Re-export clOffset for backwards-compatibility purposes.
+import Brick.Types.Internal (clOffset)
 
 -- | Given a minimum value and a maximum value, clamp a value to that
 -- range (values less than the minimum map to the minimum and values
@@ -61,7 +61,3 @@ bg = (defAttr `withBackColor`)
 -- "default").
 style :: Style -> Attr
 style = (defAttr `withStyle`)
-
--- | Add a 'Location' offset to the specified 'CursorLocation'.
-clOffset :: CursorLocation n -> Location -> CursorLocation n
-clOffset cl off = cl & cursorLocationL %~ (<> off)

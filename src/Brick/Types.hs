@@ -1,6 +1,5 @@
 -- | Basic types used by this library.
 {-# LANGUAGE RankNTypes #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Brick.Types
   ( -- * The Widget type
     Widget(..)
@@ -63,6 +62,7 @@ module Brick.Types
   , cursorsL
   , visibilityRequestsL
   , extentsL
+  , extraLayersL
 
   -- ** Visibility requests
   , VisibilityRequest(..)
@@ -154,12 +154,6 @@ nestEventM s' act = do
 -- | The rendering context's current drawing attribute.
 attrL :: forall r n. Getting r (Context n) Attr
 attrL = to (\c -> attrMapLookup (c^.ctxAttrNameL) (c^.ctxAttrMapL))
-
-instance TerminalLocation (CursorLocation n) where
-    locationColumnL = cursorLocationL._1
-    locationColumn = locationColumn . cursorLocation
-    locationRowL = cursorLocationL._2
-    locationRow = locationRow . cursorLocation
 
 -- | Given an attribute name, obtain the attribute for the attribute
 -- name by consulting the context's attribute map.

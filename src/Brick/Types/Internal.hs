@@ -80,14 +80,18 @@ module Brick.Types.Internal
   , extentsL
   , bordersL
   , visibilityRequestsL
+  , extraLayersL
   , emptyResult
+  , addResultOffset
+  , clOffset
   )
 where
 
 import Control.Concurrent (ThreadId)
 import Control.Monad.Reader
 import Control.Monad.State.Strict
-import Lens.Micro (_1, _2, Lens')
+import Data.Sequence (Seq)
+import Lens.Micro (_1, _2, Lens', (&), (%~), each, (^.))
 import Lens.Micro.Mtl (use)
 import Lens.Micro.TH (makeLenses)
 import qualified Data.Set as S
@@ -381,6 +385,10 @@ data Result n =
            , borders :: !(BorderMap DynBorder)
            -- ^ Places where we may rewrite the edge of the image when
            -- placing this widget next to another one.
+           , extraLayers :: Seq (Location, Result n)
+           -- ^ Rendering results introduced as intermediate layers
+           -- by this result, each with a translation offset from the
+           -- upper-left corner of the rendering area
            }
            deriving (Show, Read, Generic, NFData)
 
@@ -391,6 +399,7 @@ emptyResult =
            , visibilityRequests = []
            , extents = []
            , borders = BM.empty
+           , extraLayers = mempty
            }
 
 -- | The type of events.
@@ -459,7 +468,54 @@ suffixLenses ''Result
 suffixLenses ''BorderSegment
 makeLenses ''Viewport
 
+instance TerminalLocation (CursorLocation n) where
+    locationColumnL = cursorLocationL._1
+    locationColumn = locationColumn . cursorLocation
+    locationRowL = cursorLocationL._2
+    locationRow = locationRow . cursorLocation
+
 lookupReportedExtent :: (Ord n) => n -> RenderM n (Maybe (Extent n))
 lookupReportedExtent n = do
     m <- lift $ use reportedExtentsL
     return $ M.lookup n m
+
+-- | Add an offset to all cursor locations, visibility requests, and
+-- extents in the specified rendering result. This function is critical
+-- for maintaining correctness in the rendering results as they are
+-- processed successively by box layouts and other wrapping combinators,
+-- since calls to this function result in converting from widget-local
+-- coordinates to (ultimately) terminal-global ones so they can be
+-- used by other combinators. You should call this any time you render
+-- something and then translate it or otherwise offset it from its
+-- original origin.
+addResultOffset :: Location -> Result n -> Result n
+addResultOffset off = addCursorOffset off .
+                      addVisibilityOffset off .
+                      addExtentOffset off .
+                      addDynBorderOffset off .
+                      addExtraLayersOffset off
+
+addCursorOffset :: Location -> Result n -> Result n
+addCursorOffset off r =
+    let onlyVisible = filter isVisible
+        isVisible l = l^.locationColumnL >= 0 && l^.locationRowL >= 0
+    in r & cursorsL %~ (\cs -> onlyVisible $ (`clOffset` off) <$> cs)
+
+addExtraLayersOffset :: Location -> Result n -> Result n
+addExtraLayersOffset off r = r & extraLayersL %~ (fmap addLayerOffset)
+    where
+        addLayerOffset (layerOff, layerResult) =
+            (layerOff <> off, addResultOffset off layerResult)
+
+addVisibilityOffset :: Location -> Result n -> Result n
+addVisibilityOffset off r = r & visibilityRequestsL.each.vrPositionL %~ (off <>)
+
+addExtentOffset :: Location -> Result n -> Result n
+addExtentOffset off r = r & extentsL.each %~ (\(Extent n l sz) -> Extent n (off <> l) sz)
+
+addDynBorderOffset :: Location -> Result n -> Result n
+addDynBorderOffset off r = r & bordersL %~ BM.translate off
+
+-- | Add a 'Location' offset to the specified 'CursorLocation'.
+clOffset :: CursorLocation n -> Location -> CursorLocation n
+clOffset cl off = cl & cursorLocationL %~ (<> off)

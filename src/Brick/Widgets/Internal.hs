@@ -1,4 +1,5 @@
 {-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE FlexibleContexts #-}
 module Brick.Widgets.Internal
   ( renderFinal
   , cropToContext
@@ -13,6 +14,8 @@ import Lens.Micro.Mtl ((%=))
 import Control.Monad
 import Control.Monad.State.Strict
 import Control.Monad.Reader
+import qualified Data.Foldable as F
+import qualified Data.Sequence as Seq
 import Data.Maybe (fromMaybe, mapMaybe)
 import qualified Data.Map as M
 import qualified Data.Set as S
@@ -44,10 +47,21 @@ renderFinal aMap layerRenders (w, h) chooseCursor rs =
         (layerResults, !newRS) = flip runState resetRs $ sequence $
             (\p -> runReaderT p ctx) <$>
             (\layerWidget -> do
+                let recordExtents r =
+                        forM_ (r^.extentsL) $ \e ->
+                            reportedExtentsL %= M.insert (extentName e) e
+
                 result <- render $ cropToContext layerWidget
-                forM_ (result^.extentsL) $ \e ->
-                    reportedExtentsL %= M.insert (extentName e) e
-                return result
+                recordExtents result
+
+                let translatedLayerResults = translateLayer <$> result^.extraLayersL
+                    translateLayer (off, r) =
+                        addResultOffset off $
+                            r & imageL %~ (V.translate (off^.locationColumnL) (off^.locationRowL))
+
+                mapM_ recordExtents translatedLayerResults
+
+                return $ translatedLayerResults Seq.|> result
                 ) <$> reverse layerRenders
 
         ctx = Context { ctxAttrName = mempty
@@ -69,14 +83,16 @@ renderFinal aMap layerRenders (w, h) chooseCursor rs =
                       }
 
         layersTopmostFirst = reverse layerResults
-        pic = V.picForLayers $ V.resize w h <$> (^.imageL) <$> layersTopmostFirst
+        allLayers = mconcat layersTopmostFirst
+
+        pic = V.picForLayers $ F.toList $ V.resize w h <$> (^.imageL) <$> allLayers
 
         -- picWithBg is a workaround for runaway attributes.
         -- See https://github.com/coreyoconnor/vty/issues/95
         picWithBg = pic { V.picBackground = V.Background ' ' V.defAttr }
 
-        layerCursors = (^.cursorsL) <$> layersTopmostFirst
-        layerExtents = reverse $ (^.extentsL) <$> layersTopmostFirst
+        layerCursors = F.toList $ (^.cursorsL) <$> allLayers
+        layerExtents = reverse $ F.toList $ (^.extentsL) <$> allLayers
         theCursor = chooseCursor $ concat layerCursors
 
 -- | After rendering the specified widget, crop its result image to the
