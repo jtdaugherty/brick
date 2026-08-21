@@ -1042,6 +1042,7 @@ raw img = Widget Fixed Fixed $ return $ emptyResult & imageL .~ img
 -- | Translate the specified widget by the specified offset amount.
 -- Defers to the translated widget for growth policy.
 translateBy :: Location -> Widget n -> Widget n
+translateBy (Location (0, 0)) w = w
 translateBy off p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
