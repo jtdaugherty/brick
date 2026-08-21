@@ -1056,8 +1056,7 @@ translateBy (Location (0, 0)) w = w
 translateBy off p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
-      return $ result & translationOffsetL %~ (off <>)
-                      & performTranslationL .~ True
+      return $ addResultOffset off $ result & performTranslationL .~ True
 
 -- | Given a widget, translate it to position it relative to the
 -- upper-left coordinates of a reported extent with the specified
