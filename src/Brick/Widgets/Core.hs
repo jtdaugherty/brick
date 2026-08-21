@@ -1097,13 +1097,15 @@ relativeTo n off w =
 -- > lower :: Widget n
 -- > lower = middle `layerAbove` bottom
 --
--- The resulting layering is @[upper, middle, bottom]@, with @middle@
--- having the same upper-left corner position as @bottom@, subject to
--- translation.
+-- the resulting layering is @[upper, middle, bottom]@, with @middle@
+-- having the same upper-left corner position as @bottom@, even if
+-- @bottom@ has been translated with 'translateBy'.
 --
--- In addition, when two layers are introduced above widgets in the
--- same layer, their ordering in the final layer list is undefined. For
--- example,
+-- In addition, when two layers are introduced above widgets in the same
+-- layer, their ordering with respect to each other in the final layer
+-- list is undefined. The only guarantee is that they will be above the
+-- widget in question but underneath the nextmost layer further up in
+-- the stack. For example,
 --
 -- > draw :: s -> [Widget n]
 -- > draw _ = [upper, lower]
@@ -1111,8 +1113,9 @@ relativeTo n off w =
 -- > lower :: Widget n
 -- > lower = (a `layerAbove` b) <+> (c `layerAbove` d)
 --
--- will result in a layer ordering @[upper, a, c, b <+> d]@ but the
--- order of @a@ and @c@ is undefined.
+-- will result in a layer ordering with both @a@ and @c@ being beneath
+-- @upper@ and above @b \<+\> d@ in the sequence, but the order of @a@ and
+-- @c@ with respect to each other is undefined.
 layerAbove :: Widget n -> Widget n -> Widget n
 layerAbove upper lower =
     Widget (hSize lower) (vSize lower) $ do
