@@ -1132,7 +1132,7 @@ cropLeftBy cols p =
       let amt = V.imageWidth (result^.imageL) - cols
           cropped img = if amt < 0 then V.emptyImage else V.cropLeft amt img
       render $ Widget (hSize p) (vSize p) $
-               withReaderT (availWidthL .~ amt) $
+               withReaderT (availWidthL %~ (subtract cols)) $
                    cropResultToContext $
                        addResultOffset (Location (-1 * cols, 0)) $
                            result & imageL %~ cropped
@@ -1157,7 +1157,7 @@ cropRightBy cols p =
       result <- render p
       let amt = V.imageWidth (result^.imageL) - cols
           cropped img = if amt < 0 then V.emptyImage else V.cropRight amt img
-      withReaderT (availWidthL .~ amt) $
+      withReaderT (availWidthL %~ (subtract cols)) $
           cropResultToContext $ result & imageL %~ cropped
 
 -- | Crop the specified widget to the specified size from the right.
@@ -1181,7 +1181,7 @@ cropTopBy rows p =
       let amt = V.imageHeight (result^.imageL) - rows
           cropped img = if amt < 0 then V.emptyImage else V.cropTop amt img
       render $ Widget (hSize p) (vSize p) $
-               withReaderT (availHeightL .~ amt) $
+               withReaderT (availHeightL %~ (subtract rows)) $
                    cropResultToContext $
                        addResultOffset (Location (0, -1 * rows)) $
                            result & imageL %~ cropped
@@ -1206,7 +1206,7 @@ cropBottomBy rows p =
       result <- render p
       let amt = V.imageHeight (result^.imageL) - rows
           cropped img = if amt < 0 then V.emptyImage else V.cropBottom amt img
-      withReaderT (availHeightL .~ amt) $
+      withReaderT (availHeightL %~ (subtract rows)) $
           cropResultToContext $ result & imageL %~ cropped
 
 -- | Crop the specified widget to the specified size from the bottom.
