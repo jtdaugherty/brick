@@ -459,6 +459,12 @@ suffixLenses ''Result
 suffixLenses ''BorderSegment
 makeLenses ''Viewport
 
+instance TerminalLocation (CursorLocation n) where
+    locationColumnL = cursorLocationL._1
+    locationColumn = locationColumn . cursorLocation
+    locationRowL = cursorLocationL._2
+    locationRow = locationRow . cursorLocation
+
 lookupReportedExtent :: (Ord n) => n -> RenderM n (Maybe (Extent n))
 lookupReportedExtent n = do
     m <- lift $ use reportedExtentsL
