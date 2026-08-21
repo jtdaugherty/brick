@@ -1142,8 +1142,8 @@ above upper lower =
         upperResult <- render upper
         lowerResult <- render lower
 
-        let translatedUpper = addResultOffset (translationOffset lowerResult) upperResult
-                                  & performTranslationL .~ True
+        let translatedUpper = addResultOffset (translationOffset lowerResult) $
+                                  upperResult & performTranslationL .~ True
         return $ lowerResult & extraLayersL %~ (translatedUpper Seq.<|)
 
 -- | Crop the specified widget on the left by the specified number of
