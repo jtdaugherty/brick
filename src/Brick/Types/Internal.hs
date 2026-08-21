@@ -523,7 +523,10 @@ addDynBorderOffset :: Location -> Result n -> Result n
 addDynBorderOffset off r = r & bordersL %~ BM.translate off
 
 addTranslationOffset :: Location -> Result n -> Result n
-addTranslationOffset off r = r & translationOffsetL %~ (off <>)
+addTranslationOffset off r =
+    if performTranslation r
+    then r & translationOffsetL %~ (off <>)
+    else r
 
 -- | Add a 'Location' offset to the specified 'CursorLocation'.
 clOffset :: CursorLocation n -> Location -> CursorLocation n
