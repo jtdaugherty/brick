@@ -1136,6 +1136,7 @@ cropLeftBy cols p =
                    cropResultToContext $
                        addResultOffset (Location (-1 * cols, 0)) $
                            result & imageL %~ cropped
+                                  & translationOffsetL %~ (Location (cols, 0) <>)
 
 -- | Crop the specified widget to the specified size from the left.
 -- Defers to the cropped widget for growth policy.
@@ -1185,6 +1186,7 @@ cropTopBy rows p =
                    cropResultToContext $
                        addResultOffset (Location (0, -1 * rows)) $
                            result & imageL %~ cropped
+                                  & translationOffsetL %~ (Location (0, rows) <>)
 
 -- | Crop the specified widget to the specified size from the top.
 -- Defers to the cropped widget for growth policy.
