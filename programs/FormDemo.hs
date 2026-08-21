@@ -106,7 +106,7 @@ draw f = [C.vCenter $ C.hCenter form <=> C.hCenter help]
         help = padTop (Pad 1) $ B.borderWithLabel (str "Help") body
         body = str $ "- Name is free-form text\n" <>
                      "- Age must be an integer (try entering an\n" <>
-                     "  invalid age!)\n" <>
+                     "  invalid age or an age less than 18!)\n" <>
                      "- Handedness selects from a list of options\n" <>
                      "- The last option is a checkbox\n" <>
                      "- Enter/Esc quit, mouse interacts with fields"
