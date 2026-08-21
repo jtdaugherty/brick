@@ -22,7 +22,7 @@ import qualified Brick.Widgets.Center as C
 import qualified Brick.Widgets.Border as B
 import Brick.Widgets.Core
 
-data Name = Info | Button1 | Button2 | Button3 | Prose | TextBox
+data Name = Info | Button1 | Button2 | Button3 | Prose | TextBox | MenuTitle
           deriving (Show, Ord, Eq)
 
 data St =
@@ -30,6 +30,7 @@ data St =
        , _lastReportedClick :: Maybe (Name, T.Location)
        , _prose :: String
        , _edit :: E.Editor String Name
+       , _menuShowing :: Bool
        }
 
 makeLenses ''St
@@ -47,8 +48,35 @@ buttonLayer st =
       C.hCenterLayer (padBottom (Pad 1) $ str "Click a button:") <=>
       C.hCenterLayer (hBox $ padLeftRight 1 <$> buttons) <=>
       C.hCenterLayer (padTopBottom 1 $ str "Or enter text and then click in this editor:") <=>
-      C.hCenterLayer (vLimit 3 $ hLimit 50 $ E.renderEditor (str . unlines) True (st^.edit))
+      C.hCenterLayer (vLimit 3 $ hLimit 50 $ E.renderEditor (str . unlines) True (st^.edit)) <=>
+      C.hCenterLayer (padTopBottom 1 $ str "Or click to toggle this menu:") <=>
+      C.hCenterLayer menu
     where
+        menuWidth = 16
+        menuTitle = hLimit menuWidth $
+                    clickable MenuTitle $
+                    C.hCenter $ str "--MENU--"
+
+        closedMenu = B.border menuTitle
+
+        openMenu =
+            B.border $
+            hLimit menuWidth $
+            vBox [ menuTitle
+                 , B.hBorder
+                 , str "Open..."
+                 , str "Save..."
+                 , B.hBorder
+                 , str "Exit"
+                 ]
+
+        menu =
+            hLimit 15 $
+            joinBorders $
+                if not $ st^.menuShowing
+                then closedMenu
+                else openMenu `layerAbove` closedMenu
+
         buttons = mkButton <$> buttonData
         buttonData = [ (Button1, "Button 1", attrName "button1")
                      , (Button2, "Button 2", attrName "button2")
@@ -86,6 +114,9 @@ infoLayer st = T.Widget T.Fixed T.Fixed $ do
 
 appEvent :: T.BrickEvent Name e -> T.EventM Name St ()
 appEvent ev@(T.MouseDown n _ _ loc) = do
+    case n of
+        MenuTitle -> menuShowing %= not
+        _ -> return ()
     lastReportedClick .= Just (n, loc)
     zoom edit $ E.handleEditorEvent ev
 appEvent (T.MouseUp {}) =
@@ -145,3 +176,4 @@ main = do
                     , "anim id est laborum."
                     ])
            (E.editor TextBox Nothing "")
+           False
