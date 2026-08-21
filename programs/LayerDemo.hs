@@ -22,7 +22,7 @@ import Brick.Widgets.Core
   , relativeTo
   , reportExtent
   , withDefAttr
-  , layerAbove
+  , above
   )
 import Brick.Util (fg)
 import Brick.AttrMap
@@ -46,7 +46,7 @@ drawUi :: St -> [Widget Name]
 drawUi st =
     [ C.centerLayer $
       B.border $ str "This layer is centered but other\nlayers are placed underneath it."
-    , arrowLayer `layerAbove` middleLayer (st^.middleLayerLocation)
+    , arrowLayer `above` middleLayer (st^.middleLayerLocation)
     , bottomLayer (st^.bottomLayerLocation)
     ]
 

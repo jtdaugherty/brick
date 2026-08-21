@@ -70,7 +70,7 @@ module Brick.Widgets.Core
   -- * Translation and positioning
   , translateBy
   , relativeTo
-  , layerAbove
+  , above
 
   -- * Cropping
   , cropLeftBy
@@ -1084,7 +1084,7 @@ relativeTo n off w =
             Nothing -> render emptyWidget
             Just ext -> render $ translateBy (extentUpperLeft ext <> off) w
 
--- | @layerAbove upper lower@ introduces @upper@ as a new layer that is
+-- | @above upper lower@ introduces @upper@ as a new layer that is
 -- positioned relative to the upper-left corner of @lower@.
 --
 -- A layer introduced this way will be beneath any layers further up in
@@ -1095,7 +1095,7 @@ relativeTo n off w =
 -- > draw _ = [upper, lower]
 -- >
 -- > lower :: Widget n
--- > lower = middle `layerAbove` bottom
+-- > lower = middle `above` bottom
 --
 -- the resulting layering is @[upper, middle, bottom]@, with @middle@
 -- having the same upper-left corner position as @bottom@, even if
@@ -1111,13 +1111,13 @@ relativeTo n off w =
 -- > draw _ = [upper, lower]
 -- >
 -- > lower :: Widget n
--- > lower = (a `layerAbove` b) <+> (c `layerAbove` d)
+-- > lower = (a `above` b) <+> (c `above` d)
 --
 -- will result in a layer ordering with both @a@ and @c@ being beneath
 -- @upper@ and above @b \<+\> d@ in the sequence, but the order of @a@ and
 -- @c@ with respect to each other is undefined.
-layerAbove :: Widget n -> Widget n -> Widget n
-layerAbove upper lower =
+above :: Widget n -> Widget n -> Widget n
+above upper lower =
     Widget (hSize lower) (vSize lower) $ do
         upperResult <- render upper
         lowerResult <- render lower
