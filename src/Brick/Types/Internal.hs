@@ -51,6 +51,7 @@ module Brick.Types.Internal
   , EventRO(..)
   , NextAction(..)
   , Result(..)
+  , addResultOffset
   , Extent(..)
   , Edges(..)
   , eTopL, eBottomL, eRightL, eLeftL
@@ -88,7 +89,7 @@ where
 import Control.Concurrent (ThreadId)
 import Control.Monad.Reader
 import Control.Monad.State.Strict
-import Lens.Micro ((&), (%~), _1, _2, Lens')
+import Lens.Micro ((&), (%~), (^.), _1, _2, Lens', each)
 import Lens.Micro.Mtl (use)
 import Lens.Micro.TH (makeLenses)
 import qualified Data.Set as S
@@ -474,3 +475,33 @@ lookupReportedExtent :: (Ord n) => n -> RenderM n (Maybe (Extent n))
 lookupReportedExtent n = do
     m <- lift $ use reportedExtentsL
     return $ M.lookup n m
+
+-- | Add an offset to all cursor locations, visibility requests, and
+-- extents in the specified rendering result. This function is critical
+-- for maintaining correctness in the rendering results as they are
+-- processed successively by box layouts and other wrapping combinators,
+-- since calls to this function result in converting from widget-local
+-- coordinates to (ultimately) terminal-global ones so they can be
+-- used by other combinators. You should call this any time you render
+-- something and then translate it or otherwise offset it from its
+-- original origin.
+addResultOffset :: Location -> Result n -> Result n
+addResultOffset off = addCursorOffset off .
+                      addVisibilityOffset off .
+                      addExtentOffset off .
+                      addDynBorderOffset off
+
+addVisibilityOffset :: Location -> Result n -> Result n
+addVisibilityOffset off r = r & visibilityRequestsL.each.vrPositionL %~ (off <>)
+
+addExtentOffset :: Location -> Result n -> Result n
+addExtentOffset off r = r & extentsL.each %~ (\(Extent n l sz) -> Extent n (off <> l) sz)
+
+addDynBorderOffset :: Location -> Result n -> Result n
+addDynBorderOffset off r = r & bordersL %~ BM.translate off
+
+addCursorOffset :: Location -> Result n -> Result n
+addCursorOffset off r =
+    let onlyVisible = filter isVisible
+        isVisible l = l^.locationColumnL >= 0 && l^.locationRowL >= 0
+    in r & cursorsL %~ (\cs -> onlyVisible $ (`clOffset` off) <$> cs)

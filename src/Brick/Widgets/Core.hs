@@ -123,7 +123,7 @@ where
 import Data.Monoid ((<>))
 #endif
 
-import Lens.Micro ((^.), (.~), (&), (%~), to, _1, _2, each, to, Lens')
+import Lens.Micro ((^.), (.~), (&), (%~), to, _1, _2, to, Lens')
 import Lens.Micro.Mtl (use, (%=))
 import Control.Monad
 import Control.Monad.State.Strict
@@ -203,30 +203,6 @@ freezeBorders p = Widget (hSize p) (vSize p) $ (bordersL %~ BM.clear) <$> render
 emptyWidget :: Widget n
 emptyWidget = raw V.emptyImage
 
--- | Add an offset to all cursor locations, visibility requests, and
--- extents in the specified rendering result. This function is critical
--- for maintaining correctness in the rendering results as they are
--- processed successively by box layouts and other wrapping combinators,
--- since calls to this function result in converting from widget-local
--- coordinates to (ultimately) terminal-global ones so they can be
--- used by other combinators. You should call this any time you render
--- something and then translate it or otherwise offset it from its
--- original origin.
-addResultOffset :: Location -> Result n -> Result n
-addResultOffset off = addCursorOffset off .
-                      addVisibilityOffset off .
-                      addExtentOffset off .
-                      addDynBorderOffset off
-
-addVisibilityOffset :: Location -> Result n -> Result n
-addVisibilityOffset off r = r & visibilityRequestsL.each.vrPositionL %~ (off <>)
-
-addExtentOffset :: Location -> Result n -> Result n
-addExtentOffset off r = r & extentsL.each %~ (\(Extent n l sz) -> Extent n (off <> l) sz)
-
-addDynBorderOffset :: Location -> Result n -> Result n
-addDynBorderOffset off r = r & bordersL %~ BM.translate off
-
 -- | Render the specified widget and record its rendering extent using
 -- the specified name (see also 'lookupExtent').
 --
@@ -262,12 +238,6 @@ clickable n p =
     Widget (hSize p) (vSize p) $ do
         clickableNamesL %= (n:)
         render $ reportExtent n p
-
-addCursorOffset :: Location -> Result n -> Result n
-addCursorOffset off r =
-    let onlyVisible = filter isVisible
-        isVisible l = l^.locationColumnL >= 0 && l^.locationRowL >= 0
-    in r & cursorsL %~ (\cs -> onlyVisible $ (`clOffset` off) <$> cs)
 
 unrestricted :: Int
 unrestricted = 100000
