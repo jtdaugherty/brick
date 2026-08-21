@@ -1052,6 +1052,7 @@ raw img = Widget Fixed Fixed $ return $ emptyResult & imageL .~ img
 -- applied at rendering time. Subsequent calls to this function on the
 -- same widget accumulate the offset.
 translateBy :: Location -> Widget n -> Widget n
+translateBy (Location (0, 0)) w = w
 translateBy off p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
