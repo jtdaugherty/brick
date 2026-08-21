@@ -55,7 +55,7 @@ arrowLayer =
     let msg = "Relatively\n" <>
               "positioned\n" <>
               "arrow---->"
-    in -- translateBy (Location (-10, -2)) $
+    in translateBy (Location (-10, -2)) $
        withDefAttr arrowAttr $
        str msg
 
