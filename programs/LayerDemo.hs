@@ -22,6 +22,7 @@ import Brick.Widgets.Core
   , layerRelativeTo
   , reportExtent
   , withDefAttr
+  , above
   )
 import Brick.Util (fg)
 import Brick.AttrMap
@@ -45,18 +46,29 @@ drawUi :: St -> [Widget Name]
 drawUi st =
     [ C.centerLayer $
       B.border $ str "This layer is centered but other\nlayers are placed underneath it."
-    , arrowLayer
-    , middleLayer (st^.middleLayerLocation)
+    , arrowLayer1
+    , arrowLayer2 `above` (middleLayer (st^.middleLayerLocation))
     , bottomLayer (st^.bottomLayerLocation)
     ]
 
-arrowLayer :: Widget Name
-arrowLayer =
+arrowLayer1 :: Widget Name
+arrowLayer1 =
+    let msg = "Relatively\n" <>
+              "positioned with\n" <>
+              "'layerRelativeTo'"
+    in layerRelativeTo MiddleLayerElement (Location (-18, -4)) $
+       withDefAttr arrowAttr $
+       B.border $
+       str msg
+
+arrowLayer2 :: Widget Name
+arrowLayer2 =
     let msg = "Relatively\n" <>
               "positioned\n" <>
-              "arrow---->"
-    in layerRelativeTo MiddleLayerElement (Location (-10, -2)) $
+              "with 'above'"
+    in translateLayer (Location (18, 3)) $
        withDefAttr arrowAttr $
+       B.border $
        str msg
 
 middleLayer :: Location -> Widget Name
