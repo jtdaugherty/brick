@@ -1097,10 +1097,13 @@ relativeTo n off w =
 -- > lower :: Widget n
 -- > lower = middle `layerAbove` bottom
 --
--- The resulting layering is @[upper, middle, bottom]@.
+-- The resulting layering is @[upper, middle, bottom]@, with @middle@
+-- having the same upper-left corner position as @bottom@, subject to
+-- translation.
 --
--- In addition, two layers introduced above widgets in the same layer
--- become distinct layers in an undefined order. For example,
+-- In addition, when two layers are introduced above widgets in the
+-- same layer, their ordering in the final layer list is undefined. For
+-- example,
 --
 -- > draw :: s -> [Widget n]
 -- > draw _ = [upper, lower]
