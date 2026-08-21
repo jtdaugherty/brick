@@ -388,7 +388,7 @@ data Result n =
            , translationOffset :: !Location
            -- ^ Offset of this result's upper-left corner as a
            -- consequence of translation
-           , performTranslation :: Bool
+           , performTranslation :: !Bool
            -- ^ Whether a translation should actually occur
            }
            deriving (Show, Read, Generic, NFData)
