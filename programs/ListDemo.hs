@@ -8,7 +8,6 @@ import Control.Monad.State (modify)
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid
 #endif
-import Data.Maybe (fromMaybe)
 import qualified Graphics.Vty as V
 
 import qualified Brick.Main as M
@@ -55,14 +54,13 @@ drawUI l = [ui]
                               , C.hCenter $ str $ "Selection wrapping is currently " <> wrapStatus <> "."
                               ]
 
-appEvent :: T.BrickEvent () e -> T.EventM () (L.List () Char) ()
+appEvent :: T.BrickEvent () e -> T.EventM () (L.List () Int) ()
 appEvent (T.VtyEvent e) =
     case e of
         V.EvKey (V.KChar '+') [] -> do
             els <- use L.listElementsL
-            let el = nextElement els
-                pos = Vec.length els
-            modify $ L.listInsert pos el
+            let pos = Vec.length els
+            modify $ L.listInsert pos pos
 
         V.EvKey (V.KChar '-') [] -> do
             sel <- use L.listSelectedL
@@ -76,12 +74,9 @@ appEvent (T.VtyEvent e) =
         V.EvKey V.KEsc [] -> M.halt
 
         ev -> L.handleListEvent ev
-    where
-      nextElement :: Vec.Vector Char -> Char
-      nextElement v = fromMaybe '?' $ Vec.find (flip Vec.notElem v) (Vec.fromList ['a' .. 'z'])
 appEvent _ = return ()
 
-toggleListWrapping :: T.EventM () (L.List () Char) ()
+toggleListWrapping :: T.EventM () (L.List () Int) ()
 toggleListWrapping = L.listScrollWrapL %= not
 
 listDrawElement :: (Show a) => Bool -> a -> Widget ()
@@ -91,8 +86,8 @@ listDrawElement sel a =
                    else str s
     in C.hCenter $ str "Item " <+> (selStr $ show a)
 
-initialState :: L.List () Char
-initialState = L.list () (Vec.fromList ['a','b','c']) 1
+initialState :: L.List () Int
+initialState = L.list () (Vec.fromList [0..2000]) 1
 
 customAttr :: A.AttrName
 customAttr = L.listSelectedAttr <> A.attrName "custom"
@@ -104,7 +99,7 @@ theMap = A.attrMap V.defAttr
     , (customAttr,            fg V.cyan)
     ]
 
-theApp :: M.App (L.List () Char) e ()
+theApp :: M.App (L.List () Int) e ()
 theApp =
     M.App { M.appDraw = drawUI
           , M.appChooseCursor = M.showFirstCursor
