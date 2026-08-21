@@ -81,6 +81,8 @@ module Brick.Types.Internal
   , bordersL
   , visibilityRequestsL
   , extraLayersL
+  , translationOffsetL
+  , performTranslationL
   , emptyResult
   , addResultOffset
   , clOffset
@@ -385,10 +387,14 @@ data Result n =
            , borders :: !(BorderMap DynBorder)
            -- ^ Places where we may rewrite the edge of the image when
            -- placing this widget next to another one.
-           , extraLayers :: Seq (Location, Result n)
+           , translationOffset :: !Location
+           -- ^ Offset of this result's upper-left corner as a
+           -- consequence of translation
+           , performTranslation :: Bool
+           -- ^ Whether a translation should actually occur
+           , extraLayers :: Seq (Result n)
            -- ^ Rendering results introduced as intermediate layers
-           -- by this result, each with a translation offset from the
-           -- upper-left corner of the rendering area
+           -- by this result
            }
            deriving (Show, Read, Generic, NFData)
 
@@ -399,6 +405,8 @@ emptyResult =
            , visibilityRequests = []
            , extents = []
            , borders = BM.empty
+           , translationOffset = Location (0, 0)
+           , performTranslation = False
            , extraLayers = mempty
            }
 
@@ -493,7 +501,8 @@ addResultOffset off = addCursorOffset off .
                       addVisibilityOffset off .
                       addExtentOffset off .
                       addDynBorderOffset off .
-                      addExtraLayersOffset off
+                      addExtraLayersOffset off .
+                      addTranslationOffset off
 
 addCursorOffset :: Location -> Result n -> Result n
 addCursorOffset off r =
@@ -502,10 +511,7 @@ addCursorOffset off r =
     in r & cursorsL %~ (\cs -> onlyVisible $ (`clOffset` off) <$> cs)
 
 addExtraLayersOffset :: Location -> Result n -> Result n
-addExtraLayersOffset off r = r & extraLayersL %~ (fmap addLayerOffset)
-    where
-        addLayerOffset (layerOff, layerResult) =
-            (layerOff <> off, addResultOffset off layerResult)
+addExtraLayersOffset off r = r & extraLayersL %~ (fmap (addResultOffset off))
 
 addVisibilityOffset :: Location -> Result n -> Result n
 addVisibilityOffset off r = r & visibilityRequestsL.each.vrPositionL %~ (off <>)
@@ -515,6 +521,9 @@ addExtentOffset off r = r & extentsL.each %~ (\(Extent n l sz) -> Extent n (off 
 
 addDynBorderOffset :: Location -> Result n -> Result n
 addDynBorderOffset off r = r & bordersL %~ BM.translate off
+
+addTranslationOffset :: Location -> Result n -> Result n
+addTranslationOffset off r = r & translationOffsetL %~ (off <>)
 
 -- | Add a 'Location' offset to the specified 'CursorLocation'.
 clOffset :: CursorLocation n -> Location -> CursorLocation n

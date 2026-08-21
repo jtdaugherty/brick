@@ -51,18 +51,20 @@ renderFinal aMap layerRenders (w, h) chooseCursor rs =
                         forM_ (r^.extentsL) $ \e ->
                             reportedExtentsL %= M.insert (extentName e) e
 
-                result <- render $ cropToContext layerWidget
+                result <- translateResult <$> (render $ cropToContext layerWidget)
                 recordExtents result
 
-                let translatedLayerResults = translateLayer <$> result^.extraLayersL
-                    translateLayer (off, r) =
-                        addResultOffset off $
-                            r & imageL %~ (V.translate (off^.locationColumnL) (off^.locationRowL))
-
+                let translatedLayerResults = translateResult <$> result^.extraLayersL
                 mapM_ recordExtents translatedLayerResults
 
                 return $ translatedLayerResults Seq.|> result
                 ) <$> reverse layerRenders
+
+        translateResult r =
+            let off = translationOffset r
+            in if performTranslation r
+               then r & imageL %~ (V.translate (off^.locationColumnL) (off^.locationRowL))
+               else r
 
         ctx = Context { ctxAttrName = mempty
                       , availWidth = w

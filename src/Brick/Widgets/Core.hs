@@ -690,6 +690,8 @@ renderBox br ws =
                             (concatMap visibilityRequests allTranslatedResults)
                             (concatMap extents allTranslatedResults)
                             newBorders
+                            (Location (0, 0))
+                            False
                             (mconcat $ extraLayers <$> allTranslatedResults)
 
 catDynBorder :: Lens' (Edges BorderSegment) BorderSegment
@@ -1044,12 +1046,17 @@ raw img = Widget Fixed Fixed $ return $ emptyResult & imageL .~ img
 
 -- | Translate the specified widget by the specified offset amount.
 -- Defers to the translated widget for growth policy.
+--
+-- NOTE: this only applies to layer widgets. @translateBy@ does not
+-- actually translate; instead, it records a translation offset to be
+-- applied at rendering time. Subsequent calls to this function on the
+-- same widget accumulate the offset.
 translateBy :: Location -> Widget n -> Widget n
 translateBy off p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
-      return $ addResultOffset off
-             $ result & imageL %~ (V.translate (off^.locationColumnL) (off^.locationRowL))
+      return $ result & translationOffsetL %~ (off <>)
+                      & performTranslationL .~ True
 
 -- | Given a widget, translate it to position it relative to the
 -- upper-left coordinates of a reported extent with the specified
@@ -1108,7 +1115,9 @@ layerAbove upper lower =
     Widget (hSize lower) (vSize lower) $ do
         upperResult <- render upper
         lowerResult <- render lower
-        return $ lowerResult & extraLayersL %~ ((Location (0, 0), upperResult) Seq.<|)
+
+        let translatedUpper = addResultOffset (translationOffset lowerResult) upperResult & performTranslationL .~ True
+        return $ lowerResult & extraLayersL %~ (translatedUpper Seq.<|)
 
 -- | Crop the specified widget on the left by the specified number of
 -- columns. Defers to the cropped widget for growth policy.
