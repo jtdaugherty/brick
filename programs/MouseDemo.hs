@@ -44,10 +44,10 @@ drawUi st =
 buttonLayer :: St -> Widget Name
 buttonLayer st =
     C.vCenterLayer $
-      C.hCenterLayer (padBottom (Pad 1) $ str "Click a button:") <=>
-      C.hCenterLayer (hBox $ padLeftRight 1 <$> buttons) <=>
-      C.hCenterLayer (padTopBottom 1 $ str "Or enter text and then click in this editor:") <=>
-      C.hCenterLayer (vLimit 3 $ hLimit 50 $ E.renderEditor (str . unlines) True (st^.edit))
+      C.hCenter (padBottom (Pad 1) $ str "Click a button:") <=>
+      C.hCenter (hBox $ padLeftRight 1 <$> buttons) <=>
+      C.hCenter (padTopBottom 1 $ str "Or enter text and then click in this editor:") <=>
+      C.hCenter (vLimit 3 $ hLimit 50 $ E.renderEditor (str . unlines) True (st^.edit))
     where
         buttons = mkButton <$> buttonData
         buttonData = [ (Button1, "Button 1", attrName "button1")
@@ -65,8 +65,8 @@ buttonLayer st =
 
 proseLayer :: St -> Widget Name
 proseLayer st =
+  C.hCenter $
   B.border $
-  C.hCenterLayer $
   vLimit 8 $
   viewport Prose Vertical $
   vBox $ map str $ lines (st^.prose)
