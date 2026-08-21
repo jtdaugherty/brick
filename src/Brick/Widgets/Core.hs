@@ -70,6 +70,7 @@ module Brick.Widgets.Core
   -- * Layer translation and positioning
   , translateLayer
   , layerRelativeTo
+  , above
 
   -- * Cropping
   , cropLeftBy
@@ -128,6 +129,7 @@ import Lens.Micro.Mtl (use, (%=))
 import Control.Monad
 import Control.Monad.State.Strict
 import Control.Monad.Reader
+import qualified Data.Sequence as Seq
 import qualified Data.Foldable as F
 import Data.Traversable (for)
 import qualified Data.Text as T
@@ -690,6 +692,7 @@ renderBox br ws =
                             newBorders
                             (Location (0, 0))
                             False
+                            (mconcat $ extraLayers <$> allTranslatedResults)
 
 catDynBorder :: Lens' (Edges BorderSegment) BorderSegment
              -> Lens' (Edges BorderSegment) BorderSegment
@@ -1077,6 +1080,48 @@ layerRelativeTo n off w =
         case mExt of
             Nothing -> render emptyWidget
             Just ext -> render $ translateLayer (extentUpperLeft ext <> off) w
+
+-- | @above upper lower@ introduces @upper@ as a new layer that is
+-- positioned relative to the upper-left corner of @lower@.
+--
+-- A layer introduced this way will be beneath any layers further up in
+-- the layer stack returned by the main drawing function, so that means
+-- that in this arrangement,
+--
+-- > draw :: s -> [Widget n]
+-- > draw _ = [upper, lower]
+-- >
+-- > lower :: Widget n
+-- > lower = middle `above` bottom
+--
+-- the resulting layering is @[upper, middle, bottom]@, with @middle@
+-- having the same upper-left corner position as @bottom@, even if
+-- @bottom@ has been translated with 'translateBy'.
+--
+-- In addition, when two layers are introduced above widgets in the same
+-- layer, their ordering with respect to each other in the final layer
+-- list is undefined. The only guarantee is that they will be above the
+-- widget in question but underneath the nextmost layer further up in
+-- the stack. For example,
+--
+-- > draw :: s -> [Widget n]
+-- > draw _ = [upper, lower]
+-- >
+-- > lower :: Widget n
+-- > lower = (a `above` b) <+> (c `above` d)
+--
+-- will result in a layer ordering with both @a@ and @c@ being beneath
+-- @upper@ and above @b \<+\> d@ in the sequence, but the order of @a@ and
+-- @c@ with respect to each other is undefined.
+above :: Widget n -> Widget n -> Widget n
+above upper lower =
+    Widget (hSize lower) (vSize lower) $ do
+        upperResult <- render upper
+        lowerResult <- render lower
+
+        let translatedUpper = addResultOffset (translationOffset lowerResult) upperResult
+                                  & performTranslationL .~ True
+        return $ lowerResult & extraLayersL %~ (translatedUpper Seq.<|)
 
 -- | Crop the specified widget on the left by the specified number of
 -- columns. Defers to the cropped widget for growth policy.

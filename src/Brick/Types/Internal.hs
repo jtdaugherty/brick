@@ -83,6 +83,7 @@ module Brick.Types.Internal
   , bordersL
   , performTranslationL
   , translationOffsetL
+  , extraLayersL
   , visibilityRequestsL
   , emptyResult
   )
@@ -91,6 +92,7 @@ where
 import Control.Concurrent (ThreadId)
 import Control.Monad.Reader
 import Control.Monad.State.Strict
+import Data.Sequence (Seq)
 import Lens.Micro ((&), (%~), (^.), _1, _2, Lens', each)
 import Lens.Micro.Mtl (use)
 import Lens.Micro.TH (makeLenses)
@@ -390,6 +392,9 @@ data Result n =
            -- consequence of translation
            , performTranslation :: !Bool
            -- ^ Whether a translation should actually occur
+           , extraLayers :: Seq (Result n)
+           -- ^ Rendering results introduced as intermediate layers
+           -- by this result
            }
            deriving (Show, Read, Generic, NFData)
 
@@ -402,6 +407,7 @@ emptyResult =
            , borders = BM.empty
            , performTranslation = False
            , translationOffset = Location (0, 0)
+           , extraLayers = mempty
            }
 
 -- | The type of events.
@@ -499,7 +505,8 @@ addResultOffset off = addCursorOffset off .
                       addVisibilityOffset off .
                       addExtentOffset off .
                       addDynBorderOffset off .
-                      addTranslationOffset off
+                      addTranslationOffset off .
+                      addExtraLayersOffset off
 
 addVisibilityOffset :: Location -> Result n -> Result n
 addVisibilityOffset off r = r & visibilityRequestsL.each.vrPositionL %~ (off <>)
@@ -521,3 +528,6 @@ addTranslationOffset off r =
     if performTranslation r
     then r & translationOffsetL %~ (off <>)
     else r
+
+addExtraLayersOffset :: Location -> Result n -> Result n
+addExtraLayersOffset off r = r & extraLayersL %~ (fmap (addResultOffset off))
