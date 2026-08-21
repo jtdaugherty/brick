@@ -145,7 +145,7 @@ import Text.Wrap (wrapTextToLines, WrapSettings, defaultWrapSettings)
 import Brick.Types
 import Brick.Types.Internal
 import Brick.Widgets.Border.Style
-import Brick.Util (clOffset, clamp)
+import Brick.Util (clamp)
 import Brick.AttrMap
 import Brick.Widgets.Internal
 import qualified Brick.BorderMap as BM

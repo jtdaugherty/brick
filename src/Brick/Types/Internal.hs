@@ -20,6 +20,7 @@ module Brick.Types.Internal
   , cursorLocationL
   , cursorLocationNameL
   , cursorLocationVisibleL
+  , clOffset
   , VScrollBarOrientation(..)
   , HScrollBarOrientation(..)
   , VScrollbarRenderer(..)
@@ -87,7 +88,7 @@ where
 import Control.Concurrent (ThreadId)
 import Control.Monad.Reader
 import Control.Monad.State.Strict
-import Lens.Micro (_1, _2, Lens')
+import Lens.Micro ((&), (%~), _1, _2, Lens')
 import Lens.Micro.Mtl (use)
 import Lens.Micro.TH (makeLenses)
 import qualified Data.Set as S
@@ -464,6 +465,10 @@ instance TerminalLocation (CursorLocation n) where
     locationColumn = locationColumn . cursorLocation
     locationRowL = cursorLocationL._2
     locationRow = locationRow . cursorLocation
+
+-- | Add a 'Location' offset to the specified 'CursorLocation'.
+clOffset :: CursorLocation n -> Location -> CursorLocation n
+clOffset cl off = cl & cursorLocationL %~ (<> off)
 
 lookupReportedExtent :: (Ord n) => n -> RenderM n (Maybe (Extent n))
 lookupReportedExtent n = do
