@@ -81,6 +81,8 @@ module Brick.Types.Internal
   , cursorsL
   , extentsL
   , bordersL
+  , performTranslationL
+  , translationOffsetL
   , visibilityRequestsL
   , emptyResult
   )
@@ -383,6 +385,11 @@ data Result n =
            , borders :: !(BorderMap DynBorder)
            -- ^ Places where we may rewrite the edge of the image when
            -- placing this widget next to another one.
+           , translationOffset :: !Location
+           -- ^ Offset of this result's upper-left corner as a
+           -- consequence of translation
+           , performTranslation :: Bool
+           -- ^ Whether a translation should actually occur
            }
            deriving (Show, Read, Generic, NFData)
 
@@ -393,6 +400,8 @@ emptyResult =
            , visibilityRequests = []
            , extents = []
            , borders = BM.empty
+           , performTranslation = False
+           , translationOffset = Location (0, 0)
            }
 
 -- | The type of events.
@@ -489,7 +498,8 @@ addResultOffset :: Location -> Result n -> Result n
 addResultOffset off = addCursorOffset off .
                       addVisibilityOffset off .
                       addExtentOffset off .
-                      addDynBorderOffset off
+                      addDynBorderOffset off .
+                      addTranslationOffset off
 
 addVisibilityOffset :: Location -> Result n -> Result n
 addVisibilityOffset off r = r & visibilityRequestsL.each.vrPositionL %~ (off <>)
@@ -505,3 +515,9 @@ addCursorOffset off r =
     let onlyVisible = filter isVisible
         isVisible l = l^.locationColumnL >= 0 && l^.locationRowL >= 0
     in r & cursorsL %~ (\cs -> onlyVisible $ (`clOffset` off) <$> cs)
+
+addTranslationOffset :: Location -> Result n -> Result n
+addTranslationOffset off r =
+    if performTranslation r
+    then r & translationOffsetL %~ (off <>)
+    else r

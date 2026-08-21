@@ -153,10 +153,10 @@ centerAbout l p =
       c <- getContext
       let centerW = c^.availWidthL `div` 2
           centerH = c^.availHeightL `div` 2
-          off = Location ( centerW - l^.locationColumnL
-                         , centerH - l^.locationRowL
-                         )
-      result <- render $ translateBy off p
+          hOff = centerW - l^.locationColumnL
+          vOff = centerH - l^.locationRowL
+
+      result <- render $ padLeft (Pad hOff) $ padTop (Pad vOff) p
 
       -- Pad the result so it consumes available space
       let rightPaddingAmt = max 0 $ c^.availWidthL - imageWidth (result^.imageL)

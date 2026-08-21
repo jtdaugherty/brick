@@ -17,9 +17,9 @@ import qualified Brick.Main as M
 import qualified Brick.Widgets.Border as B
 import qualified Brick.Widgets.Center as C
 import Brick.Widgets.Core
-  ( translateBy
+  ( translateLayer
   , str
-  , relativeTo
+  , layerRelativeTo
   , reportExtent
   , withDefAttr
   )
@@ -55,19 +55,19 @@ arrowLayer =
     let msg = "Relatively\n" <>
               "positioned\n" <>
               "arrow---->"
-    in relativeTo MiddleLayerElement (Location (-10, -2)) $
+    in layerRelativeTo MiddleLayerElement (Location (-10, -2)) $
        withDefAttr arrowAttr $
        str msg
 
 middleLayer :: Location -> Widget Name
 middleLayer l =
-    translateBy l $
+    translateLayer l $
     reportExtent MiddleLayerElement $
     B.border $ str "Middle layer\n(Arrow keys move)"
 
 bottomLayer :: Location -> Widget Name
 bottomLayer l =
-    translateBy l $
+    translateLayer l $
     B.border $ str "Bottom layer\n(Ctrl-arrow keys move)"
 
 appEvent :: T.BrickEvent Name e -> T.EventM Name St ()

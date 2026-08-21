@@ -67,9 +67,9 @@ module Brick.Widgets.Core
   -- * Naming
   , Named(..)
 
-  -- * Translation and positioning
-  , translateBy
-  , relativeTo
+  -- * Layer translation and positioning
+  , translateLayer
+  , layerRelativeTo
 
   -- * Cropping
   , cropLeftBy
@@ -136,7 +136,7 @@ import qualified Data.Set as S
 import qualified Data.IMap as I
 import qualified Data.Function as DF
 import Data.List (sortBy, partition)
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, fromJust)
 import qualified Graphics.Vty as V
 import Control.DeepSeq
 
@@ -688,6 +688,8 @@ renderBox br ws =
                             (concatMap visibilityRequests allTranslatedResults)
                             (concatMap extents allTranslatedResults)
                             newBorders
+                            (Location (0, 0))
+                            False
 
 catDynBorder :: Lens' (Edges BorderSegment) BorderSegment
              -> Lens' (Edges BorderSegment) BorderSegment
@@ -1039,41 +1041,42 @@ overrideAttr targetName fromName =
 raw :: V.Image -> Widget n
 raw img = Widget Fixed Fixed $ return $ emptyResult & imageL .~ img
 
--- | Translate the specified widget by the specified offset amount.
+-- | Translate the specified layer widget by the specified offset.
 -- Defers to the translated widget for growth policy.
-translateBy :: Location -> Widget n -> Widget n
-translateBy (Location (0, 0)) w = w
-translateBy off p =
+--
+-- This only applies to layer widgets, meaning that translating a
+-- widget that is embedded within another widget will have no effect.
+-- @translateLayer@ does not translate immediately; instead, it records
+-- a translation offset to be applied at rendering time. Subsequent
+-- calls to this function on the same widget accumulate the offset.
+translateLayer :: Location -> Widget n -> Widget n
+translateLayer (Location (0, 0)) w = w
+translateLayer off p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
-      return $ addResultOffset off
-             $ result & imageL %~ (V.translate (off^.locationColumnL) (off^.locationRowL))
+      return $ addResultOffset off $ result & performTranslationL .~ True
 
--- | Given a widget, translate it to position it relative to the
--- upper-left coordinates of a reported extent with the specified
+-- | Given a layer widget, translate it to position it relative to
+-- the upper-left coordinates of a reported extent with the specified
 -- positioning offset. If the specified name has no reported extent,
 -- this draws nothing on the basis that it only makes sense to draw what
--- was requested when the relative position can be known.
+-- was requested when the relative position is known.
 --
 -- This is only useful for positioning something in a higher layer
--- relative to a reported extent in a lower layer. Any other use is
--- likely to result in the specified widget not being rendered. This
--- is because this function relies on information about lower layer
--- renderings in order to work; using it with a resource name that
--- wasn't rendered in a lower layer will result in this being equivalent
--- to @emptyWidget@.
+-- relative to a reported extent in a lower layer. For non-layer
+-- widgets, this function has no effect.
 --
 -- For example, if you have two layers @topLayer@ and @bottomLayer@,
 -- then a widget drawn in @bottomLayer@ with @reportExtent Foo@ can be
 -- used to relatively position a widget in @topLayer@ with @topLayer =
 -- relativeTo Foo ...@.
-relativeTo :: (Ord n) => n -> Location -> Widget n -> Widget n
-relativeTo n off w =
+layerRelativeTo :: (Ord n) => n -> Location -> Widget n -> Widget n
+layerRelativeTo n off w =
     Widget (hSize w) (vSize w) $ do
         mExt <- lookupReportedExtent n
         case mExt of
             Nothing -> render emptyWidget
-            Just ext -> render $ translateBy (extentUpperLeft ext <> off) w
+            Just ext -> render $ translateLayer (extentUpperLeft ext <> off) w
 
 -- | Crop the specified widget on the left by the specified number of
 -- columns. Defers to the cropped widget for growth policy.
@@ -1513,8 +1516,11 @@ viewport vpname typ p =
 
       -- Then perform a translation of the sub-rendering to fit into the
       -- viewport
-      translated <- render $ translateBy (Location (-1 * vpFinal^.vpLeft, -1 * vpFinal^.vpTop))
-                           $ Widget Fixed Fixed $ return initialResult
+      translated <- render $ fromJust $
+                             release $
+                             cropLeftBy (vpFinal^.vpLeft) $
+                             cropTopBy (vpFinal^.vpTop) $
+                             Widget Fixed Fixed $ return initialResult
 
       -- If the vertical scroll bar is enabled, render the scroll bar
       -- area.

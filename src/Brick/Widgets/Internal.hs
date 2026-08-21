@@ -44,11 +44,17 @@ renderFinal aMap layerRenders (w, h) chooseCursor rs =
         (layerResults, !newRS) = flip runState resetRs $ sequence $
             (\p -> runReaderT p ctx) <$>
             (\layerWidget -> do
-                result <- render $ cropToContext layerWidget
+                result <- translateResult <$> (render $ cropToContext layerWidget)
                 forM_ (result^.extentsL) $ \e ->
                     reportedExtentsL %= M.insert (extentName e) e
                 return result
                 ) <$> reverse layerRenders
+
+        translateResult r =
+            let off = translationOffset r
+            in if performTranslation r
+               then r & imageL %~ (V.translate (off^.locationColumnL) (off^.locationRowL))
+               else r
 
         ctx = Context { ctxAttrName = mempty
                       , availWidth = w

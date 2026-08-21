@@ -80,7 +80,7 @@ infoLayer st = T.Widget T.Fixed T.Fixed $ do
                     "Click and hold/drag to report a mouse click"
                 Just (name, T.Location l) ->
                     "Mouse down at " <> show name <> " @ " <> show l
-    T.render $ translateBy (T.Location (0, h-1)) $ clickable Info $
+    T.render $ translateLayer (T.Location (0, h-1)) $ clickable Info $
                withDefAttr (attrName "info") $
                C.hCenter $ str msg
 

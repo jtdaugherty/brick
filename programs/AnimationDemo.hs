@@ -20,7 +20,7 @@ import Brick.AttrMap (AttrName, AttrMap, attrMap, attrName)
 import Brick.Types (Widget, EventM, BrickEvent(..), Location(..))
 import Brick.Widgets.Border (border)
 import Brick.Widgets.Center (center)
-import Brick.Widgets.Core ((<+>), str, vBox, hBox, hLimit, vLimit, translateBy, withDefAttr)
+import Brick.Widgets.Core ((<+>), str, vBox, hBox, hLimit, vLimit, translateLayer, withDefAttr)
 import qualified Brick.Animation as A
 
 data CustomEvent =
@@ -50,7 +50,7 @@ drawClickAnimations st =
 
 drawClickAnimation :: St -> (Location, A.Animation St ()) -> Widget ()
 drawClickAnimation st (l, a) =
-    translateBy l $
+    translateLayer l $
     A.renderAnimation (const $ str " ") st (Just a)
 
 drawAnimations :: St -> Widget ()

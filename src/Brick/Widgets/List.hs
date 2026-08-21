@@ -397,7 +397,7 @@ drawListElements foc l drawElem =
                 in makeVisible elemWidget
 
         render $ viewport (l^.listNameL) Vertical $
-                 translateBy (Location (0, off)) $
+                 padTop (Pad off) $
                  vBox $ toList drawnElements
 
 -- | Insert an item into a list at the specified position.
