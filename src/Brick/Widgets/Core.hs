@@ -694,6 +694,29 @@ renderBox br ws =
                             False
                             (mconcat $ extraLayers <$> allTranslatedResults)
 
+cropExtraLayersToContext :: Result n -> RenderM n (Result n)
+cropExtraLayersToContext r = do
+    let ls = r^.extraLayersL
+    ls' <- mapM cropExtraLayerToContext ls
+    return $ r & extraLayersL .~ ls'
+
+cropExtraLayerToContext :: Result n -> RenderM n (Result n)
+cropExtraLayerToContext r = do
+    let hOff = r^.translationOffsetL.locationColumnL
+        vOff = r^.translationOffsetL.locationRowL
+        correction = Location (leftCropAmt, topCropAmt)
+        leftCropAmt = abs $ min 0 hOff
+        topCropAmt = abs $ min 0 vOff
+    r' <- if leftCropAmt > 0 || topCropAmt > 0
+          then
+              render $
+              translateLayer correction $
+              cropLeftBy leftCropAmt $
+              cropTopBy topCropAmt $
+              Widget Fixed Fixed $ return r
+          else return r
+    cropExtraLayersToContext r'
+
 catDynBorder :: Lens' (Edges BorderSegment) BorderSegment
              -> Lens' (Edges BorderSegment) BorderSegment
              -> DynBorder
@@ -1611,14 +1634,16 @@ viewport vpname typ p =
               return $ translated & imageL .~ spaceFill
                                   & visibilityRequestsL .~ mempty
                                   & extentsL .~ mempty
+                                  & extraLayersL .~ mempty
           _ -> render $ addVScrollbar
                       $ addHScrollbar
                       $ vLimit (vpFinal^.vpSize._2)
                       $ hLimit (vpFinal^.vpSize._1)
                       $ padBottom Max
                       $ padRight Max
-                      $ Widget Fixed Fixed
-                      $ return $ translated & visibilityRequestsL .~ mempty
+                      $ Widget Fixed Fixed $
+                            cropResultToContext =<<
+                                (cropExtraLayersToContext $ translated & visibilityRequestsL .~ mempty)
 
 -- | The base attribute for scroll bars.
 scrollbarAttr :: AttrName
