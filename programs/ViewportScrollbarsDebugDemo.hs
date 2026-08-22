@@ -53,6 +53,7 @@ import Brick.Widgets.Core
   , scrollbarHandleAttr
   , above
   , clickable
+  , (<+>), (<=>)
   )
 
 customHScrollbars :: HScrollbarRenderer n
@@ -73,7 +74,7 @@ customVScrollbars =
                        , scrollbarWidthAllocation = 5
                        }
 
-data Name = VP1 | VP2 | SBClick T.ClickableScrollbarElement Name | Thing1 | Thing2
+data Name = VP1 | VP2 | SBClick T.ClickableScrollbarElement Name | Thing1 | Thing2 | Thing3 | Thing4
           deriving (Ord, Show, Eq)
 
 data St = St { _lastClickedElement :: Maybe (T.ClickableScrollbarElement, Name)
@@ -103,6 +104,8 @@ drawUi st = [ui]
                       (str $ "Press left and right arrow keys to scroll this viewport.\n" <>
                             "This viewport uses a\n" <>
                             "custom scroll bar renderer!")
+                      <+>
+                      ((B.border $ clickable Thing3 $ str "xyz") `above` (str "foo"))
                     , B.border $
                       -- withClickableVScrollBars SBClick $
                       -- withVScrollBars OnLeft $
@@ -120,6 +123,8 @@ drawUi st = [ui]
                        , "even more fancy rendering."
                        ])
                       : (str <$> [ "Line " <> show i | i <- [2..55::Int] ]))
+                      <=>
+                      ((B.border $ clickable Thing4 $ str "xyz") `above` (str "foo\nbar"))
                     ]
 
 vp1Scroll :: M.ViewportScroll Name
