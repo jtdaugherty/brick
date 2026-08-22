@@ -52,6 +52,7 @@ module Brick.Types.Internal
   , NextAction(..)
   , Result(..)
   , addResultOffset
+  , addTranslationOffset
   , Extent(..)
   , Edges(..)
   , eTopL, eBottomL, eRightL, eLeftL

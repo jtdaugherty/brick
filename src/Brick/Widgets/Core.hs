@@ -1158,8 +1158,7 @@ cropLeftBy cols p =
                withReaderT (availWidthL %~ (subtract cols)) $
                    cropResultToContext $
                        addResultOffset (Location (-1 * cols, 0)) $
-                           result & imageL %~ cropped
-                                  & translationOffsetL %~ (Location (cols, 0) <>)
+                           addTranslationOffset (Location (cols, 0)) (result & imageL %~ cropped)
 
 -- | Crop the specified widget to the specified size from the left.
 -- Defers to the cropped widget for growth policy.
@@ -1208,8 +1207,7 @@ cropTopBy rows p =
                withReaderT (availHeightL %~ (subtract rows)) $
                    cropResultToContext $
                        addResultOffset (Location (0, -1 * rows)) $
-                           result & imageL %~ cropped
-                                  & translationOffsetL %~ (Location (0, rows) <>)
+                           addTranslationOffset (Location (0, rows)) (result & imageL %~ cropped)
 
 -- | Crop the specified widget to the specified size from the top.
 -- Defers to the cropped widget for growth policy.
