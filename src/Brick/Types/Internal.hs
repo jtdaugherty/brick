@@ -52,6 +52,7 @@ module Brick.Types.Internal
   , NextAction(..)
   , Result(..)
   , addResultOffset
+  , addResultOffsetContentOnly
   , addTranslationOffset
   , Extent(..)
   , Edges(..)
@@ -501,13 +502,23 @@ lookupReportedExtent n = do
 -- used by other combinators. You should call this any time you render
 -- something and then translate it or otherwise offset it from its
 -- original origin.
+--
+-- Note that this also offsets the translation if translation is
+-- enabled.
 addResultOffset :: Location -> Result n -> Result n
-addResultOffset off = addCursorOffset off .
-                      addVisibilityOffset off .
-                      addExtentOffset off .
-                      addDynBorderOffset off .
-                      addTranslationOffset off .
-                      addExtraLayersOffset off
+addResultOffset off = addResultOffsetContentOnly off .
+                      addTranslationOffset off
+
+-- | Same as addResultOffset but does not shift the translation; use
+-- this when the translation is to say the same but the contents need to
+-- be shifted.
+addResultOffsetContentOnly :: Location -> Result n -> Result n
+addResultOffsetContentOnly off =
+    addCursorOffset off .
+    addVisibilityOffset off .
+    addExtentOffset off .
+    addDynBorderOffset off .
+    addExtraLayersOffset off
 
 addVisibilityOffset :: Location -> Result n -> Result n
 addVisibilityOffset off r = r & visibilityRequestsL.each.vrPositionL %~ (off <>)
