@@ -17,44 +17,9 @@ import qualified Brick.Main as M
 import qualified Brick.Widgets.Center as C
 import qualified Brick.Widgets.Border as B
 import Brick.Types
-  ( Widget
-  , ViewportType(Horizontal, Both)
-  , VScrollBarOrientation(..)
-  , HScrollBarOrientation(..)
-  )
 import Brick.Util
-  ( fg
-  )
 import Brick.AttrMap
-  ( AttrMap
-  , attrMap
-  )
 import Brick.Widgets.Core
-  ( Padding(..)
-  , hLimit
-  , vLimit
-  , padRight
-  , hBox
-  , vBox
-  , viewport
-  , str
-  , fill
-  , withVScrollBars
-  , withHScrollBars
-  , withHScrollBarRenderer
-  , withVScrollBarRenderer
-  , withVScrollBarHandles
-  , withHScrollBarHandles
-  , withClickableHScrollBars
-  , withClickableVScrollBars
-  , VScrollbarRenderer(..)
-  , HScrollbarRenderer(..)
-  , scrollbarAttr
-  , scrollbarHandleAttr
-  , above
-  , clickable
-  , (<+>), (<=>)
-  )
 
 customHScrollbars :: HScrollbarRenderer n
 customHScrollbars =
@@ -84,8 +49,18 @@ data St = St { _lastClickedElement :: Maybe (T.ClickableScrollbarElement, Name)
 makeLenses ''St
 
 drawUi :: St -> [Widget Name]
-drawUi st = [ui]
+drawUi st = [referenceLayer, leftCroppedLayer, topCroppedLayer, ui]
     where
+        referenceLayer = translateLayer (Location (10, 4)) $
+                         str "-----"
+        leftCroppedLayer = translateLayer (Location (10, 5)) $
+                           cropLeftBy 2 $
+                           clickable Thing1 $
+                           str "12345"
+        topCroppedLayer = translateLayer (Location (10, 6)) $
+                          cropTopBy 1 $
+                          clickable Thing2 $
+                          str "abcde\nfghij\nklmno"
         ui = C.center $ hLimit 80 $ vLimit 21 $
              (vBox [ pair
                    , C.hCenter (str "Last clicked scroll bar element:")
