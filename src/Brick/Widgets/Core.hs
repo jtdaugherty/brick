@@ -702,19 +702,26 @@ cropExtraLayersToContext r = do
 
 cropExtraLayerToContext :: Result n -> RenderM n (Result n)
 cropExtraLayerToContext r = do
+    ctx <- getContext
+
     let hOff = r^.translationOffsetL.locationColumnL
         vOff = r^.translationOffsetL.locationRowL
         correction = Location (leftCropAmt, topCropAmt)
         leftCropAmt = abs $ min 0 hOff
         topCropAmt = abs $ min 0 vOff
-    r' <- if leftCropAmt > 0 || topCropAmt > 0
-          then
-              render $
-              translateLayer correction $
-              cropLeftBy leftCropAmt $
-              cropTopBy topCropAmt $
-              Widget Fixed Fixed $ return r
-          else return r
+        iWidth = V.imageWidth $ r^.imageL
+        iHeight = V.imageHeight $ r^.imageL
+        rightCropAmt = max (hOff + iWidth - ctx^.availWidthL) 0
+        bottomCropAmt = max (vOff + iHeight - ctx^.availHeightL) 0
+        maybeCropLeft = if leftCropAmt > 0 then cropLeftBy leftCropAmt else id
+        maybeCropTop = if topCropAmt > 0 then cropTopBy topCropAmt else id
+
+    r' <- render $ cropRightBy rightCropAmt $
+                   cropBottomBy bottomCropAmt $
+                   translateLayer correction $
+                   maybeCropLeft $
+                   maybeCropTop $
+                   Widget Fixed Fixed $ return r
     cropExtraLayersToContext r'
 
 catDynBorder :: Lens' (Edges BorderSegment) BorderSegment
