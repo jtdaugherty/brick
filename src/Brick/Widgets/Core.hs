@@ -1208,10 +1208,20 @@ cropRightBy :: Int -> Widget n -> Widget n
 cropRightBy cols p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
-      let amt = V.imageWidth (result^.imageL) - cols
-          cropped img = if amt < 0 then V.emptyImage else V.cropRight amt img
-      withReaderT (availWidthL %~ (subtract cols)) $
-          cropResultToContext $ result & imageL %~ cropped
+
+      let doCrop r amt =
+              let sz = V.imageWidth (r^.imageL) - amt
+                  cropped img = if sz < 0 then V.emptyImage else V.cropRight sz img
+              in r & imageL %~ cropped
+
+      cropResultToContext $
+         if result^.performTranslationL
+         then let hOff = result^.translationOffsetL.locationColumnL
+                  normalized = addResultOffset (Location (-1 * hOff, 0)) result
+                  cropped = doCrop normalized cols
+                  restored = addResultOffset (Location (hOff, 0)) cropped
+              in restored
+         else doCrop result cols
 
 -- | Crop the specified widget to the specified size from the right.
 -- Defers to the cropped widget for growth policy.
@@ -1282,10 +1292,20 @@ cropBottomBy :: Int -> Widget n -> Widget n
 cropBottomBy rows p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
-      let amt = V.imageHeight (result^.imageL) - rows
-          cropped img = if amt < 0 then V.emptyImage else V.cropBottom amt img
-      withReaderT (availHeightL %~ (subtract rows)) $
-          cropResultToContext $ result & imageL %~ cropped
+
+      let doCrop r amt =
+              let sz = V.imageHeight (r^.imageL) - amt
+                  cropped img = if sz < 0 then V.emptyImage else V.cropBottom sz img
+              in r & imageL %~ cropped
+
+      cropResultToContext $
+         if result^.performTranslationL
+         then let vOff = result^.translationOffsetL.locationRowL
+                  normalized = addResultOffset (Location (0, -1 * vOff)) result
+                  cropped = doCrop normalized rows
+                  restored = addResultOffset (Location (0, vOff)) cropped
+              in restored
+         else doCrop result rows
 
 -- | Crop the specified widget to the specified size from the bottom.
 -- Defers to the cropped widget for growth policy.
