@@ -1162,6 +1162,7 @@ above upper lower =
 -- | Crop the specified widget on the left by the specified number of
 -- columns. Defers to the cropped widget for growth policy.
 cropLeftBy :: Int -> Widget n -> Widget n
+cropLeftBy 0 p = p
 cropLeftBy cols p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
@@ -1213,6 +1214,7 @@ cropLeftTo cols p =
 -- | Crop the specified widget on the right by the specified number of
 -- columns. Defers to the cropped widget for growth policy.
 cropRightBy :: Int -> Widget n -> Widget n
+cropRightBy 0 p = p
 cropRightBy cols p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
@@ -1246,6 +1248,7 @@ cropRightTo cols p =
 -- | Crop the specified widget on the top by the specified number of
 -- rows. Defers to the cropped widget for growth policy.
 cropTopBy :: Int -> Widget n -> Widget n
+cropTopBy 0 p = p
 cropTopBy rows p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
@@ -1297,6 +1300,7 @@ cropTopTo rows p =
 -- | Crop the specified widget on the bottom by the specified number of
 -- rows. Defers to the cropped widget for growth policy.
 cropBottomBy :: Int -> Widget n -> Widget n
+cropBottomBy 0 p = p
 cropBottomBy rows p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
