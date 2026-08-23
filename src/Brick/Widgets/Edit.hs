@@ -232,13 +232,15 @@ renderEditor draw foc e =
             Just lim -> vLimit lim
         atChar = charAtCursor $ e^.editContentsL
         atCharWidth = maybe 1 textWidth atChar
+        contents = getEditContents e
+        noContents = null contents || Z.null (contents !! 0)
+        cursorPlaceholder = str " "
     in withAttr (if foc then editFocusedAttr else editAttr) $
        limit $
        viewport (e^.editorNameL) Both $
        (if foc then showCursor (e^.editorNameL) cursorLoc else id) $
        visibleRegion cursorLoc (atCharWidth, 1) $
-       draw $
-       getEditContents e
+       if noContents then cursorPlaceholder else draw contents
 
 charAtCursor :: (Z.GenericTextZipper t) => Z.TextZipper t -> Maybe t
 charAtCursor z =
