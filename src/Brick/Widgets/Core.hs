@@ -162,7 +162,7 @@ class TextWidth a where
     textWidth :: a -> Int
 
 instance TextWidth T.Text where
-    textWidth = V.wcswidth . T.unpack
+    textWidth = V.wctwidth
 
 instance (F.Foldable f) => TextWidth (f Char) where
     textWidth = V.wcswidth . F.toList
