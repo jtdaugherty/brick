@@ -16,6 +16,7 @@ import Control.Monad.State.Strict
 import Control.Monad.Reader
 import qualified Data.Foldable as F
 import qualified Data.Sequence as Seq
+import qualified Data.Traversable as T
 import Data.Maybe (fromMaybe, mapMaybe)
 import qualified Data.Map as M
 import qualified Data.Set as S
@@ -54,10 +55,15 @@ renderFinal aMap layerRenders (w, h) chooseCursor rs =
                 result <- translateResult <$> (render $ cropToContext layerWidget)
                 recordExtents result
 
-                let translatedLayerResults = translateResult <$> result^.extraLayersL
-                mapM_ recordExtents translatedLayerResults
+                let gatherLayer r = do
+                        let r' = translateResult r
+                        recordExtents r'
 
-                return $ translatedLayerResults Seq.|> result
+                        rest <- T.mapM gatherLayer $ r'^.extraLayersL
+                        return $ concatSeq rest Seq.|> r'
+
+                translatedLayerResults <- T.mapM gatherLayer $ result^.extraLayersL
+                return $ concatSeq translatedLayerResults Seq.|> result
                 ) <$> reverse layerRenders
 
         translateResult r =
@@ -65,6 +71,9 @@ renderFinal aMap layerRenders (w, h) chooseCursor rs =
             in if performTranslation r
                then r & imageL %~ (V.translate (off^.locationColumnL) (off^.locationRowL))
                else r
+
+        concatSeq ss =
+            F.foldr (Seq.><) Seq.empty ss
 
         ctx = Context { ctxAttrName = mempty
                       , availWidth = w
