@@ -1110,7 +1110,10 @@ layerRelativeTo n off w =
             Just ext -> render $ translateLayer (extentUpperLeft ext <> off) w
 
 -- | @above upper lower@ introduces @upper@ as a new layer that is
--- positioned relative to the upper-left corner of @lower@.
+-- positioned relative to the upper-left corner of @lower@. The upper
+-- layer will be drawn in a rendering context with the same available
+-- space as the screen, regardless of the rendering context in which the
+-- lower layer is drawn.
 --
 -- A layer introduced this way will be beneath any layers further up in
 -- the layer stack returned by the main drawing function, so that means
@@ -1144,7 +1147,12 @@ layerRelativeTo n off w =
 above :: Widget n -> Widget n -> Widget n
 above upper lower =
     Widget (hSize lower) (vSize lower) $ do
-        upperResult <- render upper
+        ctx <- getContext
+
+        let resetConstraints = (availHeightL .~ ctx^.windowHeightL) .
+                               (availWidthL .~ ctx^.windowWidthL)
+
+        upperResult <- withReaderT resetConstraints $ render upper
         lowerResult <- render lower
 
         let translatedUpper = addResultOffset (translationOffset lowerResult) $
