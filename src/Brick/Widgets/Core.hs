@@ -91,6 +91,8 @@ module Brick.Widgets.Core
   , visible
   , visibleRegion
   , unsafeLookupViewport
+
+  -- * Caching widget renderings
   , cached
 
   -- ** Viewport scroll bars
