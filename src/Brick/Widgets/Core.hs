@@ -86,14 +86,14 @@ module Brick.Widgets.Core
   , reportExtent
   , clickable
 
+  -- * Caching widget renderings
+  , cached
+
   -- * Scrollable viewports
   , viewport
   , visible
   , visibleRegion
   , unsafeLookupViewport
-
-  -- * Caching widget renderings
-  , cached
 
   -- ** Viewport scroll bars
   , withVScrollBars
