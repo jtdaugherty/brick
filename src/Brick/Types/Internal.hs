@@ -525,6 +525,7 @@ addCursorOffset off r =
     in r & cursorsL %~ (\cs -> onlyVisible $ (`clOffset` off) <$> cs)
 
 addTranslationOffset :: Location -> Result n -> Result n
+addTranslationOffset (Location (0, 0)) r = r
 addTranslationOffset off r =
     r & translationOffsetL %~ (off <>)
 
