@@ -52,7 +52,6 @@ module Brick.Types.Internal
   , NextAction(..)
   , Result(..)
   , addResultOffset
-  , addResultOffsetContentOnly
   , addTranslationOffset
   , Extent(..)
   , Edges(..)
@@ -503,17 +502,10 @@ lookupReportedExtent n = do
 -- something and then translate it or otherwise offset it from its
 -- original origin.
 --
--- Note that this also offsets the translation if translation is
--- enabled.
+-- Note that this does not modify the translation offset if translation
+-- is enabled.
 addResultOffset :: Location -> Result n -> Result n
-addResultOffset off = addResultOffsetContentOnly off .
-                      addTranslationOffset off
-
--- | Same as addResultOffset but does not shift the translation; use
--- this when the translation is to say the same but the contents need to
--- be shifted.
-addResultOffsetContentOnly :: Location -> Result n -> Result n
-addResultOffsetContentOnly off =
+addResultOffset off =
     addCursorOffset off .
     addVisibilityOffset off .
     addExtentOffset off .
@@ -542,4 +534,4 @@ addTranslationOffset off r =
     else r
 
 addExtraLayersOffset :: Location -> Result n -> Result n
-addExtraLayersOffset off r = r & extraLayersL %~ (fmap (addResultOffset off))
+addExtraLayersOffset off r = r & extraLayersL %~ (fmap (addTranslationOffset off))
