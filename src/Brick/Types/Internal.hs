@@ -501,6 +501,7 @@ lookupReportedExtent n = do
 -- Note that this does not modify the translation offset if translation
 -- is enabled.
 addResultOffset :: Location -> Result n -> Result n
+addResultOffset (Location (0, 0)) = id
 addResultOffset off =
     addCursorOffset off .
     addVisibilityOffset off .
