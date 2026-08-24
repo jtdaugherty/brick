@@ -82,7 +82,6 @@ module Brick.Types.Internal
   , cursorsL
   , extentsL
   , bordersL
-  , performTranslationL
   , translationOffsetL
   , extraLayersL
   , visibilityRequestsL
@@ -391,8 +390,6 @@ data Result n =
            , translationOffset :: !Location
            -- ^ Offset of this result's upper-left corner as a
            -- consequence of translation
-           , performTranslation :: !Bool
-           -- ^ Whether a translation should actually occur
            , extraLayers :: Seq (Result n)
            -- ^ Rendering results introduced as intermediate layers
            -- by this result
@@ -406,7 +403,6 @@ emptyResult =
            , visibilityRequests = []
            , extents = []
            , borders = BM.empty
-           , performTranslation = False
            , translationOffset = Location (0, 0)
            , extraLayers = mempty
            }
@@ -529,9 +525,7 @@ addCursorOffset off r =
 
 addTranslationOffset :: Location -> Result n -> Result n
 addTranslationOffset off r =
-    if performTranslation r
-    then r & translationOffsetL %~ (off <>)
-    else r
+    r & translationOffsetL %~ (off <>)
 
 addExtraLayersOffset :: Location -> Result n -> Result n
 addExtraLayersOffset off r = r & extraLayersL %~ (fmap (addTranslationOffset off))

@@ -693,7 +693,6 @@ renderBox br ws =
                             (concatMap extents allTranslatedResults)
                             newBorders
                             (Location (0, 0))
-                            False
                             (mconcat $ extraLayers <$> allTranslatedResults)
 
 cropExtraLayersToContext :: Result n -> RenderM n (Result n)
@@ -1087,8 +1086,7 @@ translateLayer (Location (0, 0)) w = w
 translateLayer off p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
-      return $ addTranslationOffset off $
-               result & performTranslationL .~ True
+      return $ addTranslationOffset off result
 
 -- | Given a layer widget, translate it to position it relative to
 -- the upper-left coordinates of a reported extent with the specified
@@ -1158,8 +1156,7 @@ above upper lower =
         upperResult <- withReaderT resetConstraints $ render upper
         lowerResult <- render lower
 
-        let translatedUpper = upperResult & performTranslationL .~ True
-        return $ lowerResult & extraLayersL %~ (translatedUpper Seq.<|)
+        return $ lowerResult & extraLayersL %~ (upperResult Seq.<|)
 
 -- | Crop the specified widget on the left by the specified number of
 -- columns. Defers to the cropped widget for growth policy.
@@ -1192,14 +1189,12 @@ cropLeftBy cols p =
 
       cropResultToContext $
           let hOff = result^.translationOffsetL.locationColumnL
-          in if result^.performTranslationL
-             then if hOff >= 0
-                  then cropLeftTranslated result cols
-                  else let normalizedResult = addTranslationOffset (Location (abs hOff, 0)) result
-                           normalizedCropped = cropLeftTranslated normalizedResult cols
-                           reverseTrans = min 0 (hOff + cols)
-                       in addTranslationOffset (Location (reverseTrans, 0)) normalizedCropped
-             else cropLeftUntranslated result 0 cols
+          in if hOff >= 0
+             then cropLeftTranslated result cols
+             else let normalizedResult = addTranslationOffset (Location (abs hOff, 0)) result
+                      normalizedCropped = cropLeftTranslated normalizedResult cols
+                      reverseTrans = min 0 (hOff + cols)
+                  in addTranslationOffset (Location (reverseTrans, 0)) normalizedCropped
 
 -- | Crop the specified widget to the specified size from the left.
 -- Defers to the cropped widget for growth policy.
@@ -1226,13 +1221,11 @@ cropRightBy cols p =
                   cropped img = if sz < 0 then V.emptyImage else V.cropRight sz img
               in r & imageL %~ cropped
 
-      if result^.performTranslationL
-          then do
-              let hOff = result^.translationOffsetL.locationColumnL
-                  normalized = addResultOffset (Location (hOff, 0)) result
-              cropped <- cropResultToContext $ doCrop normalized cols
-              return $ addResultOffset (Location (-1 * hOff, 0)) cropped
-          else return $ doCrop result cols
+          hOff = result^.translationOffsetL.locationColumnL
+          normalized = addResultOffset (Location (hOff, 0)) result
+
+      cropped <- cropResultToContext $ doCrop normalized cols
+      return $ addResultOffset (Location (-1 * hOff, 0)) cropped
 
 -- | Crop the specified widget to the specified size from the right.
 -- Defers to the cropped widget for growth policy.
@@ -1277,14 +1270,12 @@ cropTopBy rows p =
 
       cropResultToContext $
           let vOff = result^.translationOffsetL.locationRowL
-          in if result^.performTranslationL
-             then if vOff >= 0
-                  then cropTopTranslated result rows
-                  else let normalizedResult = addTranslationOffset (Location (0, abs vOff)) result
-                           normalizedCropped = cropTopTranslated normalizedResult rows
-                           reverseTrans = min 0 (vOff + rows)
-                       in addTranslationOffset (Location (0, reverseTrans)) normalizedCropped
-             else cropTopUntranslated result 0 rows
+          in if vOff >= 0
+             then cropTopTranslated result rows
+             else let normalizedResult = addTranslationOffset (Location (0, abs vOff)) result
+                      normalizedCropped = cropTopTranslated normalizedResult rows
+                      reverseTrans = min 0 (vOff + rows)
+                  in addTranslationOffset (Location (0, reverseTrans)) normalizedCropped
 
 -- | Crop the specified widget to the specified size from the top.
 -- Defers to the cropped widget for growth policy.
@@ -1311,13 +1302,11 @@ cropBottomBy rows p =
                   cropped img = if sz < 0 then V.emptyImage else V.cropBottom sz img
               in r & imageL %~ cropped
 
-      if result^.performTranslationL
-          then do
-              let vOff = result^.translationOffsetL.locationRowL
-                  normalized = addResultOffset (Location (0, vOff)) result
-              cropped <- cropResultToContext $ doCrop normalized rows
-              return $ addResultOffset (Location (0, -1 * vOff)) cropped
-          else return $ doCrop result rows
+          vOff = result^.translationOffsetL.locationRowL
+          normalized = addResultOffset (Location (0, vOff)) result
+
+      cropped <- cropResultToContext $ doCrop normalized rows
+      return $ addResultOffset (Location (0, -1 * vOff)) cropped
 
 -- | Crop the specified widget to the specified size from the bottom.
 -- Defers to the cropped widget for growth policy.

@@ -68,10 +68,8 @@ renderFinal aMap layerRenders (w, h) chooseCursor rs =
 
         translateResult r =
             let off = translationOffset r
-            in if performTranslation r
-               then addResultOffset off $
-                    r & imageL %~ (V.translate (off^.locationColumnL) (off^.locationRowL))
-               else r
+            in addResultOffset off $
+               r & imageL %~ (V.translate (off^.locationColumnL) (off^.locationRowL))
 
         concatSeq ss =
             F.foldr (Seq.><) Seq.empty ss
