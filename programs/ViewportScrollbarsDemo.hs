@@ -71,7 +71,7 @@ customVScrollbars =
                        , scrollbarWidthAllocation = 5
                        }
 
-data Name = VP1 | VP2 | SBClick T.ClickableScrollbarElement Name
+data Name = VP1 | VP2 | VP3 | SBClick T.ClickableScrollbarElement Name
           deriving (Ord, Show, Eq)
 
 data St = St { _lastClickedElement :: Maybe (T.ClickableScrollbarElement, Name) }
@@ -86,7 +86,7 @@ drawUi st = [ui]
                    , C.hCenter (str "Last clicked scroll bar element:")
                    , str $ show $ _lastClickedElement st
                    ])
-        pair = hBox [ padRight (Pad 5) $
+        pair = hBox [ padRight (Pad 2) $
                       B.border $
                       withClickableHScrollBars SBClick $
                       withHScrollBars OnBottom $
@@ -96,7 +96,9 @@ drawUi st = [ui]
                       str $ "Press left and right arrow keys to scroll this viewport.\n" <>
                             "This viewport uses a\n" <>
                             "custom scroll bar renderer!"
-                    , B.border $
+
+                    , padRight (Pad 2) $
+                      B.border $
                       withClickableVScrollBars SBClick $
                       withVScrollBars OnLeft $
                       withVScrollBarRenderer customVScrollbars $
@@ -104,12 +106,30 @@ drawUi st = [ui]
                       viewport VP2 Both $
                       vBox $
                       (str $ unlines $
-                       [ "Press up and down arrow keys to"
-                       , "scroll this viewport vertically."
-                       , "This viewport uses a custom"
-                       , "scroll bar renderer with"
-                       , "a larger space allocation and"
-                       , "even more fancy rendering."
+                       [ "Press up and down"
+                       , "arrow keys to"
+                       , "scroll this"
+                       , "viewport."
+                       , "This viewport uses"
+                       , "a custom scroll"
+                       , "bar renderer."
+                       ])
+                      : (str <$> [ "Line " <> show i | i <- [2..55::Int] ])
+
+                    , B.border $
+                      withClickableVScrollBars SBClick $
+                      withVScrollBars OnLeft $
+                      withVScrollBarHandles $
+                      viewport VP3 Both $
+                      vBox $
+                      (str $ unlines $
+                       [ "Press control-up and"
+                       , "control-down arrow"
+                       , "keys to scroll"
+                       , "this viewport."
+                       , "This viewport uses"
+                       , "the default scroll bar"
+                       , "renderer."
                        ])
                       : (str <$> [ "Line " <> show i | i <- [2..55::Int] ])
                     ]
@@ -120,11 +140,16 @@ vp1Scroll = M.viewportScroll VP1
 vp2Scroll :: M.ViewportScroll Name
 vp2Scroll = M.viewportScroll VP2
 
+vp3Scroll :: M.ViewportScroll Name
+vp3Scroll = M.viewportScroll VP3
+
 appEvent :: T.BrickEvent Name e -> T.EventM Name St ()
 appEvent (T.VtyEvent (V.EvKey V.KRight []))  = M.hScrollBy vp1Scroll 1
 appEvent (T.VtyEvent (V.EvKey V.KLeft []))   = M.hScrollBy vp1Scroll (-1)
 appEvent (T.VtyEvent (V.EvKey V.KDown []))   = M.vScrollBy vp2Scroll 1
 appEvent (T.VtyEvent (V.EvKey V.KUp []))     = M.vScrollBy vp2Scroll (-1)
+appEvent (T.VtyEvent (V.EvKey V.KDown [V.MCtrl])) = M.vScrollBy vp3Scroll 1
+appEvent (T.VtyEvent (V.EvKey V.KUp [V.MCtrl]))   = M.vScrollBy vp3Scroll (-1)
 appEvent (T.VtyEvent (V.EvKey V.KEsc []))    = M.halt
 appEvent (T.MouseDown (SBClick el n) _ _ _) = do
     lastClickedElement .= Just (el, n)
@@ -139,6 +164,14 @@ appEvent (T.MouseDown (SBClick el n) _ _ _) = do
                 T.SBBar          -> return ()
         VP2 -> do
             let vp = M.viewportScroll VP2
+            case el of
+                T.SBHandleBefore -> M.vScrollBy vp (-1)
+                T.SBHandleAfter  -> M.vScrollBy vp 1
+                T.SBTroughBefore -> M.vScrollBy vp (-10)
+                T.SBTroughAfter  -> M.vScrollBy vp 10
+                T.SBBar          -> return ()
+        VP3 -> do
+            let vp = M.viewportScroll VP3
             case el of
                 T.SBHandleBefore -> M.vScrollBy vp (-1)
                 T.SBHandleAfter  -> M.vScrollBy vp 1
