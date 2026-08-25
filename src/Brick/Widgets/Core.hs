@@ -695,12 +695,34 @@ renderBox br ws =
                             (Location (0, 0))
                             (mconcat $ extraLayers <$> allTranslatedResults)
 
+-- | Given a result, crop all of its extra layers to the rendering
+-- context. This is only used when rendering a result in a viewport; in
+-- a viewport setting, we want to show extra layers but crop them to the
+-- bounds of the viewport.
 cropExtraLayersToContext :: Result n -> RenderM n (Result n)
 cropExtraLayersToContext r = do
     let ls = r^.extraLayersL
     ls' <- mapM cropExtraLayerToContext ls
     return $ r & extraLayersL .~ ls'
 
+-- | Given a layer, crop it to the rendering context. This is only used
+-- when rendering a layer on top of a base layer in a viewport. In this
+-- setting, we want to crop the layer so that it is confined to the
+-- viewport's region. This works by assuming that the rendering context
+-- represents the scrollable area of the viewport, and that the extra
+-- layers on top of the base layer have been translated with respect to
+-- the viewport's scrolling state, meaning that some layers may have
+-- been translated to have negative left or top offsets. Negative left
+-- or top offsets indicate that a layer is partially or fully obscured
+-- by the viewport's visible area, and right or bottom portions of
+-- layers that exceed the bounds of the scrollable area will exceed the
+-- rendering context's size so normal 'cropResultToContext' behavior
+-- will crop them.
+--
+-- In all cases, the extra layer will be cropped on all sides as
+-- necessary to limit its visible portion to whatever is permitted by
+-- its base layer's scroll position in the viewport, since that has been
+-- used to set up the rendering context and layer translation.
 cropExtraLayerToContext :: Result n -> RenderM n (Result n)
 cropExtraLayerToContext r = do
     ctx <- getContext
