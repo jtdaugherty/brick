@@ -526,6 +526,7 @@ addCursorOffset off r =
         isVisible l = l^.locationColumnL >= 0 && l^.locationRowL >= 0
     in r & cursorsL %~ (\cs -> onlyVisible $ (`clOffset` off) <$> cs)
 
+-- | Add an offset to the translation offset for this result.
 addTranslationOffset :: Location -> Result n -> Result n
 addTranslationOffset (Location (0, 0)) r = r
 addTranslationOffset off r =
