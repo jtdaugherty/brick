@@ -1675,10 +1675,7 @@ viewport vpname typ p =
       case translatedSize of
           (0, 0) -> do
               let spaceFill = V.charFill (c^.attrL) ' ' (c^.availWidthL) (c^.availHeightL)
-              return $ translated & imageL .~ spaceFill
-                                  & visibilityRequestsL .~ mempty
-                                  & extentsL .~ mempty
-                                  & extraLayersL .~ mempty
+              return $ emptyResult & imageL .~ spaceFill
           _ -> render $ addVScrollbar
                       $ addHScrollbar
                       $ vLimit (vpFinal^.vpSize._2)
