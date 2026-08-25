@@ -390,7 +390,7 @@ data Result n =
            , translationOffset :: !Location
            -- ^ Offset of this result's upper-left corner as a
            -- consequence of translation
-           , extraLayers :: Seq (Result n)
+           , extraLayers :: !(Seq (Result n))
            -- ^ Rendering results introduced as intermediate layers
            -- by this result
            }
