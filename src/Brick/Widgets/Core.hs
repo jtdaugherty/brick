@@ -13,6 +13,7 @@ module Brick.Widgets.Core
     TextWidth(..)
   , emptyWidget
   , raw
+  , char
   , txt
   , txtWrap
   , txtWrapWith
@@ -292,6 +293,13 @@ txtWrapWith settings s =
                   lineImg lStr = V.text' (c^.attrL)
                                    (lStr <> T.replicate (maxLength - textWidth lStr) " ")
               in return $ emptyResult & imageL .~ (V.horizCat [V.vertCat lineImgs, padding])
+
+-- | Build a widget rendering a single character.
+char :: Char -> Widget n
+char ch =
+    Widget Fixed Fixed $ do
+        c <- getContext
+        return $ emptyResult & imageL .~ (V.char (c^.attrL) ch)
 
 -- | Build a widget from a 'String'. Behaves the same as 'txt' when the
 -- input contains multiple lines.
