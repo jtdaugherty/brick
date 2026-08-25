@@ -1102,6 +1102,12 @@ raw img = Widget Fixed Fixed $ return $ emptyResult & imageL .~ img
 --
 -- This only applies to layer widgets, meaning that translating a
 -- widget that is embedded within another widget will have no effect.
+-- For example, this translation of @bar@ has no effect because @bar@ is
+-- embedded in a box, and translations only apply if specified for the
+-- outermost @Widget@:
+--
+-- > foo <+> translateLayer (Location (1, 1)) bar
+--
 -- @translateLayer@ does not translate immediately; instead, it records
 -- a translation offset to be applied at rendering time. Subsequent
 -- calls to this function on the same widget accumulate the offset.
