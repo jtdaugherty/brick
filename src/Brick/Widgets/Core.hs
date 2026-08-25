@@ -1108,9 +1108,7 @@ raw img = Widget Fixed Fixed $ return $ emptyResult & imageL .~ img
 translateLayer :: Location -> Widget n -> Widget n
 translateLayer (Location (0, 0)) w = w
 translateLayer off p =
-    Widget (hSize p) (vSize p) $ do
-      result <- render p
-      return $ addTranslationOffset off result
+    Widget (hSize p) (vSize p) $ addTranslationOffset off <$> render p
 
 -- | Given a layer widget, translate it to position it relative to
 -- the upper-left coordinates of a reported extent with the specified
