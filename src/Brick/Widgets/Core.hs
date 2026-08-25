@@ -335,10 +335,11 @@ txt s =
             [] -> emptyResult
             [one] -> emptyResult & imageL .~ (V.text' (c^.attrL) one)
             multiple ->
-                let maxLength = maximum $ V.safeWctwidth <$> multiple
-                    lineImgs = lineImg <$> multiple
-                    lineImg lStr = V.text' (c^.attrL)
-                        (lStr <> T.replicate (maxLength - V.safeWctwidth lStr) (T.singleton ' '))
+                let maxLength = maximum $ fst <$> linesWithLength
+                    linesWithLength = (\l -> (V.safeWctwidth l, l)) <$> multiple
+                    lineImgs = lineImg <$> linesWithLength
+                    lineImg (len, lStr) = V.text' (c^.attrL)
+                        (lStr <> T.replicate (maxLength - len) (T.singleton ' '))
                 in emptyResult & imageL .~ (V.vertCat lineImgs)
 
 -- | Take up to the given width, having regard to character width.
