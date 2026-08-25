@@ -97,6 +97,7 @@ library
     Brick.Widgets.Edit
     Brick.Widgets.FileBrowser
     Brick.Widgets.List
+    Brick.Widgets.Menu
     Brick.Widgets.ProgressBar
     Brick.Widgets.Table
     Data.IMap
