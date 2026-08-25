@@ -744,6 +744,7 @@ cropExtraLayerToContext r = do
                     maybeCropLeft $
                     maybeCropTop $
                     Widget Fixed Fixed $ return r)
+
     cropExtraLayersToContext r'
 
 catDynBorder :: Lens' (Edges BorderSegment) BorderSegment
