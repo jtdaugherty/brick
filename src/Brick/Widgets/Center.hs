@@ -19,8 +19,7 @@ where
 
 import Lens.Micro ((^.), (&), (.~), to)
 import Data.Maybe (fromMaybe)
-import Graphics.Vty (imageWidth, imageHeight, horizCat, charFill, vertCat,
-                    translateX, translateY)
+import Graphics.Vty (imageWidth, imageHeight, horizCat, charFill, vertCat)
 
 import Brick.Types
 import Brick.Widgets.Core
@@ -30,11 +29,11 @@ import Brick.Widgets.Core
 hCenter :: Widget n -> Widget n
 hCenter = hCenterWith Nothing
 
--- | Center the specified widget horizontally using a Vty image
--- translation. Consumes all available horizontal space. Unlike hCenter,
--- this does not fill the surrounding space so it is suitable for use
--- as a layer. Layers underneath this widget will be visible in regions
--- surrounding the centered widget.
+-- | Center the specified widget horizontally using a layer translation.
+-- Consumes all available horizontal space. Unlike hCenter, this does
+-- not fill the surrounding space so it is suitable for use as a layer.
+-- Layers underneath this widget will be visible in regions surrounding
+-- the centered widget.
 hCenterLayer :: Widget n -> Widget n
 hCenterLayer p =
     Widget Greedy (vSize p) $ do
@@ -42,12 +41,8 @@ hCenterLayer p =
         c <- getContext
         let rWidth = result^.imageL.to imageWidth
             leftPaddingAmount = max 0 $ (c^.availWidthL - rWidth) `div` 2
-            paddedImage = translateX leftPaddingAmount $ result^.imageL
             off = Location (leftPaddingAmount, 0)
-        if leftPaddingAmount == 0 then
-            return result else
-            return $ addResultOffset off
-                   $ result & imageL .~ paddedImage
+        render $ translateLayer off $ Widget Fixed Fixed $ return result
 
 -- | Center the specified widget horizontally. Consumes all available
 -- horizontal space. Uses the specified character to fill in the space
@@ -79,11 +74,11 @@ hCenterWith mChar p =
 vCenter :: Widget n -> Widget n
 vCenter = vCenterWith Nothing
 
--- | Center the specified widget vertically using a Vty image
--- translation. Consumes all available vertical space. Unlike vCenter,
--- this does not fill the surrounding space so it is suitable for use
--- as a layer. Layers underneath this widget will be visible in regions
--- surrounding the centered widget.
+-- | Center the specified widget vertically using a layer translation.
+-- Consumes all available vertical space. Unlike vCenter, this does not
+-- fill the surrounding space so it is suitable for use as a layer.
+-- Layers underneath this widget will be visible in regions surrounding
+-- the centered widget.
 vCenterLayer :: Widget n -> Widget n
 vCenterLayer p =
     Widget (hSize p) Greedy $ do
@@ -91,12 +86,8 @@ vCenterLayer p =
         c <- getContext
         let rHeight = result^.imageL.to imageHeight
             topPaddingAmount = max 0 $ (c^.availHeightL - rHeight) `div` 2
-            paddedImage = translateY topPaddingAmount $ result^.imageL
             off = Location (0, topPaddingAmount)
-        if topPaddingAmount == 0 then
-            return result else
-            return $ addResultOffset off
-                   $ result & imageL .~ paddedImage
+        render $ translateLayer off $ Widget Fixed Fixed $ return result
 
 -- | Center a widget vertically. Consumes all vertical space. Uses the
 -- specified character to fill in the space above and below the centered
@@ -135,7 +126,7 @@ center = centerWith Nothing
 centerWith :: Maybe Char -> Widget n -> Widget n
 centerWith c = vCenterWith c . hCenterWith c
 
--- | Center a widget both vertically and horizontally using a Vty image
+-- | Center a widget both vertically and horizontally using a layer
 -- translation. Consumes all available vertical and horizontal space.
 -- Unlike center, this does not fill in the surrounding space with a
 -- character so it is usable as a layer. Any widget underneath this one
