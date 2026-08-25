@@ -1345,8 +1345,9 @@ cached n w =
         -- from the extents that were in the result.
         renderedClickables :: (Ord n) => Result n -> RenderM n [n]
         renderedClickables renderResult = do
+            layerClickables <- concat <$> mapM renderedClickables (renderResult^.extraLayersL)
             allClickables <- use clickableNamesL
-            return [extentName e | e <- renderResult^.extentsL, extentName e `elem` allClickables]
+            return $ layerClickables <> [extentName e | e <- renderResult^.extentsL, extentName e `elem` allClickables]
 
 cacheLookup :: (Ord n) => n -> RenderM n (Maybe ([n], Result n))
 cacheLookup n = do
