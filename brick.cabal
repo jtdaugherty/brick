@@ -274,21 +274,6 @@ executable brick-viewport-scrollbars-demo
                        microlens-mtl,
                        microlens-th
 
-executable brick-viewport-scrollbars-debug-demo
-  if !flag(demos)
-    Buildable: False
-  hs-source-dirs:      programs
-  ghc-options:         -threaded -Wall -Wcompat -O2
-  default-language:    Haskell2010
-  default-extensions:  CPP
-  main-is:             ViewportScrollbarsDebugDemo.hs
-  build-depends:       base,
-                       brick,
-                       vty,
-                       vty-crossplatform,
-                       microlens-mtl,
-                       microlens-th
-
 executable brick-viewport-scroll-demo
   if !flag(demos)
     Buildable: False
