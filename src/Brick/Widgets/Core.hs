@@ -287,11 +287,12 @@ txtWrapWith settings s =
       case force theLines of
           [] -> return emptyResult
           multiple ->
-              let maxLength = maximum $ textWidth <$> multiple
+              let maxLength = maximum $ fst <$> linesWithLength
+                  linesWithLength = (\l -> (textWidth l, l)) <$> multiple
                   padding = V.charFill (c^.attrL) ' ' (c^.availWidthL - maxLength) (length lineImgs)
-                  lineImgs = lineImg <$> multiple
-                  lineImg lStr = V.text' (c^.attrL)
-                                   (lStr <> T.replicate (maxLength - textWidth lStr) " ")
+                  lineImgs = lineImg <$> linesWithLength
+                  lineImg (len, lStr) = V.text' (c^.attrL)
+                                   (lStr <> T.replicate (maxLength - len) " ")
               in return $ emptyResult & imageL .~ (V.horizCat [V.vertCat lineImgs, padding])
 
 -- | Build a widget from a single character.
