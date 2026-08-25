@@ -294,7 +294,7 @@ txtWrapWith settings s =
                                    (lStr <> T.replicate (maxLength - textWidth lStr) " ")
               in return $ emptyResult & imageL .~ (V.horizCat [V.vertCat lineImgs, padding])
 
--- | Build a widget rendering a single character.
+-- | Build a widget from a single character.
 char :: Char -> Widget n
 char ch =
     Widget Fixed Fixed $ do
