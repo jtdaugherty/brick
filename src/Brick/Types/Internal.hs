@@ -495,8 +495,7 @@ lookupReportedExtent n = do
 -- since calls to this function result in converting from widget-local
 -- coordinates to (ultimately) terminal-global ones so they can be
 -- used by other combinators. You should call this any time you render
--- something and then translate it or otherwise offset it from its
--- original origin.
+-- something and offset it from its original origin.
 --
 -- Note that this does not modify the translation offset of this result,
 -- but it does offset the translations of this result's extra layers
