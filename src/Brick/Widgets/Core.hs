@@ -1116,14 +1116,13 @@ translateLayer off p =
 -- this draws nothing on the basis that it only makes sense to draw what
 -- was requested when the relative position is known.
 --
--- This is only useful for positioning something in a higher layer
--- relative to a reported extent in a lower layer. For non-layer
--- widgets, this function has no effect.
---
 -- For example, if you have two layers @topLayer@ and @bottomLayer@,
 -- then a widget drawn in @bottomLayer@ with @reportExtent Foo@ can be
 -- used to relatively position a widget in @topLayer@ with @topLayer =
 -- relativeTo Foo ...@.
+--
+-- To introduce a new layer directly into the rendering process without
+-- referencing a reported extent, see 'above'.
 layerRelativeTo :: (Ord n) => n -> Location -> Widget n -> Widget n
 layerRelativeTo n off w =
     Widget (hSize w) (vSize w) $ do
