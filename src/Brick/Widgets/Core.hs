@@ -716,11 +716,12 @@ cropExtraLayerToContext r = do
         maybeCropLeft = if leftCropAmt > 0 then cropLeftBy leftCropAmt else id
         maybeCropTop = if topCropAmt > 0 then cropTopBy topCropAmt else id
 
-    r' <- render $ cropRightBy rightCropAmt $
-                   cropBottomBy bottomCropAmt $
-                   maybeCropLeft $
-                   maybeCropTop $
-                   Widget Fixed Fixed $ return r
+    r' <- addTranslationOffset (Location (leftCropAmt, topCropAmt)) <$>
+          (render $ cropRightBy rightCropAmt $
+                    cropBottomBy bottomCropAmt $
+                    maybeCropLeft $
+                    maybeCropTop $
+                    Widget Fixed Fixed $ return r)
     cropExtraLayersToContext r'
 
 catDynBorder :: Lens' (Edges BorderSegment) BorderSegment
@@ -1166,35 +1167,15 @@ cropLeftBy cols p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
 
-      let cropLeftTranslated r amt =
-              let hOff = r^.translationOffsetL.locationColumnL
-              in if hOff >= amt
-                 -- If the amount of cropping is less than the amount of
-                 -- horizontal translation, just "crop" the translation
-                 -- but don't do anything to the image. Here we shift
-                 -- both the translation offset and all extents in the
-                 -- result.
-                 then addTranslationOffset (Location ((-1 * amt), 0)) r
-                 -- Otherwise the amount of cropping is enough to eat up
-                 -- both the translation and a portion of the image.
-                 else cropLeftUntranslated r hOff (amt - hOff)
+      let img = result^.imageL
+          newWidth = V.imageWidth img - cols
 
-          cropLeftUntranslated r offset cropAmt =
-              let img = r^.imageL
-              in if cropAmt >= V.imageWidth img
-                 then emptyResult
-                 else addTranslationOffset (Location (-1 * offset, 0)) $
-                      addResultOffset (Location ((-1 * cropAmt), 0)) $
-                      r & imageL .~ V.cropLeft (V.imageWidth img - cropAmt) img
-
-      cropResultToContext $
-          let hOff = result^.translationOffsetL.locationColumnL
-          in if hOff >= 0
-             then cropLeftTranslated result cols
-             else let normalizedResult = addTranslationOffset (Location (abs hOff, 0)) result
-                      normalizedCropped = cropLeftTranslated normalizedResult cols
-                      reverseTrans = min 0 (hOff + cols)
-                  in addTranslationOffset (Location (reverseTrans, 0)) normalizedCropped
+      withReaderT (availWidthL .~ newWidth) $
+          cropResultToContext $
+              if cols >= V.imageWidth img
+              then emptyResult
+              else addResultOffset (Location ((-1 * cols), 0)) $
+                   result & imageL .~ V.cropLeft newWidth img
 
 -- | Crop the specified widget to the specified size from the left.
 -- Defers to the cropped widget for growth policy.
@@ -1216,16 +1197,10 @@ cropRightBy cols p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
 
-      let doCrop r amt =
-              let sz = V.imageWidth (r^.imageL) - amt
-                  cropped img = if sz < 0 then V.emptyImage else V.cropRight sz img
-              in r & imageL %~ cropped
+      let img = result^.imageL
+          newWidth = V.imageWidth img - cols
 
-          hOff = result^.translationOffsetL.locationColumnL
-          normalized = addResultOffset (Location (hOff, 0)) result
-
-      cropped <- cropResultToContext $ doCrop normalized cols
-      return $ addResultOffset (Location (-1 * hOff, 0)) cropped
+      render $ hLimit newWidth $ Widget Fixed Fixed $ return result
 
 -- | Crop the specified widget to the specified size from the right.
 -- Defers to the cropped widget for growth policy.
@@ -1247,35 +1222,15 @@ cropTopBy rows p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
 
-      let cropTopTranslated r amt =
-              let vOff = r^.translationOffsetL.locationRowL
-              in if vOff >= amt
-                 -- If the amount of cropping is less than the amount of
-                 -- vertical translation, just "crop" the translation
-                 -- but don't do anything to the image. Here we shift
-                 -- both the translation offset and all extents in the
-                 -- result.
-                 then addTranslationOffset (Location (0, (-1 * amt))) r
-                 -- Otherwise the amount of cropping is enough to eat up
-                 -- both the translation and a portion of the image.
-                 else cropTopUntranslated r vOff (amt - vOff)
+      let img = result^.imageL
+          newHeight = V.imageHeight img - rows
 
-          cropTopUntranslated r offset cropAmt =
-              let img = r^.imageL
-              in if cropAmt >= V.imageHeight img
-                 then emptyResult
-                 else addTranslationOffset (Location (0, -1 * offset)) $
-                      addResultOffset (Location (0, (-1 * cropAmt))) $
-                      r & imageL .~ V.cropTop (V.imageHeight img - cropAmt) img
-
-      cropResultToContext $
-          let vOff = result^.translationOffsetL.locationRowL
-          in if vOff >= 0
-             then cropTopTranslated result rows
-             else let normalizedResult = addTranslationOffset (Location (0, abs vOff)) result
-                      normalizedCropped = cropTopTranslated normalizedResult rows
-                      reverseTrans = min 0 (vOff + rows)
-                  in addTranslationOffset (Location (0, reverseTrans)) normalizedCropped
+      withReaderT (availHeightL .~ newHeight) $
+          cropResultToContext $
+              if rows >= V.imageHeight img
+              then emptyResult
+              else addResultOffset (Location (0, (-1 * rows))) $
+                   result & imageL .~ V.cropTop newHeight img
 
 -- | Crop the specified widget to the specified size from the top.
 -- Defers to the cropped widget for growth policy.
@@ -1297,16 +1252,10 @@ cropBottomBy rows p =
     Widget (hSize p) (vSize p) $ do
       result <- render p
 
-      let doCrop r amt =
-              let sz = V.imageHeight (r^.imageL) - amt
-                  cropped img = if sz < 0 then V.emptyImage else V.cropBottom sz img
-              in r & imageL %~ cropped
+      let img = result^.imageL
+          newHeight = V.imageHeight img - rows
 
-          vOff = result^.translationOffsetL.locationRowL
-          normalized = addResultOffset (Location (0, vOff)) result
-
-      cropped <- cropResultToContext $ doCrop normalized rows
-      return $ addResultOffset (Location (0, -1 * vOff)) cropped
+      render $ vLimit newHeight $ Widget Fixed Fixed $ return result
 
 -- | Crop the specified widget to the specified size from the bottom.
 -- Defers to the cropped widget for growth policy.
