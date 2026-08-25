@@ -498,8 +498,10 @@ lookupReportedExtent n = do
 -- something and then translate it or otherwise offset it from its
 -- original origin.
 --
--- Note that this does not modify the translation offset if translation
--- is enabled.
+-- Note that this does not modify the translation offset of this result,
+-- but it does offset the translations of this result's extra layers
+-- so that they maintain their relative position with respect to this
+-- result.
 addResultOffset :: Location -> Result n -> Result n
 addResultOffset (Location (0, 0)) = id
 addResultOffset off =
