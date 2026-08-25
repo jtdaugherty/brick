@@ -1188,6 +1188,15 @@ above upper lower =
 
 -- | Crop the specified widget on the left by the specified number of
 -- columns. Defers to the cropped widget for growth policy.
+--
+-- This operation crops the widget without regard for its translation
+-- offset, meaning that
+--
+-- > cropLeftBy amt $ translateBy n w
+--
+-- is effectively equivalent to
+--
+-- > translateBy n $ cropLeftBy amt w
 cropLeftBy :: Int -> Widget n -> Widget n
 cropLeftBy 0 p = p
 cropLeftBy cols p =
@@ -1206,6 +1215,9 @@ cropLeftBy cols p =
 
 -- | Crop the specified widget to the specified size from the left.
 -- Defers to the cropped widget for growth policy.
+--
+-- See 'cropLeftBy' for details about how this interacts with layer
+-- translations.
 cropLeftTo :: Int -> Widget n -> Widget n
 cropLeftTo cols p =
     Widget (hSize p) (vSize p) $ do
@@ -1218,6 +1230,9 @@ cropLeftTo cols p =
 
 -- | Crop the specified widget on the right by the specified number of
 -- columns. Defers to the cropped widget for growth policy.
+--
+-- See 'cropLeftBy' for details about how this interacts with layer
+-- translations.
 cropRightBy :: Int -> Widget n -> Widget n
 cropRightBy 0 p = p
 cropRightBy cols p =
@@ -1231,6 +1246,9 @@ cropRightBy cols p =
 
 -- | Crop the specified widget to the specified size from the right.
 -- Defers to the cropped widget for growth policy.
+--
+-- See 'cropLeftBy' for details about how this interacts with layer
+-- translations.
 cropRightTo :: Int -> Widget n -> Widget n
 cropRightTo cols p =
     Widget (hSize p) (vSize p) $ do
@@ -1243,6 +1261,9 @@ cropRightTo cols p =
 
 -- | Crop the specified widget on the top by the specified number of
 -- rows. Defers to the cropped widget for growth policy.
+--
+-- See 'cropLeftBy' for details about how this interacts with layer
+-- translations.
 cropTopBy :: Int -> Widget n -> Widget n
 cropTopBy 0 p = p
 cropTopBy rows p =
@@ -1261,6 +1282,9 @@ cropTopBy rows p =
 
 -- | Crop the specified widget to the specified size from the top.
 -- Defers to the cropped widget for growth policy.
+--
+-- See 'cropLeftBy' for details about how this interacts with layer
+-- translations.
 cropTopTo :: Int -> Widget n -> Widget n
 cropTopTo rows p =
     Widget (hSize p) (vSize p) $ do
@@ -1273,6 +1297,9 @@ cropTopTo rows p =
 
 -- | Crop the specified widget on the bottom by the specified number of
 -- rows. Defers to the cropped widget for growth policy.
+--
+-- See 'cropLeftBy' for details about how this interacts with layer
+-- translations.
 cropBottomBy :: Int -> Widget n -> Widget n
 cropBottomBy 0 p = p
 cropBottomBy rows p =
@@ -1286,6 +1313,9 @@ cropBottomBy rows p =
 
 -- | Crop the specified widget to the specified size from the bottom.
 -- Defers to the cropped widget for growth policy.
+--
+-- See 'cropLeftBy' for details about how this interacts with layer
+-- translations.
 cropBottomTo :: Int -> Widget n -> Widget n
 cropBottomTo rows p =
     Widget (hSize p) (vSize p) $ do
