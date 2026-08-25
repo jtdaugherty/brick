@@ -1630,8 +1630,8 @@ viewport vpname typ p =
           Nothing -> error $ "BUG: viewport: viewport name " <> show vpname <> " absent from viewport map"
           Just v -> return v
 
-      -- Then perform a translation of the sub-rendering to fit into the
-      -- viewport
+      -- Then crop the sub-rendering to fit into the viewport at the
+      -- desired viewport offset.
       translated <- render $ fromJust $
                              release $
                              cropLeftBy (vpFinal^.vpLeft) $
