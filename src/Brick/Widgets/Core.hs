@@ -1435,8 +1435,8 @@ verticalScrollbarRenderer :: VScrollbarRenderer n
 verticalScrollbarRenderer =
     VScrollbarRenderer { renderVScrollbar = fill '█'
                        , renderVScrollbarTrough = fill ' '
-                       , renderVScrollbarHandleBefore = str "^"
-                       , renderVScrollbarHandleAfter = str "v"
+                       , renderVScrollbarHandleBefore = char '^'
+                       , renderVScrollbarHandleAfter = char 'v'
                        , scrollbarWidthAllocation = 1
                        }
 
@@ -1494,8 +1494,8 @@ horizontalScrollbarRenderer :: HScrollbarRenderer n
 horizontalScrollbarRenderer =
     HScrollbarRenderer { renderHScrollbar = fill '█'
                        , renderHScrollbarTrough = fill ' '
-                       , renderHScrollbarHandleBefore = str "<"
-                       , renderHScrollbarHandleAfter = str ">"
+                       , renderHScrollbarHandleBefore = char '<'
+                       , renderHScrollbarHandleAfter = char '>'
                        , scrollbarHeightAllocation = 1
                        }
 
