@@ -1148,8 +1148,9 @@ layerRelativeTo n off w =
 -- > lower = middle `above` bottom
 --
 -- the resulting layering is @[upper, middle, bottom]@, with @middle@
--- having the same upper-left corner position as @bottom@, even if
--- @bottom@ has been translated with 'translateBy'.
+-- having the same upper-left corner position as @bottom@, even
+-- if @bottom@ has been translated with 'translateBy' or has been
+-- positioned in a box layout.
 --
 -- In addition, when two layers are introduced above widgets in the same
 -- layer, their ordering with respect to each other in the final layer
