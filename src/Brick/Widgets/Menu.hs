@@ -3,6 +3,9 @@ module Brick.Widgets.Menu
   , MenuItem(..)
   , MenuEntry(..)
 
+  , menu
+  , renderMenu
+
   -- * Attributes
   , menuAttr
   , menuTitleAttr
@@ -15,6 +18,7 @@ module Brick.Widgets.Menu
 where
 
 import qualified Data.Text as T
+import qualified Data.Vector as V
 
 import Brick.AttrMap
 import Brick.Types
@@ -22,15 +26,28 @@ import Brick.Types.EventM (EventM)
 import Brick.Widgets.Border
 import Brick.Widgets.Core
 
+-- | The type of menu regions, for embedding in the application's
+-- resource name and reporting mouse click events.
+data MenuRegion =
+    MenuTitleRegion
+    -- ^ The region of a menu's title
+    | MenuEntryRegion !Int
+    -- ^ The region of a menu entry
+    deriving (Ord, Show, Eq)
+
 data Menu s n =
     Menu { menuTitle :: T.Text
          -- ^ The menu's title
-         , menuBody :: [MenuItem s n]
+         , menuItems :: V.Vector (MenuItem s n)
          -- ^ The contents of the menu
          , menuIsOpen :: Bool
          -- ^ Whether the menu is showing
-         , menuWidth :: Maybe Int
-         -- ^ If not specified, default to the widest entry
+         , menuWidth :: Int
+         -- ^ The width of the menu's items within the enclosing border
+         , menuRegionNameBuilder :: MenuRegion -> n
+         -- ^ A function to build resource names for clickable regions
+         , menuSelectedIndex :: Maybe Int
+         -- ^ State for tracking the selected item index, if any
          }
 
 data MenuItem s n =
@@ -51,6 +68,63 @@ data MenuEntry s n =
               -- ^ The function to determine whether this menu entry is
               -- enabled
               }
+
+menu :: T.Text -> (MenuRegion -> n) -> [MenuItem s n] -> Menu s n
+menu title regionNameBuilder items =
+    let defaultWidth = (maximum $ menuItemWidth <$> items) + 3
+    in Menu { menuTitle = title
+            , menuItems = V.fromList items
+            , menuIsOpen = False
+            , menuWidth = defaultWidth
+            , menuRegionNameBuilder = regionNameBuilder
+            , menuSelectedIndex = Nothing
+            }
+
+menuItemWidth :: MenuItem s n -> Int
+menuItemWidth MISeparator = 0
+menuItemWidth MIGap = 0
+menuItemWidth (MIEntry e) = menuEntryWidth e
+
+menuEntryWidth :: MenuEntry s n -> Int
+menuEntryWidth = textWidth . menuEntryTitle
+
+renderMenu :: (Ord n) => s -> Menu s n -> Widget n
+renderMenu s m =
+    if menuIsOpen m
+    then body `above` title
+    else title
+    where
+        setTitleAttr = if menuIsOpen m
+                       then withDefAttr menuTitleSelectedAttr
+                       else withDefAttr menuTitleAttr
+        title = clickable (menuRegionNameBuilder m MenuTitleRegion) $
+                setTitleAttr $
+                txt $ menuTitle m
+
+        body = joinBorders $
+               border $
+               hLimit (menuWidth m) $
+               vBox $
+               renderMenuItem <$> (zip [0..] $ V.toList $ menuItems m)
+
+        renderMenuItem (_, MISeparator) = hBorder
+        renderMenuItem (_, MIGap)       = vLimit 1 $ fill ' '
+        renderMenuItem (i, MIEntry e)   = renderMenuEntry i e
+
+        renderMenuEntry i e =
+            setEntryAttr i e $
+            vLimit 1 $
+            padRight Max $
+            txt $ menuEntryTitle e
+
+        setEntryAttr i e =
+            if Just i == menuSelectedIndex m
+            then if menuEntryEnabled e s
+                 then withDefAttr menuEntrySelectedAttr
+                 else withDefAttr menuEntrySelectedDisabledAttr
+            else if menuEntryEnabled e s
+                 then id
+                 else withDefAttr menuEntryDisabledAttr
 
 menuAttr :: AttrName
 menuAttr = attrName "brick" <> attrName "menu"
