@@ -20,12 +20,12 @@ import Brick.Types.EventM (EventM)
 import Brick.Widgets.Border
 import Brick.Widgets.Core
 
-data Menu s e n =
+data Menu s n =
     Menu { menuTitle :: T.Text
          -- ^ The menu's title
          , menuTitleRegionName :: n
          -- ^ The menu title's clickable region name
-         , menuBody :: [MenuItem s e n]
+         , menuBody :: [MenuItem s n]
          -- ^ The contents of the menu
          , menuIsOpen :: Bool
          -- ^ Whether the menu is showing
@@ -33,15 +33,15 @@ data Menu s e n =
          -- ^ If not specified, default to the widest entry
          }
 
-data MenuItem s e n =
+data MenuItem s n =
     MISeparator
     -- ^ A horizontal border between menu items
     | MIGap
     -- ^ An empty line between menu items
-    | MIEntry (MenuEntry s e n)
+    | MIEntry (MenuEntry s n)
     -- ^ A menu entry
 
-data MenuEntry s e n =
+data MenuEntry s n =
     MenuEntry { menuEntryRegionName :: n
               -- ^ The menu entry's clickable region name
               , menuEntryHandler :: EventM n s ()
