@@ -1,7 +1,20 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Brick.Widgets.Menu
-  ( Menu(..)
-  , MenuItem(..)
+  ( MenuItem(..)
+  , MenuRegion(..)
+
+  , Menu(..)
+  , menuTitleL
+  , menuItemsL
+  , menuIsOpenL
+  , menuWidthL
+  , menuRegionNameBuilderL
+  , menuSelectedIndexL
+
   , MenuEntry(..)
+  , menuEntryTitleL
+  , menuEntryEnabledL
+  , menuEntryHandlerL
 
   , menu
   , renderMenu
@@ -59,15 +72,18 @@ data MenuItem s n =
     -- ^ A menu entry
 
 data MenuEntry s n =
-    MenuEntry { menuEntryHandler :: EventM n s ()
-              -- ^ The event handler to invoke when this entry is
-              -- activated
-              , menuEntryTitle :: T.Text
+    MenuEntry { menuEntryTitle :: T.Text
               -- ^ The menu entry's title
               , menuEntryEnabled :: s -> Bool
               -- ^ The function to determine whether this menu entry is
               -- enabled
+              , menuEntryHandler :: EventM n s ()
+              -- ^ The event handler to invoke when this entry is
+              -- activated
               }
+
+suffixLenses ''Menu
+suffixLenses ''MenuEntry
 
 menu :: T.Text -> (MenuRegion -> n) -> [MenuItem s n] -> Menu s n
 menu title regionNameBuilder items =
