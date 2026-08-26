@@ -544,6 +544,22 @@ executable brick-progressbar-demo
                        microlens-mtl,
                        microlens-th
 
+executable brick-menu-demo
+  if !flag(demos)
+    Buildable: False
+  hs-source-dirs:      programs
+  ghc-options:         -threaded -Wall -Wcompat -O2
+  default-extensions:  CPP
+  default-language:    Haskell2010
+  main-is:             MenuDemo.hs
+  build-depends:       base,
+                       brick,
+                       vty,
+                       mtl,
+                       microlens,
+                       microlens-mtl,
+                       microlens-th
+
 test-suite brick-tests
   type:                exitcode-stdio-1.0
   hs-source-dirs:      tests
