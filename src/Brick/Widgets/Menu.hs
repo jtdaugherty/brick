@@ -17,6 +17,9 @@ module Brick.Widgets.Menu
   , menuEntryHandlerL
 
   , menu
+  , menuSeparator
+  , menuGap
+  , menuEntry
   , renderMenu
 
   -- * Attributes
@@ -84,6 +87,16 @@ data MenuEntry s n =
 
 suffixLenses ''Menu
 suffixLenses ''MenuEntry
+
+menuSeparator :: MenuItem s n
+menuSeparator = MISeparator
+
+menuGap :: MenuItem s n
+menuGap = MIGap
+
+menuEntry :: T.Text -> (s -> Bool) -> EventM n s () -> MenuItem s n
+menuEntry title enabled handler =
+    MIEntry $ MenuEntry title enabled handler
 
 menu :: T.Text -> (MenuRegion -> n) -> [MenuItem s n] -> Menu s n
 menu title regionNameBuilder items =

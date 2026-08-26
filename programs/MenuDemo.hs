@@ -66,9 +66,9 @@ app =
 fileMenu :: Menu St Name
 fileMenu =
     menu "File" FileMenu
-        [ MIEntry $ MenuEntry "Open..." (const True) (return ())
-        , MISeparator
-        , MIEntry $ MenuEntry "Exit" (const True) M.halt
+        [ menuEntry "Open..." (const True) (return ())
+        , menuSeparator
+        , menuEntry "Exit" (const True) M.halt
         ]
 
 main :: IO ()
