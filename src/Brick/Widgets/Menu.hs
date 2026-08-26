@@ -23,8 +23,6 @@ import Brick.Widgets.Core
 data Menu s n =
     Menu { menuTitle :: T.Text
          -- ^ The menu's title
-         , menuTitleRegionName :: n
-         -- ^ The menu title's clickable region name
          , menuBody :: [MenuItem s n]
          -- ^ The contents of the menu
          , menuIsOpen :: Bool
@@ -42,9 +40,7 @@ data MenuItem s n =
     -- ^ A menu entry
 
 data MenuEntry s n =
-    MenuEntry { menuEntryRegionName :: n
-              -- ^ The menu entry's clickable region name
-              , menuEntryHandler :: EventM n s ()
+    MenuEntry { menuEntryHandler :: EventM n s ()
               -- ^ The event handler to invoke when this entry is
               -- activated
               , menuEntryTitle :: T.Text
