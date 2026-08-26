@@ -8,7 +8,9 @@ module Brick.Widgets.Menu
   , menuTitleAttr
   , menuTitleSelectedAttr
   , menuBodyAttr
+  , menuEntryDisabledAttr
   , menuEntrySelectedAttr
+  , menuEntrySelectedDisabledAttr
   )
 where
 
@@ -62,5 +64,11 @@ menuTitleSelectedAttr = menuTitleAttr <> attrName "selected"
 menuBodyAttr :: AttrName
 menuBodyAttr = menuAttr <> attrName "body"
 
+menuEntryDisabledAttr :: AttrName
+menuEntryDisabledAttr = menuBodyAttr <> attrName "disabled"
+
 menuEntrySelectedAttr :: AttrName
 menuEntrySelectedAttr = menuBodyAttr <> attrName "selected"
+
+menuEntrySelectedDisabledAttr :: AttrName
+menuEntrySelectedDisabledAttr = menuEntrySelectedAttr <> attrName "disabled"
