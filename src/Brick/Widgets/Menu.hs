@@ -91,7 +91,7 @@ menuEntryWidth = textWidth . menuEntryTitle
 renderMenu :: (Ord n) => s -> Menu s n -> Widget n
 renderMenu s m =
     if menuIsOpen m
-    then body `above` title
+    then (translateLayer (Location (0, 1)) body) `above` title
     else title
     where
         setTitleAttr = if menuIsOpen m
