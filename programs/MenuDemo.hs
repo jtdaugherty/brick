@@ -18,6 +18,8 @@ import Brick.AttrMap
 import Brick.Util
 import Brick.Types (Widget)
 import qualified Brick.Main as M
+import Brick.Widgets.Core (padTop, str, Padding(Max))
+import Brick.Widgets.Center (hCenter)
 import Brick.Widgets.Menu
 
 data Name = FileMenu MenuRegion
@@ -25,6 +27,7 @@ data Name = FileMenu MenuRegion
 
 data St =
     St { _fileMenuState :: Menu St Name
+       , _lastClicked :: Maybe Int
        }
 
 makeLenses ''St
@@ -32,14 +35,35 @@ makeLenses ''St
 drawUi :: St -> [Widget Name]
 drawUi st =
     [ renderMenu st (st^.fileMenuState)
+    , padTop Max $
+      hCenter $
+      str $
+      "Last clicked menu item: " <> show (st^.lastClicked)
     ]
 
 appEvent :: T.BrickEvent Name e -> T.EventM Name St ()
-appEvent (T.MouseDown _ _ _ _) = do
+appEvent (T.MouseDown (FileMenu MenuTitleRegion) _ _ _) =
     fileMenuState.menuIsOpenL %= not
-appEvent (T.VtyEvent (V.EvKey V.KEsc [])) =
+appEvent e = do
+    isOpen <- use (fileMenuState.menuIsOpenL)
+    if isOpen
+       then handleMenuEvent e
+       else handleNonMenuEvent e
+
+handleMenuEvent :: T.BrickEvent Name e -> T.EventM Name St ()
+handleMenuEvent (T.MouseDown (FileMenu (MenuEntryRegion i)) _ _ _) =
+    lastClicked .= Just i
+handleMenuEvent (T.VtyEvent (V.EvKey V.KEsc [])) =
+    -- Esc closes the menu
+    fileMenuState.menuIsOpenL %= not
+handleMenuEvent _ =
+    return ()
+
+handleNonMenuEvent :: T.BrickEvent Name e -> T.EventM Name St ()
+handleNonMenuEvent (T.VtyEvent (V.EvKey V.KEsc [])) =
+    -- Esc quits the application
     M.halt
-appEvent _ =
+handleNonMenuEvent _ =
     return ()
 
 aMap :: AttrMap
@@ -73,4 +97,4 @@ fileMenu =
 
 main :: IO ()
 main = do
-    void $ M.defaultMain app $ St fileMenu
+    void $ M.defaultMain app $ St fileMenu Nothing
