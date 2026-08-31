@@ -151,9 +151,8 @@ keyDispatcher conf ks =
         groups = groupBy ((==) `on` fst) $ sortBy (compare `on` fst) pairs
         badGroups = filter ((> 1) . length) groups
         combine :: [(Binding, KeyHandler k m)] -> (Binding, [KeyHandler k m])
-        combine as =
-            let b = fst $ head as
-            in (b, snd <$> as)
+        combine as@((b, _):_) = (b, snd <$> as)
+        combine _ = error "BUG: combine should only be called with non-empty lists"
     in if null badGroups
        then Right $ KeyDispatcher $ M.fromList pairs
        else Left $ combine <$> badGroups
