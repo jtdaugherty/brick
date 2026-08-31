@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE CPP #-}
 module Data.IMap
     ( IMap
     , Run(..)
@@ -21,7 +22,9 @@ module Data.IMap
     , unsafeToAscList
     ) where
 
+#if !MIN_VERSION_base(4,20,0)
 import Data.List (foldl')
+#endif
 import Data.Monoid
 import Data.IntMap.Strict (IntMap)
 import GHC.Generics
