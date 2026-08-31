@@ -45,26 +45,36 @@ renderFinal aMap layerRenders (w, h) chooseCursor rs =
                      & observedNamesL .~ mempty
                      & clickableNamesL .~ mempty
 
-        (layerResults, !newRS) = flip runState resetRs $ sequence $
-            (\p -> runReaderT p ctx) <$>
-            (\layerWidget -> do
-                let recordExtents r =
-                        forM_ (r^.extentsL) $ \e ->
-                            reportedExtentsL %= M.insert (extentName e) e
+        (allLayers, !newRS) = flip runState resetRs $ do
+            go $ Seq.fromList layerRenders
+            where
+                go layers =
+                    case Seq.viewr layers of
+                        Seq.EmptyR -> return mempty
+                        rest Seq.:> next -> do
+                            thisLayerResults <- flip runReaderT ctx $
+                                processMainLayer next
 
-                result <- translateResult <$> (render $ cropToContext layerWidget)
-                recordExtents result
+                            restResults <- go rest
+                            return $ restResults <> thisLayerResults
 
-                let gatherLayer r = do
-                        let r' = translateResult r
-                        recordExtents r'
+                processMainLayer layerWidget = do
+                    let recordExtents r =
+                            forM_ (r^.extentsL) $ \e ->
+                                reportedExtentsL %= M.insert (extentName e) e
 
-                        rest <- T.mapM gatherLayer $ r'^.extraLayersL
-                        return $ concatSeq rest Seq.|> r'
+                    result <- translateResult <$> (render $ cropToContext layerWidget)
+                    recordExtents result
 
-                translatedLayerResults <- T.mapM gatherLayer $ result^.extraLayersL
-                return $ concatSeq translatedLayerResults Seq.|> result
-                ) <$> reverse layerRenders
+                    let gatherLayer r = do
+                            let r' = translateResult r
+                            recordExtents r'
+
+                            rest <- T.mapM gatherLayer $ r'^.extraLayersL
+                            return $ concatSeq rest Seq.|> r'
+
+                    translatedLayerResults <- T.mapM gatherLayer $ result^.extraLayersL
+                    return $ concatSeq translatedLayerResults Seq.|> result
 
         translateResult r =
             let off = translationOffset r
@@ -92,18 +102,15 @@ renderFinal aMap layerRenders (w, h) chooseCursor rs =
                       , ctxVScrollBarClickableConstr = Nothing
                       }
 
-        layersTopmostFirst = reverse layerResults
-        allLayers = mconcat layersTopmostFirst
-
         pic = V.picForLayers $ F.toList $ V.resize w h <$> (^.imageL) <$> allLayers
 
         -- picWithBg is a workaround for runaway attributes.
         -- See https://github.com/coreyoconnor/vty/issues/95
         picWithBg = pic { V.picBackground = V.Background ' ' V.defAttr }
 
-        layerCursors = F.toList $ (^.cursorsL) <$> allLayers
-        layerExtents = reverse $ F.toList $ (^.extentsL) <$> allLayers
-        theCursor = chooseCursor $ concat layerCursors
+        (layerCursors, layerExtents) = Seq.unzipWith layerInfo allLayers
+        layerInfo l = (l^.cursorsL, l^.extentsL)
+        theCursor = chooseCursor $ concat $ F.toList layerCursors
 
 -- | After rendering the specified widget, crop its result image to the
 -- dimensions in the rendering context.
