@@ -149,8 +149,8 @@ data RenderState n =
     RS { viewportMap :: !(M.Map n Viewport)
        , rsScrollRequests :: ![(n, ScrollRequest)]
        , observedNames :: !(S.Set n)
-       , renderCache :: !(M.Map n ([n], Result n))
-       , clickableNames :: ![n]
+       , renderCache :: !(M.Map n (S.Set n, Result n))
+       , clickableNames :: !(S.Set n)
        , requestedVisibleNames_ :: !(S.Set n)
        , reportedExtents :: !(M.Map n (Extent n))
        } deriving (Read, Show, Generic, NFData)

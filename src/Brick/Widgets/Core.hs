@@ -241,7 +241,7 @@ reportExtent n p =
 clickable :: (Ord n) => n -> Widget n -> Widget n
 clickable n p =
     Widget (hSize p) (vSize p) $ do
-        clickableNamesL %= (n:)
+        clickableNamesL %= S.insert n
         render $ reportExtent n p
 
 unrestricted :: Int
@@ -1379,7 +1379,7 @@ cached n w =
         result <- cacheLookup n
         case result of
             Just (clickables, prevResult) -> do
-                clickableNamesL %= (clickables ++)
+                clickableNamesL %= (clickables <>)
                 return prevResult
             Nothing  -> do
                 wResult <- render w
@@ -1389,18 +1389,18 @@ cached n w =
     where
         -- Given the rendered result of a Widget, collect the list of "clickable" names
         -- from the extents that were in the result.
-        renderedClickables :: (Ord n) => Result n -> RenderM n [n]
+        renderedClickables :: (Ord n) => Result n -> RenderM n (S.Set n)
         renderedClickables renderResult = do
-            layerClickables <- concat <$> mapM renderedClickables (renderResult^.extraLayersL)
+            layerClickables <- S.unions <$> mapM renderedClickables (renderResult^.extraLayersL)
             allClickables <- use clickableNamesL
-            return $ layerClickables <> [extentName e | e <- renderResult^.extentsL, extentName e `elem` allClickables]
+            return $ layerClickables <> S.fromList [extentName e | e <- renderResult^.extentsL, extentName e `F.elem` allClickables]
 
-cacheLookup :: (Ord n) => n -> RenderM n (Maybe ([n], Result n))
+cacheLookup :: (Ord n) => n -> RenderM n (Maybe (S.Set n, Result n))
 cacheLookup n = do
     cache <- lift $ gets (^.renderCacheL)
     return $ M.lookup n cache
 
-cacheUpdate :: Ord n => n -> ([n], Result n) -> RenderM n ()
+cacheUpdate :: Ord n => n -> (S.Set n, Result n) -> RenderM n ()
 cacheUpdate n r = lift $ modify (renderCacheL %~ M.insert n r)
 
 -- | Enable vertical scroll bars on all viewports in the specified

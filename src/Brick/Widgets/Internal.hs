@@ -224,7 +224,7 @@ renderWidget mAttrMap layerRenders region = pic
                        , rsScrollRequests = []
                        , observedNames = S.empty
                        , renderCache = mempty
-                       , clickableNames = []
+                       , clickableNames = mempty
                        , requestedVisibleNames_ = S.empty
                        , reportedExtents = mempty
                        }

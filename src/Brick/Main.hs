@@ -299,7 +299,7 @@ customMainWithVty initialVty buildVty mUserChan app initialAppState = do
                        , rsScrollRequests = esScrollRequests eState
                        , observedNames = S.empty
                        , renderCache = mempty
-                       , clickableNames = []
+                       , clickableNames = mempty
                        , requestedVisibleNames_ = requestedVisibleNames eState
                        , reportedExtents = mempty
                        }
@@ -504,7 +504,7 @@ invalidateCache = EventM $ do
 getRenderState :: EventM n s (RenderState n)
 getRenderState = EventM $ asks oldState
 
-resetRenderState :: RenderState n -> RenderState n
+resetRenderState :: (Ord n) => RenderState n -> RenderState n
 resetRenderState s =
     s & observedNamesL .~ S.empty
       & clickableNamesL .~ mempty
