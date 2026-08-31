@@ -141,6 +141,7 @@ renderMenu s m =
         renderMenuItem (i, MIEntry e)   = renderMenuEntry i e
 
         renderMenuEntry i e =
+            clickable (menuRegionNameBuilder m (MenuEntryRegion i)) $
             setEntryAttr i e $
             vLimit 1 $
             padRight Max $
