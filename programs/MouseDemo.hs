@@ -43,11 +43,15 @@ drawUi st =
 
 buttonLayer :: St -> Widget Name
 buttonLayer st =
-    C.vCenterLayer $
-      C.hCenter (padBottom (Pad 1) $ str "Click a button:") <=>
-      C.hCenter (hBox $ padLeftRight 1 <$> buttons) <=>
-      C.hCenter (padTopBottom 1 $ str "Or enter text and then click in this editor:") <=>
-      C.hCenter (vLimit 3 $ hLimit 50 $ E.renderEditor (str . unlines) True (st^.edit))
+    C.centerLayer $
+      hLimit 60 $
+      vBox $
+      C.hCenter <$>
+      [ padBottom (Pad 1) $ str "Click a button:"
+      , hBox $ padLeftRight 1 <$> buttons
+      , padTopBottom 1 $ str "Or enter text and then click in this editor:"
+      , vLimit 3 $ hLimit 50 $ E.renderEditor (str . unlines) True (st^.edit)
+      ]
     where
         buttons = mkButton <$> buttonData
         buttonData = [ (Button1, "Button 1", attrName "button1")
