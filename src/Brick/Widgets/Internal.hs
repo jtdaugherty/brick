@@ -35,9 +35,9 @@ renderFinal :: (Ord n)
             -> V.DisplayRegion
             -> ([CursorLocation n] -> Maybe (CursorLocation n))
             -> RenderState n
-            -> (RenderState n, V.Picture, Maybe (CursorLocation n), [Extent n])
+            -> (RenderState n, V.Picture, Maybe (CursorLocation n), [LayerExtents n])
 renderFinal aMap layerRenders (w, h) chooseCursor rs =
-    (newRS, picWithBg, theCursor, concat layerExtents)
+    (newRS, picWithBg, theCursor, F.toList layerExtents)
     where
         -- Reset various fields from the last rendering state so they
         -- don't accumulate or affect this rendering.
@@ -63,7 +63,14 @@ renderFinal aMap layerRenders (w, h) chooseCursor rs =
                             forM_ (r^.extentsL) $ \e ->
                                 reportedExtentsL %= M.insert (extentName e) e
 
-                    result <- translateResult <$> (render $ cropToContext layerWidget)
+                    -- Keep track of the rendered result prior to
+                    -- translation so we can record its size. Once
+                    -- translated, its size will be the size of the
+                    -- display region, but we need the original
+                    -- untranslated size so we can keep track of layer
+                    -- extents for click events.
+                    preTranslation <- render $ cropToContext layerWidget
+                    let result = translateResult preTranslation
                     recordExtents result
 
                     let gatherLayer r = do
@@ -71,15 +78,19 @@ renderFinal aMap layerRenders (w, h) chooseCursor rs =
                             recordExtents r'
 
                             rest <- T.mapM gatherLayer $ r'^.extraLayersL
-                            return $ concatSeq rest Seq.|> r'
+                            return $ concatSeq rest Seq.|> (resultSize r, r')
 
                     translatedLayerResults <- T.mapM gatherLayer $ result^.extraLayersL
-                    return $ concatSeq translatedLayerResults Seq.|> result
+                    return $ concatSeq translatedLayerResults Seq.|> (resultSize preTranslation, result)
 
         translateResult r =
             let off = translationOffset r
             in addResultOffset off $
                r & imageL %~ (V.translate (off^.locationColumnL) (off^.locationRowL))
+
+        resultSize r = (V.imageWidth i, V.imageHeight i)
+            where
+            i = r^.imageL
 
         concatSeq ss =
             F.foldr (Seq.><) Seq.empty ss
@@ -102,14 +113,20 @@ renderFinal aMap layerRenders (w, h) chooseCursor rs =
                       , ctxVScrollBarClickableConstr = Nothing
                       }
 
-        pic = V.picForLayers $ F.toList $ V.resize w h <$> (^.imageL) <$> allLayers
+        pic = V.picForLayers $ F.toList $ V.resize w h <$> (^.imageL) <$> snd <$> allLayers
 
         -- picWithBg is a workaround for runaway attributes.
         -- See https://github.com/coreyoconnor/vty/issues/95
         picWithBg = pic { V.picBackground = V.Background ' ' V.defAttr }
 
         (layerCursors, layerExtents) = Seq.unzipWith layerInfo allLayers
-        layerInfo l = (l^.cursorsL, l^.extentsL)
+        layerInfo (untranslatedSize, l) = (l^.cursorsL, mkLayerExtents untranslatedSize l)
+        mkLayerExtents untranslatedSize l =
+            -- The size of a layer is its size prior to translation,
+            -- since measuring the layer's image size after translation
+            -- will give a size much bigger than the size of the layer's
+            -- apparent visual area.
+            LayerExtents (l^.translationOffsetL) untranslatedSize $ l^.extentsL
         theCursor = chooseCursor $ concat $ F.toList layerCursors
 
 -- | After rendering the specified widget, crop its result image to the

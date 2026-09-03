@@ -348,9 +348,9 @@ runVty :: (Ord n)
        -> App s e n
        -> s
        -> RenderState n
-       -> [Extent n]
+       -> [LayerExtents n]
        -> Bool
-       -> IO (s, NextAction, RenderState n, [Extent n], VtyContext)
+       -> IO (s, NextAction, RenderState n, [LayerExtents n], VtyContext)
 runVty vtyCtx readEvent app appState rs prevExtents draw = do
     (firstRS, exts) <- if draw
                        then renderApp vtyCtx app appState rs
@@ -460,14 +460,25 @@ lookupViewport n = EventM $ asks (M.lookup n . eventViewportMap)
 -- | Did the specified mouse coordinates (column, row) intersect the
 -- specified extent?
 clickedExtent :: (Int, Int) -> Extent n -> Bool
-clickedExtent (c, r) (Extent _ (Location (lc, lr)) (w, h)) =
+clickedExtent pos (Extent _ ul sz) = clickedRegion pos ul sz
+
+-- | Given a position and layer extent, return whether the position
+-- falls within the layer extent.
+clickedLayerExtent :: (Int, Int) -> LayerExtents n -> Bool
+clickedLayerExtent pos (LayerExtents ul sz _) = clickedRegion pos ul sz
+
+-- | Given a position, an upper-left corner, and a region size, return
+-- whether the position falls within the region with the specified size
+-- at the specified upper-left corner.
+clickedRegion :: (Int, Int) -> Location -> (Int, Int) -> Bool
+clickedRegion (c, r) (Location (lc, lr)) (w, h) =
    c >= lc && c < (lc + w) &&
    r >= lr && r < (lr + h)
 
 -- | Given a resource name, get the most recent rendering extent for the
 -- name (if any).
 lookupExtent :: (Eq n) => n -> EventM n s (Maybe (Extent n))
-lookupExtent n = EventM $ asks (find f . latestExtents)
+lookupExtent n = EventM $ asks (find f . concat . fmap layerAppExtents . latestExtents)
     where
         f (Extent n' _ _) = n == n'
 
@@ -476,11 +487,32 @@ lookupExtent n = EventM $ asks (find f . latestExtents)
 -- the list is the most specific extent and the last extent is the most
 -- generic (top-level). So if two extents A and B both intersected the
 -- mouse click but A contains B, then they would be returned [B, A].
+--
+-- Note that this will prohibit clicks from matching underlying layers
+-- if the clicks intersect a layer even if that point in the layer is
+-- not itself within a clickable region. This behavior ensures that any
+-- clickable region is only clickable if it is not visually obscured by
+-- another layer.
 findClickedExtents :: (Int, Int) -> EventM n s [Extent n]
 findClickedExtents pos = EventM $ asks (findClickedExtents_ pos . latestExtents)
 
-findClickedExtents_ :: (Int, Int) -> [Extent n] -> [Extent n]
-findClickedExtents_ pos = reverse . filter (clickedExtent pos)
+-- Internal mouse click extent matching: assuming extents are in order
+-- from upper to lower (in layer order), find all matching extents until
+-- a layer base is reached, then stop. This ensures that a click on a
+-- layer with no matching extent at that location will not fall through
+-- to a matching extent at a lower (but visually obstructed) layer.
+findClickedExtents_ :: (Int, Int) -> [LayerExtents n] -> [Extent n]
+findClickedExtents_ pos ls =
+    maybe [] fst $ find isMatch $ getMatching <$> ls
+    where
+        -- A layer is a match -- that is, it has been clicked on -- if
+        -- either some application extent(s) were clicked, or if the
+        -- layer itself was clicked outside of any declared extents
+        isMatch (es, l) = not (null es) || clickedLayerExtent pos l
+
+        -- For a given layer, pair the layer with all of the clicked
+        -- extents in that layer
+        getMatching l = (filter (clickedExtent pos) $ layerAppExtents l, l)
 
 -- | Get the Vty handle currently in use.
 getVtyHandle :: EventM n s Vty
@@ -509,7 +541,7 @@ resetRenderState s =
     s & observedNamesL .~ S.empty
       & clickableNamesL .~ mempty
 
-renderApp :: (Ord n) => VtyContext -> App s e n -> s -> RenderState n -> IO (RenderState n, [Extent n])
+renderApp :: (Ord n) => VtyContext -> App s e n -> s -> RenderState n -> IO (RenderState n, [LayerExtents n])
 renderApp vtyCtx app appState rs = do
     sz <- displayBounds $ outputIface $ vtyContextHandle vtyCtx
     let (newRS, pic, theCursor, exts) = renderFinal (appAttrMap app appState)

@@ -54,6 +54,7 @@ module Brick.Types.Internal
   , addResultOffset
   , addTranslationOffset
   , Extent(..)
+  , LayerExtents(..)
   , Edges(..)
   , eTopL, eBottomL, eRightL, eLeftL
   , BorderSegment(..)
@@ -293,6 +294,12 @@ data Extent n = Extent { extentName      :: !n
                        }
                        deriving (Show, Read, Generic, NFData)
 
+data LayerExtents n =
+    LayerExtents { layerExtentUpperLeft :: !Location
+                 , layerExtentSize      :: !(Int, Int)
+                 , layerAppExtents      :: ![Extent n]
+                 }
+
 -- | The type of actions to take upon completion of an event handler.
 data NextAction =
     Continue
@@ -423,7 +430,7 @@ data BrickEvent n e = VtyEvent !Event
                     deriving (Show, Eq, Ord)
 
 data EventRO n = EventRO { eventViewportMap :: !(M.Map n Viewport)
-                         , latestExtents :: ![Extent n]
+                         , latestExtents :: ![LayerExtents n]
                          , oldState :: !(RenderState n)
                          }
 
