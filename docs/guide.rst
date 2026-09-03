@@ -1198,8 +1198,10 @@ different layers? The next approach is to find all clicked extents:
 This approach finds all clicked extents and returns them in a list with
 the following properties:
 
-* For extents ``A`` and ``B``, if ``A``'s layer is higher than ``B``'s
-  layer, ``A`` comes before ``B`` in the list.
+* For matching extents ``A`` and ``B``, if ``A``'s layer is higher than
+  ``B``'s layer, ``A`` is included in the results but ``B`` is not. This
+  is because the layer containing ``A`` obscures the region ``B``, so it
+  doesn't make sense to include it.
 * For extents ``A`` and ``B``, if ``A`` and ``B`` are in the same layer
   and ``A`` is contained within ``B``, ``A`` comes before ``B`` in the
   list.
