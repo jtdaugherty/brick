@@ -24,10 +24,10 @@ import Lens.Micro.Internal (Field1, Field2)
 #endif
 
 -- | A terminal screen location.
-data Location = Location { loc :: !(Int, Int)
-                         -- ^ (Column, Row)
-                         }
-                deriving (Show, Eq, Ord, Read, Generic, NFData)
+newtype Location = Location { loc :: (Int, Int)
+                            -- ^ (Column, Row)
+                            }
+                            deriving (Show, Eq, Ord, Read, Generic, NFData)
 
 suffixLenses ''Location
 
