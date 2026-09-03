@@ -233,7 +233,6 @@ renderEditor draw foc e =
         atChar = charAtCursor $ e^.editContentsL
         atCharWidth = maybe 1 textWidth atChar
         contents = getEditContents e
-        noContents = null contents || Z.null (contents !! 0)
     in withAttr (if foc then editFocusedAttr else editAttr) $
        limit $
        viewport (e^.editorNameL) Both $
