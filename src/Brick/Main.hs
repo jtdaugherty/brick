@@ -512,7 +512,7 @@ findClickedExtents_ pos ls =
 
         -- For a given layer, pair the layer with all of the clicked
         -- extents in that layer
-        getMatching l = (filter (clickedExtent pos) $ layerAppExtents l, l)
+        getMatching l = (reverse $ filter (clickedExtent pos) $ layerAppExtents l, l)
 
 -- | Get the Vty handle currently in use.
 getVtyHandle :: EventM n s Vty
