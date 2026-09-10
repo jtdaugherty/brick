@@ -84,4 +84,4 @@ fileMenuState =
 
 main :: IO ()
 main = do
-    void $ M.defaultMain app $ St fileMenuState Nothing
+    void $ M.defaultMain app $ St fileMenuState
