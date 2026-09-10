@@ -233,16 +233,9 @@ selectPrevEntry m =
 handleMenuEvent :: (Eq n) => Lens' s (Menu s n k) -> BrickEvent n e -> EventM n s ()
 handleMenuEvent which (VtyEvent (Vty.EvKey Vty.KEnter [])) = do
     sel <- use (which.menuSelectedIndexL)
-    handler <- use (which.menuEventHandlerL)
-    is <- use (which.menuItemsL)
     case sel of
         Nothing -> return ()
-        Just idx ->
-            case is V.!? idx of
-                Just (MIEntry entry) -> do
-                    which.menuIsOpenL %= not
-                    handler $ menuEntryEvent entry
-                _ -> return ()
+        Just idx -> activateMenuItem which idx
 handleMenuEvent which (VtyEvent (Vty.EvKey Vty.KDown [])) =
     which %= selectNextEntry
 handleMenuEvent which (VtyEvent (Vty.EvKey Vty.KUp [])) = do
@@ -251,15 +244,9 @@ handleMenuEvent which (MouseDown n _ _ (Location (_, row))) = do
     mkRegionName <- use (which.menuRegionNameBuilderL)
     if | mkRegionName MenuTitle == n ->
            which.menuIsOpenL %= not
-       | mkRegionName MenuBody == n -> do
+       | mkRegionName MenuBody == n ->
            -- Map the location to the clicked menu entry
-           is <- use (which.menuItemsL)
-           handler <- use (which.menuEventHandlerL)
-           case is V.!? row of
-               Just (MIEntry entry) -> do
-                   which.menuIsOpenL %= not
-                   handler $ menuEntryEvent entry
-               _ -> return ()
+           activateMenuItem which row
        | otherwise -> return ()
 handleMenuEvent which (VtyEvent (Vty.EvMouseDown {})) =
     which.menuIsOpenL %= not
@@ -268,3 +255,13 @@ handleMenuEvent which (VtyEvent (Vty.EvKey Vty.KEsc [])) =
     which.menuIsOpenL %= not
 handleMenuEvent _ _ =
     return ()
+
+activateMenuItem :: Lens' s (Menu s n k) -> Int -> EventM n s ()
+activateMenuItem which idx = do
+    handler <- use (which.menuEventHandlerL)
+    is <- use (which.menuItemsL)
+    case is V.!? idx of
+        Just (MIEntry entry) -> do
+            which.menuIsOpenL %= not
+            handler $ menuEntryEvent entry
+        _ -> return ()
