@@ -84,7 +84,6 @@ fileMenu =
         [ menuEntry "New..." (const True) (return ())
         , menuEntry "Open..." (const True) (return ())
         , menuSeparator
-        , menuGap
         , menuEntry "Exit" (const True) M.halt
         ]
 
