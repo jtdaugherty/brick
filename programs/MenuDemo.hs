@@ -18,8 +18,6 @@ import Brick.AttrMap
 import Brick.Util
 import Brick.Types (Widget)
 import qualified Brick.Main as M
-import Brick.Widgets.Core (padTop, str, Padding(Max))
-import Brick.Widgets.Center (hCenter)
 import Brick.Widgets.Menu
 
 data Name = FileMenu MenuRegion
