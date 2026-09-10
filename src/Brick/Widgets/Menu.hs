@@ -294,6 +294,6 @@ activateMenuItem which idx = do
             case is V.!? idx of
                 Just (MIEntry entry) -> do
                     when (menuEntryEnabled entry s) $ do
-                        which.menuIsOpenL %= not
+                        which %= closeMenu
                         handler $ menuEntryEvent entry
                 _ -> return ()
