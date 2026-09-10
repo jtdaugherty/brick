@@ -88,6 +88,7 @@ fileMenuState =
     simpleMenu "File" FileMenu
         [ menuEntry "New..." (const True) (return ())
         , menuEntry "Open..." (const True) (return ())
+        , submenu (const True) subMenuState
         , menuSeparator
         , menuEntry "Exit" (const True) M.halt
         ]
@@ -101,6 +102,13 @@ editMenuState =
         , menuEntry "Cut" (const True) (return ())
         , menuEntry "Copy" (const True) (return ())
         , menuEntry "Paste" (const True) (return ())
+        ]
+
+subMenuState :: SimpleMenu St Name
+subMenuState =
+    simpleMenu "Submenu" HelpMenu
+        [ menuEntry "Entry 1" (const True) (return ())
+        , menuEntry "Entry 2" (const True) (return ())
         ]
 
 helpMenuState :: SimpleMenu St Name
