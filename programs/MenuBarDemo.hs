@@ -52,8 +52,6 @@ drawUi st =
     ]
 
 appEvent :: T.BrickEvent Name e -> T.EventM Name St ()
--- appEvent (T.MouseDown (FileMenu MenuTitle) _ _ _) =
---     fileMenu.menuIsOpenL %= not
 appEvent e = do
     mb <- use menuBar
     let isOpen = hasOpenMenu mb
