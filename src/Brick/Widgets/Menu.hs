@@ -2,30 +2,23 @@
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE RankNTypes #-}
 module Brick.Widgets.Menu
-  ( MenuItem(..)
-  , MenuRegion(..)
-
-  , Menu(..)
+  ( Menu
+  , menuTitle
   , menuTitleL
-  , menuItemsL
+  , menuIsOpen
   , menuIsOpenL
+  , menuWidth
   , menuWidthL
-  , menuRegionNameBuilderL
-  , menuSelectedIndexL
-  , menuEventHandlerL
-
-  , SimpleMenu
-
-  , MenuEntry(..)
-  , menuEntryTitleL
-  , menuEntryEnabledL
-  , menuEntryEventL
+  , MenuRegion(..)
 
   -- * Constructing menus
   , menu
+  , SimpleMenu
   , simpleMenu
 
   -- * Constructing menu items
+  , MenuItem
+  , MenuEntry
   , menuEntry
   , menuSeparator
   , menuGap
@@ -33,7 +26,7 @@ module Brick.Widgets.Menu
   -- * Handling events
   , handleMenuEvent
 
-  -- * Rendering menus
+  -- * Rendering
   , renderMenu
   , menuAttr
   , menuTitleAttr
@@ -103,7 +96,6 @@ data MenuEntry s k =
               }
 
 suffixLenses ''Menu
-suffixLenses ''MenuEntry
 
 menuSeparator :: MenuItem s k
 menuSeparator = MISeparator
