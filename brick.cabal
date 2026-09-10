@@ -98,6 +98,7 @@ library
     Brick.Widgets.FileBrowser
     Brick.Widgets.List
     Brick.Widgets.Menu
+    Brick.Widgets.MenuBar
     Brick.Widgets.ProgressBar
     Brick.Widgets.Table
     Data.IMap
@@ -118,7 +119,8 @@ library
                        exceptions >= 0.10.0,
                        filepath,
                        containers >= 0.5.7,
-                       microlens >= 0.3.0.0 && < 0.6,
+                       microlens-platform >= 0.3.0.0 && < 0.6,
+                       microlens,
                        microlens-th,
                        microlens-mtl,
                        mtl,
@@ -552,6 +554,23 @@ executable brick-menu-demo
   default-extensions:  CPP
   default-language:    Haskell2010
   main-is:             MenuDemo.hs
+  build-depends:       base,
+                       brick,
+                       vty,
+                       mtl,
+                       text,
+                       microlens,
+                       microlens-mtl,
+                       microlens-th
+
+executable brick-menu-bar-demo
+  if !flag(demos)
+    Buildable: False
+  hs-source-dirs:      programs
+  ghc-options:         -threaded -Wall -Wcompat -O2
+  default-extensions:  CPP
+  default-language:    Haskell2010
+  main-is:             MenuBarDemo.hs
   build-depends:       base,
                        brick,
                        vty,
