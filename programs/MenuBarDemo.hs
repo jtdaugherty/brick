@@ -3,7 +3,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-import Lens.Micro ((^.), (&), (.~))
+import Lens.Micro ((^.))
 import Lens.Micro.TH (makeLenses)
 import Lens.Micro.Mtl
 import Control.Monad (void)
