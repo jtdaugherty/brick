@@ -67,11 +67,19 @@ handleMenuBarEvent which e = do
         Nothing -> withOpenMenu which $ \(idx, _) ->
             handleMenuEvent (which.menuBarMenusL.ix idx) e
         Just (i, _) -> do
-            prevVal <- preuse (which.menuBarMenusL.ix i.menuIsOpenL)
-            closeAllMenus which
-            case prevVal of
+            mMatchingMenu <- preuse (which.menuBarMenusL.ix i)
+            case mMatchingMenu of
                 Nothing -> return ()
-                Just v -> which.menuBarMenusL.ix i.menuIsOpenL .= not v
+                Just matchingMenu ->
+                    case e of
+                        MouseDown _ _ _ _ ->
+                            if menuIsOpen matchingMenu
+                            then return ()
+                            else do
+                                closeAllMenus which
+                                which.menuBarMenusL.ix i.menuIsOpenL .= True
+
+                        _ -> return ()
 
 closeAllMenus :: Lens' s (MenuBar s n k) -> EventM n s ()
 closeAllMenus which =
