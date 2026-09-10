@@ -558,8 +558,7 @@ executable brick-menu-demo
                        mtl,
                        microlens,
                        microlens-mtl,
-                       microlens-th,
-                       vector
+                       microlens-th
 
 test-suite brick-tests
   type:                exitcode-stdio-1.0

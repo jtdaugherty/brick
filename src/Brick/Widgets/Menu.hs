@@ -1,4 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE MultiWayIf #-}
+{-# LANGUAGE RankNTypes #-}
 module Brick.Widgets.Menu
   ( MenuItem(..)
   , MenuRegion(..)
@@ -23,6 +25,9 @@ module Brick.Widgets.Menu
   , menuEntry
   , renderMenu
 
+  -- * Handling events
+  , handleMenuEvent
+
   -- * Attributes
   , menuAttr
   , menuTitleAttr
@@ -34,8 +39,13 @@ module Brick.Widgets.Menu
   )
 where
 
+import Lens.Micro ((^.), (.~), (&), Lens')
+import Lens.Micro.Mtl
+
 import qualified Data.Text as T
 import qualified Data.Vector as V
+
+import qualified Graphics.Vty as Vty
 
 import Brick.AttrMap
 import Brick.Types
@@ -177,3 +187,74 @@ menuEntrySelectedAttr = menuBodyAttr <> attrName "selected"
 
 menuEntrySelectedDisabledAttr :: AttrName
 menuEntrySelectedDisabledAttr = menuEntrySelectedAttr <> attrName "disabled"
+
+selectNextEntry :: Menu s n k -> Menu s n k
+selectNextEntry m =
+    case matching V.!? 0 of
+        Nothing -> m
+        Just (newIdx, _) -> m & menuSelectedIndexL .~ Just newIdx
+    where
+        dropAmt = case m^.menuSelectedIndexL of
+                 Nothing -> 0
+                 Just i -> i + 1
+        is = m^.menuItemsL
+        matching = V.filter (isEntry . snd) items
+        pairs = V.zip (V.enumFromN 0 (V.length is)) is
+        items = V.drop dropAmt $ pairs <> pairs
+        isEntry (MIEntry {}) = True
+        isEntry _ = False
+
+selectPrevEntry :: Menu s n k -> Menu s n k
+selectPrevEntry m =
+    case matching V.!? 0 of
+        Nothing -> m
+        Just (newIdx, _) -> m & menuSelectedIndexL .~ Just newIdx
+    where
+        takeAmt = case m^.menuSelectedIndexL of
+                 Nothing -> 0
+                 Just i -> i
+        is = m^.menuItemsL
+        matching = V.filter (isEntry . snd) items
+        pairs = V.zip (V.enumFromN 0 (V.length is)) is
+        items = V.reverse $ pairs <> V.take takeAmt pairs
+        isEntry (MIEntry {}) = True
+        isEntry _ = False
+
+handleMenuEvent :: (Eq n) => Lens' s (Menu s n k) -> BrickEvent n e -> EventM n s ()
+handleMenuEvent which (VtyEvent (Vty.EvKey Vty.KEnter [])) = do
+    sel <- use (which.menuSelectedIndexL)
+    handler <- use (which.menuEventHandlerL)
+    is <- use (which.menuItemsL)
+    case sel of
+        Nothing -> return ()
+        Just idx ->
+            case is V.!? idx of
+                Just (MIEntry entry) -> do
+                    which.menuIsOpenL %= not
+                    handler $ menuEntryEvent entry
+                _ -> return ()
+handleMenuEvent which (VtyEvent (Vty.EvKey Vty.KDown [])) =
+    which %= selectNextEntry
+handleMenuEvent which (VtyEvent (Vty.EvKey Vty.KUp [])) = do
+    which %= selectPrevEntry
+handleMenuEvent which (MouseDown n _ _ (Location (_, row))) = do
+    mkRegionName <- use (which.menuRegionNameBuilderL)
+    if | mkRegionName MenuTitleRegion == n ->
+           which.menuIsOpenL %= not
+       | mkRegionName MenuBodyRegion  == n -> do
+           -- Map the location to the clicked menu entry
+           is <- use (which.menuItemsL)
+           handler <- use (which.menuEventHandlerL)
+           case is V.!? row of
+               Just (MIEntry entry) -> do
+                   which.menuIsOpenL %= not
+                   handler $ menuEntryEvent entry
+               _ -> return ()
+       | otherwise -> return ()
+handleMenuEvent which (VtyEvent (Vty.EvMouseDown {})) =
+    which.menuIsOpenL %= not
+handleMenuEvent which (VtyEvent (Vty.EvKey Vty.KEsc [])) =
+    -- Esc closes the menu
+    which.menuIsOpenL %= not
+handleMenuEvent _ _ =
+    return ()
