@@ -26,7 +26,7 @@ data Name = FileMenu MenuRegion
           deriving (Show, Ord, Eq)
 
 data St =
-    St { _fileMenuState :: SimpleMenu St Name
+    St { _fileMenu :: SimpleMenu St Name
        , _lastClicked :: Maybe Int
        }
 
@@ -34,7 +34,7 @@ makeLenses ''St
 
 drawUi :: St -> [Widget Name]
 drawUi st =
-    [ renderMenu st (st^.fileMenuState)
+    [ renderMenu st (st^.fileMenu)
     , padTop Max $
       hCenter $
       str $
@@ -43,11 +43,11 @@ drawUi st =
 
 appEvent :: T.BrickEvent Name e -> T.EventM Name St ()
 appEvent (T.MouseDown (FileMenu MenuTitle) _ _ _) =
-    fileMenuState.menuIsOpenL %= not
+    fileMenu.menuIsOpenL %= not
 appEvent e = do
-    isOpen <- use (fileMenuState.menuIsOpenL)
+    isOpen <- use (fileMenu.menuIsOpenL)
     if isOpen
-       then handleMenuEvent fileMenuState e
+       then handleMenuEvent fileMenu e
        else handleNonMenuEvent e
 
 handleNonMenuEvent :: T.BrickEvent Name e -> T.EventM Name St ()
@@ -78,8 +78,8 @@ app =
           , M.appChooseCursor = M.showFirstCursor
           }
 
-fileMenu :: SimpleMenu St Name
-fileMenu =
+fileMenuState :: SimpleMenu St Name
+fileMenuState =
     simpleMenu "File" FileMenu
         [ menuEntry "New..." (const True) (return ())
         , menuEntry "Open..." (const True) (return ())
@@ -89,4 +89,4 @@ fileMenu =
 
 main :: IO ()
 main = do
-    void $ M.defaultMain app $ St fileMenu Nothing
+    void $ M.defaultMain app $ St fileMenuState Nothing
