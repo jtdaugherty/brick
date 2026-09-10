@@ -117,9 +117,12 @@ simpleMenu :: T.Text -> (MenuRegion -> n) -> [MenuItem s (EventM n s ())] -> Sim
 simpleMenu title regionNameBuilder items =
     menu title regionNameBuilder items id
 
+defaultMenuPadding :: Int
+defaultMenuPadding = 3
+
 menu :: T.Text -> (MenuRegion -> n) -> [MenuItem s k] -> (k -> EventM n s ()) -> Menu s n k
 menu title regionNameBuilder items handler =
-    let defaultWidth = (maximum $ menuItemWidth <$> items) + 3
+    let defaultWidth = (maximum $ menuItemWidth <$> items) + defaultMenuPadding
     in Menu { menuTitle = title
             , menuItems = V.fromList items
             , menuIsOpen = False
