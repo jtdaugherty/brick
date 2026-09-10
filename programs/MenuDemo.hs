@@ -84,6 +84,18 @@ selectPrevEntry m =
         isEntry _ = False
 
 handleMenuEvent :: T.BrickEvent Name e -> T.EventM Name St ()
+handleMenuEvent (T.VtyEvent (V.EvKey V.KEnter [])) = do
+    sel <- use (fileMenuState.menuSelectedIndexL)
+    handler <- use (fileMenuState.menuEventHandlerL)
+    is <- use (fileMenuState.menuItemsL)
+    case sel of
+        Nothing -> return ()
+        Just idx ->
+            case is Vec.!? idx of
+                Just (MIEntry entry) -> do
+                    fileMenuState.menuIsOpenL %= not
+                    handler $ menuEntryEvent entry
+                _ -> return ()
 handleMenuEvent (T.VtyEvent (V.EvKey V.KDown [])) =
     fileMenuState %= selectNextEntry
 handleMenuEvent (T.VtyEvent (V.EvKey V.KUp [])) = do
