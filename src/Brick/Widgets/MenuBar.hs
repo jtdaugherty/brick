@@ -13,6 +13,7 @@ module Brick.Widgets.MenuBar
   )
 where
 
+import Control.Monad (when)
 import Data.Maybe (isJust, listToMaybe)
 import Lens.Micro.Platform ((^.), Lens', ix, each)
 import Lens.Micro.Mtl
@@ -73,12 +74,9 @@ handleMenuBarEvent which e = do
                 Just matchingMenu ->
                     case e of
                         MouseDown _ _ _ _ ->
-                            if menuIsOpen matchingMenu
-                            then return ()
-                            else do
+                            when (not $ menuIsOpen matchingMenu) $ do
                                 closeAllMenus which
                                 which.menuBarMenusL.ix i.menuIsOpenL .= True
-
                         _ -> return ()
 
 closeAllMenus :: Lens' s (MenuBar s n k) -> EventM n s ()
