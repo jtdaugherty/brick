@@ -38,6 +38,8 @@ module Brick.Widgets.Menu
   )
 where
 
+import Control.Monad (when)
+
 import Lens.Micro ((^.), (.~), (&), Lens')
 import Lens.Micro.Mtl
 
@@ -252,10 +254,12 @@ handleMenuEvent _ _ =
 
 activateMenuItem :: Lens' s (Menu s n k) -> Int -> EventM n s ()
 activateMenuItem which idx = do
+    s <- use id
     handler <- use (which.menuEventHandlerL)
     is <- use (which.menuItemsL)
     case is V.!? idx of
         Just (MIEntry entry) -> do
-            which.menuIsOpenL %= not
-            handler $ menuEntryEvent entry
+            when (menuEntryEnabled entry s) $ do
+                which.menuIsOpenL %= not
+                handler $ menuEntryEvent entry
         _ -> return ()
