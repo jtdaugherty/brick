@@ -41,7 +41,7 @@ where
 
 import Control.Monad (when)
 
-import Lens.Micro ((^.), (.~), (&), Lens')
+import Lens.Micro ((^.), (.~), (&), Traversal')
 import Lens.Micro.Mtl
 
 import qualified Data.Text as T
@@ -230,24 +230,33 @@ selectPrevEntry m =
         isEntry (MIEntry {}) = True
         isEntry _ = False
 
-handleMenuEvent :: (Eq n) => Lens' s (Menu s n k) -> BrickEvent n e -> EventM n s ()
+handleMenuEvent :: (Eq n) => Traversal' s (Menu s n k) -> BrickEvent n e -> EventM n s ()
 handleMenuEvent which (VtyEvent (Vty.EvKey Vty.KEnter [])) = do
-    sel <- use (which.menuSelectedIndexL)
-    case sel of
+    mMenu <- preuse which
+    case mMenu of
         Nothing -> return ()
-        Just idx -> activateMenuItem which idx
+        Just m -> do
+            let sel = m^.menuSelectedIndexL
+            case sel of
+                Nothing -> return ()
+                Just idx -> activateMenuItem which idx
 handleMenuEvent which (VtyEvent (Vty.EvKey Vty.KDown [])) =
     which %= selectNextEntry
 handleMenuEvent which (VtyEvent (Vty.EvKey Vty.KUp [])) = do
     which %= selectPrevEntry
 handleMenuEvent which (MouseDown n _ _ (Location (_, row))) = do
-    mkRegionName <- use (which.menuRegionNameBuilderL)
-    if | mkRegionName MenuTitle == n ->
-           which.menuIsOpenL %= not
-       | mkRegionName MenuBody == n ->
-           -- Map the location to the clicked menu entry
-           activateMenuItem which row
-       | otherwise -> return ()
+    mMenu <- preuse which
+    case mMenu of
+        Nothing -> return ()
+        Just m -> do
+            let mkRegionName = m^.menuRegionNameBuilderL
+
+            if | mkRegionName MenuTitle == n ->
+                   which.menuIsOpenL %= not
+               | mkRegionName MenuBody == n ->
+                   -- Map the location to the clicked menu entry
+                   activateMenuItem which row
+               | otherwise -> return ()
 handleMenuEvent which (VtyEvent (Vty.EvMouseDown {})) =
     which.menuIsOpenL %= not
 handleMenuEvent which (VtyEvent (Vty.EvKey Vty.KEsc [])) =
@@ -256,14 +265,18 @@ handleMenuEvent which (VtyEvent (Vty.EvKey Vty.KEsc [])) =
 handleMenuEvent _ _ =
     return ()
 
-activateMenuItem :: Lens' s (Menu s n k) -> Int -> EventM n s ()
+activateMenuItem :: Traversal' s (Menu s n k) -> Int -> EventM n s ()
 activateMenuItem which idx = do
-    s <- use id
-    handler <- use (which.menuEventHandlerL)
-    is <- use (which.menuItemsL)
-    case is V.!? idx of
-        Just (MIEntry entry) -> do
-            when (menuEntryEnabled entry s) $ do
-                which.menuIsOpenL %= not
-                handler $ menuEntryEvent entry
-        _ -> return ()
+    mMenu <- preuse which
+    case mMenu of
+        Nothing -> return ()
+        Just m -> do
+            s <- use id
+            let handler = m^.menuEventHandlerL
+                is = m^.menuItemsL
+            case is V.!? idx of
+                Just (MIEntry entry) -> do
+                    when (menuEntryEnabled entry s) $ do
+                        which.menuIsOpenL %= not
+                        handler $ menuEntryEvent entry
+                _ -> return ()
