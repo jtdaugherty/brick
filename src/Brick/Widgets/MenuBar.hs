@@ -74,14 +74,14 @@ handleMenuBarEvent which e@(MouseDown n _ _ _) = do
                 Just matchingMenu ->
                     when (not $ menuIsOpen matchingMenu) $ do
                         closeAllMenus which
-                        which.menuBarMenusL.ix i.menuIsOpenL .= True
+                        which.menuBarMenusL.ix i %= openMenu
 handleMenuBarEvent which e =
     withOpenMenu which $ \(idx, _) ->
         handleMenuEvent (which.menuBarMenusL.ix idx) e
 
 closeAllMenus :: Lens' s (MenuBar s n k) -> EventM n s ()
 closeAllMenus which =
-    which.menuBarMenusL.each.menuIsOpenL .= False
+    which.menuBarMenusL.each %= closeMenu
 
 withOpenMenu :: Lens' s (MenuBar s n k) -> ((Int, Menu s n k) -> EventM n s ()) -> EventM n s ()
 withOpenMenu which f = do

@@ -12,6 +12,8 @@ module Brick.Widgets.Menu
   , menuWidthL
   , menuTitleName
   , MenuRegion(..)
+  , openMenu
+  , closeMenu
 
   -- * Constructing menus
   , menu
@@ -133,6 +135,13 @@ menu title regionNameBuilder items handler =
             , menuSelectedIndex = Nothing
             , menuEventHandler = handler
             }
+
+closeMenu :: Menu s n k -> Menu s n k
+closeMenu m = m & menuIsOpenL .~ False
+                & menuSelectedIndexL .~ Nothing
+
+openMenu :: Menu s n k -> Menu s n k
+openMenu m = m & menuIsOpenL .~ True
 
 menuItemWidth :: MenuItem s k -> Int
 menuItemWidth MISeparator = 0
