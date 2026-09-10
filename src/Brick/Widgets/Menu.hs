@@ -7,7 +7,6 @@ module Brick.Widgets.Menu
   , menuTitle
   , menuTitleL
   , menuIsOpen
-  , menuIsOpenL
   , menuWidth
   , menuWidthL
   , menuTitleName
