@@ -36,7 +36,8 @@ suffixLenses ''MenuBar
 type SimpleMenuBar s n = MenuBar s n (EventM n s ())
 
 newMenuBar :: [Menu s n k] -> MenuBar s n k
-newMenuBar = MenuBar . V.fromList
+newMenuBar [] = error "BUG: newMenuBar requires a non-empty list"
+newMenuBar ms = MenuBar $ V.fromList ms
 
 hasOpenMenu :: MenuBar s n k -> Bool
 hasOpenMenu = isJust . getOpenMenu
