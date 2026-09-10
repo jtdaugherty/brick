@@ -9,6 +9,7 @@ module Brick.Widgets.Menu
   , menuIsOpenL
   , menuWidth
   , menuWidthL
+  , menuTitleName
   , MenuRegion(..)
 
   -- * Constructing menus
@@ -71,6 +72,8 @@ data Menu s n k =
          -- ^ Whether the menu is showing
          , menuWidth :: Int
          -- ^ The width of the menu's items within the enclosing border
+         , menuTitleName :: n
+         -- ^ The resource name for this menu's title
          , menuRegionNameBuilder :: MenuRegion -> n
          -- ^ A function to build resource names for clickable regions
          , menuSelectedIndex :: Maybe Int
@@ -121,6 +124,7 @@ menu title regionNameBuilder items handler =
             , menuItems = V.fromList items
             , menuIsOpen = False
             , menuWidth = defaultWidth
+            , menuTitleName = regionNameBuilder MenuTitle
             , menuRegionNameBuilder = regionNameBuilder
             , menuSelectedIndex = Nothing
             , menuEventHandler = handler
@@ -143,7 +147,7 @@ renderMenu s m =
         setTitleAttr = if menuIsOpen m
                        then withDefAttr menuTitleSelectedAttr
                        else withDefAttr menuTitleAttr
-        title = clickable (menuRegionNameBuilder m MenuTitle) $
+        title = clickable (menuTitleName m) $
                 setTitleAttr $
                 txt $ menuTitle m
 
