@@ -27,7 +27,6 @@ data Name = FileMenu MenuRegion
 
 data St =
     St { _fileMenu :: SimpleMenu St Name
-       , _lastClicked :: Maybe Int
        }
 
 makeLenses ''St
@@ -35,10 +34,6 @@ makeLenses ''St
 drawUi :: St -> [Widget Name]
 drawUi st =
     [ renderMenu st (st^.fileMenu)
-    , padTop Max $
-      hCenter $
-      str $
-      "Last clicked menu item: " <> show (st^.lastClicked)
     ]
 
 appEvent :: T.BrickEvent Name e -> T.EventM Name St ()
