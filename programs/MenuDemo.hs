@@ -39,7 +39,7 @@ drawUi st =
       hLimit 40 $
       txtWrap $
       Text.unlines $
-      [ "Click the menu title with the mouse to open the menu."
+      [ "Click the menu title with the mouse or press Alt-F to open the menu."
       , ""
       , "When the menu is open, press arrow keys to select items and then " <>
         "press Enter to activate them, or click them with the mouse instead."
@@ -49,6 +49,8 @@ drawUi st =
     ]
 
 appEvent :: T.BrickEvent Name e -> T.EventM Name St ()
+appEvent (T.VtyEvent (V.EvKey (V.KChar 'f') [V.MMeta])) =
+    fileMenu.menuIsOpenL %= not
 appEvent (T.MouseDown (FileMenu MenuTitle) _ _ _) =
     fileMenu.menuIsOpenL %= not
 appEvent e = do
