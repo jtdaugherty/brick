@@ -12,6 +12,7 @@ import Control.Monad.Trans (liftIO)
 import Data.Monoid ((<>))
 #endif
 import qualified Graphics.Vty as V
+import qualified Data.Vector as Vec
 
 import qualified Brick.Types as T
 import Brick.AttrMap
@@ -26,7 +27,7 @@ data Name = FileMenu MenuRegion
           deriving (Show, Ord, Eq)
 
 data St =
-    St { _fileMenuState :: Menu St Name
+    St { _fileMenuState :: Menu St Name (T.EventM Name St ())
        , _lastClicked :: Maybe Int
        }
 
@@ -51,8 +52,19 @@ appEvent e = do
        else handleNonMenuEvent e
 
 handleMenuEvent :: T.BrickEvent Name e -> T.EventM Name St ()
-handleMenuEvent (T.MouseDown (FileMenu (MenuEntryRegion i)) _ _ _) =
-    lastClicked .= Just i
+handleMenuEvent (T.MouseDown (FileMenu MenuBodyRegion) _ _ (T.Location (_, row))) = do
+    -- Map the location to the clicked menu entry
+    is <- use (fileMenuState.menuItemsL)
+    handler <- use (fileMenuState.menuEventHandlerL)
+    case is Vec.!? row of
+        Just (MIEntry entry) -> do
+            fileMenuState.menuIsOpenL %= not
+            handler $ menuEntryEvent entry
+        _ -> return ()
+handleMenuEvent (T.MouseDown {}) =
+    fileMenuState.menuIsOpenL %= not
+handleMenuEvent (T.VtyEvent (V.EvMouseDown {})) =
+    fileMenuState.menuIsOpenL %= not
 handleMenuEvent (T.VtyEvent (V.EvKey V.KEsc [])) =
     -- Esc closes the menu
     fileMenuState.menuIsOpenL %= not
@@ -87,13 +99,14 @@ app =
           , M.appChooseCursor = M.showFirstCursor
           }
 
-fileMenu :: Menu St Name
+fileMenu :: Menu St Name (T.EventM Name St ())
 fileMenu =
     menu "File" FileMenu
         [ menuEntry "Open..." (const True) (return ())
         , menuSeparator
         , menuEntry "Exit" (const True) M.halt
         ]
+        id
 
 main :: IO ()
 main = do
