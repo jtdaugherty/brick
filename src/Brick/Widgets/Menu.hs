@@ -59,9 +59,9 @@ import Brick.Widgets.Core
 -- | The type of menu regions, for embedding in the application's
 -- resource name and reporting mouse click events.
 data MenuRegion =
-    MenuTitleRegion
+    MenuTitle
     -- ^ The region of a menu's title
-    | MenuBodyRegion
+    | MenuBody
     -- ^ The region of a menu's body
     deriving (Ord, Show, Eq)
 
@@ -147,14 +147,14 @@ renderMenu s m =
         setTitleAttr = if menuIsOpen m
                        then withDefAttr menuTitleSelectedAttr
                        else withDefAttr menuTitleAttr
-        title = clickable (menuRegionNameBuilder m MenuTitleRegion) $
+        title = clickable (menuRegionNameBuilder m MenuTitle) $
                 setTitleAttr $
                 txt $ menuTitle m
 
         body = joinBorders $
                border $
                hLimit (menuWidth m) $
-               clickable (menuRegionNameBuilder m MenuBodyRegion) $
+               clickable (menuRegionNameBuilder m MenuBody) $
                vBox $
                renderMenuItem <$> (zip [0..] $ V.toList $ menuItems m)
 
@@ -249,9 +249,9 @@ handleMenuEvent which (VtyEvent (Vty.EvKey Vty.KUp [])) = do
     which %= selectPrevEntry
 handleMenuEvent which (MouseDown n _ _ (Location (_, row))) = do
     mkRegionName <- use (which.menuRegionNameBuilderL)
-    if | mkRegionName MenuTitleRegion == n ->
+    if | mkRegionName MenuTitle == n ->
            which.menuIsOpenL %= not
-       | mkRegionName MenuBodyRegion  == n -> do
+       | mkRegionName MenuBody == n -> do
            -- Map the location to the clicked menu entry
            is <- use (which.menuItemsL)
            handler <- use (which.menuEventHandlerL)

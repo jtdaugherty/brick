@@ -42,7 +42,7 @@ drawUi st =
     ]
 
 appEvent :: T.BrickEvent Name e -> T.EventM Name St ()
-appEvent (T.MouseDown (FileMenu MenuTitleRegion) _ _ _) =
+appEvent (T.MouseDown (FileMenu MenuTitle) _ _ _) =
     fileMenuState.menuIsOpenL %= not
 appEvent e = do
     isOpen <- use (fileMenuState.menuIsOpenL)
