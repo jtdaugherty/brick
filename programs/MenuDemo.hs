@@ -26,7 +26,7 @@ data Name = FileMenu MenuRegion
           deriving (Show, Ord, Eq)
 
 data St =
-    St { _fileMenuState :: Menu St Name (T.EventM Name St ())
+    St { _fileMenuState :: SimpleMenu St Name
        , _lastClicked :: Maybe Int
        }
 
@@ -78,16 +78,15 @@ app =
           , M.appChooseCursor = M.showFirstCursor
           }
 
-fileMenu :: Menu St Name (T.EventM Name St ())
+fileMenu :: SimpleMenu St Name
 fileMenu =
-    menu "File" FileMenu
+    simpleMenu "File" FileMenu
         [ menuEntry "New..." (const True) (return ())
         , menuEntry "Open..." (const True) (return ())
         , menuSeparator
         , menuGap
         , menuEntry "Exit" (const True) M.halt
         ]
-        id
 
 main :: IO ()
 main = do

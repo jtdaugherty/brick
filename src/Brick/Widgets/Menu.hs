@@ -25,6 +25,10 @@ module Brick.Widgets.Menu
   , menuEntry
   , renderMenu
 
+  -- * Alternative use cases
+  , SimpleMenu
+  , simpleMenu
+
   -- * Handling events
   , handleMenuEvent
 
@@ -107,6 +111,12 @@ menuGap = MIGap
 
 menuEntry :: T.Text -> (s -> Bool) -> k -> MenuItem s k
 menuEntry title enabled ev = MIEntry $ MenuEntry title enabled ev
+
+type SimpleMenu s n = Menu s n (EventM n s ())
+
+simpleMenu :: T.Text -> (MenuRegion -> n) -> [MenuItem s (EventM n s ())] -> SimpleMenu s n
+simpleMenu title regionNameBuilder items =
+    menu title regionNameBuilder items id
 
 menu :: T.Text -> (MenuRegion -> n) -> [MenuItem s k] -> (k -> EventM n s ()) -> Menu s n k
 menu title regionNameBuilder items handler =
