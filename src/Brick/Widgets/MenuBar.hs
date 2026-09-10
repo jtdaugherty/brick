@@ -14,12 +14,14 @@ module Brick.Widgets.MenuBar
 where
 
 import Control.Monad (when)
-import Data.Maybe (isJust, listToMaybe)
-import Lens.Micro.Platform ((^.), Lens', ix, each)
+import Data.Maybe (isJust, listToMaybe, fromMaybe)
+import Lens.Micro.Platform ((^.), (&), (%~), Lens', ix, each)
 import Lens.Micro.Mtl
 
 import qualified Data.Foldable as F
 import qualified Data.Vector as V
+
+import qualified Graphics.Vty as Vty
 
 import Brick.Types
 import Brick.Widgets.Core
@@ -62,6 +64,10 @@ getMenuTitleMatch mb n =
         matchesTitle (_, m) = n == menuTitleName m
 
 handleMenuBarEvent :: (Eq n) => Lens' s (MenuBar s n k) -> BrickEvent n e -> EventM n s ()
+handleMenuBarEvent which (VtyEvent (Vty.EvKey Vty.KLeft [])) =
+    which %= openPreviousMenu
+handleMenuBarEvent which (VtyEvent (Vty.EvKey Vty.KRight [])) =
+    which %= openNextMenu
 handleMenuBarEvent which e@(MouseDown n _ _ _) = do
     mb <- use which
     case getMenuTitleMatch mb n of
@@ -74,14 +80,36 @@ handleMenuBarEvent which e@(MouseDown n _ _ _) = do
                 Just matchingMenu ->
                     when (not $ menuIsOpen matchingMenu) $ do
                         closeAllMenus which
-                        which.menuBarMenusL.ix i %= openMenu
+                        which %= openMenuIndex i
 handleMenuBarEvent which e =
     withOpenMenu which $ \(idx, _) ->
         handleMenuEvent (which.menuBarMenusL.ix idx) e
 
+openPreviousMenu :: MenuBar s n k -> MenuBar s n k
+openPreviousMenu mb = fromMaybe mb $ do
+    (i, _) <- getOpenMenu mb
+    let newIndex = if i == 0
+                   then V.length (mb^.menuBarMenusL) - 1
+                   else i - 1
+    return $ openMenuIndex newIndex $ closeAll mb
+
+openNextMenu :: MenuBar s n k -> MenuBar s n k
+openNextMenu mb = fromMaybe mb $ do
+    (i, _) <- getOpenMenu mb
+    let newIndex = if i == V.length (mb^.menuBarMenusL) - 1
+                   then 0
+                   else i + 1
+    return $ openMenuIndex newIndex mb
+
 closeAllMenus :: Lens' s (MenuBar s n k) -> EventM n s ()
 closeAllMenus which =
-    which.menuBarMenusL.each %= closeMenu
+    which %= closeAll
+
+closeAll :: MenuBar s n k -> MenuBar s n k
+closeAll mb = mb & menuBarMenusL.each %~ closeMenu
+
+openMenuIndex :: Int -> MenuBar s n k -> MenuBar s n k
+openMenuIndex i mb = (closeAll mb) & menuBarMenusL.ix i %~ openMenu
 
 withOpenMenu :: Lens' s (MenuBar s n k) -> ((Int, Menu s n k) -> EventM n s ()) -> EventM n s ()
 withOpenMenu which f = do
