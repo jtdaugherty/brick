@@ -13,6 +13,7 @@ module Brick.Widgets.Menu
   , MenuRegion(..)
   , openMenu
   , closeMenu
+  , toggleMenu
 
   -- * Constructing menus
   , menu
@@ -43,7 +44,7 @@ where
 
 import Control.Monad (when)
 
-import Lens.Micro ((^.), (.~), (&), Traversal')
+import Lens.Micro ((^.), (.~), (&), (%~), Traversal')
 import Lens.Micro.Mtl
 
 import qualified Data.Text as T
@@ -141,6 +142,9 @@ closeMenu m = m & menuIsOpenL .~ False
 
 openMenu :: Menu s n k -> Menu s n k
 openMenu m = m & menuIsOpenL .~ True
+
+toggleMenu :: Menu s n k -> Menu s n k
+toggleMenu m = m & menuIsOpenL %~ not
 
 menuItemWidth :: MenuItem s k -> Int
 menuItemWidth MISeparator = 0

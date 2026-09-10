@@ -51,7 +51,7 @@ drawUi st =
 
 appEvent :: T.BrickEvent Name e -> T.EventM Name St ()
 appEvent (T.VtyEvent (V.EvKey (V.KChar 'f') [V.MMeta])) =
-    fileMenu %= openMenu
+    fileMenu %= toggleMenu
 appEvent e = do
     handled <- handleMenuEvent fileMenu e
     when (not handled) $ handleNonMenuEvent e
