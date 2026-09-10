@@ -105,10 +105,10 @@ data MenuEntry s k =
 suffixLenses ''Menu
 suffixLenses ''MenuEntry
 
-menuSeparator :: MenuItem s n
+menuSeparator :: MenuItem s k
 menuSeparator = MISeparator
 
-menuGap :: MenuItem s n
+menuGap :: MenuItem s k
 menuGap = MIGap
 
 menuEntry :: T.Text -> (s -> Bool) -> k -> MenuItem s k
