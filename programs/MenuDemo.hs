@@ -19,7 +19,7 @@ import Brick.AttrMap
 import Brick.Util
 import Brick.Types (Widget)
 import qualified Brick.Main as M
-import Brick.Widgets.Core (txtWrap, hLimit)
+import Brick.Widgets.Core (txtWrap, hLimit, padLeft, Padding(..))
 import Brick.Widgets.Center (center)
 import Brick.Widgets.Menu
 
@@ -34,7 +34,8 @@ makeLenses ''St
 
 drawUi :: St -> [Widget Name]
 drawUi st =
-    [ renderMenu st (st^.fileMenu)
+    [ padLeft (Pad 1) $
+      renderMenu st (st^.fileMenu)
     , center $
       hLimit 40 $
       txtWrap $
