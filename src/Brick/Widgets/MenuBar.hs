@@ -80,7 +80,7 @@ handleMenuBarEvent which e@(MouseDown n _ _ _) = do
                 Nothing -> return ()
                 Just matchingMenu ->
                     when (not $ menuIsOpen matchingMenu) $ do
-                        closeAllMenus which
+                        which %= closeAllMenus
                         which %= openMenuIndex i
 handleMenuBarEvent which e =
     withOpenMenu which $ \(idx, _) ->
@@ -92,7 +92,7 @@ openPreviousMenu mb = fromMaybe mb $ do
     let newIndex = if i == 0
                    then V.length (mb^.menuBarMenusL) - 1
                    else i - 1
-    return $ openMenuIndex newIndex $ closeAll mb
+    return $ openMenuIndex newIndex $ closeAllMenus mb
 
 openNextMenu :: MenuBar s n k -> MenuBar s n k
 openNextMenu mb = fromMaybe mb $ do
@@ -102,15 +102,11 @@ openNextMenu mb = fromMaybe mb $ do
                    else i + 1
     return $ openMenuIndex newIndex mb
 
-closeAllMenus :: Lens' s (MenuBar s n k) -> EventM n s ()
-closeAllMenus which =
-    which %= closeAll
-
-closeAll :: MenuBar s n k -> MenuBar s n k
-closeAll mb = mb & menuBarMenusL.each %~ closeMenu
+closeAllMenus :: MenuBar s n k -> MenuBar s n k
+closeAllMenus mb = mb & menuBarMenusL.each %~ closeMenu
 
 openMenuIndex :: Int -> MenuBar s n k -> MenuBar s n k
-openMenuIndex i mb = (closeAll mb) & menuBarMenusL.ix i %~ openMenu
+openMenuIndex i mb = (closeAllMenus mb) & menuBarMenusL.ix i %~ openMenu
 
 withOpenMenu :: Lens' s (MenuBar s n k) -> ((Int, Menu s n k) -> EventM n s ()) -> EventM n s ()
 withOpenMenu which f = do
