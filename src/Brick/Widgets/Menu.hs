@@ -118,7 +118,7 @@ simpleMenu title regionNameBuilder items =
     menu title regionNameBuilder items id
 
 defaultMenuPadding :: Int
-defaultMenuPadding = 3
+defaultMenuPadding = 7
 
 menu :: T.Text -> (MenuRegion -> n) -> [MenuItem s k] -> (k -> EventM n s ()) -> Menu s n k
 menu title regionNameBuilder items handler =
