@@ -13,7 +13,7 @@ module Brick.Widgets.MenuBar
   )
 where
 
-import Control.Monad (when)
+import Control.Monad (when, void)
 import Data.Maybe (isJust, listToMaybe, fromMaybe)
 import Lens.Micro.Platform ((^.), (&), (%~), Lens', ix, each)
 import Lens.Micro.Mtl
@@ -64,16 +64,18 @@ getMenuTitleMatch mb n =
     where
         matchesTitle (_, m) = n == menuTitleName m
 
-handleMenuBarEvent :: (Eq n) => Lens' s (MenuBar s n k) -> BrickEvent n e -> EventM n s ()
-handleMenuBarEvent which (VtyEvent (Vty.EvKey Vty.KLeft [])) =
+handleMenuBarEvent :: (Eq n) => Lens' s (MenuBar s n k) -> BrickEvent n e -> EventM n s Bool
+handleMenuBarEvent which (VtyEvent (Vty.EvKey Vty.KLeft [])) = do
     which %= openPreviousMenu
-handleMenuBarEvent which (VtyEvent (Vty.EvKey Vty.KRight [])) =
+    return True
+handleMenuBarEvent which (VtyEvent (Vty.EvKey Vty.KRight [])) = do
     which %= openNextMenu
+    return True
 handleMenuBarEvent which e@(MouseDown n _ _ _) = do
     mb <- use which
     case getMenuTitleMatch mb n of
         Nothing -> withOpenMenu which $ \(idx, _) ->
-            handleMenuEvent (which.menuBarMenusL.ix idx) e
+            void $ handleMenuEvent (which.menuBarMenusL.ix idx) e
         Just (i, _) -> do
             mMatchingMenu <- preuse (which.menuBarMenusL.ix i)
             case mMatchingMenu of
@@ -82,9 +84,10 @@ handleMenuBarEvent which e@(MouseDown n _ _ _) = do
                     when (not $ menuIsOpen matchingMenu) $ do
                         which %= closeAllMenus
                         which %= openMenuIndex i
+            return True
 handleMenuBarEvent which e =
     withOpenMenu which $ \(idx, _) ->
-        handleMenuEvent (which.menuBarMenusL.ix idx) e
+        void $ handleMenuEvent (which.menuBarMenusL.ix idx) e
 
 openPreviousMenu :: MenuBar s n k -> MenuBar s n k
 openPreviousMenu mb = fromMaybe mb $ do
@@ -108,9 +111,9 @@ closeAllMenus mb = mb & menuBarMenusL.each %~ closeMenu
 openMenuIndex :: Int -> MenuBar s n k -> MenuBar s n k
 openMenuIndex i mb = (closeAllMenus mb) & menuBarMenusL.ix i %~ openMenu
 
-withOpenMenu :: Lens' s (MenuBar s n k) -> ((Int, Menu s n k) -> EventM n s ()) -> EventM n s ()
+withOpenMenu :: Lens' s (MenuBar s n k) -> ((Int, Menu s n k) -> EventM n s ()) -> EventM n s Bool
 withOpenMenu which f = do
     mb <- use which
     case getOpenMenu mb of
-        Nothing -> return ()
-        Just pair -> f pair
+        Nothing -> return False
+        Just pair -> f pair >> return True

@@ -6,7 +6,7 @@ module Main where
 import Lens.Micro ((^.))
 import Lens.Micro.TH (makeLenses)
 import Lens.Micro.Mtl
-import Control.Monad (void)
+import Control.Monad (void, when)
 import Control.Monad.Trans (liftIO)
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid ((<>))
@@ -52,13 +52,9 @@ drawUi st =
 appEvent :: T.BrickEvent Name e -> T.EventM Name St ()
 appEvent (T.VtyEvent (V.EvKey (V.KChar 'f') [V.MMeta])) =
     fileMenu %= openMenu
-appEvent (T.MouseDown (FileMenu MenuTitle) _ _ _) =
-    fileMenu %= openMenu
 appEvent e = do
-    m <- use fileMenu
-    if menuAcceptingEvents m
-       then handleMenuEvent fileMenu e
-       else handleNonMenuEvent e
+    handled <- handleMenuEvent fileMenu e
+    when (not handled) $ handleNonMenuEvent e
 
 handleNonMenuEvent :: T.BrickEvent Name e -> T.EventM Name St ()
 handleNonMenuEvent (T.VtyEvent (V.EvKey V.KEsc [])) =

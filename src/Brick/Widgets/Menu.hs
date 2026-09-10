@@ -27,7 +27,6 @@ module Brick.Widgets.Menu
   , menuGap
 
   -- * Handling events
-  , menuAcceptingEvents
   , handleMenuEvent
 
   -- * Rendering
@@ -244,27 +243,27 @@ selectPrevEntry m =
         isEntry (MIEntry {}) = True
         isEntry _ = False
 
-menuAcceptingEvents :: Menu s n k -> Bool
-menuAcceptingEvents = menuIsOpen
-
-handleMenuEvent :: (Eq n) => Traversal' s (Menu s n k) -> BrickEvent n e -> EventM n s ()
+handleMenuEvent :: (Eq n) => Traversal' s (Menu s n k) -> BrickEvent n e -> EventM n s Bool
 handleMenuEvent which (VtyEvent (Vty.EvKey Vty.KEnter [])) = do
     mMenu <- preuse which
     case mMenu of
-        Nothing -> return ()
+        Nothing -> return False
         Just m -> do
             let sel = m^.menuSelectedIndexL
             case sel of
                 Nothing -> return ()
                 Just idx -> activateMenuItem which idx
-handleMenuEvent which (VtyEvent (Vty.EvKey Vty.KDown [])) =
+            return True
+handleMenuEvent which (VtyEvent (Vty.EvKey Vty.KDown [])) = do
     which %= selectNextEntry
+    return True
 handleMenuEvent which (VtyEvent (Vty.EvKey Vty.KUp [])) = do
     which %= selectPrevEntry
+    return True
 handleMenuEvent which (MouseDown n _ _ (Location (_, row))) = do
     mMenu <- preuse which
     case mMenu of
-        Nothing -> return ()
+        Nothing -> return False
         Just m -> do
             let mkRegionName = m^.menuRegionNameBuilderL
 
@@ -274,13 +273,22 @@ handleMenuEvent which (MouseDown n _ _ (Location (_, row))) = do
                    -- Map the location to the clicked menu entry
                    activateMenuItem which row
                | otherwise -> return ()
-handleMenuEvent which (VtyEvent (Vty.EvMouseDown {})) =
-    which.menuIsOpenL %= not
-handleMenuEvent which (VtyEvent (Vty.EvKey Vty.KEsc [])) =
-    -- Esc closes the menu
-    which.menuIsOpenL %= not
+
+            return True
+handleMenuEvent which (VtyEvent (Vty.EvMouseDown {})) = do
+    which %= closeMenu
+    return True
+handleMenuEvent which (VtyEvent (Vty.EvKey Vty.KEsc [])) = do
+    mMenu <- preuse which
+    case mMenu of
+        Nothing -> return False
+        Just m -> if menuIsOpen m
+                  then do
+                      which %= closeMenu
+                      return True
+                  else return False
 handleMenuEvent _ _ =
-    return ()
+    return False
 
 activateMenuItem :: Traversal' s (Menu s n k) -> Int -> EventM n s ()
 activateMenuItem which idx = do

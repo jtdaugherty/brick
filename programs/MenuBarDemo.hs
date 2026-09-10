@@ -5,8 +5,7 @@ module Main where
 
 import Lens.Micro ((^.))
 import Lens.Micro.TH (makeLenses)
-import Lens.Micro.Mtl
-import Control.Monad (void)
+import Control.Monad (void, when)
 import Control.Monad.Trans (liftIO)
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid ((<>))
@@ -53,12 +52,8 @@ drawUi st =
 
 appEvent :: T.BrickEvent Name e -> T.EventM Name St ()
 appEvent e = do
-    mb <- use menuBar
-    let isOpen = hasOpenMenu mb
-        isTitleClick = isMenuTitleEvent mb e
-    if isOpen || isTitleClick
-       then handleMenuBarEvent menuBar e
-       else handleNonMenuBarEvent e
+    handled <- handleMenuBarEvent menuBar e
+    when (not handled) $ handleNonMenuBarEvent e
 
 handleNonMenuBarEvent :: T.BrickEvent Name e -> T.EventM Name St ()
 handleNonMenuBarEvent (T.VtyEvent (V.EvKey V.KEsc [])) =
