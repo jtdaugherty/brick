@@ -556,6 +556,7 @@ executable brick-menu-demo
                        brick,
                        vty,
                        mtl,
+                       text,
                        microlens,
                        microlens-mtl,
                        microlens-th

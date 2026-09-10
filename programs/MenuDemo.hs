@@ -11,6 +11,7 @@ import Control.Monad.Trans (liftIO)
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid ((<>))
 #endif
+import qualified Data.Text as Text
 import qualified Graphics.Vty as V
 
 import qualified Brick.Types as T
@@ -18,6 +19,8 @@ import Brick.AttrMap
 import Brick.Util
 import Brick.Types (Widget)
 import qualified Brick.Main as M
+import Brick.Widgets.Core (txtWrap, hLimit)
+import Brick.Widgets.Center (center)
 import Brick.Widgets.Menu
 
 data Name = FileMenu MenuRegion
@@ -32,6 +35,17 @@ makeLenses ''St
 drawUi :: St -> [Widget Name]
 drawUi st =
     [ renderMenu st (st^.fileMenu)
+    , center $
+      hLimit 40 $
+      txtWrap $
+      Text.unlines $
+      [ "Click the menu title with the mouse to open the menu."
+      , ""
+      , "When the menu is open, press arrow keys to select items and then " <>
+        "press Enter to activate them, or click them with the mouse instead."
+      , ""
+      , "Press Esc to quit the program."
+      ]
     ]
 
 appEvent :: T.BrickEvent Name e -> T.EventM Name St ()
