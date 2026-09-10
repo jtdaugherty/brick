@@ -3,7 +3,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-import Lens.Micro ((^.))
+import Lens.Micro ((^.), (.~), (&))
 import Lens.Micro.TH (makeLenses)
 import Lens.Micro.Mtl
 import Control.Monad (void)
@@ -51,7 +51,43 @@ appEvent e = do
        then handleMenuEvent e
        else handleNonMenuEvent e
 
+selectNextEntry :: Menu s n k -> Menu s n k
+selectNextEntry m =
+    case matching Vec.!? 0 of
+        Nothing -> m
+        Just (newIdx, _) -> m & menuSelectedIndexL .~ Just newIdx
+    where
+        dropAmt = case m^.menuSelectedIndexL of
+                 Nothing -> 0
+                 Just i -> i + 1
+        is = m^.menuItemsL
+        matching = Vec.filter (isEntry . snd) items
+        pairs = Vec.zip (Vec.enumFromN 0 (Vec.length is)) is
+        items = Vec.drop dropAmt $ pairs <> pairs
+        isEntry (MIEntry {}) = True
+        isEntry _ = False
+
+selectPrevEntry :: Menu s n k -> Menu s n k
+selectPrevEntry m =
+    case matching Vec.!? 0 of
+        Nothing -> m
+        Just (newIdx, _) -> m & menuSelectedIndexL .~ Just newIdx
+    where
+        takeAmt = case m^.menuSelectedIndexL of
+                 Nothing -> 0
+                 Just i -> i
+        is = m^.menuItemsL
+        matching = Vec.filter (isEntry . snd) items
+        pairs = Vec.zip (Vec.enumFromN 0 (Vec.length is)) is
+        items = Vec.reverse $ pairs <> Vec.take takeAmt pairs
+        isEntry (MIEntry {}) = True
+        isEntry _ = False
+
 handleMenuEvent :: T.BrickEvent Name e -> T.EventM Name St ()
+handleMenuEvent (T.VtyEvent (V.EvKey V.KDown [])) =
+    fileMenuState %= selectNextEntry
+handleMenuEvent (T.VtyEvent (V.EvKey V.KUp [])) = do
+    fileMenuState %= selectPrevEntry
 handleMenuEvent (T.MouseDown (FileMenu MenuBodyRegion) _ _ (T.Location (_, row))) = do
     -- Map the location to the clicked menu entry
     is <- use (fileMenuState.menuItemsL)
@@ -102,8 +138,10 @@ app =
 fileMenu :: Menu St Name (T.EventM Name St ())
 fileMenu =
     menu "File" FileMenu
-        [ menuEntry "Open..." (const True) (return ())
+        [ menuEntry "New..." (const True) (return ())
+        , menuEntry "Open..." (const True) (return ())
         , menuSeparator
+        , menuGap
         , menuEntry "Exit" (const True) M.halt
         ]
         id
