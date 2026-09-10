@@ -169,6 +169,7 @@ renderMenu s m =
             setEntryAttr i e $
             vLimit 1 $
             padRight Max $
+            padLeft (Pad 1) $
             txt $ menuEntryTitle e
 
         setEntryAttr i e =
