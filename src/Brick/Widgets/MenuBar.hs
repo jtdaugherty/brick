@@ -52,19 +52,19 @@ renderMenuBar s mb =
     F.toList (renderMenu s <$> menuBarMenus mb)
 
 isMenuTitleEvent :: (Eq n) => MenuBar s n k -> BrickEvent n e -> Bool
-isMenuTitleEvent mb e = isJust $ getMenuTitleMatch mb e
+isMenuTitleEvent mb (MouseDown n _ _ _) = isJust $ getMenuTitleMatch mb n
+isMenuTitleEvent _ _ = False
 
-getMenuTitleMatch :: (Eq n) => MenuBar s n k -> BrickEvent n e -> Maybe (Int, Menu s n k)
-getMenuTitleMatch mb (MouseDown n _ _ _) =
+getMenuTitleMatch :: (Eq n) => MenuBar s n k -> n -> Maybe (Int, Menu s n k)
+getMenuTitleMatch mb n =
     listToMaybe $ filter matchesTitle $ zip [0..] (F.toList $ mb^.menuBarMenusL)
     where
         matchesTitle (_, m) = n == menuTitleName m
-getMenuTitleMatch _ _ = Nothing
 
 handleMenuBarEvent :: (Eq n) => Lens' s (MenuBar s n k) -> BrickEvent n e -> EventM n s ()
-handleMenuBarEvent which e = do
+handleMenuBarEvent which e@(MouseDown n _ _ _) = do
     mb <- use which
-    case getMenuTitleMatch mb e of
+    case getMenuTitleMatch mb n of
         Nothing -> withOpenMenu which $ \(idx, _) ->
             handleMenuEvent (which.menuBarMenusL.ix idx) e
         Just (i, _) -> do
@@ -72,12 +72,12 @@ handleMenuBarEvent which e = do
             case mMatchingMenu of
                 Nothing -> return ()
                 Just matchingMenu ->
-                    case e of
-                        MouseDown _ _ _ _ ->
-                            when (not $ menuIsOpen matchingMenu) $ do
-                                closeAllMenus which
-                                which.menuBarMenusL.ix i.menuIsOpenL .= True
-                        _ -> return ()
+                    when (not $ menuIsOpen matchingMenu) $ do
+                        closeAllMenus which
+                        which.menuBarMenusL.ix i.menuIsOpenL .= True
+handleMenuBarEvent which e =
+    withOpenMenu which $ \(idx, _) ->
+        handleMenuEvent (which.menuBarMenusL.ix idx) e
 
 closeAllMenus :: Lens' s (MenuBar s n k) -> EventM n s ()
 closeAllMenus which =
