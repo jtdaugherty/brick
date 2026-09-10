@@ -1,9 +1,11 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE MultiWayIf #-}
 module Main where
 
-import Lens.Micro ((^.), (.~), (&))
+import Lens.Micro ((^.), (.~), (&), Lens')
 import Lens.Micro.TH (makeLenses)
 import Lens.Micro.Mtl
 import Control.Monad (void)
@@ -48,7 +50,7 @@ appEvent (T.MouseDown (FileMenu MenuTitleRegion) _ _ _) =
 appEvent e = do
     isOpen <- use (fileMenuState.menuIsOpenL)
     if isOpen
-       then handleMenuEvent e
+       then handleMenuEvent fileMenuState e
        else handleNonMenuEvent e
 
 selectNextEntry :: Menu s n k -> Menu s n k
@@ -83,40 +85,44 @@ selectPrevEntry m =
         isEntry (MIEntry {}) = True
         isEntry _ = False
 
-handleMenuEvent :: T.BrickEvent Name e -> T.EventM Name St ()
-handleMenuEvent (T.VtyEvent (V.EvKey V.KEnter [])) = do
-    sel <- use (fileMenuState.menuSelectedIndexL)
-    handler <- use (fileMenuState.menuEventHandlerL)
-    is <- use (fileMenuState.menuItemsL)
+-- handleMenuEvent :: Lens' St (Menu St Name (T.EventM Name St ())) -> T.BrickEvent Name e -> T.EventM Name St ()
+handleMenuEvent :: (Eq n) => Lens' s (Menu s n k) -> T.BrickEvent n e -> T.EventM n s ()
+handleMenuEvent which (T.VtyEvent (V.EvKey V.KEnter [])) = do
+    sel <- use (which.menuSelectedIndexL)
+    handler <- use (which.menuEventHandlerL)
+    is <- use (which.menuItemsL)
     case sel of
         Nothing -> return ()
         Just idx ->
             case is Vec.!? idx of
                 Just (MIEntry entry) -> do
-                    fileMenuState.menuIsOpenL %= not
+                    which.menuIsOpenL %= not
                     handler $ menuEntryEvent entry
                 _ -> return ()
-handleMenuEvent (T.VtyEvent (V.EvKey V.KDown [])) =
-    fileMenuState %= selectNextEntry
-handleMenuEvent (T.VtyEvent (V.EvKey V.KUp [])) = do
-    fileMenuState %= selectPrevEntry
-handleMenuEvent (T.MouseDown (FileMenu MenuBodyRegion) _ _ (T.Location (_, row))) = do
-    -- Map the location to the clicked menu entry
-    is <- use (fileMenuState.menuItemsL)
-    handler <- use (fileMenuState.menuEventHandlerL)
-    case is Vec.!? row of
-        Just (MIEntry entry) -> do
-            fileMenuState.menuIsOpenL %= not
-            handler $ menuEntryEvent entry
-        _ -> return ()
-handleMenuEvent (T.MouseDown {}) =
-    fileMenuState.menuIsOpenL %= not
-handleMenuEvent (T.VtyEvent (V.EvMouseDown {})) =
-    fileMenuState.menuIsOpenL %= not
-handleMenuEvent (T.VtyEvent (V.EvKey V.KEsc [])) =
+handleMenuEvent which (T.VtyEvent (V.EvKey V.KDown [])) =
+    which %= selectNextEntry
+handleMenuEvent which (T.VtyEvent (V.EvKey V.KUp [])) = do
+    which %= selectPrevEntry
+handleMenuEvent which (T.MouseDown n _ _ (T.Location (_, row))) = do
+    mkRegionName <- use (which.menuRegionNameBuilderL)
+    if | mkRegionName MenuTitleRegion == n ->
+           which.menuIsOpenL %= not
+       | mkRegionName MenuBodyRegion  == n -> do
+           -- Map the location to the clicked menu entry
+           is <- use (which.menuItemsL)
+           handler <- use (which.menuEventHandlerL)
+           case is Vec.!? row of
+               Just (MIEntry entry) -> do
+                   which.menuIsOpenL %= not
+                   handler $ menuEntryEvent entry
+               _ -> return ()
+       | otherwise -> return ()
+handleMenuEvent which (T.VtyEvent (V.EvMouseDown {})) =
+    which.menuIsOpenL %= not
+handleMenuEvent which (T.VtyEvent (V.EvKey V.KEsc [])) =
     -- Esc closes the menu
-    fileMenuState.menuIsOpenL %= not
-handleMenuEvent _ =
+    which.menuIsOpenL %= not
+handleMenuEvent _ _ =
     return ()
 
 handleNonMenuEvent :: T.BrickEvent Name e -> T.EventM Name St ()
