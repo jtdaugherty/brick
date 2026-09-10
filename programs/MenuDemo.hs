@@ -55,8 +55,8 @@ appEvent (T.VtyEvent (V.EvKey (V.KChar 'f') [V.MMeta])) =
 appEvent (T.MouseDown (FileMenu MenuTitle) _ _ _) =
     fileMenu %= openMenu
 appEvent e = do
-    isOpen <- use (fileMenu.menuIsOpenL)
-    if isOpen
+    m <- use fileMenu
+    if menuAcceptingEvents m
        then handleMenuEvent fileMenu e
        else handleNonMenuEvent e
 

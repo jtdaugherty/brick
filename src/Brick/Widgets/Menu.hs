@@ -28,6 +28,7 @@ module Brick.Widgets.Menu
   , menuGap
 
   -- * Handling events
+  , menuAcceptingEvents
   , handleMenuEvent
 
   -- * Rendering
@@ -243,6 +244,9 @@ selectPrevEntry m =
         items = V.reverse $ pairs <> V.take takeAmt pairs
         isEntry (MIEntry {}) = True
         isEntry _ = False
+
+menuAcceptingEvents :: Menu s n k -> Bool
+menuAcceptingEvents = menuIsOpen
 
 handleMenuEvent :: (Eq n) => Traversal' s (Menu s n k) -> BrickEvent n e -> EventM n s ()
 handleMenuEvent which (VtyEvent (Vty.EvKey Vty.KEnter [])) = do
