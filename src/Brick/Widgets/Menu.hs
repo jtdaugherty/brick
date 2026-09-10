@@ -14,25 +14,27 @@ module Brick.Widgets.Menu
   , menuSelectedIndexL
   , menuEventHandlerL
 
+  , SimpleMenu
+
   , MenuEntry(..)
   , menuEntryTitleL
   , menuEntryEnabledL
   , menuEntryEventL
 
+  -- * Constructing menus
   , menu
+  , simpleMenu
+
+  -- * Constructing menu items
+  , menuEntry
   , menuSeparator
   , menuGap
-  , menuEntry
-  , renderMenu
-
-  -- * Alternative use cases
-  , SimpleMenu
-  , simpleMenu
 
   -- * Handling events
   , handleMenuEvent
 
-  -- * Attributes
+  -- * Rendering menus
+  , renderMenu
   , menuAttr
   , menuTitleAttr
   , menuTitleSelectedAttr
