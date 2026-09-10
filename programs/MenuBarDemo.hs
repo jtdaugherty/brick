@@ -26,6 +26,7 @@ import Brick.Widgets.MenuBar
 
 data Name = FileMenu MenuRegion
           | EditMenu MenuRegion
+          | HelpMenu MenuRegion
           deriving (Show, Ord, Eq)
 
 data St =
@@ -108,6 +109,13 @@ editMenuState =
         , menuEntry "Paste" (const True) (return ())
         ]
 
+helpMenuState :: SimpleMenu St Name
+helpMenuState =
+    simpleMenu "Help" HelpMenu
+        [ menuEntry "About" (const True) (return ())
+        , menuEntry "Check for updates" (const True) (return ())
+        ]
+
 main :: IO ()
 main = do
-    void $ M.defaultMain app $ St $ newMenuBar [fileMenuState, editMenuState]
+    void $ M.defaultMain app $ St $ newMenuBar [fileMenuState, editMenuState, helpMenuState]
