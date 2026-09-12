@@ -43,8 +43,10 @@ drawUi st =
       Text.unlines $
       [ "Click the menu title with the mouse or press Alt-F to open the menu."
       , ""
-      , "When the menu is open, press arrow keys to select items and then " <>
+      , "When the menu is open, press up/down arrow keys to select items and then " <>
         "press Enter to activate them, or click them with the mouse instead."
+      , ""
+      , "When a menu is open, press left/right arrow keys cycle through open menus."
       , ""
       , "Press Esc to quit the program."
       ]
