@@ -80,6 +80,9 @@ drawUi st =
       , "When the menu is open, press arrow keys to select items and then " <>
         "press Enter to activate them, or click them with the mouse instead."
       , ""
+      , "When the menu is open or closed, press the keybindings shown in the " <>
+        "menu to activate the corresponding menu items."
+      , ""
       , "Last action: " <> st^.lastAction
       ]
     ]
