@@ -576,7 +576,6 @@ executable brick-menu-keybindings-demo
                        vty,
                        mtl,
                        text,
-                       containers,
                        microlens,
                        microlens-mtl,
                        microlens-th

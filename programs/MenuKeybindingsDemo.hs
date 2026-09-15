@@ -6,13 +6,12 @@ module Main where
 import Lens.Micro ((^.))
 import Lens.Micro.TH (makeLenses)
 import Lens.Micro.Mtl
-import Control.Monad (void, forM_, when)
+import Control.Monad (void, forM_)
 import Control.Monad.Trans (liftIO)
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid ((<>))
 #endif
 import Data.Maybe (fromJust)
-import qualified Data.Set as S
 import qualified Data.Text as Text
 import qualified Data.Text.IO as Text
 import qualified Graphics.Vty as V
@@ -144,27 +143,7 @@ main = do
     -- Create a key config that includes the default bindings.
     let kc = K.newKeyConfig allKeyEvents defaultBindings []
 
-    -- Before starting the application, check on whether any events have
-    -- colliding bindings. Exit if so.
-    --
-    -- Note that in a Real Application, we would more than likely
-    -- want to check for collisions among specific sets of
-    -- events. For example, if 'Esc' was bound to both 'quit' and
-    -- 'close-dialog-box', we might not care about such a collision
-    -- if the application only ever handled the 'close-dialog-box'
-    -- event in a separate mode and only ever handled 'quit' at the
-    -- top-level of the event handler. But if we had two events such as
-    -- 'dialog-box-okay' and 'dialog-box-cancel' that were intended to
-    -- be handled in the same mode, we might want to check that those
-    -- two events did not have the same binding.
-    forM_ (K.keyEventMappings kc) $ \(b, evs) -> do
-        when (S.size evs > 1) $ do
-            Text.putStrLn $ "Error: key '" <> K.ppBinding b <> "' is bound to multiple events:"
-            forM_ evs $ \e ->
-                Text.putStrLn $ "  " <> Text.pack (show e) <> " (" <> fromJust (K.keyEventName allKeyEvents e) <> ")"
-            exitFailure
-
-    -- Now build a key dispatcher for our event handlers. If this fails
+    -- Build a key dispatcher for our event handlers. If this fails
     -- due to key collision detection, we'll print out info about the
     -- collisions.
     d <- case K.keyDispatcher kc handlers of
