@@ -99,6 +99,9 @@ handlers =
 
     , K.onEvent OpenEvent "Open" $
         lastAction .= "Activated Open... menu entry"
+
+    , K.onKey (K.ctrl 't') "Fixed key" $
+        lastAction .= "Activated fixed-key event handler"
     ]
 
 appEvent :: T.BrickEvent Name e -> T.EventM Name St ()
@@ -131,6 +134,7 @@ fileMenuState d =
     menuWithDispatcher d "File" FileMenu
         [ menuEntryForEvent "New..." (const True) NewEvent
         , menuEntryForEvent "Open..." (const True) OpenEvent
+        , menuEntryForKey "Test" (const True) (K.ctrl 't')
         , menuSeparator
         , menuEntryForEvent "Exit" (const True) QuitEvent
         ]
