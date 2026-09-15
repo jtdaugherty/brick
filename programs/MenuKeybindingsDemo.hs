@@ -114,6 +114,7 @@ aMap = attrMap V.defAttr
     , (menuEntryDisabledAttr, fg V.red)
     , (menuEntrySelectedAttr, V.black `on` V.yellow)
     , (menuEntrySelectedDisabledAttr, V.black `on` V.red)
+    , (menuEntryKeybindingAttr, fg V.cyan `V.withStyle` V.bold)
     ]
 
 app :: M.App St e Name

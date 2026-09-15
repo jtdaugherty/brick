@@ -44,6 +44,7 @@ module Brick.Widgets.Menu
   , menuEntryDisabledAttr
   , menuEntrySelectedAttr
   , menuEntrySelectedDisabledAttr
+  , menuEntryKeybindingAttr
   )
 where
 
@@ -183,7 +184,8 @@ menuWithDispatcher kd title regionNameBuilder items =
                 ByKey b -> return b
                 ByEvent ev -> listToMaybe $ bindingsForEvent ev
 
-            let renderedKeybinding = txt $ ppBinding keybinding
+            let renderedKeybinding = withDefAttr menuEntryKeybindingAttr $
+                                     txt $ ppBinding keybinding
 
             return $ e { menuEntryAnnotate = (<+> renderedKeybinding) }
 
@@ -260,11 +262,11 @@ renderMenu s m =
         setEntryAttr i e =
             if Just i == menuSelectedIndex m
             then if menuEntryEnabled e s
-                 then withDefAttr menuEntrySelectedAttr
-                 else withDefAttr menuEntrySelectedDisabledAttr
+                 then forceAttr menuEntrySelectedAttr
+                 else forceAttr menuEntrySelectedDisabledAttr
             else if menuEntryEnabled e s
                  then id
-                 else withDefAttr menuEntryDisabledAttr
+                 else forceAttr menuEntryDisabledAttr
 
 menuAttr :: AttrName
 menuAttr = attrName "brick" <> attrName "menu"
@@ -277,6 +279,9 @@ menuTitleSelectedAttr = menuTitleAttr <> attrName "selected"
 
 menuBodyAttr :: AttrName
 menuBodyAttr = menuAttr <> attrName "body"
+
+menuEntryKeybindingAttr :: AttrName
+menuEntryKeybindingAttr = menuBodyAttr <> attrName "keybinding"
 
 menuEntryDisabledAttr :: AttrName
 menuEntryDisabledAttr = menuBodyAttr <> attrName "disabled"
