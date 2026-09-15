@@ -62,6 +62,7 @@ data St =
     St { _keyConfig :: K.KeyConfig KeyEvent
        , _dispatcher :: K.KeyDispatcher KeyEvent (T.EventM Name St)
        , _fileMenu :: Menu St Name (K.EventTrigger KeyEvent)
+       , _lastAction :: Text.Text
        }
 
 makeLenses ''St
@@ -78,17 +79,25 @@ drawUi st =
       , ""
       , "When the menu is open, press arrow keys to select items and then " <>
         "press Enter to activate them, or click them with the mouse instead."
+      , ""
+      , "Last action: " <> st^.lastAction
       ]
     ]
 
 -- | Key event handlers for our application.
 handlers :: [K.KeyEventHandler KeyEvent (T.EventM n St)]
 handlers =
-    [ K.onEvent QuitEvent "Quit the program"
-          M.halt
+    [ K.onEvent QuitEvent "Quit the program" M.halt
 
-    , K.onEvent ToggleFileMenuEvent "Toggle the File menu" $
-          fileMenu %= toggleMenu
+    , K.onEvent ToggleFileMenuEvent "Toggle the File menu" $ do
+        lastAction .= "Toggled the File menu"
+        fileMenu %= toggleMenu
+
+    , K.onEvent NewEvent "New" $
+        lastAction .= "Activated New... menu entry"
+
+    , K.onEvent OpenEvent "Open" $ do
+        lastAction .= "Activated Open... menu entry"
     ]
 
 appEvent :: T.BrickEvent Name e -> T.EventM Name St ()
@@ -198,4 +207,4 @@ main = do
 
             exitFailure
 
-    void $ M.defaultMain app $ St kc d (fileMenuState d)
+    void $ M.defaultMain app $ St kc d (fileMenuState d) "(none yet)"
