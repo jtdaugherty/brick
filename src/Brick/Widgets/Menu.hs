@@ -55,6 +55,7 @@ import Lens.Micro.Mtl
 import qualified Data.Foldable as F
 import qualified Data.Text as T
 import qualified Data.Vector as V
+import Data.Maybe (listToMaybe, fromMaybe)
 
 import qualified Graphics.Vty as Vty
 
@@ -65,6 +66,7 @@ import Brick.Widgets.Core
 
 import Brick.Keybindings.KeyDispatcher
 import Brick.Keybindings.KeyConfig
+import Brick.Keybindings.Pretty
 
 -- | The type of menu regions, for embedding in the application's
 -- resource name and reporting mouse click events.
@@ -78,7 +80,7 @@ data MenuRegion =
 data Menu s n k =
     Menu { menuTitle :: T.Text
          -- ^ The menu's title
-         , menuItems :: V.Vector (MenuItem s k)
+         , menuItems :: V.Vector (MenuItem s n k)
          -- ^ The contents of the menu
          , menuIsOpen :: Bool
          -- ^ Whether the menu is showing
@@ -97,45 +99,48 @@ data Menu s n k =
          -- menuEventHandler
          }
 
-data MenuItem s k =
+data MenuItem s n k =
     MISeparator
     -- ^ A horizontal border between menu items
     | MIGap
     -- ^ An empty line between menu items
-    | MIEntry (MenuEntry s k)
+    | MIEntry (MenuEntry s n k)
     -- ^ A menu entry
 
-data MenuEntry s k =
+data MenuEntry s n k =
     MenuEntry { menuEntryTitle :: T.Text
               -- ^ The menu entry's title
               , menuEntryEnabled :: s -> Bool
               -- ^ The function to determine whether this menu entry is
               -- enabled
+              , menuEntryAnnotate :: Widget n -> Widget n
+              -- ^ Final annotation to perform on the menu entry's
+              -- rendering
               , menuEntryEvent :: k
               -- ^ The event to generate when this entry is activated
               }
 
 suffixLenses ''Menu
 
-menuSeparator :: MenuItem s k
+menuSeparator :: MenuItem s n k
 menuSeparator = MISeparator
 
-menuGap :: MenuItem s k
+menuGap :: MenuItem s n k
 menuGap = MIGap
 
-menuEntry :: T.Text -> (s -> Bool) -> k -> MenuItem s k
-menuEntry title enabled ev = MIEntry $ MenuEntry title enabled ev
+menuEntry :: T.Text -> (s -> Bool) -> k -> MenuItem s n k
+menuEntry title enabled ev = MIEntry $ MenuEntry title enabled id ev
 
 type SimpleMenu s n = Menu s n (EventM n s ())
 
-simpleMenu :: T.Text -> (MenuRegion -> n) -> [MenuItem s (EventM n s ())] -> SimpleMenu s n
+simpleMenu :: T.Text -> (MenuRegion -> n) -> [MenuItem s n (EventM n s ())] -> SimpleMenu s n
 simpleMenu title regionNameBuilder items =
     menu title regionNameBuilder items id
 
 defaultMenuPadding :: Int
 defaultMenuPadding = 7
 
-menu :: T.Text -> (MenuRegion -> n) -> [MenuItem s k] -> (k -> EventM n s ()) -> Menu s n k
+menu :: T.Text -> (MenuRegion -> n) -> [MenuItem s n k] -> (k -> EventM n s ()) -> Menu s n k
 menu title regionNameBuilder items handler =
     let defaultWidth = (maximum $ menuItemWidth <$> items) + defaultMenuPadding
     in Menu { menuTitle = title
@@ -153,13 +158,32 @@ menuWithDispatcher :: (Eq k)
                    => KeyDispatcher k (EventM n s)
                    -> T.Text
                    -> (MenuRegion -> n)
-                   -> [MenuItem s (EventTrigger k)]
+                   -> [MenuItem s n (EventTrigger k)]
                    -> Menu s n (EventTrigger k)
 menuWithDispatcher kd title regionNameBuilder items =
-    addFallbackHandler $ menu title regionNameBuilder items handler
+    addFallbackHandler $ menu title regionNameBuilder annotatedItems handler
     where
         addFallbackHandler m =
             m { menuFallbackHandler = handleKey kd }
+
+        annotatedItems =
+            addAnnotation <$> items
+
+        addAnnotation (MIEntry e) =
+            MIEntry $ addEntryAnnotation e
+        addAnnotation i = i
+
+        addEntryAnnotation e = fromMaybe e $ do
+            keybinding <- case menuEntryEvent e of
+                ByKey b -> return b
+                ByEvent ev -> listToMaybe $ bindingsForEvent ev
+
+            let renderedKeybinding = txt $ ppBinding keybinding
+
+            return $ e { menuEntryAnnotate = (<+> renderedKeybinding) }
+
+        bindingsForEvent ev =
+            [ b | KeyHandler { khBinding = b, khHandler = h } <- snd <$> keyDispatcherToList kd, kehEventTrigger h == ByEvent ev ]
 
         handler trigger =
             let result = case trigger of
@@ -169,13 +193,13 @@ menuWithDispatcher kd title regionNameBuilder items =
                 Nothing -> return ()
                 Just kh -> handlerAction $ kehHandler $ khHandler kh
 
-menuEntryForKey :: T.Text -> (s -> Bool) -> Binding -> MenuItem s (EventTrigger k)
+menuEntryForKey :: T.Text -> (s -> Bool) -> Binding -> MenuItem s n (EventTrigger k)
 menuEntryForKey title enabled b =
-    MIEntry $ MenuEntry title enabled $ ByKey b
+    MIEntry $ MenuEntry title enabled id $ ByKey b
 
-menuEntryForEvent :: T.Text -> (s -> Bool) -> k -> MenuItem s (EventTrigger k)
+menuEntryForEvent :: T.Text -> (s -> Bool) -> k -> MenuItem s n (EventTrigger k)
 menuEntryForEvent title enabled ev =
-    MIEntry $ MenuEntry title enabled $ ByEvent ev
+    MIEntry $ MenuEntry title enabled id $ ByEvent ev
 
 closeMenu :: Menu s n k -> Menu s n k
 closeMenu m = m & menuIsOpenL .~ False
@@ -187,12 +211,12 @@ openMenu m = m & menuIsOpenL .~ True
 toggleMenu :: Menu s n k -> Menu s n k
 toggleMenu m = m & menuIsOpenL %~ not
 
-menuItemWidth :: MenuItem s k -> Int
+menuItemWidth :: MenuItem s n k -> Int
 menuItemWidth MISeparator = 0
 menuItemWidth MIGap = 0
 menuItemWidth (MIEntry e) = menuEntryWidth e
 
-menuEntryWidth :: MenuEntry s k -> Int
+menuEntryWidth :: MenuEntry s n k -> Int
 menuEntryWidth = textWidth . menuEntryTitle
 
 renderMenu :: (Ord n) => s -> Menu s n k -> Widget n
@@ -222,6 +246,8 @@ renderMenu s m =
         renderMenuEntry i e =
             setEntryAttr i e $
             vLimit 1 $
+            padRight (Pad 1) $
+            menuEntryAnnotate e $
             padRight Max $
             padLeft (Pad 1) $
             txt $ menuEntryTitle e
