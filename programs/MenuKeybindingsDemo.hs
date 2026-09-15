@@ -49,7 +49,7 @@ allKeyEvents =
 -- | Default key bindings for each abstract key event.
 defaultBindings :: [(KeyEvent, [K.Binding])]
 defaultBindings =
-    [ (QuitEvent,           [K.ctrl 'q', K.bind V.KEsc])
+    [ (QuitEvent,           [K.ctrl 'q'])
     , (ToggleFileMenuEvent, [K.meta 'f'])
     , (NewEvent,            [K.meta 'n'])
     , (OpenEvent,           [K.meta 'o'])
@@ -78,8 +78,6 @@ drawUi st =
       , ""
       , "When the menu is open, press arrow keys to select items and then " <>
         "press Enter to activate them, or click them with the mouse instead."
-      , ""
-      , "Press Esc to quit the program."
       ]
     ]
 
