@@ -161,8 +161,13 @@ menuWithDispatcher :: (Eq k)
                    -> [MenuItem s n (EventTrigger k)]
                    -> Menu s n (EventTrigger k)
 menuWithDispatcher kd title regionNameBuilder items =
-    addFallbackHandler $ menu title regionNameBuilder annotatedItems handler
+    setWidth $
+    addFallbackHandler $
+    menu title regionNameBuilder annotatedItems handler
     where
+        setWidth m =
+            m { menuWidth = menuWidth m + 4 }
+
         addFallbackHandler m =
             m { menuFallbackHandler = handleKey kd }
 
