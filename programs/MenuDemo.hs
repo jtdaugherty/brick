@@ -19,8 +19,9 @@ import Brick.AttrMap
 import Brick.Util
 import Brick.Types (Widget)
 import qualified Brick.Main as M
-import Brick.Widgets.Core (txtWrap, hLimit, padLeft, Padding(..))
+import Brick.Widgets.Core (txtWrap, hLimit, padLeft, Padding(..), withBorderStyle)
 import Brick.Widgets.Center (center)
+import qualified Brick.Widgets.Border.Style as S
 import Brick.Widgets.Menu
 
 data Name = FileMenu MenuRegion
@@ -28,6 +29,7 @@ data Name = FileMenu MenuRegion
 
 data St =
     St { _fileMenu :: SimpleMenu St Name
+       , _borderStyle :: S.BorderStyle
        }
 
 makeLenses ''St
@@ -35,6 +37,7 @@ makeLenses ''St
 drawUi :: St -> [Widget Name]
 drawUi st =
     [ padLeft (Pad 1) $
+      withBorderStyle (st^.borderStyle) $
       renderMenu st (st^.fileMenu)
     , center $
       hLimit 40 $
@@ -45,13 +48,32 @@ drawUi st =
       , "When the menu is open, press arrow keys to select items and then " <>
         "press Enter to activate them, or click them with the mouse instead."
       , ""
+      , "Press number keys to switch menu border styles:"
+      , ""
+      , "- 1: Unicode (default)"
+      , "- 2: Unicode rounded"
+      , "- 3: Unicode bold"
+      , "- 4: ASCII"
+      , ""
       , "Press Esc to quit the program."
       ]
+    ]
+
+borderStyles :: [(Char, S.BorderStyle)]
+borderStyles =
+    [ ('1', S.unicode)
+    , ('2', S.unicodeRounded)
+    , ('3', S.unicodeBold)
+    , ('4', S.ascii)
     ]
 
 appEvent :: T.BrickEvent Name e -> T.EventM Name St ()
 appEvent (T.VtyEvent (V.EvKey (V.KChar 'f') [V.MMeta])) =
     fileMenu %= toggleMenu
+appEvent (T.VtyEvent (V.EvKey (V.KChar c) [])) =
+    case lookup c borderStyles of
+        Nothing -> return ()
+        Just s -> borderStyle .= s
 appEvent e = do
     handled <- handleMenuEvent fileMenu e
     when (not handled) $ handleNonMenuEvent e
@@ -95,4 +117,4 @@ fileMenuState =
 
 main :: IO ()
 main = do
-    void $ M.defaultMain app $ St fileMenuState
+    void $ M.defaultMain app $ St fileMenuState S.unicode
