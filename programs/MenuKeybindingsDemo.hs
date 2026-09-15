@@ -96,7 +96,7 @@ handlers =
     , K.onEvent NewEvent "New" $
         lastAction .= "Activated New... menu entry"
 
-    , K.onEvent OpenEvent "Open" $ do
+    , K.onEvent OpenEvent "Open" $
         lastAction .= "Activated Open... menu entry"
     ]
 
