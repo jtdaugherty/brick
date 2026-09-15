@@ -27,7 +27,7 @@ module Brick.Widgets.Menu
   , menuSeparator
   , menuGap
 
-  -- * Integrating with custom keybindings
+  -- * Constructing menus using custom keybindings
   , menuWithDispatcher
   , menuEntryForKey
   , menuEntryForEvent
