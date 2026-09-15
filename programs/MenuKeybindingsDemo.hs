@@ -59,7 +59,7 @@ data Name = FileMenu MenuRegion
 data St =
     St { _keyConfig :: K.KeyConfig KeyEvent
        , _dispatcher :: K.KeyDispatcher KeyEvent (T.EventM Name St)
-       , _fileMenu :: Menu St Name (K.EventTrigger KeyEvent)
+       , _fileMenu :: Menu St Name (EntryTrigger St Name KeyEvent)
        , _lastAction :: Text.Text
        }
 
@@ -129,12 +129,13 @@ app =
           , M.appChooseCursor = M.showFirstCursor
           }
 
-fileMenuState :: K.KeyDispatcher KeyEvent (T.EventM Name St) -> Menu St Name (K.EventTrigger KeyEvent)
+fileMenuState :: K.KeyDispatcher KeyEvent (T.EventM Name St) -> Menu St Name (EntryTrigger St Name KeyEvent)
 fileMenuState d =
     menuWithDispatcher d "File" FileMenu
         [ menuEntryForEvent "New..." (const True) NewEvent
         , menuEntryForEvent "Open..." (const True) OpenEvent
         , menuEntryForKey "Test" (const True) (K.ctrl 't')
+        , menuEntryForAction "Test 2" (const True) M.halt
         , menuSeparator
         , menuEntryForEvent "Exit" (const True) QuitEvent
         ]

@@ -28,9 +28,11 @@ module Brick.Widgets.Menu
   , menuGap
 
   -- * Constructing menus using custom keybindings
+  , EntryTrigger
   , menuWithDispatcher
   , menuEntryForKey
   , menuEntryForEvent
+  , menuEntryForAction
 
   -- * Handling events
   , handleMenuEvent
@@ -155,12 +157,16 @@ menu title regionNameBuilder items handler =
             , menuFallbackHandler = const $ const $ return False
             }
 
+data EntryTrigger s n k =
+    TriggerEvent (EventTrigger k)
+    | TriggerAction (EventM n s ())
+
 menuWithDispatcher :: (Eq k)
                    => KeyDispatcher k (EventM n s)
                    -> T.Text
                    -> (MenuRegion -> n)
-                   -> [MenuItem s n (EventTrigger k)]
-                   -> Menu s n (EventTrigger k)
+                   -> [MenuItem s n (EntryTrigger s n k)]
+                   -> Menu s n (EntryTrigger s n k)
 menuWithDispatcher kd title regionNameBuilder items =
     setWidth $
     addFallbackHandler $
@@ -181,8 +187,9 @@ menuWithDispatcher kd title regionNameBuilder items =
 
         addEntryAnnotation e = fromMaybe e $ do
             keybinding <- case menuEntryEvent e of
-                ByKey b -> return b
-                ByEvent ev -> listToMaybe $ bindingsForEvent ev
+                TriggerEvent (ByKey b) -> return b
+                TriggerEvent (ByEvent ev) -> listToMaybe $ bindingsForEvent ev
+                TriggerAction {} -> Nothing
 
             let renderedKeybinding = withDefAttr menuEntryKeybindingAttr $
                                      txt $ ppBinding keybinding
@@ -193,20 +200,25 @@ menuWithDispatcher kd title regionNameBuilder items =
             [ b | KeyHandler { khBinding = b, khHandler = h } <- snd <$> keyDispatcherToList kd, kehEventTrigger h == ByEvent ev ]
 
         handler trigger =
-            let result = case trigger of
-                  ByKey b    -> lookupVtyEvent (kbKey b) (F.toList $ kbMods b) kd
-                  ByEvent ev -> lookupEvent ev kd
-            in case result of
-                Nothing -> return ()
-                Just kh -> handlerAction $ kehHandler $ khHandler kh
+            case trigger of
+                  TriggerEvent (ByKey b)    -> invokeHandler $ lookupVtyEvent (kbKey b) (F.toList $ kbMods b) kd
+                  TriggerEvent (ByEvent ev) -> invokeHandler $ lookupEvent ev kd
+                  TriggerAction act         -> act
+            where
+                invokeHandler Nothing = return ()
+                invokeHandler (Just kh) = handlerAction $ kehHandler $ khHandler kh
 
-menuEntryForKey :: T.Text -> (s -> Bool) -> Binding -> MenuItem s n (EventTrigger k)
+menuEntryForKey :: T.Text -> (s -> Bool) -> Binding -> MenuItem s n (EntryTrigger s n k)
 menuEntryForKey title enabled b =
-    MIEntry $ MenuEntry title enabled id $ ByKey b
+    MIEntry $ MenuEntry title enabled id $ TriggerEvent $ ByKey b
 
-menuEntryForEvent :: T.Text -> (s -> Bool) -> k -> MenuItem s n (EventTrigger k)
+menuEntryForEvent :: T.Text -> (s -> Bool) -> k -> MenuItem s n (EntryTrigger s n k)
 menuEntryForEvent title enabled ev =
-    MIEntry $ MenuEntry title enabled id $ ByEvent ev
+    MIEntry $ MenuEntry title enabled id $ TriggerEvent $ ByEvent ev
+
+menuEntryForAction :: T.Text -> (s -> Bool) -> EventM n s () -> MenuItem s n (EntryTrigger s n k)
+menuEntryForAction title enabled act =
+    MIEntry $ MenuEntry title enabled id $ TriggerAction act
 
 closeMenu :: Menu s n k -> Menu s n k
 closeMenu m = m & menuIsOpenL .~ False
