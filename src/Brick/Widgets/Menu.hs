@@ -4,11 +4,8 @@
 {-# OPTIONS_GHC -fno-warn-unused-top-binds #-}
 module Brick.Widgets.Menu
   ( Menu
-  , menuTitle
-  , menuTitleL
   , menuIsOpen
   , menuWidth
-  , menuWidthL
   , menuTitleName
   , MenuRegion(..)
   , openMenu
