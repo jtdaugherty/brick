@@ -52,7 +52,7 @@ where
 
 import Control.Monad (when)
 
-import Lens.Micro ((^.), (.~), (&), (%~), Traversal')
+import Lens.Micro ((^.), (.~), (&), Traversal')
 import Lens.Micro.Mtl
 
 import qualified Data.Foldable as F
