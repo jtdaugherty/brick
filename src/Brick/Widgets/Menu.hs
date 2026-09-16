@@ -228,7 +228,10 @@ openMenu :: Menu s n k -> Menu s n k
 openMenu m = m & menuIsOpenL .~ True
 
 toggleMenu :: Menu s n k -> Menu s n k
-toggleMenu m = m & menuIsOpenL %~ not
+toggleMenu m =
+    if m^.menuIsOpenL
+    then closeMenu m
+    else openMenu m
 
 menuItemWidth :: MenuItem s n k -> Int
 menuItemWidth MISeparator = 0
