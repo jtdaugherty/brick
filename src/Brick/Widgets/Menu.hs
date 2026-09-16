@@ -71,7 +71,7 @@ import Brick.Keybindings.KeyDispatcher
 import Brick.Keybindings.KeyConfig
 import Brick.Keybindings.Pretty
 
--- | The type of menu regions, for embedding in the application's
+-- | The type of menu regions for embedding in the application's
 -- resource name and reporting mouse click events.
 data MenuRegion =
     MenuTitle
@@ -80,6 +80,18 @@ data MenuRegion =
     -- ^ The region of a menu's body
     deriving (Ord, Show, Eq)
 
+-- | A menu.
+--
+-- Menus are parameterized on three types:
+--
+-- * @s@: the application state type used in the @App@ type,
+-- * @n@: the application resource name type used in the application's
+--   @Widget@ type, and
+-- * @k@: the type of data carried and handled by the menu's event
+--   handler when a menu entry has been activated.
+--
+-- Menus contain a sequence of /items/ of type 'MenuItem'. See the
+-- constructors below for both menus and menu items to create menus.
 data Menu s n k =
     Menu { menuTitle :: T.Text
          -- ^ The menu's title
@@ -102,14 +114,18 @@ data Menu s n k =
          -- menuEventHandler
          }
 
+-- | The type of menu items.
 data MenuItem s n k =
     MISeparator
     -- ^ A horizontal border between menu items
     | MIGap
     -- ^ An empty line between menu items
     | MIEntry (MenuEntry s n k)
-    -- ^ A menu entry
+    -- ^ A labeled menu entry that can be activated with the mouse or by
+    -- a keypress
 
+-- | A labeled menu entry that can be activated with the mouse or by a
+-- keypress.
 data MenuEntry s n k =
     MenuEntry { menuEntryTitle :: T.Text
               -- ^ The menu entry's title
@@ -125,25 +141,58 @@ data MenuEntry s n k =
 
 suffixLenses ''Menu
 
+-- | A separator between menu items.
 menuSeparator :: MenuItem s n k
 menuSeparator = MISeparator
 
+-- | A gap between menu items.
 menuGap :: MenuItem s n k
 menuGap = MIGap
 
-menuEntry :: T.Text -> (s -> Bool) -> k -> MenuItem s n k
+-- | Create a menu entry.
+--
+-- This is the fully general entry constructor. For more specific use
+-- cases, see the other 'MenuItem' constructors in this module.
+menuEntry :: T.Text
+          -- ^ The menu entry's label
+          -> (s -> Bool)
+          -- ^ A function to determine whether the entry is enabled at
+          -- rendering and event-handling time
+          -> k
+          -- ^ The event data carried by the menu entry that will be
+          -- passed to the enclosing menu's event handler when this
+          -- entry is activated
+          -> MenuItem s n k
 menuEntry title enabled ev = MIEntry $ MenuEntry title enabled id ev
 
+-- | A specialization of 'Menu' that has 'EventM' handlers in each menu
+-- entry that are evaluated whenever the entries are activated.
 type SimpleMenu s n = Menu s n (EventM n s ())
 
-simpleMenu :: T.Text -> (MenuRegion -> n) -> [MenuItem s n (EventM n s ())] -> SimpleMenu s n
+-- | Create a 'SimpleMenu'.
+simpleMenu :: T.Text
+           -- ^ The menu's title
+           -> (MenuRegion -> n)
+           -- ^ The menu's resource name constructor
+           -> [MenuItem s n (EventM n s ())]
+           -- ^ The items in this menu
+           -> SimpleMenu s n
 simpleMenu title regionNameBuilder items =
     menu title regionNameBuilder items id
 
 defaultMenuPadding :: Int
 defaultMenuPadding = 7
 
-menu :: T.Text -> (MenuRegion -> n) -> [MenuItem s n k] -> (k -> EventM n s ()) -> Menu s n k
+-- | Create a 'Menu'.
+menu :: T.Text
+     -- ^ The menu's title
+     -> (MenuRegion -> n)
+     -- ^ The menu's resource name constructor
+     -> [MenuItem s n k]
+     -- ^ The items in this menu
+     -> (k -> EventM n s ())
+     -- ^ The event handler to invoke when entries are activated
+     -> Menu s n k
 menu title regionNameBuilder items handler =
     let defaultWidth = (maximum $ menuItemWidth <$> items) + defaultMenuPadding
     in Menu { menuTitle = title
@@ -157,15 +206,31 @@ menu title regionNameBuilder items handler =
             , menuFallbackHandler = const $ const $ return False
             }
 
+-- | A trigger to be executed when an entry with this trigger is
+-- activated.
 data EntryTrigger s n k =
     TriggerEvent (EventTrigger k)
+    -- ^ The entry triggers an abstract 'EventTrigger'
     | TriggerAction (EventM n s ())
+    -- ^ The entry triggers a specific 'EventM' action
 
+-- | Create a 'Menu' whose entries are activated by specific triggers,
+-- including specified key bindings or abstract key events associated
+-- with a 'KeyDispatcher'.
+--
+-- To create entries in this menu, see 'menuEntryForKey',
+-- 'menuEntryForEvent', and 'menuEntryForAction'.
 menuWithDispatcher :: (Eq k)
                    => KeyDispatcher k (EventM n s)
+                   -- ^ The key dispatcher to use to build the menu, and
+                   -- whose handlers should be invoked by the menu's
+                   -- entries
                    -> T.Text
+                   -- ^ The menu's title
                    -> (MenuRegion -> n)
+                   -- ^ The menu's resource name constructor
                    -> [MenuItem s n (EntryTrigger s n k)]
+                   -- ^ The items in this menu
                    -> Menu s n (EntryTrigger s n k)
 menuWithDispatcher kd title regionNameBuilder items =
     setWidth $
@@ -208,39 +273,77 @@ menuWithDispatcher kd title regionNameBuilder items =
                 invokeHandler Nothing = return ()
                 invokeHandler (Just kh) = handlerAction $ kehHandler $ khHandler kh
 
-menuEntryForKey :: T.Text -> (s -> Bool) -> Binding -> MenuItem s n (EntryTrigger s n k)
+-- | Create a menu entry that is activated by the specified key binding,
+-- irrespective of the enclosing menu's 'KeyDispatcher' configuration.
+menuEntryForKey :: T.Text
+                -- ^ The menu entry's label
+                -> (s -> Bool)
+                -- ^ A function to determine whether the entry is
+                -- enabled at rendering and event-handling time
+                -> Binding
+                -- ^ The specific key binding to trigger this menu entry
+                -> MenuItem s n (EntryTrigger s n k)
 menuEntryForKey title enabled b =
     MIEntry $ MenuEntry title enabled id $ TriggerEvent $ ByKey b
 
-menuEntryForEvent :: T.Text -> (s -> Bool) -> k -> MenuItem s n (EntryTrigger s n k)
+-- | Create a menu entry that generates the specified abstract key event
+-- when activated, thus triggering the enclosing menu's 'KeyDispatcher'
+-- handler for that event.
+menuEntryForEvent :: T.Text
+                  -- ^ The menu entry's label
+                  -> (s -> Bool)
+                  -- ^ A function to determine whether the entry is
+                  -- enabled at rendering and event-handling time
+                  -> k
+                  -- ^ The abstract key event to generate when this
+                  -- entry is activated
+                  -> MenuItem s n (EntryTrigger s n k)
 menuEntryForEvent title enabled ev =
     MIEntry $ MenuEntry title enabled id $ TriggerEvent $ ByEvent ev
 
-menuEntryForAction :: T.Text -> (s -> Bool) -> EventM n s () -> MenuItem s n (EntryTrigger s n k)
+-- | Create a menu entry that invokes the specified 'EventM' action when
+-- activated. Use this for entries that are not invoked by specific keys
+-- or associated with abstract key events.
+menuEntryForAction :: T.Text
+                   -- ^ The menu entry's label
+                   -> (s -> Bool)
+                   -- ^ A function to determine whether the entry is
+                   -- enabled at rendering and event-handling time
+                   -> EventM n s ()
+                   -- ^ The action to evaluate when this entry is
+                   -- activated
+                   -> MenuItem s n (EntryTrigger s n k)
 menuEntryForAction title enabled act =
     MIEntry $ MenuEntry title enabled id $ TriggerAction act
 
+-- | Close a menu and unselect any selected entry.
 closeMenu :: Menu s n k -> Menu s n k
 closeMenu m = m & menuIsOpenL .~ False
                 & menuSelectedIndexL .~ Nothing
 
+-- | Open a menu.
 openMenu :: Menu s n k -> Menu s n k
 openMenu m = m & menuIsOpenL .~ True
 
+-- | Toggle the menu's open state.
 toggleMenu :: Menu s n k -> Menu s n k
 toggleMenu m =
     if m^.menuIsOpenL
     then closeMenu m
     else openMenu m
 
+-- | Get the screen width of this menu item if it is an entry; zero
+-- otherwise.
 menuItemWidth :: MenuItem s n k -> Int
 menuItemWidth MISeparator = 0
 menuItemWidth MIGap = 0
 menuItemWidth (MIEntry e) = menuEntryWidth e
 
+-- | Get this entry's width, i.e., the width of its label.
 menuEntryWidth :: MenuEntry s n k -> Int
 menuEntryWidth = textWidth . menuEntryTitle
 
+-- | Render a menu.
 renderMenu :: (Ord n) => s -> Menu s n k -> Widget n
 renderMenu s m =
     if menuIsOpen m
@@ -283,30 +386,41 @@ renderMenu s m =
                  then id
                  else forceAttr menuEntryDisabledAttr
 
+-- | The base attribute of menus.
 menuAttr :: AttrName
 menuAttr = attrName "brick" <> attrName "menu"
 
+-- | Menu titles.
 menuTitleAttr :: AttrName
 menuTitleAttr = menuAttr <> attrName "title"
 
+-- | Selected menu titles, for open menus.
 menuTitleSelectedAttr :: AttrName
 menuTitleSelectedAttr = menuTitleAttr <> attrName "selected"
 
+-- | The base attribute for menu bodies.
 menuBodyAttr :: AttrName
 menuBodyAttr = menuAttr <> attrName "body"
 
+-- | Menu keybindings for entries in menus created with
+-- 'menuWithDispatcher'.
 menuEntryKeybindingAttr :: AttrName
 menuEntryKeybindingAttr = menuBodyAttr <> attrName "keybinding"
 
+-- | Disabled menu entries.
 menuEntryDisabledAttr :: AttrName
 menuEntryDisabledAttr = menuBodyAttr <> attrName "disabled"
 
+-- | Selected and enabled menu entries.
 menuEntrySelectedAttr :: AttrName
 menuEntrySelectedAttr = menuBodyAttr <> attrName "selected"
 
+-- | Selected and disnabled menu entries.
 menuEntrySelectedDisabledAttr :: AttrName
 menuEntrySelectedDisabledAttr = menuEntrySelectedAttr <> attrName "disabled"
 
+-- | Select the next entry in a menu, or the first one if no entry is
+-- currently selected.
 selectNextEntry :: Menu s n k -> Menu s n k
 selectNextEntry m =
     case matching V.!? 0 of
@@ -323,6 +437,8 @@ selectNextEntry m =
         isEntry (MIEntry {}) = True
         isEntry _ = False
 
+-- | Select the prevouis entry in a menu, or the last one if no entry is
+-- currently selected.
 selectPrevEntry :: Menu s n k -> Menu s n k
 selectPrevEntry m =
     case matching V.!? 0 of
@@ -339,6 +455,9 @@ selectPrevEntry m =
         isEntry (MIEntry {}) = True
         isEntry _ = False
 
+-- | Handle an event for this menu and return @True@, or return @False@
+-- if the event was not handled by the menu (e.g. because it was not
+-- open, or because it did not correspond to any menu entry).
 handleMenuEvent :: (Eq n) => Traversal' s (Menu s n k) -> BrickEvent n e -> EventM n s Bool
 handleMenuEvent which e = do
     handled <- handleMenuEventPrimary which e
@@ -405,6 +524,7 @@ handleMenuEventPrimary which (VtyEvent (Vty.EvKey Vty.KEsc [])) = do
 handleMenuEventPrimary _ _ =
     return False
 
+-- | Activate the menu's selected entry, if any.
 activateMenuItem :: Traversal' s (Menu s n k) -> Int -> EventM n s ()
 activateMenuItem which idx = do
     mMenu <- preuse which
