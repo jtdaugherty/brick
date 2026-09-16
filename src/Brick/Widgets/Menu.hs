@@ -37,8 +37,10 @@ module Brick.Widgets.Menu
   -- * Handling events
   , handleMenuEvent
 
-  -- * Rendering
+  -- * Rendering menus
   , renderMenu
+
+  -- * Attributes
   , menuAttr
   , menuTitleAttr
   , menuTitleSelectedAttr
