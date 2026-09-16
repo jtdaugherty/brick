@@ -28,6 +28,8 @@ module Brick.Widgets.Menu
   , menuGap
 
   -- * Constructing menus using custom keybindings
+  , DispatchingMenu
+  , DispatchingMenuItem
   , EntryTrigger
   , menuWithDispatcher
   , menuEntryForKey
@@ -214,6 +216,15 @@ data EntryTrigger s n k =
     | TriggerAction (EventM n s ())
     -- ^ The entry triggers a specific 'EventM' action
 
+-- | A specialization of 'Menu' whose entries are associated with
+-- specific keys or abstract key events handled by a 'KeyDispatcher'.
+type DispatchingMenu s n k = Menu s n (EntryTrigger s n k)
+
+-- | A specialization of 'MenuItem' for menus whose entries are
+-- associated with specific keys or abstract key events handled by a
+-- 'KeyDispatcher'.
+type DispatchingMenuItem s n k = MenuItem s n (EntryTrigger s n k)
+
 -- | Create a 'Menu' whose entries are activated by specific triggers,
 -- including specified key bindings or abstract key events associated
 -- with a 'KeyDispatcher'.
@@ -229,9 +240,9 @@ menuWithDispatcher :: (Eq k)
                    -- ^ The menu's title
                    -> (MenuRegion -> n)
                    -- ^ The menu's resource name constructor
-                   -> [MenuItem s n (EntryTrigger s n k)]
+                   -> [DispatchingMenuItem s n k]
                    -- ^ The items in this menu
-                   -> Menu s n (EntryTrigger s n k)
+                   -> DispatchingMenu s n k
 menuWithDispatcher kd title regionNameBuilder items =
     setWidth $
     addFallbackHandler $
@@ -282,7 +293,7 @@ menuEntryForKey :: T.Text
                 -- enabled at rendering and event-handling time
                 -> Binding
                 -- ^ The specific key binding to trigger this menu entry
-                -> MenuItem s n (EntryTrigger s n k)
+                -> DispatchingMenuItem s n k
 menuEntryForKey title enabled b =
     MIEntry $ MenuEntry title enabled id $ TriggerEvent $ ByKey b
 
@@ -297,7 +308,7 @@ menuEntryForEvent :: T.Text
                   -> k
                   -- ^ The abstract key event to generate when this
                   -- entry is activated
-                  -> MenuItem s n (EntryTrigger s n k)
+                  -> DispatchingMenuItem s n k
 menuEntryForEvent title enabled ev =
     MIEntry $ MenuEntry title enabled id $ TriggerEvent $ ByEvent ev
 
@@ -312,7 +323,7 @@ menuEntryForAction :: T.Text
                    -> EventM n s ()
                    -- ^ The action to evaluate when this entry is
                    -- activated
-                   -> MenuItem s n (EntryTrigger s n k)
+                   -> DispatchingMenuItem s n k
 menuEntryForAction title enabled act =
     MIEntry $ MenuEntry title enabled id $ TriggerAction act
 
