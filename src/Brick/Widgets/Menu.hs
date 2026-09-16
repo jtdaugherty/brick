@@ -12,20 +12,20 @@ module Brick.Widgets.Menu
   , closeMenu
   , toggleMenu
 
-  -- * Constructing menus
+  -- * Constructing menus and items in general
   , menu
-  , SimpleMenu
-  , SimpleMenuItem
-  , simpleMenu
-
-  -- * Constructing menu items
   , MenuItem
   , MenuEntry
   , menuEntry
   , menuSeparator
   , menuGap
 
-  -- * Constructing menus using custom keybindings
+  -- * Constructing menus with EventM handlers
+  , SimpleMenu
+  , SimpleMenuItem
+  , simpleMenu
+
+  -- * Constructing menus that use custom keybindings
   , DispatchingMenu
   , DispatchingMenuItem
   , EntryTrigger
