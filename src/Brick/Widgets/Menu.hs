@@ -15,6 +15,7 @@ module Brick.Widgets.Menu
   -- * Constructing menus
   , menu
   , SimpleMenu
+  , SimpleMenuItem
   , simpleMenu
 
   -- * Constructing menu items
@@ -170,12 +171,17 @@ menuEntry title enabled ev = MIEntry $ MenuEntry title enabled id ev
 -- entry that are evaluated whenever the entries are activated.
 type SimpleMenu s n = Menu s n (EventM n s ())
 
+-- | A specialization of 'MenuItem' for 'SimpleMenu' for entries with
+-- 'EventM' handlers that are evaluated whenever the entries are
+-- activated.
+type SimpleMenuItem s n = MenuItem s n (EventM n s ())
+
 -- | Create a 'SimpleMenu'.
 simpleMenu :: T.Text
            -- ^ The menu's title
            -> (MenuRegion -> n)
            -- ^ The menu's resource name constructor
-           -> [MenuItem s n (EventM n s ())]
+           -> [SimpleMenuItem s n]
            -- ^ The items in this menu
            -> SimpleMenu s n
 simpleMenu title regionNameBuilder items =
