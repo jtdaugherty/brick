@@ -102,7 +102,9 @@ data Menu s n k =
          , menuIsOpen :: Bool
          -- ^ Whether the menu is showing
          , menuWidth :: Int
-         -- ^ The width of the menu's items within the enclosing border
+         -- ^ The width of the menu's items within the enclosing border.
+         -- This is a record accessor so it can also be used to change
+         -- the menu's width.
          , menuTitleName :: n
          -- ^ The resource name for this menu's title
          , menuRegionNameBuilder :: MenuRegion -> n
