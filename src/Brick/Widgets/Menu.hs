@@ -505,6 +505,13 @@ selectPrevEntry m =
         pairs = V.zip (V.enumFromN 0 (V.length is)) is
         items = V.reverse $ pairs <> V.take takeAmt pairs
 
+withMenu :: Traversal' s (Menu s n k) -> (Menu s n k -> EventM n s Bool) -> EventM n s Bool
+withMenu which f = do
+    mMenu <- preuse which
+    case mMenu of
+        Nothing -> return False
+        Just m -> f m
+
 -- | Handle an event for this menu and return @True@, or return @False@
 -- if the event was not handled by the menu (e.g. because it was not
 -- open, or because it did not correspond to any menu entry).
@@ -516,28 +523,21 @@ handleMenuEvent which e = do
        else handleMenuEventFallback which e
 
 handleMenuEventFallback :: (Eq n) => Traversal' s (Menu s n k) -> BrickEvent n e -> EventM n s Bool
-handleMenuEventFallback which (VtyEvent (Vty.EvKey k mods)) = do
-    mMenu <- preuse which
-    case mMenu of
-        Nothing -> return False
-        Just m -> do
-            handled <- menuFallbackHandler m k mods
-            when (menuIsOpen m) $ which %= closeMenu
-            return handled
+handleMenuEventFallback which (VtyEvent (Vty.EvKey k mods)) =
+    withMenu which $ \m -> do
+        handled <- menuFallbackHandler m k mods
+        when (menuIsOpen m) $ which %= closeMenu
+        return handled
 handleMenuEventFallback _ _ =
     return False
 
 handleMenuEventPrimary :: (Eq n) => Traversal' s (Menu s n k) -> BrickEvent n e -> EventM n s Bool
 handleMenuEventPrimary which (VtyEvent (Vty.EvKey Vty.KEnter [])) = do
-    mMenu <- preuse which
-    case mMenu of
-        Nothing -> return False
-        Just m -> do
-            let sel = m^.menuSelectedIndexL
-            case sel of
-                Nothing -> return ()
-                Just idx -> activateMenuItem which idx
-            return True
+    withMenu which $ \m -> do
+        let sel = m^.menuSelectedIndexL
+        case sel of
+            Nothing -> return True
+            Just idx -> activateMenuItem which idx
 handleMenuEventPrimary which (VtyEvent (Vty.EvKey Vty.KDown [])) = do
     which %= selectNextEntry
     return True
@@ -545,48 +545,40 @@ handleMenuEventPrimary which (VtyEvent (Vty.EvKey Vty.KUp [])) = do
     which %= selectPrevEntry
     return True
 handleMenuEventPrimary which (MouseDown n _ _ (Location (_, row))) = do
-    mMenu <- preuse which
-    case mMenu of
-        Nothing -> return False
-        Just m -> do
-            let mkRegionName = m^.menuRegionNameBuilderL
+    withMenu which $ \m -> do
+        let mkRegionName = m^.menuRegionNameBuilderL
 
-            if | mkRegionName MenuTitle == n ->
-                   which.menuIsOpenL %= not
-               | mkRegionName MenuBody == n ->
-                   -- Map the location to the clicked menu entry
-                   activateMenuItem which row
-               | otherwise -> return ()
-
-            return True
+        if | mkRegionName MenuTitle == n -> do
+               which.menuIsOpenL %= not
+               return True
+           | mkRegionName MenuBody == n ->
+               -- Map the location to the clicked menu entry
+               activateMenuItem which row
+           | otherwise -> return False
 handleMenuEventPrimary which (VtyEvent (Vty.EvMouseDown {})) = do
     which %= closeMenu
     return True
 handleMenuEventPrimary which (VtyEvent (Vty.EvKey Vty.KEsc [])) = do
-    mMenu <- preuse which
-    case mMenu of
-        Nothing -> return False
-        Just m -> if menuIsOpen m
-                  then do
-                      which %= closeMenu
-                      return True
-                  else return False
+    withMenu which $ \m -> do
+        if menuIsOpen m
+        then do
+            which %= closeMenu
+            return True
+        else return False
 handleMenuEventPrimary _ _ =
     return False
 
 -- | Activate the menu's selected entry, if any.
-activateMenuItem :: Traversal' s (Menu s n k) -> Int -> EventM n s ()
-activateMenuItem which idx = do
-    mMenu <- preuse which
-    case mMenu of
-        Nothing -> return ()
-        Just m -> do
-            s <- use id
-            let handler = m^.menuEventHandlerL
-                is = m^.menuItemsL
-            case is V.!? idx of
-                Just (MIEntry entry) -> do
-                    when (menuEntryEnabled entry s) $ do
-                        which %= closeMenu
-                        handler $ menuEntryEvent entry
-                _ -> return ()
+activateMenuItem :: Traversal' s (Menu s n k) -> Int -> EventM n s Bool
+activateMenuItem which idx =
+    withMenu which $ \m -> do
+        s <- use id
+        let handler = m^.menuEventHandlerL
+            is = m^.menuItemsL
+        case is V.!? idx of
+            Just (MIEntry entry) -> do
+                when (menuEntryEnabled entry s) $ do
+                    which %= closeMenu
+                    handler $ menuEntryEvent entry
+                return True
+            _ -> return False
