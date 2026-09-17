@@ -7,6 +7,7 @@ module Brick.Widgets.MenuBar
 
   , newMenuBar
   , hasOpenMenu
+  , closeAllMenus
   , isMenuTitleEvent
   , handleMenuBarEvent
 
