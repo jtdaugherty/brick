@@ -186,7 +186,7 @@ menuGap = MIGap
 --
 -- By default, this entry has no custom renderer so its appearance is
 -- determined by the default entry renderer of the enclosing menu.
--- To change either of these behaiors, use 'setEntryRenderer' or
+-- To change either of these behaviors, use 'setEntryRenderer' or
 -- 'setDefaultEntryRenderer'.
 --
 -- By default, this entry is always enabled regardless of the
