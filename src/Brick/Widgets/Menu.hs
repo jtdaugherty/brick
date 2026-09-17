@@ -20,6 +20,9 @@ module Brick.Widgets.Menu
   , menuSeparator
   , menuGap
 
+  -- * Configuring menu items
+  , setEnabledWith
+
   -- * Constructing menus with EventM handlers
   , SimpleMenu
   , SimpleMenuItem
@@ -146,6 +149,11 @@ data MenuEntry s n k =
 
 suffixLenses ''Menu
 
+-- | Set this menu entry's function to check for whether it is enabled.
+setEnabledWith :: (s -> Bool) -> MenuItem s n k -> MenuItem s n k
+setEnabledWith f (MIEntry e) = MIEntry $ e { menuEntryEnabled = f }
+setEnabledWith _ e = e
+
 -- | A separator between menu items.
 menuSeparator :: MenuItem s n k
 menuSeparator = MISeparator
@@ -160,15 +168,12 @@ menuGap = MIGap
 -- cases, see the other 'MenuItem' constructors in this module.
 menuEntry :: T.Text
           -- ^ The menu entry's label
-          -> (s -> Bool)
-          -- ^ A function to determine whether the entry is enabled at
-          -- rendering and event-handling time
           -> k
           -- ^ The event data carried by the menu entry that will be
           -- passed to the enclosing menu's event handler when this
           -- entry is activated
           -> MenuItem s n k
-menuEntry title enabled ev = MIEntry $ MenuEntry title enabled id ev
+menuEntry title ev = MIEntry $ MenuEntry title (const True) id ev
 
 -- | A specialization of 'Menu' that has 'EventM' handlers in each menu
 -- entry that are evaluated whenever the entries are activated.
@@ -296,44 +301,35 @@ menuWithDispatcher kd title regionNameBuilder items =
 -- irrespective of the enclosing menu's 'KeyDispatcher' configuration.
 menuEntryForKey :: T.Text
                 -- ^ The menu entry's label
-                -> (s -> Bool)
-                -- ^ A function to determine whether the entry is
-                -- enabled at rendering and event-handling time
                 -> Binding
                 -- ^ The specific key binding to trigger this menu entry
                 -> DispatchingMenuItem s n k
-menuEntryForKey title enabled b =
-    MIEntry $ MenuEntry title enabled id $ TriggerEvent $ ByKey b
+menuEntryForKey title b =
+    MIEntry $ MenuEntry title (const True) id $ TriggerEvent $ ByKey b
 
 -- | Create a menu entry that generates the specified abstract key event
 -- when activated, thus triggering the enclosing menu's 'KeyDispatcher'
 -- handler for that event.
 menuEntryForEvent :: T.Text
                   -- ^ The menu entry's label
-                  -> (s -> Bool)
-                  -- ^ A function to determine whether the entry is
-                  -- enabled at rendering and event-handling time
                   -> k
                   -- ^ The abstract key event to generate when this
                   -- entry is activated
                   -> DispatchingMenuItem s n k
-menuEntryForEvent title enabled ev =
-    MIEntry $ MenuEntry title enabled id $ TriggerEvent $ ByEvent ev
+menuEntryForEvent title ev =
+    MIEntry $ MenuEntry title (const True) id $ TriggerEvent $ ByEvent ev
 
 -- | Create a menu entry that invokes the specified 'EventM' action when
 -- activated. Use this for entries that are not invoked by specific keys
 -- or associated with abstract key events.
 menuEntryForAction :: T.Text
                    -- ^ The menu entry's label
-                   -> (s -> Bool)
-                   -- ^ A function to determine whether the entry is
-                   -- enabled at rendering and event-handling time
                    -> EventM n s ()
                    -- ^ The action to evaluate when this entry is
                    -- activated
                    -> DispatchingMenuItem s n k
-menuEntryForAction title enabled act =
-    MIEntry $ MenuEntry title enabled id $ TriggerAction act
+menuEntryForAction title act =
+    MIEntry $ MenuEntry title (const True) id $ TriggerAction act
 
 -- | Close a menu and unselect any selected entry.
 closeMenu :: Menu s n k -> Menu s n k

@@ -138,12 +138,12 @@ app =
 fileMenuState :: K.KeyDispatcher KeyEvent (T.EventM Name St) -> DispatchingMenu St Name KeyEvent
 fileMenuState d =
     menuWithDispatcher d "File" FileMenu
-        [ menuEntryForEvent "New..." (const True) NewEvent
-        , menuEntryForEvent "Open..." (const True) OpenEvent
-        , menuEntryForKey "Test" (const True) (K.ctrl 't')
-        , menuEntryForAction "Test 2" (const True) M.halt
+        [ menuEntryForEvent "New..." NewEvent
+        , menuEntryForEvent "Open..." OpenEvent
+        , menuEntryForKey "Test" (K.ctrl 't')
+        , menuEntryForAction "Test 2" M.halt
         , menuSeparator
-        , menuEntryForEvent "Exit" (const True) QuitEvent
+        , menuEntryForEvent "Exit" QuitEvent
         ]
 
 sectionName :: Text.Text

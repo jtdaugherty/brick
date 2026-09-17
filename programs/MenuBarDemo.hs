@@ -90,28 +90,28 @@ app =
 fileMenuState :: SimpleMenu St Name
 fileMenuState =
     simpleMenu "File" FileMenu
-        [ menuEntry "New..." (const True) (return ())
-        , menuEntry "Open..." (const True) (return ())
+        [ menuEntry "New..." (return ())
+        , menuEntry "Open..." (return ())
         , menuSeparator
-        , menuEntry "Exit" (const True) M.halt
+        , menuEntry "Exit" M.halt
         ]
 
 editMenuState :: SimpleMenu St Name
 editMenuState =
     simpleMenu "Edit" EditMenu
-        [ menuEntry "Undo" (const True) (return ())
-        , menuEntry "Redo" (const True) (return ())
+        [ menuEntry "Undo" (return ())
+        , menuEntry "Redo" (return ())
         , menuSeparator
-        , menuEntry "Cut" (const True) (return ())
-        , menuEntry "Copy" (const True) (return ())
-        , menuEntry "Paste" (const True) (return ())
+        , menuEntry "Cut" (return ())
+        , menuEntry "Copy" (return ())
+        , menuEntry "Paste" (return ())
         ]
 
 helpMenuState :: SimpleMenu St Name
 helpMenuState =
     simpleMenu "Help" HelpMenu
-        [ menuEntry "About" (const True) (return ())
-        , menuEntry "Check for updates" (const True) (return ())
+        [ menuEntry "About" (return ())
+        , menuEntry "Check for updates" (return ())
         ]
 
 main :: IO ()

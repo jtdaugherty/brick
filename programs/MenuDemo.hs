@@ -109,10 +109,10 @@ app =
 fileMenuState :: SimpleMenu St Name
 fileMenuState =
     simpleMenu "File" FileMenu
-        [ menuEntry "New..." (const True) (return ())
-        , menuEntry "Open..." (const True) (return ())
+        [ menuEntry "New..." (return ())
+        , menuEntry "Open..." (return ())
         , menuSeparator
-        , menuEntry "Exit" (const True) M.halt
+        , menuEntry "Exit" M.halt
         ]
 
 main :: IO ()
