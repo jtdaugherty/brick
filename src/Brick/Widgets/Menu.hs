@@ -5,7 +5,7 @@
 module Brick.Widgets.Menu
   ( Menu
   , menuIsOpen
-  , menuWidth
+  , menuContentWidth
   , menuTitleName
   , MenuRegion(..)
   , openMenu
@@ -108,7 +108,7 @@ data Menu s n k =
          -- ^ The contents of the menu
          , menuIsOpen :: !Bool
          -- ^ Whether the menu is open
-         , menuWidth :: !Int
+         , menuContentWidth :: !Int
          -- ^ The width of the menu's items within the enclosing border.
          -- This is a record accessor so it can also be used to change
          -- the menu's width.
@@ -230,7 +230,7 @@ menu title regionNameBuilder items handler =
     in Menu { menuTitle = title
             , menuItems = V.fromList items
             , menuIsOpen = False
-            , menuWidth = defaultWidth
+            , menuContentWidth = defaultWidth
             , menuTitleName = regionNameBuilder MenuTitle
             , menuRegionNameBuilder = regionNameBuilder
             , menuSelectedIndex = Nothing
@@ -281,7 +281,7 @@ menuWithDispatcher kd title regionNameBuilder items =
     menu title regionNameBuilder items handler
     where
         setWidth m =
-            m { menuWidth = menuWidth m + 4 }
+            m { menuContentWidth = menuContentWidth m + 4 }
 
         addFallbackHandler m =
             m { menuFallbackHandler = handleKey kd }
@@ -384,7 +384,7 @@ renderMenu s m =
 
         body = joinBorders $
                border $
-               hLimit (menuWidth m) $
+               hLimit (menuContentWidth m) $
                clickable (menuRegionNameBuilder m MenuBody) $
                vBox $
                renderMenuItem <$> (zip [0..] $ V.toList $ menuItems m)
