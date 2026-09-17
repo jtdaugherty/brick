@@ -20,13 +20,6 @@ module Brick.Widgets.Menu
   , menuSeparator
   , menuGap
 
-  -- * Configuring menus
-  , setDefaultEntryRenderer
-
-  -- * Configuring menu items
-  , setEnabledWith
-  , setEntryRenderer
-
   -- * Constructing menus with EventM handlers
   , SimpleMenu
   , SimpleMenuItem
@@ -40,6 +33,13 @@ module Brick.Widgets.Menu
   , menuEntryForKey
   , menuEntryForEvent
   , menuEntryForAction
+
+  -- * Configuring menus
+  , setDefaultEntryRenderer
+
+  -- * Configuring menu items
+  , setEnabledWith
+  , setEntryRenderer
 
   -- * Handling events
   , handleMenuEvent
