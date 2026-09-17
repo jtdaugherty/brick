@@ -3,6 +3,7 @@
 module Brick.Widgets.MenuBar
   ( MenuBar
   , SimpleMenuBar
+  , DispatchingMenuBar
 
   , newMenuBar
   , hasOpenMenu
@@ -37,6 +38,10 @@ suffixLenses ''MenuBar
 -- | A specialization of 'MenuBar' for menus with 'EventM' handlers; use
 -- this with 'simpleMenu'.
 type SimpleMenuBar s n = MenuBar s n (EventM n s ())
+
+-- | A specialization of 'MenuBar' for menus with abstract key event
+-- triggers; this with 'menuWithDispatcher'.
+type DispatchingMenuBar s n k = MenuBar s n (EventM n s (EntryTrigger s n k))
 
 -- | Create a new menu bar from the specified menu list. If the list is
 -- empty, this calls 'error'.
