@@ -481,11 +481,13 @@ selectNextEntry m =
                  Nothing -> 0
                  Just i -> i + 1
         is = m^.menuItemsL
-        matching = V.filter (isEntry . snd) items
+        matching = V.filter (itemIsSelectable . snd) items
         pairs = V.zip (V.enumFromN 0 (V.length is)) is
         items = V.drop dropAmt $ pairs <> pairs
-        isEntry (MIEntry {}) = True
-        isEntry _ = False
+
+itemIsSelectable :: MenuItem s n k -> Bool
+itemIsSelectable (MIEntry {}) = True
+itemIsSelectable _ = False
 
 -- | Select the prevouis entry in a menu, or the last one if no entry is
 -- currently selected.
@@ -499,11 +501,9 @@ selectPrevEntry m =
                  Nothing -> 0
                  Just i -> i
         is = m^.menuItemsL
-        matching = V.filter (isEntry . snd) items
+        matching = V.filter (itemIsSelectable . snd) items
         pairs = V.zip (V.enumFromN 0 (V.length is)) is
         items = V.reverse $ pairs <> V.take takeAmt pairs
-        isEntry (MIEntry {}) = True
-        isEntry _ = False
 
 -- | Handle an event for this menu and return @True@, or return @False@
 -- if the event was not handled by the menu (e.g. because it was not
