@@ -22,7 +22,7 @@ import Brick.AttrMap
 import Brick.Util
 import Brick.Types (Widget)
 import qualified Brick.Main as M
-import Brick.Widgets.Core (txtWrap, hLimit, padLeft, Padding(..))
+import Brick.Widgets.Core ((<=>), txt, withAttr, txtWrap, hLimit, padLeft, Padding(..))
 import Brick.Widgets.Center (center)
 import Brick.Widgets.Menu
 
@@ -70,19 +70,21 @@ drawUi st =
     [ padLeft (Pad 1) $
       renderMenu st (st^.fileMenu)
     , center $
-      hLimit 40 $
-      txtWrap $
-      Text.unlines $
-      [ "Click the menu title with the mouse or press Alt-F to open the menu."
-      , ""
-      , "When the menu is open, press arrow keys to select items and then " <>
-        "press Enter to activate them, or click them with the mouse instead."
-      , ""
-      , "When the menu is open or closed, press the keybindings shown in the " <>
-        "menu to activate the corresponding menu items."
-      , ""
-      , "Last action: " <> st^.lastAction
-      ]
+      hLimit 60 $
+      (txtWrap $
+       Text.unlines $
+       [ "Click the menu title with the mouse or press Alt-F to open the menu."
+       , ""
+       , "When the menu is open, press arrow keys to select items and then " <>
+         "press Enter to activate them, or click them with the mouse instead."
+       , ""
+       , "When the menu is open or closed, press the keybindings shown in the " <>
+         "menu to activate the corresponding menu items."
+       , ""
+       ])
+      <=>
+      (withAttr emphAttr $
+        txt $ "Last action: " <> st^.lastAction)
     ]
 
 -- | Key event handlers for our application.
@@ -107,6 +109,9 @@ handlers =
 appEvent :: T.BrickEvent Name e -> T.EventM Name St ()
 appEvent e = void $ handleMenuEvent fileMenu e
 
+emphAttr :: AttrName
+emphAttr = attrName "emphasis"
+
 aMap :: AttrMap
 aMap = attrMap V.defAttr
     [ (menuAttr, fg V.white)
@@ -116,6 +121,7 @@ aMap = attrMap V.defAttr
     , (menuEntrySelectedAttr, V.black `on` V.yellow)
     , (menuEntrySelectedDisabledAttr, V.black `on` V.red)
     , (menuEntryKeybindingAttr, fg V.cyan `V.withStyle` V.bold)
+    , (emphAttr, fg V.white)
     ]
 
 app :: M.App St e Name
