@@ -12,7 +12,7 @@ module Brick.Widgets.Menu
   , closeMenu
   , toggleMenu
 
-  -- * Constructing menus and items in general
+  -- * Constructing menus and items
   , menu
   , MenuItem
   , MenuEntry
@@ -20,12 +20,19 @@ module Brick.Widgets.Menu
   , menuSeparator
   , menuGap
 
-  -- * Constructing menus with EventM handlers
+  -- * Configuring menus
+  , setDefaultEntryRenderer
+
+  -- * Configuring menu items
+  , setEnabledWith
+  , setEntryRenderer
+
+  -- * Menus with EventM handlers
   , SimpleMenu
   , SimpleMenuItem
   , simpleMenu
 
-  -- * Constructing menus that use custom keybindings
+  -- * Menus with custom keybindings
   , DispatchingMenu
   , DispatchingMenuItem
   , EntryTrigger
@@ -33,13 +40,6 @@ module Brick.Widgets.Menu
   , menuEntryForKey
   , menuEntryForEvent
   , menuEntryForAction
-
-  -- * Configuring menus
-  , setDefaultEntryRenderer
-
-  -- * Configuring menu items
-  , setEnabledWith
-  , setEntryRenderer
 
   -- * Handling events
   , handleMenuEvent
