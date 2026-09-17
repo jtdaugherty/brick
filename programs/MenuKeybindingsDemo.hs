@@ -141,7 +141,7 @@ fileMenuState d =
         [ menuEntryForEvent "New..." NewEvent
         , menuEntryForEvent "Open..." OpenEvent
         , menuEntryForKey "Test" (K.ctrl 't')
-        , menuEntryForAction "Test 2" M.halt
+        , menuEntryForAction "Test 2" (lastAction .= "Activated 'Test 2' item")
         , menuSeparator
         , menuEntryForEvent "Exit" QuitEvent
         ]
