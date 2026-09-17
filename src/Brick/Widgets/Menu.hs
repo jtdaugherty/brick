@@ -132,8 +132,8 @@ data MenuItem s n k =
 -- | A labeled menu entry that can be activated with the mouse or by a
 -- keypress.
 data MenuEntry s n k =
-    MenuEntry { menuEntryTitle :: T.Text
-              -- ^ The menu entry's title
+    MenuEntry { menuEntryLabel :: T.Text
+              -- ^ The menu entry's label
               , menuEntryEnabled :: s -> Bool
               -- ^ The function to determine whether this menu entry is
               -- enabled
@@ -360,7 +360,7 @@ menuItemWidth (MIEntry e) = menuEntryWidth e
 
 -- | Get this entry's width, i.e., the width of its label.
 menuEntryWidth :: MenuEntry s n k -> Int
-menuEntryWidth = textWidth . menuEntryTitle
+menuEntryWidth = textWidth . menuEntryLabel
 
 -- | Render a menu.
 renderMenu :: (Ord n) => s -> Menu s n k -> Widget n
@@ -394,7 +394,7 @@ renderMenu s m =
             menuEntryAnnotate e $
             padRight Max $
             padLeft (Pad 1) $
-            txt $ menuEntryTitle e
+            txt $ menuEntryLabel e
 
         setEntryAttr i e =
             if Just i == menuSelectedIndex m
