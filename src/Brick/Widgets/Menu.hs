@@ -420,7 +420,7 @@ menuTitleSelectedAttr = menuTitleAttr <> attrName "selected"
 menuBodyAttr :: AttrName
 menuBodyAttr = menuAttr <> attrName "body"
 
--- | Menu keybindings for entries in menus created with
+-- | Menu entry keybindings for entries in menus created with
 -- 'menuWithDispatcher'.
 menuEntryKeybindingAttr :: AttrName
 menuEntryKeybindingAttr = menuBodyAttr <> attrName "keybinding"
