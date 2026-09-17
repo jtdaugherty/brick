@@ -185,8 +185,9 @@ menuGap = MIGap
 -- event handler of the enclosing menu.
 --
 -- By default, this entry has no custom renderer so its appearance is
--- determined by the 'menuEntryDefaultRenderer' of the enclosing menu.
--- To change this, use 'setEntryRenderer'.
+-- determined by the default entry renderer of the enclosing menu.
+-- To change either of these behaiors, use 'setEntryRenderer' or
+-- 'setDefaultEntryRenderer'.
 --
 -- By default, this entry is always enabled regardless of the
 -- application state. To change this, use 'setEnabledWith'.
