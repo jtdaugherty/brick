@@ -106,7 +106,8 @@ data Menu s n k =
          -- This is a record accessor so it can also be used to change
          -- the menu's width.
          , menuTitleName :: n
-         -- ^ The resource name for this menu's title
+         -- ^ The resource name for this menu's title for generating and
+         -- detecting mouse click events
          , menuRegionNameBuilder :: MenuRegion -> n
          -- ^ A function to build resource names for clickable regions
          , menuSelectedIndex :: Maybe Int
