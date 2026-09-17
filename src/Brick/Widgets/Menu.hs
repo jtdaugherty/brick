@@ -151,8 +151,11 @@ suffixLenses ''Menu
 
 -- | Set this menu entry's function to check for whether it is enabled.
 setEnabledWith :: (s -> Bool) -> MenuItem s n k -> MenuItem s n k
-setEnabledWith f (MIEntry e) = MIEntry $ e { menuEntryEnabled = f }
-setEnabledWith _ e = e
+setEnabledWith f = mapMenuEntry (\e -> e { menuEntryEnabled = f })
+
+mapMenuEntry :: (MenuEntry s n k -> MenuEntry s n k) -> MenuItem s n k -> MenuItem s n k
+mapMenuEntry f (MIEntry e) = MIEntry $ f e
+mapMenuEntry _ e = e
 
 -- | A separator between menu items.
 menuSeparator :: MenuItem s n k
