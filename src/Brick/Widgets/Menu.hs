@@ -307,8 +307,7 @@ menuEntryForKey :: T.Text
                 -> Binding
                 -- ^ The specific key binding to trigger this menu entry
                 -> DispatchingMenuItem s n k
-menuEntryForKey title b =
-    MIEntry $ MenuEntry title (const True) id $ TriggerEvent $ ByKey b
+menuEntryForKey title b = menuEntry title $ TriggerEvent $ ByKey b
 
 -- | Create a menu entry that generates the specified abstract key event
 -- when activated, thus triggering the enclosing menu's 'KeyDispatcher'
@@ -319,8 +318,7 @@ menuEntryForEvent :: T.Text
                   -- ^ The abstract key event to generate when this
                   -- entry is activated
                   -> DispatchingMenuItem s n k
-menuEntryForEvent title ev =
-    MIEntry $ MenuEntry title (const True) id $ TriggerEvent $ ByEvent ev
+menuEntryForEvent title ev = menuEntry title $ TriggerEvent $ ByEvent ev
 
 -- | Create a menu entry that invokes the specified 'EventM' action when
 -- activated. Use this for entries that are not invoked by specific keys
@@ -331,8 +329,7 @@ menuEntryForAction :: T.Text
                    -- ^ The action to evaluate when this entry is
                    -- activated
                    -> DispatchingMenuItem s n k
-menuEntryForAction title act =
-    MIEntry $ MenuEntry title (const True) id $ TriggerAction act
+menuEntryForAction title act = menuEntry title $ TriggerAction act
 
 -- | Close a menu and unselect any selected entry.
 closeMenu :: Menu s n k -> Menu s n k
