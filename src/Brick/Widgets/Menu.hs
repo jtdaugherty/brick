@@ -191,7 +191,12 @@ menuEntry :: T.Text
           -- passed to the enclosing menu's event handler when this
           -- entry is activated
           -> MenuItem s n k
-menuEntry title ev = MIEntry $ MenuEntry title (const True) ev Nothing
+menuEntry title ev =
+    MIEntry $ MenuEntry { menuEntryLabel = title
+                        , menuEntryEnabled = const True
+                        , menuEntryEvent = ev
+                        , menuEntryRenderer = Nothing
+                        }
 
 -- | A specialization of 'Menu' that has 'EventM' handlers in each menu
 -- entry that are evaluated whenever the entries are activated.
