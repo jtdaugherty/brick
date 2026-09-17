@@ -149,7 +149,7 @@ data MenuEntry s n k =
 
 suffixLenses ''Menu
 
--- | Set this menu entry's function to check for whether it is enabled.
+-- | Set this menu entry's function used to check for its enabled state.
 setEnabledWith :: (s -> Bool) -> MenuItem s n k -> MenuItem s n k
 setEnabledWith f = mapMenuEntry (\e -> e { menuEntryEnabled = f })
 
