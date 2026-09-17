@@ -180,7 +180,16 @@ menuSeparator = MISeparator
 menuGap :: MenuItem s n k
 menuGap = MIGap
 
--- | Create a menu entry.
+-- | Create a menu entry with the specified label and event data.
+-- When the entry is activated, its event data will be passed to the
+-- 'menuEventHandler' of the enclosing menu.
+--
+-- By default, this entry has no custom renderer so its appearance is
+-- determined by the 'menuEntryDefaultRenderer' of the enclosing menu.
+-- To change this, use 'setEntryRenderer'.
+--
+-- By default, this entry is always enabled regardless of the
+-- application state. To change this, use 'setEnabledWith'.
 --
 -- This is the fully general entry constructor. For more specific use
 -- cases, see the other 'MenuItem' constructors in this module.
