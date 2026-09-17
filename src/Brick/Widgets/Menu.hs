@@ -22,6 +22,7 @@ module Brick.Widgets.Menu
 
   -- * Configuring menus
   , setDefaultEntryRenderer
+  , setTitleRenderer
 
   -- * Configuring menu items
   , setEnabledWith
@@ -104,6 +105,8 @@ data MenuRegion =
 data Menu s n k =
     Menu { menuTitle :: !T.Text
          -- ^ The menu's title
+         , menuTitleRenderer :: T.Text -> Widget n
+         -- ^ The renderer for the menu's title
          , menuItems :: !(V.Vector (MenuItem s n k))
          -- ^ The contents of the menu
          , menuIsOpen :: !Bool
@@ -167,6 +170,10 @@ setEntryRenderer f = mapMenuEntry (\e -> e { menuEntryRenderer = Just f })
 -- | Set this menu's entry rendering function.
 setDefaultEntryRenderer :: (k -> T.Text -> Widget n) -> Menu s n k -> Menu s n k
 setDefaultEntryRenderer f m = m { menuEntryDefaultRenderer = f }
+
+-- | Set this menu's title renderer.
+setTitleRenderer :: (T.Text -> Widget n) -> Menu s n k -> Menu s n k
+setTitleRenderer f m = m { menuTitleRenderer = f }
 
 mapMenuEntry :: (MenuEntry s n k -> MenuEntry s n k) -> MenuItem s n k -> MenuItem s n k
 mapMenuEntry f (MIEntry e) = MIEntry $ f e
@@ -244,6 +251,7 @@ menu :: T.Text
 menu title regionNameBuilder items handler =
     let defaultWidth = (maximum $ menuItemWidth <$> items) + defaultMenuPadding
     in Menu { menuTitle = title
+            , menuTitleRenderer = txt
             , menuItems = V.fromList items
             , menuIsOpen = False
             , menuContentWidth = defaultWidth
@@ -396,7 +404,8 @@ renderMenu s m =
                        else withDefAttr menuTitleAttr
         title = clickable (menuTitleName m) $
                 setTitleAttr $
-                txt $ menuTitle m
+                menuTitleRenderer m $
+                menuTitle m
 
         body = joinBorders $
                border $
