@@ -182,7 +182,7 @@ menuGap = MIGap
 
 -- | Create a menu entry with the specified label and event data.
 -- When the entry is activated, its event data will be passed to the
--- 'menuEventHandler' of the enclosing menu.
+-- event handler of the enclosing menu.
 --
 -- By default, this entry has no custom renderer so its appearance is
 -- determined by the 'menuEntryDefaultRenderer' of the enclosing menu.
