@@ -20,8 +20,12 @@ module Brick.Widgets.Menu
   , menuSeparator
   , menuGap
 
+  -- * Configuring menus
+  , setDefaultEntryRenderer
+
   -- * Configuring menu items
   , setEnabledWith
+  , setEntryRenderer
 
   -- * Constructing menus with EventM handlers
   , SimpleMenu
@@ -120,6 +124,8 @@ data Menu s n k =
          , menuFallbackHandler :: Vty.Key -> [Vty.Modifier] -> EventM n s Bool
          -- ^ Handler for key events that weren't handled by the
          -- menuEventHandler
+         , menuEntryDefaultRenderer :: k -> T.Text -> Widget n
+         -- ^ The function to render entries in this menu
          }
 
 -- | The type of menu items.
@@ -140,11 +146,10 @@ data MenuEntry s n k =
               , menuEntryEnabled :: s -> Bool
               -- ^ The function to determine whether this menu entry is
               -- enabled
-              , menuEntryAnnotate :: Widget n -> Widget n
-              -- ^ Final annotation to perform on the menu entry's
-              -- rendering
               , menuEntryEvent :: !k
               -- ^ The event to generate when this entry is activated
+              , menuEntryRenderer :: Maybe (k -> T.Text -> Widget n)
+              -- ^ This menu entry's renderer
               }
 
 suffixLenses ''Menu
@@ -152,6 +157,15 @@ suffixLenses ''Menu
 -- | Set this menu entry's function used to check for its enabled state.
 setEnabledWith :: (s -> Bool) -> MenuItem s n k -> MenuItem s n k
 setEnabledWith f = mapMenuEntry (\e -> e { menuEntryEnabled = f })
+
+-- | Set this menu entry's rendering function, overriding the menu's
+-- default rendering behavior for this entry.
+setEntryRenderer :: (k -> T.Text -> Widget n) -> MenuItem s n k -> MenuItem s n k
+setEntryRenderer f = mapMenuEntry (\e -> e { menuEntryRenderer = Just f })
+
+-- | Set this menu's entry rendering function.
+setDefaultEntryRenderer :: (k -> T.Text -> Widget n) -> Menu s n k -> Menu s n k
+setDefaultEntryRenderer f m = m { menuEntryDefaultRenderer = f }
 
 mapMenuEntry :: (MenuEntry s n k -> MenuEntry s n k) -> MenuItem s n k -> MenuItem s n k
 mapMenuEntry f (MIEntry e) = MIEntry $ f e
@@ -176,7 +190,7 @@ menuEntry :: T.Text
           -- passed to the enclosing menu's event handler when this
           -- entry is activated
           -> MenuItem s n k
-menuEntry title ev = MIEntry $ MenuEntry title (const True) id ev
+menuEntry title ev = MIEntry $ MenuEntry title (const True) ev Nothing
 
 -- | A specialization of 'Menu' that has 'EventM' handlers in each menu
 -- entry that are evaluated whenever the entries are activated.
@@ -222,6 +236,7 @@ menu title regionNameBuilder items handler =
             , menuSelectedIndex = Nothing
             , menuEventHandler = handler
             , menuFallbackHandler = const $ const $ return False
+            , menuEntryDefaultRenderer = \_ label -> txt label
             }
 
 -- | A trigger to be executed when an entry with this trigger is
@@ -262,7 +277,8 @@ menuWithDispatcher :: (Eq k)
 menuWithDispatcher kd title regionNameBuilder items =
     setWidth $
     addFallbackHandler $
-    menu title regionNameBuilder annotatedItems handler
+    setDefaultEntryRenderer renderWithKeybinding $
+    menu title regionNameBuilder items handler
     where
         setWidth m =
             m { menuWidth = menuWidth m + 4 }
@@ -270,23 +286,17 @@ menuWithDispatcher kd title regionNameBuilder items =
         addFallbackHandler m =
             m { menuFallbackHandler = handleKey kd }
 
-        annotatedItems =
-            addAnnotation <$> items
+        renderWithKeybinding e label =
+            let maybeShowKeybinding w = fromMaybe w $ do
+                    keybinding <- case e of
+                        TriggerEvent (ByKey b) -> return b
+                        TriggerEvent (ByEvent ev) -> listToMaybe $ bindingsForEvent ev
+                        TriggerAction {} -> Nothing
 
-        addAnnotation (MIEntry e) =
-            MIEntry $ addEntryAnnotation e
-        addAnnotation i = i
+                    return $ w <+> (withDefAttr menuEntryKeybindingAttr $
+                                    txt $ ppBinding keybinding)
 
-        addEntryAnnotation e = fromMaybe e $ do
-            keybinding <- case menuEntryEvent e of
-                TriggerEvent (ByKey b) -> return b
-                TriggerEvent (ByEvent ev) -> listToMaybe $ bindingsForEvent ev
-                TriggerAction {} -> Nothing
-
-            let renderedKeybinding = withDefAttr menuEntryKeybindingAttr $
-                                     txt $ ppBinding keybinding
-
-            return $ e { menuEntryAnnotate = (<+> renderedKeybinding) }
+            in maybeShowKeybinding $ padRight Max $ txt label
 
         bindingsForEvent ev =
             [ b | KeyHandler { khBinding = b, khHandler = h } <- snd <$> keyDispatcherToList kd, kehEventTrigger h == ByEvent ev ]
@@ -384,13 +394,13 @@ renderMenu s m =
         renderMenuItem (i, MIEntry e)   = renderMenuEntry i e
 
         renderMenuEntry i e =
-            setEntryAttr i e $
-            vLimit 1 $
-            padRight (Pad 1) $
-            menuEntryAnnotate e $
-            padRight Max $
-            padLeft (Pad 1) $
-            txt $ menuEntryLabel e
+            let renderEntry = fromMaybe (menuEntryDefaultRenderer m) (menuEntryRenderer e)
+            in setEntryAttr i e $
+               vLimit 1 $
+               padRight (Pad 1) $
+               padRight Max $
+               padLeft (Pad 1) $
+               renderEntry (menuEntryEvent e) (menuEntryLabel e)
 
         setEntryAttr i e =
             if Just i == menuSelectedIndex m
