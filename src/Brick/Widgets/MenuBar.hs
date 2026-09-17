@@ -30,7 +30,7 @@ import Brick.Widgets.Menu
 
 -- | A menu bar holding a sequence of menus.
 data MenuBar s n k =
-    MenuBar { menuBarMenus :: V.Vector (Menu s n k)
+    MenuBar { menuBarMenus :: !(V.Vector (Menu s n k))
             }
 
 suffixLenses ''MenuBar
