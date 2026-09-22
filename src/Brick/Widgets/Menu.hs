@@ -1,6 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -fno-warn-unused-top-binds #-}
 module Brick.Widgets.Menu
   ( Menu
@@ -19,6 +20,7 @@ module Brick.Widgets.Menu
   , menuEntry
   , menuSeparator
   , menuGap
+  , submenu
 
   -- * Configuring menus
   , setDefaultEntryRenderer
@@ -62,7 +64,7 @@ where
 
 import Control.Monad (when)
 
-import Lens.Micro ((^.), (.~), (&), Traversal')
+import Lens.Micro.Platform ((^.), (.~), (&), Traversal', ix)
 import Lens.Micro.Mtl
 
 import qualified Data.Foldable as F
@@ -141,6 +143,8 @@ data MenuItem s n k =
     | MIEntry !(MenuEntry s n k)
     -- ^ A labeled menu entry that can be activated with the mouse or by
     -- a keypress
+    | MISubmenu !(Menu s n k)
+    -- ^ A submenu
 
 -- | A labeled menu entry that can be activated with the mouse or by a
 -- keypress.
@@ -186,6 +190,10 @@ menuSeparator = MISeparator
 -- | A gap between menu items.
 menuGap :: MenuItem s n k
 menuGap = MIGap
+
+-- | A submenu.
+submenu :: Menu s n k -> MenuItem s n k
+submenu = MISubmenu
 
 -- | Create a menu entry with the specified label and event data.
 -- When the entry is activated, its event data will be passed to the
@@ -387,6 +395,7 @@ menuItemWidth :: MenuItem s n k -> Int
 menuItemWidth MISeparator = 0
 menuItemWidth MIGap = 0
 menuItemWidth (MIEntry e) = menuEntryWidth e
+menuItemWidth (MISubmenu sm) = textWidth $ menuTitle sm
 
 -- | Get this entry's width, i.e., the width of its label.
 menuEntryWidth :: MenuEntry s n k -> Int
@@ -396,7 +405,7 @@ menuEntryWidth = textWidth . menuEntryLabel
 renderMenu :: (Ord n) => s -> Menu s n k -> Widget n
 renderMenu s m =
     if menuIsOpen m
-    then (translateLayer (Location (-1, 1)) body) `above` title
+    then (translateLayer (Location (-1, 1)) (renderMenuContents s m)) `above` title
     else title
     where
         setTitleAttr = if menuIsOpen m
@@ -407,6 +416,9 @@ renderMenu s m =
                 menuTitleRenderer m $
                 menuTitle m
 
+renderMenuContents :: (Ord n) => s -> Menu s n k -> Widget n
+renderMenuContents s m = body
+    where
         body = joinBorders $
                border $
                hLimit (menuContentWidth m) $
@@ -414,9 +426,27 @@ renderMenu s m =
                vBox $
                renderMenuItem <$> (zip [0..] $ V.toList $ menuItems m)
 
-        renderMenuItem (_, MISeparator) = hBorder
-        renderMenuItem (_, MIGap)       = vLimit 1 $ fill ' '
-        renderMenuItem (i, MIEntry e)   = renderMenuEntry i e
+        renderMenuItem (_, MISeparator)  = hBorder
+        renderMenuItem (_, MIGap)        = vLimit 1 $ fill ' '
+        renderMenuItem (i, MIEntry e)    = renderMenuEntry i e
+        renderMenuItem (i, MISubmenu sm) = renderSubmenu i sm
+
+        renderSubmenu i sm =
+            let submenuTitle = vLimit 1 $
+                               padRight (Pad 1) $
+                               ((padRight Max $
+                                 padLeft (Pad 1) $
+                                 txt $ menuTitle sm) <+> txt ">")
+                layerOffset = Location (menuContentWidth m + 1, -1)
+                submenuLayer = translateLayer layerOffset $ renderMenuContents s sm
+                maybeAddLayer = if sm^.menuIsOpenL
+                                then (submenuLayer `above`)
+                                else id
+                maybeSetAttr = if Just i == menuSelectedIndex m
+                               then forceAttr menuEntrySelectedAttr
+                               else id
+            in maybeAddLayer $
+               maybeSetAttr submenuTitle
 
         renderMenuEntry i e =
             let renderEntry = fromMaybe (menuEntryDefaultRenderer m) (menuEntryRenderer e)
@@ -487,6 +517,7 @@ selectNextEntry m =
 
 itemIsSelectable :: MenuItem s n k -> Bool
 itemIsSelectable (MIEntry {}) = True
+itemIsSelectable (MISubmenu {}) = True
 itemIsSelectable _ = False
 
 -- | Select the prevouis entry in a menu, or the last one if no entry is
@@ -510,73 +541,122 @@ withMenu which f = do
         Nothing -> return False
         Just m -> f m
 
+resolveMenuEventTarget :: Traversal' s (Menu s n k)
+                       -> EventM n s [Int]
+resolveMenuEventTarget which = do
+    mMenu <- preuse which
+    case mMenu of
+        Nothing -> return []
+        Just m ->
+            case m^.menuSelectedIndexL of
+                Nothing -> return []
+                Just idx -> do
+                    let is = m^.menuItemsL
+                    case is V.!? idx of
+                        Just (MISubmenu sm) -> do
+                            -- If the submenu is open, recurse; if it
+                            -- is not, don't add its index because we
+                            -- aren't targeting the submenu at that
+                            -- index.
+                            if not $ sm^.menuIsOpenL
+                               then return []
+                               else do
+                                   rest <- resolveMenuEventTarget (which.menuItemsL.ix idx._Submenu)
+                                   return $ idx : rest
+                        _ -> return []
+
+targetMenu :: Traversal' s (Menu s n k)
+           -> [Int]
+           -> Traversal' s (Menu s n k)
+targetMenu = foldl (\base idx -> base.menuItemsL.ix idx._Submenu)
+
 -- | Handle an event for this menu and return @True@, or return @False@
 -- if the event was not handled by the menu (e.g. because it was not
 -- open, or because it did not correspond to any menu entry).
 handleMenuEvent :: (Eq n) => Traversal' s (Menu s n k) -> BrickEvent n e -> EventM n s Bool
 handleMenuEvent which e = do
-    handled <- handleMenuEventCommon which e
+    -- First, determine where we're routing the event based on whether
+    -- the current selection targets an open submenu.
+    path <- resolveMenuEventTarget which
+
+    handled <- handleMenuEventCommon which path e
     if handled
        then return True
-       else handleMenuEventFallback which e
+       else handleMenuEventFallback which path e
 
-handleMenuEventFallback :: (Eq n) => Traversal' s (Menu s n k) -> BrickEvent n e -> EventM n s Bool
-handleMenuEventFallback which (VtyEvent (Vty.EvKey k mods)) =
-    withMenu which $ \m -> do
+handleMenuEventFallback :: (Eq n) => Traversal' s (Menu s n k) -> [Int] -> BrickEvent n e -> EventM n s Bool
+handleMenuEventFallback which path (VtyEvent (Vty.EvKey k mods)) =
+    withMenu (targetMenu which path) $ \m -> do
         handled <- menuFallbackEventHandler m k mods
-        when (menuIsOpen m) $ which %= closeMenu
+        when (menuIsOpen m) $ (targetMenu which path) %= closeMenu
         return handled
-handleMenuEventFallback _ _ =
+handleMenuEventFallback _ _ _ =
     return False
 
-handleMenuEventCommon :: (Eq n) => Traversal' s (Menu s n k) -> BrickEvent n e -> EventM n s Bool
-handleMenuEventCommon which (VtyEvent (Vty.EvKey Vty.KEnter [])) = do
-    withMenu which $ \m -> do
+handleMenuEventCommon :: (Eq n) => Traversal' s (Menu s n k) -> [Int] -> BrickEvent n e -> EventM n s Bool
+handleMenuEventCommon which path (VtyEvent (Vty.EvKey Vty.KEnter [])) = do
+    withMenu (targetMenu which path) $ \m -> do
         let sel = m^.menuSelectedIndexL
         case sel of
             Nothing -> return True
-            Just idx -> activateMenuItem which idx
-handleMenuEventCommon which (VtyEvent (Vty.EvKey Vty.KDown [])) = do
-    which %= selectNextEntry
+            Just idx -> activateMenuItem which path idx
+handleMenuEventCommon which path (VtyEvent (Vty.EvKey Vty.KDown [])) = do
+    targetMenu which path %= selectNextEntry
     return True
-handleMenuEventCommon which (VtyEvent (Vty.EvKey Vty.KUp [])) = do
-    which %= selectPrevEntry
+handleMenuEventCommon which path (VtyEvent (Vty.EvKey Vty.KUp [])) = do
+    targetMenu which path %= selectPrevEntry
     return True
-handleMenuEventCommon which (MouseDown n _ _ (Location (_, row))) = do
-    withMenu which $ \m -> do
+handleMenuEventCommon which path (MouseDown n _ _ (Location (_, row))) = do
+    withMenu (targetMenu which path) $ \m -> do
         let mkRegionName = m^.menuRegionNameBuilderL
 
         if | mkRegionName MenuTitle == n -> do
-               which.menuIsOpenL %= not
+               (targetMenu which path).menuIsOpenL %= not
                return True
            | mkRegionName MenuBody == n ->
                -- Map the location to the clicked menu entry
-               activateMenuItem which row
+               activateMenuItem which path row
            | otherwise -> return False
-handleMenuEventCommon which (VtyEvent (Vty.EvMouseDown {})) = do
-    which %= closeMenu
+handleMenuEventCommon which path (VtyEvent (Vty.EvMouseDown {})) = do
+    targetMenu which path %= closeMenu
     return True
-handleMenuEventCommon which (VtyEvent (Vty.EvKey Vty.KEsc [])) = do
-    withMenu which $ \m -> do
+handleMenuEventCommon which path (VtyEvent (Vty.EvKey Vty.KEsc [])) = do
+    withMenu (targetMenu which path) $ \m -> do
         if menuIsOpen m
         then do
-            which %= closeMenu
+            targetMenu which path %= closeMenu
             return True
         else return False
-handleMenuEventCommon _ _ =
+handleMenuEventCommon _ _ _ =
     return False
 
--- | Activate the menu's selected entry, if any.
-activateMenuItem :: Traversal' s (Menu s n k) -> Int -> EventM n s Bool
-activateMenuItem which idx =
-    withMenu which $ \m -> do
+_Submenu :: Traversal' (MenuItem s n k) (Menu s n k)
+_Submenu f (MISubmenu sm) = MISubmenu <$> f sm
+_Submenu _ i = pure i
+
+closeAllMenus :: Traversal' s (Menu s n k) -> [Int] -> EventM n s ()
+closeAllMenus which [] =
+    which %= closeMenu
+closeAllMenus which (i:is) = do
+    closeAllMenus (which.menuItemsL.ix i._Submenu) is
+    which %= closeMenu
+
+-- | Activate the menu's selected entry. If the selected entry is
+-- a normal entry, trigger its handler and close the menu and its
+-- ancestors. If the selected entry is a submenu, open the submenu.
+activateMenuItem :: Traversal' s (Menu s n k) -> [Int] -> Int -> EventM n s Bool
+activateMenuItem which path idx =
+    withMenu (targetMenu which path) $ \m -> do
         s <- use id
         let handler = m^.menuEventHandlerL
             is = m^.menuItemsL
         case is V.!? idx of
             Just (MIEntry entry) -> do
                 when (menuEntryEnabled entry s) $ do
-                    which %= closeMenu
+                    closeAllMenus which path
                     handler $ menuEntryEvent entry
+                return True
+            Just (MISubmenu {}) -> do
+                (targetMenu which path).menuItemsL.ix idx._Submenu %= toggleMenu
                 return True
             _ -> return False
