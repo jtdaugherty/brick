@@ -25,6 +25,7 @@ import qualified Brick.Widgets.Border.Style as S
 import Brick.Widgets.Menu
 
 data Name = FileMenu MenuRegion
+          | ExportMenu MenuRegion
           deriving (Show, Ord, Eq)
 
 data St =
@@ -40,13 +41,16 @@ drawUi st =
       withBorderStyle (st^.borderStyle) $
       renderMenu st (st^.fileMenu)
     , center $
-      hLimit 40 $
+      hLimit 60 $
       txtWrap $
       Text.unlines $
       [ "Click the menu title with the mouse or press Alt-F to open the menu."
       , ""
       , "When the menu is open, press arrow keys to select items and then " <>
         "press Enter to activate them, or click them with the mouse instead."
+      , ""
+      , "When the menu is open, press Enter or the right arrow key to open " <>
+        "the submenu; press Esc or the left arrow key to close it."
       , ""
       , "Press number keys to switch menu border styles:"
       , ""
@@ -111,6 +115,12 @@ fileMenuState =
     simpleMenu "File" FileMenu
         [ menuEntry "New..." (return ())
         , menuEntry "Open..." (return ())
+        , menuSeparator
+        , submenu $ simpleMenu "Export" ExportMenu
+            [ menuEntry "JPEG" (return ())
+            , menuEntry "PNG" (return ())
+            , menuEntry "GIF" (return ())
+            ]
         , menuSeparator
         , menuEntry "Exit" M.halt
         ]
