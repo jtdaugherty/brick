@@ -678,6 +678,11 @@ activateMenuItem which path idx =
                     handler $ menuEntryEvent entry
                 return True
             Just (MISubmenu {}) -> do
-                (targetMenu which path).menuItemsL.ix idx._Submenu %= toggleMenu
+                -- If the submenu entry isn't the selected one, select
+                -- it.
+                when (Just idx /= (m^.menuSelectedIndexL)) $
+                    (targetMenu which path).menuSelectedIndexL .= Just idx
+
+                (targetMenu which path).menuItemsL.ix idx._Submenu %= openMenu
                 return True
             _ -> return False
