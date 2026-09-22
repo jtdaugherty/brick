@@ -15,7 +15,7 @@ module Brick.Widgets.MenuBar
   )
 where
 
-import Control.Monad (when, void)
+import Control.Monad (when)
 import Data.Maybe (isJust, listToMaybe, fromMaybe)
 import Lens.Micro.Platform ((^.), (&), (%~), Lens', ix, each)
 import Lens.Micro.Mtl
@@ -86,17 +86,31 @@ getMenuTitleMatch mb n =
 -- a menu title mouse click or because no menu was open to receive the
 -- event).
 handleMenuBarEvent :: (Eq n) => Lens' s (MenuBar s n k) -> BrickEvent n e -> EventM n s Bool
-handleMenuBarEvent which (VtyEvent (Vty.EvKey Vty.KLeft [])) = do
-    which %= openPreviousMenu
+handleMenuBarEvent which e@(VtyEvent (Vty.EvKey Vty.KLeft [])) = do
+    -- Since this key might be handled by the open menu, try that first
+    -- and only switch menus if it wasn't handled by the menu.
+    handled <- withOpenMenu which $ \(idx, _) ->
+        handleMenuEvent (which.menuBarMenusL.ix idx) e
+
+    when (not handled) $
+        which %= openPreviousMenu
+
     return True
-handleMenuBarEvent which (VtyEvent (Vty.EvKey Vty.KRight [])) = do
-    which %= openNextMenu
+handleMenuBarEvent which e@(VtyEvent (Vty.EvKey Vty.KRight [])) = do
+    -- Since this key might be handled by the open menu, try that first
+    -- and only switch menus if it wasn't handled by the menu.
+    handled <- withOpenMenu which $ \(idx, _) ->
+        handleMenuEvent (which.menuBarMenusL.ix idx) e
+
+    when (not handled) $
+        which %= openNextMenu
+
     return True
 handleMenuBarEvent which e@(MouseDown n _ _ _) = do
     mb <- use which
     case getMenuTitleMatch mb n of
         Nothing -> withOpenMenu which $ \(idx, _) ->
-            void $ handleMenuEvent (which.menuBarMenusL.ix idx) e
+            handleMenuEvent (which.menuBarMenusL.ix idx) e
         Just (i, _) -> do
             mMatchingMenu <- preuse (which.menuBarMenusL.ix i)
             case mMatchingMenu of
@@ -108,7 +122,7 @@ handleMenuBarEvent which e@(MouseDown n _ _ _) = do
             return True
 handleMenuBarEvent which e =
     withOpenMenu which $ \(idx, _) ->
-        void $ handleMenuEvent (which.menuBarMenusL.ix idx) e
+        handleMenuEvent (which.menuBarMenusL.ix idx) e
 
 -- | Given a menu bar with an open menu, switch the open menu to the one
 -- preceding the currently open one, or do nothing if no menu is open.
@@ -141,9 +155,9 @@ openMenuIndex i mb = (closeAllMenus mb) & menuBarMenusL.ix i %~ openMenu
 -- | Given a lens to access a menu bar and a handler to invoke on its
 -- currently open menu, invoke the handler if there is an open menu and
 -- return True, or do nothing and return False otherwise.
-withOpenMenu :: Lens' s (MenuBar s n k) -> ((Int, Menu s n k) -> EventM n s ()) -> EventM n s Bool
+withOpenMenu :: Lens' s (MenuBar s n k) -> ((Int, Menu s n k) -> EventM n s Bool) -> EventM n s Bool
 withOpenMenu which f = do
     mb <- use which
     case getOpenMenu mb of
         Nothing -> return False
-        Just pair -> f pair >> return True
+        Just pair -> f pair

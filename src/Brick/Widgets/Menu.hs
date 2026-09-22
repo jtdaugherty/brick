@@ -606,6 +606,27 @@ handleMenuEventCommon which path (VtyEvent (Vty.EvKey Vty.KEnter [])) = do
         case sel of
             Nothing -> return True
             Just idx -> activateMenuItem which path idx
+handleMenuEventCommon which path (VtyEvent (Vty.EvKey Vty.KRight [])) = do
+    withMenu (targetMenu which path) $ \m -> do
+        let sel = m^.menuSelectedIndexL
+        case sel of
+            Nothing -> return False
+            Just idx -> do
+                -- If the selected item is a submenu that is not open,
+                -- open it and select its first item.
+                let is = m^.menuItemsL
+                case is V.!? idx of
+                    Just (MISubmenu sm) | not (sm^.menuIsOpenL) -> do
+                        which.menuItemsL.ix idx._Submenu %= (selectNextEntry . openMenu)
+                        return True
+                    _ -> return False
+handleMenuEventCommon which path (VtyEvent (Vty.EvKey Vty.KLeft [])) =
+    -- Close the current menu if it is a submenu.
+    case path of
+        [] -> return False
+        _ -> do
+            targetMenu which path %= closeMenu
+            return True
 handleMenuEventCommon which path (VtyEvent (Vty.EvKey Vty.KDown [])) = do
     targetMenu which path %= selectNextEntry
     return True
