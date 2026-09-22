@@ -517,7 +517,7 @@ withMenu which f = do
 -- open, or because it did not correspond to any menu entry).
 handleMenuEvent :: (Eq n) => Traversal' s (Menu s n k) -> BrickEvent n e -> EventM n s Bool
 handleMenuEvent which e = do
-    handled <- handleMenuEventPrimary which e
+    handled <- handleMenuEventCommon which e
     if handled
        then return True
        else handleMenuEventFallback which e
@@ -531,20 +531,20 @@ handleMenuEventFallback which (VtyEvent (Vty.EvKey k mods)) =
 handleMenuEventFallback _ _ =
     return False
 
-handleMenuEventPrimary :: (Eq n) => Traversal' s (Menu s n k) -> BrickEvent n e -> EventM n s Bool
-handleMenuEventPrimary which (VtyEvent (Vty.EvKey Vty.KEnter [])) = do
+handleMenuEventCommon :: (Eq n) => Traversal' s (Menu s n k) -> BrickEvent n e -> EventM n s Bool
+handleMenuEventCommon which (VtyEvent (Vty.EvKey Vty.KEnter [])) = do
     withMenu which $ \m -> do
         let sel = m^.menuSelectedIndexL
         case sel of
             Nothing -> return True
             Just idx -> activateMenuItem which idx
-handleMenuEventPrimary which (VtyEvent (Vty.EvKey Vty.KDown [])) = do
+handleMenuEventCommon which (VtyEvent (Vty.EvKey Vty.KDown [])) = do
     which %= selectNextEntry
     return True
-handleMenuEventPrimary which (VtyEvent (Vty.EvKey Vty.KUp [])) = do
+handleMenuEventCommon which (VtyEvent (Vty.EvKey Vty.KUp [])) = do
     which %= selectPrevEntry
     return True
-handleMenuEventPrimary which (MouseDown n _ _ (Location (_, row))) = do
+handleMenuEventCommon which (MouseDown n _ _ (Location (_, row))) = do
     withMenu which $ \m -> do
         let mkRegionName = m^.menuRegionNameBuilderL
 
@@ -555,17 +555,17 @@ handleMenuEventPrimary which (MouseDown n _ _ (Location (_, row))) = do
                -- Map the location to the clicked menu entry
                activateMenuItem which row
            | otherwise -> return False
-handleMenuEventPrimary which (VtyEvent (Vty.EvMouseDown {})) = do
+handleMenuEventCommon which (VtyEvent (Vty.EvMouseDown {})) = do
     which %= closeMenu
     return True
-handleMenuEventPrimary which (VtyEvent (Vty.EvKey Vty.KEsc [])) = do
+handleMenuEventCommon which (VtyEvent (Vty.EvKey Vty.KEsc [])) = do
     withMenu which $ \m -> do
         if menuIsOpen m
         then do
             which %= closeMenu
             return True
         else return False
-handleMenuEventPrimary _ _ =
+handleMenuEventCommon _ _ =
     return False
 
 -- | Activate the menu's selected entry, if any.
