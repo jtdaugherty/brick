@@ -125,7 +125,7 @@ data Menu s n k =
          , menuEventHandler :: k -> EventM n s ()
          -- ^ Handler to be invoked when an entry in this menu is
          -- activated
-         , menuFallbackHandler :: Vty.Key -> [Vty.Modifier] -> EventM n s Bool
+         , menuFallbackEventHandler :: Vty.Key -> [Vty.Modifier] -> EventM n s Bool
          -- ^ Handler for key events that weren't handled by
          -- 'handleMenuEvent'
          , menuEntryDefaultRenderer :: k -> T.Text -> Widget n
@@ -259,7 +259,7 @@ menu title regionNameBuilder items handler =
             , menuRegionNameBuilder = regionNameBuilder
             , menuSelectedIndex = Nothing
             , menuEventHandler = handler
-            , menuFallbackHandler = const $ const $ return False
+            , menuFallbackEventHandler = const $ const $ return False
             , menuEntryDefaultRenderer = \_ label -> txt label
             }
 
@@ -308,7 +308,7 @@ menuWithDispatcher kd title regionNameBuilder items =
             m { menuContentWidth = menuContentWidth m + 4 }
 
         addFallbackHandler m =
-            m { menuFallbackHandler = handleKey kd }
+            m { menuFallbackEventHandler = handleKey kd }
 
         renderWithKeybinding e label =
             let maybeShowKeybinding w = fromMaybe w $ do
@@ -525,7 +525,7 @@ handleMenuEvent which e = do
 handleMenuEventFallback :: (Eq n) => Traversal' s (Menu s n k) -> BrickEvent n e -> EventM n s Bool
 handleMenuEventFallback which (VtyEvent (Vty.EvKey k mods)) =
     withMenu which $ \m -> do
-        handled <- menuFallbackHandler m k mods
+        handled <- menuFallbackEventHandler m k mods
         when (menuIsOpen m) $ which %= closeMenu
         return handled
 handleMenuEventFallback _ _ =
