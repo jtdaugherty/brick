@@ -191,7 +191,8 @@ menuSeparator = MISeparator
 menuGap :: MenuItem s n k
 menuGap = MIGap
 
--- | A submenu.
+-- | A submenu. The menu's title will be used as the submenu's label in
+-- its parent menu.
 submenu :: Menu s n k -> MenuItem s n k
 submenu = MISubmenu
 
