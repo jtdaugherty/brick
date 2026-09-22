@@ -154,7 +154,7 @@ openMenuIndex i mb = (closeAllMenus mb) & menuBarMenusL.ix i %~ openMenu
 
 -- | Given a lens to access a menu bar and a handler to invoke on its
 -- currently open menu, invoke the handler if there is an open menu and
--- return True, or do nothing and return False otherwise.
+-- return its result, or do nothing and return False otherwise.
 withOpenMenu :: Lens' s (MenuBar s n k) -> ((Int, Menu s n k) -> EventM n s Bool) -> EventM n s Bool
 withOpenMenu which f = do
     mb <- use which
