@@ -64,7 +64,7 @@ where
 
 import Control.Monad (when)
 
-import Lens.Micro.Platform ((^.), (.~), (&), Traversal', ix)
+import Lens.Micro.Platform ((^.), (.~), (%~), (&), Traversal', ix, each)
 import Lens.Micro.Mtl
 
 import qualified Data.Foldable as F
@@ -373,10 +373,17 @@ menuEntryForAction :: T.Text
                    -> DispatchingMenuItem s n k
 menuEntryForAction label act = menuEntry label $ TriggerAction act
 
--- | Close a menu and unselect any selected entry.
+-- | Close a menu and unselect any selected entry. Also closes any open
+-- submenus in the menu, recursively.
 closeMenu :: Menu s n k -> Menu s n k
-closeMenu m = m & menuIsOpenL .~ False
-                & menuSelectedIndexL .~ Nothing
+closeMenu m =
+    closeSubmenus $
+        m & menuIsOpenL .~ False
+          & menuSelectedIndexL .~ Nothing
+
+closeSubmenus :: Menu s n k -> Menu s n k
+closeSubmenus m =
+    m & menuItemsL.each._Submenu %~ closeMenu
 
 -- | Open a menu.
 openMenu :: Menu s n k -> Menu s n k
