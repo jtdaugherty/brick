@@ -595,7 +595,6 @@ handleMenuEventFallback :: (Eq n) => Traversal' s (Menu s n k) -> [Int] -> Brick
 handleMenuEventFallback which path (VtyEvent (Vty.EvKey k mods)) =
     withMenu (targetMenu which path) $ \m -> do
         handled <- menuFallbackEventHandler m k mods
-        when (menuIsOpen m) $ (targetMenu which path) %= closeMenu
         return handled
 handleMenuEventFallback _ _ _ =
     return False
@@ -641,13 +640,6 @@ _Submenu :: Traversal' (MenuItem s n k) (Menu s n k)
 _Submenu f (MISubmenu sm) = MISubmenu <$> f sm
 _Submenu _ i = pure i
 
-closeAllMenus :: Traversal' s (Menu s n k) -> [Int] -> EventM n s ()
-closeAllMenus which [] =
-    which %= closeMenu
-closeAllMenus which (i:is) = do
-    closeAllMenus (which.menuItemsL.ix i._Submenu) is
-    which %= closeMenu
-
 -- | Activate the menu's selected entry. If the selected entry is
 -- a normal entry, trigger its handler and close the menu and its
 -- ancestors. If the selected entry is a submenu, open the submenu.
@@ -660,7 +652,7 @@ activateMenuItem which path idx =
         case is V.!? idx of
             Just (MIEntry entry) -> do
                 when (menuEntryEnabled entry s) $ do
-                    closeAllMenus which path
+                    which %= closeMenu
                     handler $ menuEntryEvent entry
                 return True
             Just (MISubmenu {}) -> do
