@@ -497,9 +497,7 @@ selectPrevEntry m =
         Nothing -> m
         Just (newIdx, _) -> m & menuSelectedIndexL .~ Just newIdx
     where
-        takeAmt = case m^.menuSelectedIndexL of
-                 Nothing -> 0
-                 Just i -> i
+        takeAmt = fromMaybe 0 $ m^.menuSelectedIndexL
         is = m^.menuItemsL
         matching = V.filter (itemIsSelectable . snd) items
         pairs = V.zip (V.enumFromN 0 (V.length is)) is
