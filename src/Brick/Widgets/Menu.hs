@@ -107,7 +107,7 @@ data MenuRegion =
 data Menu s n k =
     Menu { menuTitle :: !T.Text
          -- ^ The menu's title
-         , menuTitleRenderer :: T.Text -> Widget n
+         , menuTitleRenderer :: s -> T.Text -> Widget n
          -- ^ The renderer for the menu's title
          , menuItems :: !(V.Vector (MenuItem s n k))
          -- ^ The contents of the menu
@@ -176,7 +176,7 @@ setDefaultEntryRenderer :: (k -> T.Text -> Widget n) -> Menu s n k -> Menu s n k
 setDefaultEntryRenderer f m = m { menuEntryDefaultRenderer = f }
 
 -- | Set this menu's title renderer.
-setTitleRenderer :: (T.Text -> Widget n) -> Menu s n k -> Menu s n k
+setTitleRenderer :: (s -> T.Text -> Widget n) -> Menu s n k -> Menu s n k
 setTitleRenderer f m = m { menuTitleRenderer = f }
 
 mapMenuEntry :: (MenuEntry s n k -> MenuEntry s n k) -> MenuItem s n k -> MenuItem s n k
@@ -260,7 +260,7 @@ menu :: T.Text
 menu title regionNameBuilder items handler =
     let defaultWidth = (maximum $ menuItemWidth <$> items) + defaultMenuPadding
     in Menu { menuTitle = title
-            , menuTitleRenderer = txt
+            , menuTitleRenderer = const txt
             , menuItems = V.fromList items
             , menuIsOpen = False
             , menuContentWidth = defaultWidth
@@ -421,7 +421,7 @@ renderMenu s m =
                        else withDefAttr menuTitleAttr
         title = clickable (menuTitleName m) $
                 setTitleAttr $
-                menuTitleRenderer m $
+                menuTitleRenderer m s $
                 menuTitle m
 
 renderMenuContents :: (Ord n) => s -> Menu s n k -> Widget n
