@@ -6,8 +6,8 @@
 -- | This module provides a drop-down menu widget that is common to most
 -- graphical interface toolkits.
 --
--- This module provides a fully general 'Menu' type and a few type
--- aliases for common menu use cases:
+-- This module provides a fully general 'Menu' type and a few
+-- specialized interfaces for common menu use cases:
 --
 -- * 'SimpleMenu': a menu with entries that have 'EventM' handlers.
 --   Create one of these with 'simpleMenu'. This is a good starting point.
