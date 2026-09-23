@@ -812,9 +812,10 @@ _Submenu :: Traversal' (MenuItem s n k) (Menu s n k)
 _Submenu f (MISubmenu sm) = MISubmenu <$> f sm
 _Submenu _ i = pure i
 
--- | Activate the menu's selected entry. If the selected entry is
--- a normal entry, trigger its handler and close the menu and its
--- ancestors. If the selected entry is a submenu, open the submenu.
+-- | Activate the menu's selected entry. If the selected entry is a
+-- normal entry and is enabled, trigger its handler and close the menu
+-- and its ancestors. If the selected entry is a submenu, open the
+-- submenu.
 activateMenuItem :: Traversal' s (Menu s n k) -> [Int] -> Int -> EventM n s Bool
 activateMenuItem which path idx =
     withMenu (targetMenu which path) $ \m -> do
