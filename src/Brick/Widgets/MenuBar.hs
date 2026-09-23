@@ -23,6 +23,9 @@
 --
 -- This API requires the use of lenses for application state fields that
 -- store menu bar state.
+--
+-- See the @MenuBarDemo@ demonstration program for a complete working
+-- example of using this API.
 module Brick.Widgets.MenuBar
   (
   -- * Types
