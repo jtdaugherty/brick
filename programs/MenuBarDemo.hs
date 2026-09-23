@@ -87,8 +87,8 @@ app =
           , M.appChooseCursor = M.showFirstCursor
           }
 
-fileMenuState :: SimpleMenu St Name
-fileMenuState =
+newFileMenu :: SimpleMenu St Name
+newFileMenu =
     simpleMenu "File" FileMenu
         [ menuEntry "New..." (return ())
         , menuEntry "Open..." (return ())
@@ -96,8 +96,8 @@ fileMenuState =
         , menuEntry "Exit" M.halt
         ]
 
-editMenuState :: SimpleMenu St Name
-editMenuState =
+newEditMenu :: SimpleMenu St Name
+newEditMenu =
     simpleMenu "Edit" EditMenu
         [ menuEntry "Undo" (return ())
         , menuEntry "Redo" (return ())
@@ -107,8 +107,8 @@ editMenuState =
         , menuEntry "Paste" (return ())
         ]
 
-helpMenuState :: SimpleMenu St Name
-helpMenuState =
+newHelpMenu :: SimpleMenu St Name
+newHelpMenu =
     simpleMenu "Help" HelpMenu
         [ menuEntry "About" (return ())
         , menuEntry "Check for updates" (return ())
@@ -116,4 +116,4 @@ helpMenuState =
 
 main :: IO ()
 main = do
-    void $ M.defaultMain app $ St $ newMenuBar [fileMenuState, editMenuState, helpMenuState]
+    void $ M.defaultMain app $ St $ newMenuBar [newFileMenu, newEditMenu, newHelpMenu]
