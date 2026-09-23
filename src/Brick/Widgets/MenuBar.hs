@@ -3,8 +3,8 @@
 -- | This module provides a menu bar for grouping menus together.
 --
 -- Menu bars carry menus of a particular type using the menu types
--- provided in the @Menu@ module. The type aliases provided here
--- correspond to the aliases for menu use cases:
+-- provided in the @Brick.Widgets.Menu@ module. The type aliases
+-- provided here correspond to the aliases for menu use cases:
 --
 -- * 'SimpleMenuBar': a menu bar made up of 'SimpleMenu's created with
 --   'simpleMenu'
