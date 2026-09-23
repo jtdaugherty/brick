@@ -5,6 +5,7 @@ module Main where
 
 import Lens.Micro ((^.))
 import Lens.Micro.TH (makeLenses)
+import Lens.Micro.Mtl ((%=))
 import Control.Monad (void, when)
 import Control.Monad.Trans (liftIO)
 #if !(MIN_VERSION_base(4,11,0))
@@ -41,7 +42,7 @@ drawUi st =
       hLimit 40 $
       txtWrap $
       Text.unlines $
-      [ "Click the menu title with the mouse or press Alt-F to open the menu."
+      [ "Click the menu title with the mouse or press Alt-F, Alt-E, or Alt-H to open the menus."
       , ""
       , "When a menu is open:"
       , ""
@@ -63,6 +64,12 @@ handleNonMenuBarEvent :: T.BrickEvent Name e -> T.EventM Name St ()
 handleNonMenuBarEvent (T.VtyEvent (V.EvKey V.KEsc [])) =
     -- Esc quits the application
     M.halt
+handleNonMenuBarEvent (T.VtyEvent (V.EvKey (V.KChar 'f') [V.MMeta])) =
+    menuBar %= toggleMenuAtIndex 0
+handleNonMenuBarEvent (T.VtyEvent (V.EvKey (V.KChar 'e') [V.MMeta])) =
+    menuBar %= toggleMenuAtIndex 1
+handleNonMenuBarEvent (T.VtyEvent (V.EvKey (V.KChar 'h') [V.MMeta])) =
+    menuBar %= toggleMenuAtIndex 2
 handleNonMenuBarEvent _ =
     return ()
 
