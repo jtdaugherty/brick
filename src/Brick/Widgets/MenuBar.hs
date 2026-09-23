@@ -1,17 +1,48 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TemplateHaskell #-}
+-- | This module provides a menu bar for grouping menus together.
+--
+-- Menu bars carry menus of a particular type using the menu types
+-- provided in the @Menu@ module. The type aliases provided here
+-- correspond to the aliases for menu use cases:
+--
+-- * 'SimpleMenuBar': a menu bar made up of 'SimpleMenu's created with
+--   'simpleMenu'
+-- * 'DispatchingMenuBar': a menu bar made up of 'DispatchingMenu's
+--    created with 'menuWithDispatcher'
+-- * 'MenuBar': the fully general type for menu bars with menus created
+--   with 'menu'
+--
+-- In all cases, use 'newMenuBar' to construct a menu bar, and create
+-- its menus using the corresponding menu constructor for the type of
+-- menu bar you want to make.
+--
+-- Render your menu bar with 'renderMenuBar' and handle menu bar events
+-- with 'handleMenuBarEvent', deferring to your application's event
+-- handling for events that the menu bar doesn't handle.
+--
+-- This API requires the use of lenses for application state fields that
+-- store menu bar state.
 module Brick.Widgets.MenuBar
-  ( MenuBar
+  (
+  -- * Types
+    MenuBar
   , SimpleMenuBar
   , DispatchingMenuBar
 
+  -- * Creating menu bars
   , newMenuBar
+
+  -- * Handling events
+  , handleMenuBarEvent
+
+  -- * Rendering
+  , renderMenuBar
+
+  -- * Working with menu bars
   , hasOpenMenu
   , closeAllMenus
   , isMenuTitleEvent
-  , handleMenuBarEvent
-
-  , renderMenuBar
   )
 where
 
@@ -30,6 +61,8 @@ import Brick.Widgets.Core
 import Brick.Widgets.Menu
 
 -- | A menu bar holding a sequence of menus.
+--
+-- A menu bar can have up to one open menu at a time.
 data MenuBar s n k =
     MenuBar { menuBarMenus :: !(V.Vector (Menu s n k))
             }
@@ -85,6 +118,37 @@ getMenuTitleMatch mb n =
 -- @False@ if the event was not handled (e.g. because the event was not
 -- a menu title mouse click or because no menu was open to receive the
 -- event).
+--
+-- Events handled include:
+--
+-- * Mouse clicks on menu titles will open the clicked menu, closing
+--   other open menus.
+-- * Left and Right arrow keys will cycle between menus if there is an
+--   open menu.
+-- * If a submenu entry is selected, the Right arrow key will open it or
+--   close it if it is open.
+-- * @Esc@ will close the currently-open menu.
+--
+-- In all other cases, this will attempt to defer to the opened menu to
+-- handle the event. This returns @True@ if the event was one of the
+-- above and was handled, @True@ if the event was not one of the above
+-- but was handled by the open menu, or @False@ otherwise.
+--
+-- A return value of @True@ indicates that the event should not be
+-- handled by the application because it was destined for the menu bar
+-- or one of its menus; a return value of @False@ indicates that the
+-- event should be handled by the application because it did not affect
+-- the menu bar or its menus in their current state for any reason.
+-- Consequently, a common pattern when using this function will look
+-- something like this:
+--
+-- @
+-- myApplicationEventHandler :: BrickEvent n e -> EventM n s ()
+-- myApplicationEventHandler e = do
+--     handled <- handleMenuBarEvent myMenuBarLens e
+--     when (not handled) $ do
+--         -- Go on to handle the event in the rest of the application
+-- @
 handleMenuBarEvent :: (Eq n) => Lens' s (MenuBar s n k) -> BrickEvent n e -> EventM n s Bool
 handleMenuBarEvent which e@(VtyEvent (Vty.EvKey Vty.KLeft [])) = do
     -- Since this key might be handled by the open menu, try that first
