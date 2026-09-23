@@ -148,7 +148,13 @@ getMenuTitleMatch mb n =
 --     when (not handled) $ do
 --         -- Go on to handle the event in the rest of the application
 -- @
-handleMenuBarEvent :: (Eq n) => Lens' s (MenuBar s n k) -> BrickEvent n e -> EventM n s Bool
+handleMenuBarEvent :: (Eq n)
+                   => Lens' s (MenuBar s n k)
+                   -- ^ The lens into the application state where the
+                   -- menu state can be found
+                   -> BrickEvent n e
+                   -- ^ The event to handle
+                   -> EventM n s Bool
 handleMenuBarEvent which e@(VtyEvent (Vty.EvKey Vty.KLeft [])) = do
     -- Since this key might be handled by the open menu, try that first
     -- and only switch menus if it wasn't handled by the menu.

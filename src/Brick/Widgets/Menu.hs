@@ -731,7 +731,13 @@ targetMenu = foldl (\base idx -> base.menuItemsL.ix idx._Submenu)
 --     when (not handled) $ do
 --         -- Go on to handle the event in the rest of the application
 -- @
-handleMenuEvent :: (Eq n) => Traversal' s (Menu s n k) -> BrickEvent n e -> EventM n s Bool
+handleMenuEvent :: (Eq n)
+                => Traversal' s (Menu s n k)
+                -- ^ The traversal into the application state where the
+                -- menu state can be found
+                -> BrickEvent n e
+                -- ^ The event to handle
+                -> EventM n s Bool
 handleMenuEvent which e = do
     -- First, determine where we're routing the event based on whether
     -- the current selection targets an open submenu.
