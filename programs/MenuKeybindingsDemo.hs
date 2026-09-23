@@ -135,8 +135,8 @@ app =
           , M.appChooseCursor = M.showFirstCursor
           }
 
-fileMenuState :: K.KeyDispatcher KeyEvent (T.EventM Name St) -> DispatchingMenu St Name KeyEvent
-fileMenuState d =
+newFileMenu :: K.KeyDispatcher KeyEvent (T.EventM Name St) -> DispatchingMenu St Name KeyEvent
+newFileMenu d =
     menuWithDispatcher d "File" FileMenu
         [ menuEntryForEvent "New..." NewEvent
         , menuEntryForEvent "Open..." OpenEvent
@@ -174,4 +174,4 @@ main = do
 
             exitFailure
 
-    void $ M.defaultMain app $ St kc d (fileMenuState d) "(none yet)"
+    void $ M.defaultMain app $ St kc d (newFileMenu d) "(none yet)"
