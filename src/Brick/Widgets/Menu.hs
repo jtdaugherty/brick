@@ -3,6 +3,71 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -fno-warn-unused-top-binds #-}
+-- | This module provides a drop-down menu widget that is common to most
+-- graphical interface toolkits.
+--
+-- This module provides a fully general 'Menu' type and a few type
+-- aliases for common menu use cases:
+--
+-- * 'SimpleMenu': a menu with entries that have 'EventM' handlers.
+--   Create one of these with 'simpleMenu'. This is a good starting point.
+-- * 'DispatchingMenu': a menu whose entries correspond to abstract key
+--   events bound to keys by a 'KeyDispatcher'. Create one of these with
+--   'menuWithDispatcher'. This is a good choice when you already have
+--   a 'KeyDispatcher' set up and would like your menu entries to be
+--   triggered by the rebindable keys that trigger your dispatcher's
+--   handlers.
+-- * 'Menu': the fully general type for menus. Create one of these with
+--   'menu'.
+--
+-- Menus carry a sequence of /items/, expressed by the 'MenuItem' type.
+-- Items can be:
+--
+-- * /entries/ - named menu items that can be activated with the
+--   keyboard or mouse
+-- * /submenus/ - entries that correspond to nested menus
+-- * /separators/ - horizontal lines dividing up groups of other
+--   entries
+-- * /gaps/ - vertical space between items
+--
+-- Menu /entries/ can be either enabled or disabled; their state in this
+-- regard is determined by invoking a function of type @s -> Bool@ at
+-- rendering and event-handling time. By default, all entries are always
+-- enabled. Change this on a per-entry basis with 'setEnabledWith'.
+--
+-- Depending on the type of menu you're creating, different item
+-- constructors may apply. See the 'MenuItem' type aliases, since their
+-- naming convention follows that of the menu types.
+--
+-- Handle menu events with 'handleMenuEvent', deferring to your
+-- application's event handling for events that the menu bar doesn't
+-- handle. To support mouse events, each menu must be identified by
+-- a unique resource name; this is done by providing a resource name
+-- constructor when creating each menu. The application's name type must
+-- provide a constructor of type @MenuRegion -> n@ to uniquely identify
+-- the menu and its constituent parts. For example, if your resource
+-- name type is as follows,
+--
+-- @
+-- data Name = Editor1 | Editor2
+-- @
+--
+-- It would need to be modified so that a new data constructor (e.g.
+-- @FileMenu@) could be given to the menu constuctors:
+--
+-- @
+-- data Name = Editor1 | Editor2 | FileMenu MenuRegion
+-- @
+--
+-- If you would like to use more than one menu in a menu bar
+-- arrangement, see the 'Brick.Widgets.MenuBar' module, which builds on
+-- this abstraction.
+--
+-- This API requires the use of lenses for application state fields that
+-- store menu bar state.
+--
+-- See the @MenuDemo@ and @MenuKeybindingsDemo@ demonstration programs
+-- for complete working examples of using this API.
 module Brick.Widgets.Menu
   ( Menu
   , menuIsOpen
@@ -92,9 +157,9 @@ data MenuRegion =
     -- ^ The region of a menu's body
     deriving (Ord, Show, Eq)
 
--- | A menu.
+-- | The general menu type.
 --
--- Menus are parameterized on three types:
+-- Menus and their items are parameterized on three types:
 --
 -- * @s@: the application state type used in the @App@ type,
 -- * @n@: the application resource name type used in the application's
@@ -102,8 +167,33 @@ data MenuRegion =
 -- * @k@: the type of data carried and handled by the menu's event
 --   handler when a menu entry has been activated.
 --
--- Menus contain a sequence of /items/ of type 'MenuItem'. See the
--- constructors below for both menus and menu items to create menus.
+-- Menus contain a sequence of items of type 'MenuItem'. See the
+-- documentation above and the constructors for both menus and menu
+-- items to create menus.
+--
+-- A menu is either /open/, in which case its contents are being shown
+-- in a floating layer above the application's UI and it is responding
+-- to events that manipulate the menu's selected entry, or it is
+-- /closed/, in which case its contents are not shown and it is not
+-- responding to events other than mouse clicks on its title. The menu's
+-- open/closed state is affected by calls to 'openMenu', 'closeMenu',
+-- and mouse click events on the menu's title.
+--
+-- At any given time, a menu may or may not have a currently-selected
+-- entry. See 'handleMenuEvent' for details on how keyboard and mouse
+-- events influence the choice and behavior of the selected entry. When
+-- an entry is selected, it can be /activated/ by an @Enter@ keypress or
+-- a mouse click. When activated, its event data is used to invoke the
+-- menu's event handler.
+--
+-- To support mouse events, each menu must be identified by a unique
+-- resource name; this is done by providing a resource name constructor
+-- when creating each menu. The application's name type must provide a
+-- constructor of type @MenuRegion -> n@ to uniquely identify the menu
+-- and its constituent parts.
+--
+-- A menu carries an event handler that will be invoked by
+-- 'handleMenuEvent' whenever a menu entry is selected.
 data Menu s n k =
     Menu { menuTitle :: !T.Text
          -- ^ The menu's title
@@ -112,7 +202,7 @@ data Menu s n k =
          , menuItems :: !(V.Vector (MenuItem s n k))
          -- ^ The contents of the menu
          , menuIsOpen :: !Bool
-         -- ^ Whether the menu is open
+         -- ^ Whether the menu is open.
          , menuContentWidth :: !Int
          -- ^ The width of the menu's items within the enclosing border.
          -- This is a record accessor so it can also be used to change
@@ -163,11 +253,13 @@ data MenuEntry s n k =
 suffixLenses ''Menu
 
 -- | Set this menu entry's function used to check for its enabled state.
+-- This is equivalent to 'id' for non-entry items.
 setEnabledWith :: (s -> Bool) -> MenuItem s n k -> MenuItem s n k
 setEnabledWith f = mapMenuEntry (\e -> e { menuEntryEnabled = f })
 
 -- | Set this menu entry's rendering function, overriding the menu's
--- default rendering behavior for this entry.
+-- default rendering behavior for this entry. This is equivalent to 'id'
+-- for non-entry items.
 setEntryRenderer :: (k -> T.Text -> Widget n) -> MenuItem s n k -> MenuItem s n k
 setEntryRenderer f = mapMenuEntry (\e -> e { menuEntryRenderer = Just f })
 
@@ -225,15 +317,17 @@ menuEntry label ev =
                         }
 
 -- | A specialization of 'Menu' that has 'EventM' handlers in each menu
--- entry that are evaluated whenever the entries are activated.
+-- entry that are evaluated whenever the entries are activated. Create
+-- one of these with 'simpleMenu'.
 type SimpleMenu s n = Menu s n (EventM n s ())
 
--- | A specialization of 'MenuItem' for 'SimpleMenu' for entries with
--- 'EventM' handlers that are evaluated whenever the entries are
--- activated.
+-- | A specialization of 'MenuItem' for 'SimpleMenu'. Create these with
+-- 'menuGap', 'menuSeparator', 'submenu', and 'menuEntry'.
 type SimpleMenuItem s n = MenuItem s n (EventM n s ())
 
--- | Create a 'SimpleMenu'.
+-- | Create a 'SimpleMenu' whose entries carry ordinary 'EventM'
+-- handlers that are evaluated whenever the menu's entries are
+-- activated.
 simpleMenu :: T.Text
            -- ^ The menu's title
            -> (MenuRegion -> n)
@@ -282,24 +376,25 @@ data EntryTrigger s n k =
 
 -- | A specialization of 'Menu' whose entries are associated with
 -- specific keys or abstract key events handled by a 'KeyDispatcher'.
+-- Create one of these with 'menuWithDispatcher'.
 type DispatchingMenu s n k = Menu s n (EntryTrigger s n k)
 
--- | A specialization of 'MenuItem' for menus whose entries are
--- associated with specific keys or abstract key events handled by a
--- 'KeyDispatcher'.
+-- | A specialization of 'MenuItem' for 'DispatchingMenu'. Create these
+-- with 'menuGap', 'menuSeparator', 'submenu', 'menuEntryForKey',
+-- 'menuEntryForAction', and 'menuEntryForEvent'.
 type DispatchingMenuItem s n k = MenuItem s n (EntryTrigger s n k)
 
 -- | Create a 'Menu' whose entries are activated by specific triggers,
 -- including specified key bindings or abstract key events associated
 -- with a 'KeyDispatcher'.
 --
--- To create entries in this menu, see 'menuEntryForKey',
+-- To create entries in this menu, use 'menuEntryForKey',
 -- 'menuEntryForEvent', and 'menuEntryForAction'.
 menuWithDispatcher :: (Eq k)
                    => KeyDispatcher k (EventM n s)
                    -- ^ The key dispatcher to use to build the menu, and
                    -- whose handlers should be invoked by the menu's
-                   -- entries
+                   -- entries when activated
                    -> T.Text
                    -- ^ The menu's title
                    -> (MenuRegion -> n)
@@ -410,6 +505,21 @@ menuEntryWidth :: MenuEntry s n k -> Int
 menuEntryWidth = textWidth . menuEntryLabel
 
 -- | Render a menu.
+--
+-- If the menu is closed, only its title is rendered. If the menu is
+-- open, its title is rendered with its contents shown as a floating
+-- layer vertically positioned below the title.
+--
+-- When menu contents are shown, they are rendered in a 'border', and
+-- separators are rendered with 'hBorder'. Use 'withBorderStyle' to
+-- change how such borders are drawn, e.g.,
+--
+-- @
+-- drawUi :: s -> Widget n
+-- drawUi s =
+--     withBorderStyle unicodeRounded $
+--     renderMenu s (s^.myMenu)
+-- @
 renderMenu :: (Ord n) => s -> Menu s n k -> Widget n
 renderMenu s m =
     if menuIsOpen m
@@ -579,8 +689,46 @@ targetMenu :: Traversal' s (Menu s n k)
 targetMenu = foldl (\base idx -> base.menuItemsL.ix idx._Submenu)
 
 -- | Handle an event for this menu and return @True@, or return @False@
--- if the event was not handled by the menu (e.g. because it was not
--- open, or because it did not correspond to any menu entry).
+-- if the event was not handled (e.g. because the event was not a menu
+-- title mouse click or because the menu was not open to receive the
+-- event).
+--
+-- Events handled include:
+--
+-- * Mouse clicks on the menu title will toggle whether the menu is
+--   open.
+-- * If a submenu entry is selected, the Right arrow key will open it
+--   and the Left arrow key will close it if it is open.
+-- * Mouse clicks on submenu entries will open their submenus.
+-- * @Esc@ will close the menu if no submenus are open; otherwise it
+--   will close the last open submenu.
+-- * If no entry is selected, the Down arrow key will select the first
+--   entry and the Up arrow key will select the last entry.
+-- * If an entry is selected, the Down arrow key will select the next
+--   entry and the Up arrow key will select the previous entry.
+-- * If the selected entry is a submenu and the submenu is open, events
+--   will be delegated to the submenu until it closes.
+--
+-- In all other cases, this will attempt to defer to the menu's selected
+-- entry or submenu to handle the event. This returns @True@ if the
+-- event was one of the above and was handled, @True@ if the event was
+-- not one of the above but was handled by the menu's selected entry, or
+-- @False@ otherwise.
+--
+-- A return value of @True@ indicates that the event should not be
+-- handled by the application because it was destined for the menu; a
+-- return value of @False@ indicates that the event should be handled by
+-- the application because it did not affect the menu or its entries in
+-- their current state for any reason. Consequently, a common pattern
+-- when using this function will look something like this:
+--
+-- @
+-- myApplicationEventHandler :: BrickEvent n e -> EventM n s ()
+-- myApplicationEventHandler e = do
+--     handled <- handleMenuEvent myMenuLens e
+--     when (not handled) $ do
+--         -- Go on to handle the event in the rest of the application
+-- @
 handleMenuEvent :: (Eq n) => Traversal' s (Menu s n k) -> BrickEvent n e -> EventM n s Bool
 handleMenuEvent which e = do
     -- First, determine where we're routing the event based on whether
