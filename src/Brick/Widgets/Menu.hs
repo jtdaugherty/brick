@@ -32,10 +32,11 @@
 --   entries
 -- * /gaps/ - vertical space between items
 --
--- Menu /entries/ can be either enabled or disabled; their state in this
--- regard is determined by invoking a function of type @s -> Bool@ at
--- rendering and event-handling time. By default, all entries are always
--- enabled. Change this on a per-entry basis with 'setEnabledWith'.
+-- Menu /entries/ can be either enabled or disabled; their status
+-- in this regard is determined by invoking a function of type @s
+-- -> Bool@ at rendering and event-handling time. By default, all
+-- entries are always enabled. Change this on a per-entry basis with
+-- 'setEnabledWith'.
 --
 -- Depending on the type of menu you're creating, different item
 -- constructors may apply. See the 'MenuItem' type aliases, since their
