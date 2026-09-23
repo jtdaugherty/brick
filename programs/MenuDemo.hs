@@ -110,8 +110,8 @@ app =
           , M.appChooseCursor = M.showFirstCursor
           }
 
-fileMenuState :: SimpleMenu St Name
-fileMenuState =
+newFileMenu :: SimpleMenu St Name
+newFileMenu =
     simpleMenu "File" FileMenu
         [ menuEntry "New..." (return ())
         , menuEntry "Open..." (return ())
@@ -127,4 +127,4 @@ fileMenuState =
 
 main :: IO ()
 main = do
-    void $ M.defaultMain app $ St fileMenuState S.unicode
+    void $ M.defaultMain app $ St newFileMenu S.unicode
