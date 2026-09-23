@@ -84,7 +84,6 @@ module Brick.Widgets.Menu
   -- * Constructing menus and items
   , menu
   , MenuItem
-  , MenuEntry
   , menuEntry
   , menuSeparator
   , menuGap
