@@ -45,6 +45,7 @@ module Brick.Widgets.MenuBar
   -- * Working with menu bars
   , hasOpenMenu
   , closeAllMenus
+  , openMenuAtIndex
   )
 where
 
@@ -179,7 +180,7 @@ handleMenuBarEvent which e@(MouseDown n _ _ _) = do
                 Just matchingMenu ->
                     when (not $ menuIsOpen matchingMenu) $ do
                         which %= closeAllMenus
-                        which %= openMenuIndex i
+                        which %= openMenuAtIndex i
             return True
 handleMenuBarEvent which e =
     withOpenMenu which $ \(idx, _) ->
@@ -193,7 +194,7 @@ openPreviousMenu mb = fromMaybe mb $ do
     let newIndex = if i == 0
                    then V.length (mb^.menuBarMenusL) - 1
                    else i - 1
-    return $ openMenuIndex newIndex $ closeAllMenus mb
+    return $ openMenuAtIndex newIndex $ closeAllMenus mb
 
 -- | Given a menu bar with an open menu, switch the open menu to the one
 -- following the currently open one, or do nothing if no menu is open.
@@ -203,15 +204,16 @@ openNextMenu mb = fromMaybe mb $ do
     let newIndex = if i == V.length (mb^.menuBarMenusL) - 1
                    then 0
                    else i + 1
-    return $ openMenuIndex newIndex mb
+    return $ openMenuAtIndex newIndex mb
 
 -- | Close all open menus in this menu bar.
 closeAllMenus :: MenuBar s n k -> MenuBar s n k
 closeAllMenus mb = mb & menuBarMenusL.each %~ closeMenu
 
--- | Open the menu in this menu bar with the specified index, if any.
-openMenuIndex :: Int -> MenuBar s n k -> MenuBar s n k
-openMenuIndex i mb = (closeAllMenus mb) & menuBarMenusL.ix i %~ openMenu
+-- | Open the menu at the specified index, closing any other open menus
+-- in the menu bar. If the index is invalid, this does nothing.
+openMenuAtIndex :: Int -> MenuBar s n k -> MenuBar s n k
+openMenuAtIndex i mb = (closeAllMenus mb) & menuBarMenusL.ix i %~ openMenu
 
 -- | Given a lens to access a menu bar and a handler to invoke on its
 -- currently open menu, invoke the handler if there is an open menu and
