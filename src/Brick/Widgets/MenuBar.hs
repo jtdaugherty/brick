@@ -46,6 +46,7 @@ module Brick.Widgets.MenuBar
   , hasOpenMenu
   , closeAllMenus
   , openMenuAtIndex
+  , toggleMenuAtIndex
   )
 where
 
@@ -214,6 +215,17 @@ closeAllMenus mb = mb & menuBarMenusL.each %~ closeMenu
 -- in the menu bar. If the index is invalid, this does nothing.
 openMenuAtIndex :: Int -> MenuBar s n k -> MenuBar s n k
 openMenuAtIndex i mb = (closeAllMenus mb) & menuBarMenusL.ix i %~ openMenu
+
+-- | Toggle the open state of the menu at the specified index. If
+-- toggling to open, this will close any other open menus in the menu
+-- bar. If the index is invalid, this does nothing.
+toggleMenuAtIndex :: Int -> MenuBar s n k -> MenuBar s n k
+toggleMenuAtIndex i mb =
+    case getOpenMenu mb of
+        Nothing -> openMenuAtIndex i mb
+        Just (idx, _) -> if idx == i
+                         then closeAllMenus mb
+                         else openMenuAtIndex i mb
 
 -- | Given a lens to access a menu bar and a handler to invoke on its
 -- currently open menu, invoke the handler if there is an open menu and
