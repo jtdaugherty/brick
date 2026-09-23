@@ -42,7 +42,8 @@ drawUi st =
       hLimit 40 $
       txtWrap $
       Text.unlines $
-      [ "Click the menu title with the mouse or press Alt-F, Alt-E, or Alt-H to open the menus."
+      [ "Click the menu title with the mouse or press Alt-F, Alt-E, " <>
+        "or Alt-H to open the menus."
       , ""
       , "When a menu is open:"
       , ""
