@@ -792,7 +792,9 @@ handleMenuEventCommon which path (MouseDown n _ _ (Location (_, row))) = do
                (targetMenu which path).menuIsOpenL %= not
                return True
            | mkRegionName MenuBody == n ->
-               -- Map the location to the clicked menu entry
+               -- Map the location to the clicked menu entry; since each
+               -- item is expected to be exactly one row high, the row
+               -- index here is equivalent to the item index.
                activateMenuItem which path row
            | otherwise -> return False
 handleMenuEventCommon which path (VtyEvent (Vty.EvMouseDown {})) = do
