@@ -42,7 +42,6 @@ module Brick.Widgets.MenuBar
   -- * Working with menu bars
   , hasOpenMenu
   , closeAllMenus
-  , isMenuTitleEvent
   )
 where
 
@@ -100,11 +99,6 @@ renderMenuBar s mb =
     hBox $
     padLeft (Pad 1) <$>
     F.toList (renderMenu s <$> menuBarMenus mb)
-
--- | Is this event a title bar click event?
-isMenuTitleEvent :: (Eq n) => MenuBar s n k -> BrickEvent n e -> Bool
-isMenuTitleEvent mb (MouseDown n _ _ _) = isJust $ getMenuTitleMatch mb n
-isMenuTitleEvent _ _ = False
 
 -- | Given a resource name, find the menu whose title bar portion
 -- matches the resource name, if any.
