@@ -3,8 +3,10 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -fno-warn-unused-top-binds #-}
--- | This module provides a drop-down menu widget that is common to most
--- graphical interface toolkits.
+-- | This module provides a drop-down menu widget that is common to
+-- most graphical interface toolkits. Menus carry entries that can be
+-- activated with the mouse and keyboard and invoke event handlers that
+-- you specify when creating the menus and entries.
 --
 -- This module provides a fully general 'Menu' type and a few
 -- specialized interfaces for common menu use cases:
