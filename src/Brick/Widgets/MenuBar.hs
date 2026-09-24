@@ -110,7 +110,7 @@ renderMenuBar s mb =
     withDefAttr menuTitleAttr $ padForOrientation body
     where
         padForOrientation = case mb^.menuBarOrientationL of
-            LeftToRight -> id
+            LeftToRight -> padRight Max
             RightToLeft -> padLeft Max . padRight (Pad 1)
 
         body = hBox $
