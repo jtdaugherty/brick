@@ -138,7 +138,7 @@ where
 
 import Control.Monad (when)
 
-import Lens.Micro.Platform ((^.), (.~), (%~), (&), Traversal', ix, each)
+import Lens.Micro.Platform ((^.), (^?), (.~), (%~), (&), Traversal', ix, each)
 import Lens.Micro.Mtl
 
 import Data.Char (toLower)
@@ -768,23 +768,28 @@ resolveMenuEventTarget which = do
     mMenu <- preuse which
     case mMenu of
         Nothing -> return []
-        Just m ->
-            case m^.menuSelectedIndexL of
-                Nothing -> return []
-                Just idx -> do
-                    let is = m^.menuItemsL
-                    case is V.!? idx of
-                        Just (MISubmenu sm) -> do
-                            -- If the submenu is open, recurse; if it
-                            -- is not, don't add its index because we
-                            -- aren't targeting the submenu at that
-                            -- index.
-                            if not $ sm^.menuIsOpenL
-                               then return []
-                               else do
-                                   rest <- resolveMenuEventTarget (which.menuItemsL.ix idx._Submenu)
-                                   return $ idx : rest
-                        _ -> return []
+        Just m -> return $ resolveMenuEventTarget' m
+
+resolveMenuEventTarget' :: Menu s n k -> [Int]
+resolveMenuEventTarget' m = fromMaybe [] $ do
+    idx <- m^.menuSelectedIndexL
+    let is = m^.menuItemsL
+    sel <- is V.!? idx
+
+    case sel of
+        MISubmenu sm -> do
+            -- If the submenu is open, recurse; if it
+            -- is not, don't add its index because we
+            -- aren't targeting the submenu at that
+            -- index.
+            if not $ sm^.menuIsOpenL
+               then return []
+               else do
+                   let rest = maybe [] resolveMenuEventTarget' $
+                              m^?menuItemsL.ix idx._Submenu
+
+                   return $ idx : rest
+        _ -> return []
 
 targetMenu :: Traversal' s (Menu s n k)
            -> [Int]
