@@ -76,12 +76,12 @@ renderFinal aMap layerRenders (w, h) chooseCursor rs =
                 rWidth = V.imageWidth (r^.imageL)
                 rHeight = V.imageHeight (r^.imageL)
                 colCorrection = if hOff < 0
-                                then -1 * hOff
+                                then abs hOff
                                 else if hOff + rWidth > w
                                      then w - (hOff + rWidth)
                                      else 0
                 rowCorrection = if vOff < 0
-                                then -1 * vOff
+                                then abs vOff
                                 else if vOff + rHeight > h
                                      then h - (vOff + rHeight)
                                      else 0
