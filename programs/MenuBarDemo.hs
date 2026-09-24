@@ -128,4 +128,8 @@ newHelpMenu =
 
 main :: IO ()
 main = do
-    void $ M.defaultMain app $ St $ newMenuBar [newFileMenu, newEditMenu, newHelpMenu]
+    let mb = newMenuBar [ newFileMenu
+                        , newEditMenu
+                        , newHelpMenu
+                        ]
+    void $ M.defaultMain app $ St mb
