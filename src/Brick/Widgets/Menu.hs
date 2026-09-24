@@ -414,9 +414,10 @@ menu title regionNameBuilder items handler =
 -- work with this data type indirectly.
 data EntryTrigger s n k =
     TriggerEvent !(EventTrigger k)
-    -- ^ The entry triggers an abstract 'EventTrigger'
+    -- ^ The entry produces an 'EventTrigger' to be handled by a
+    -- 'KeyDispatcher'
     | TriggerAction !(EventM n s ())
-    -- ^ The entry triggers a specific 'EventM' action
+    -- ^ The entry runs a specific 'EventM' action
 
 -- | A specialization of 'Menu' whose entries are associated with
 -- specific keys or abstract key events handled by a 'KeyDispatcher'.
