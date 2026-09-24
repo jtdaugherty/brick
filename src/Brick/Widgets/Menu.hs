@@ -778,9 +778,8 @@ resolveMenuEventTarget' m = fromMaybe [] $ do
 
     case sel of
         MISubmenu sm -> do
-            -- If the submenu is open, recurse; if it
-            -- is not, don't add its index because we
-            -- aren't targeting the submenu at that
+            -- If the submenu is open, recurse; if it is not, don't add
+            -- its index because we aren't targeting the submenu at that
             -- index.
             if not $ sm^.menuIsOpenL
                then return []
