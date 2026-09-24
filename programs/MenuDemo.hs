@@ -54,21 +54,19 @@ drawUi st =
       , ""
       , "Press number keys to switch menu border styles:"
       , ""
-      , "- 1: Unicode (default)"
-      , "- 2: Unicode rounded"
-      , "- 3: Unicode bold"
-      , "- 4: ASCII"
-      , ""
+      ] <>
+      [Text.pack $ "- " <> show c <> ": " <> Text.unpack label | (c, (label, _)) <- borderStyles] <>
+      [ ""
       , "Press Esc to quit the program."
       ]
     ]
 
-borderStyles :: [(Char, S.BorderStyle)]
+borderStyles :: [(Char, (Text.Text, S.BorderStyle))]
 borderStyles =
-    [ ('1', S.unicode)
-    , ('2', S.unicodeRounded)
-    , ('3', S.unicodeBold)
-    , ('4', S.ascii)
+    [ ('1', ("Unicode (default)", S.unicode))
+    , ('2', ("Unicode rounded", S.unicodeRounded))
+    , ('3', ("Unicode bold", S.unicodeBold))
+    , ('4', ("ASCII", S.ascii))
     ]
 
 appEvent :: T.BrickEvent Name e -> T.EventM Name St ()
@@ -77,7 +75,7 @@ appEvent (T.VtyEvent (V.EvKey (V.KChar 'f') [V.MMeta])) =
 appEvent (T.VtyEvent (V.EvKey (V.KChar c) [])) =
     case lookup c borderStyles of
         Nothing -> return ()
-        Just s -> borderStyle .= s
+        Just (_, s) -> borderStyle .= s
 appEvent e = do
     handled <- handleMenuEvent fileMenu e
     when (not handled) $ handleNonMenuEvent e
