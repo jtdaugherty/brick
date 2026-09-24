@@ -165,6 +165,8 @@ data MenuRegion =
     -- ^ The region of a menu's title
     | MenuBody
     -- ^ The region of a menu's body
+    | MenuItemAt Int
+    -- ^ The region of the menu item at the specified index
     deriving (Ord, Show, Eq)
 
 -- | Orientation for menu contents.
@@ -580,7 +582,12 @@ renderMenu s m =
         setTitleAttr = if menuIsOpen m
                        then forceAttr menuTitleSelectedAttr
                        else withDefAttr menuTitleAttr
+        maybePutCursor =
+            if menuIsOpen m
+            then putCursor (menuTitleName m) (Location (0, 0))
+            else id
         title = clickable (menuTitleName m) $
+                maybePutCursor $
                 setTitleAttr $
                 menuTitleRenderer m s $
                 menuTitle m
@@ -600,8 +607,14 @@ renderMenuContents s m = body
         renderMenuItem (i, MIEntry e)    = renderMenuEntry i e
         renderMenuItem (i, MISubmenu sm) = renderSubmenu i sm
 
+        maybePutCursor i =
+            if menuSelectedIndex m == Just i
+            then putCursor (menuRegionNameBuilder m $ MenuItemAt i) (Location (0, 0))
+            else id
+
         renderSubmenu i sm =
             let submenuTitle = vLimit 1 $
+                               maybePutCursor i $
                                padRight (Pad 1) $
                                padLeft (Pad 1) $
                                addSubmenuPointer $
@@ -633,6 +646,7 @@ renderMenuContents s m = body
             let renderEntry = fromMaybe (menuEntryDefaultRenderer m) (menuEntryRenderer e)
             in setEntryAttr i e $
                vLimit 1 $
+               maybePutCursor i $
                padRight (Pad 1) $
                padLeft (Pad 1) $
                padEntry $
