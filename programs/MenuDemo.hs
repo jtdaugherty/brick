@@ -126,5 +126,4 @@ newFileMenu =
         ]
 
 main :: IO ()
-main = do
-    void $ M.defaultMain app $ St newFileMenu S.unicode
+main = void $ M.defaultMain app $ St newFileMenu S.unicode
