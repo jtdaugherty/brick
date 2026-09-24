@@ -55,7 +55,7 @@ drawUi st =
       , "Press these keys to switch menu border styles:"
       , ""
       ] <>
-      [Text.pack $ "- " <> show c <> ": " <> Text.unpack label | (c, (label, _)) <- borderStyles] <>
+      [ "- " <> Text.singleton c <> ": " <> label | (c, (label, _)) <- borderStyles] <>
       [ ""
       , "Press Esc to quit the program."
       ]
