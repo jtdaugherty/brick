@@ -488,6 +488,7 @@ menuWithDispatcher kd title regionNameBuilder items =
 
 -- | Create a menu entry that is activated by the specified key binding,
 -- irrespective of the enclosing menu's 'KeyDispatcher' configuration.
+-- This entry will show the specified keybinding in its text.
 menuEntryForKey :: T.Text
                 -- ^ The menu entry's label
                 -> Binding
@@ -497,7 +498,8 @@ menuEntryForKey label b = menuEntry label $ TriggerEvent $ ByKey b
 
 -- | Create a menu entry that generates the specified abstract key event
 -- when activated, thus triggering the enclosing menu's 'KeyDispatcher'
--- handler for that event.
+-- handler for that event. This entry will show the first known
+-- keybinding for the specified abstract key event, if any.
 menuEntryForEvent :: T.Text
                   -- ^ The menu entry's label
                   -> k
