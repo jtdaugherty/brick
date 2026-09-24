@@ -111,11 +111,12 @@ module Brick.Widgets.Menu
   -- * Menus with custom keybindings
   , DispatchingMenu
   , DispatchingMenuItem
-  , EntryTrigger
+  , EntryTrigger(..)
   , menuWithDispatcher
   , menuEntryForKey
   , menuEntryForEvent
   , menuEntryForAction
+  , entryWithKeybinding
 
   -- * Handling events
   , handleMenuEvent
@@ -407,8 +408,10 @@ menu title regionNameBuilder items handler =
             , menuOrientation = LeftToRight
             }
 
--- | A trigger to be executed when an entry with this trigger is
--- activated.
+-- | A trigger to be executed when an entry with this trigger
+-- is activated. This is exposed for completeness only; use
+-- 'menuEntryForKey', 'menuEntryForAction', and 'menuEntryForEvent' to
+-- work with this data type indirectly.
 data EntryTrigger s n k =
     TriggerEvent !(EventTrigger k)
     -- ^ The entry triggers an abstract 'EventTrigger'
@@ -427,7 +430,9 @@ type DispatchingMenuItem s n k = MenuItem s n (EntryTrigger s n k)
 
 -- | Create a 'Menu' whose entries are activated by specific triggers,
 -- including specified key bindings or abstract key events associated
--- with a 'KeyDispatcher'.
+-- with a 'KeyDispatcher'. This uses 'entryWithKeybinding' as its
+-- default entry renderer to show available keybindings for entries
+-- associated with key events.
 --
 -- To create entries in this menu, use 'menuEntryForKey',
 -- 'menuEntryForEvent', and 'menuEntryForAction'.
@@ -446,7 +451,7 @@ menuWithDispatcher :: (Eq k)
 menuWithDispatcher kd title regionNameBuilder items =
     setWidth $
     addFallbackHandler $
-    setDefaultEntryRenderer renderWithKeybinding $
+    setDefaultEntryRenderer (entryWithKeybinding kd) $
     menu title regionNameBuilder items handler
     where
         setWidth m =
@@ -454,28 +459,6 @@ menuWithDispatcher kd title regionNameBuilder items =
 
         addFallbackHandler m =
             m { menuFallbackEventHandler = handleKey kd }
-
-        renderWithKeybinding o e label =
-            let maybeShowKeybinding w = fromMaybe w $ do
-                    keybinding <- case e of
-                        TriggerEvent (ByKey b) -> return b
-                        TriggerEvent (ByEvent ev) -> listToMaybe $ bindingsForEvent ev
-                        TriggerAction {} -> Nothing
-
-                    let renderedBinding = withDefAttr menuEntryKeybindingAttr $
-                                          txt $ ppBinding keybinding
-                    return $ case o of
-                        LeftToRight ->
-                            w <+> renderedBinding
-                        RightToLeft ->
-                            renderedBinding <+> w
-
-            in maybeShowKeybinding $ case o of
-                LeftToRight -> padRight Max $ txt label
-                RightToLeft -> padLeft Max $ txt label
-
-        bindingsForEvent ev =
-            [ b | KeyHandler { khBinding = b, khHandler = h } <- snd <$> keyDispatcherToList kd, kehEventTrigger h == ByEvent ev ]
 
         handler trigger =
             case trigger of
@@ -485,6 +468,42 @@ menuWithDispatcher kd title regionNameBuilder items =
             where
                 invokeHandler Nothing = return ()
                 invokeHandler (Just kh) = handlerAction $ kehHandler $ khHandler kh
+
+-- | An entry rendering function usable with 'setDefaultEntryRenderer'
+-- and 'setEntryRenderer' that renders a menu entry with the first known
+-- available keybinding for its abstract event, as configured in the
+-- specified 'KeyDispatcher'.
+entryWithKeybinding :: (Eq k)
+                    => KeyDispatcher k (EventM n s)
+                    -- ^ The key dispatcher to check for bindings
+                    -> MenuOrientation
+                    -- ^ The menu's orientation
+                    -> EntryTrigger s n k
+                    -- ^ The entry's trigger
+                    -> T.Text
+                    -- ^ The entry's label
+                    -> Widget n
+entryWithKeybinding kd o e label =
+    let maybeShowKeybinding w = fromMaybe w $ do
+            keybinding <- case e of
+                TriggerEvent (ByKey b) -> return b
+                TriggerEvent (ByEvent ev) -> listToMaybe $ bindingsForEvent ev
+                TriggerAction {} -> Nothing
+
+            let renderedBinding = withDefAttr menuEntryKeybindingAttr $
+                                  txt $ ppBinding keybinding
+            return $ case o of
+                LeftToRight ->
+                    w <+> renderedBinding
+                RightToLeft ->
+                    renderedBinding <+> w
+
+        bindingsForEvent ev =
+            [ b | KeyHandler { khBinding = b, khHandler = h } <- snd <$> keyDispatcherToList kd, kehEventTrigger h == ByEvent ev ]
+
+    in maybeShowKeybinding $ case o of
+        LeftToRight -> padRight Max $ txt label
+        RightToLeft -> padLeft Max $ txt label
 
 -- | Create a menu entry that is activated by the specified key binding,
 -- irrespective of the enclosing menu's 'KeyDispatcher' configuration.
