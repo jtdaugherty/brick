@@ -575,7 +575,7 @@ renderMenu s m =
                 LeftToRight -> Location (-1, 1)
                 RightToLeft -> Location (-1 * (menuContentWidth m - textWidth (menuTitle m) + 1), 1)
         setTitleAttr = if menuIsOpen m
-                       then withDefAttr menuTitleSelectedAttr
+                       then forceAttr menuTitleSelectedAttr
                        else withDefAttr menuTitleAttr
         title = clickable (menuTitleName m) $
                 setTitleAttr $
