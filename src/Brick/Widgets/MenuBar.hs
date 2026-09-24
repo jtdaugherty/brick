@@ -22,6 +22,9 @@
 -- with 'handleMenuBarEvent', deferring to your application's event
 -- handling for events that the menu bar doesn't handle.
 --
+-- Similar to individual menus, menu bars have an orientation that can
+-- be changed with 'setMenuBarOrientation'.
+--
 -- This API requires the use of lenses for application state fields that
 -- store menu bar state.
 --

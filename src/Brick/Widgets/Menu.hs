@@ -65,6 +65,10 @@
 -- arrangement, see the 'Brick.Widgets.MenuBar' module, which builds on
 -- this abstraction.
 --
+-- Menus have an orientation that can be changed with
+-- 'setMenuOrientation'. This affects how entries and submenus are
+-- rendered and how left/right arrow keys navigate submenus.
+--
 -- This API requires the use of lenses for application state fields that
 -- store menu bar state.
 --
