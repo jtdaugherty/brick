@@ -1,5 +1,6 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# OPTIONS_GHC -fno-warn-unused-top-binds #-}
 -- | This module provides a menu bar for grouping menus together.
 --
 -- Menu bars carry menus of a particular type using the menu types
@@ -47,12 +48,13 @@ module Brick.Widgets.MenuBar
   , closeAllMenus
   , openMenuAtIndex
   , toggleMenuAtIndex
+  , setMenuBarOrientation
   )
 where
 
 import Control.Monad (when)
 import Data.Maybe (isJust, listToMaybe, fromMaybe)
-import Lens.Micro.Platform ((^.), (&), (%~), Lens', ix, each)
+import Lens.Micro.Platform ((^.), (&), (%~), (.~), Lens', ix, each)
 import Lens.Micro.Mtl
 
 import qualified Data.Foldable as F
@@ -68,7 +70,8 @@ import Brick.Widgets.Menu
 --
 -- A menu bar can have up to one open menu at a time.
 data MenuBar s n k =
-    MenuBar { menuBarMenus :: !(V.Vector (Menu s n k))
+    MenuBar { menuBarOrientation :: !MenuOrientation
+            , menuBarMenus :: !(V.Vector (Menu s n k))
             }
 
 suffixLenses ''MenuBar
@@ -85,7 +88,7 @@ type DispatchingMenuBar s n k = MenuBar s n (EventM n s (EntryTrigger s n k))
 -- empty, this calls 'error'.
 newMenuBar :: [Menu s n k] -> MenuBar s n k
 newMenuBar [] = error "BUG: newMenuBar requires a non-empty list"
-newMenuBar ms = MenuBar $ V.fromList ms
+newMenuBar ms = MenuBar LeftToRight $ V.fromList ms
 
 -- | Return whether this menu bar has an open menu.
 hasOpenMenu :: MenuBar s n k -> Bool
@@ -101,9 +104,15 @@ getOpenMenu mb = do
 -- | Render this menu bar with the given application state as input.
 renderMenuBar :: (Ord n) => s -> MenuBar s n k -> Widget n
 renderMenuBar s mb =
-    hBox $
-    padLeft (Pad 1) <$>
-    F.toList (renderMenu s <$> menuBarMenus mb)
+    padForOrientation body
+    where
+        padForOrientation = case mb^.menuBarOrientationL of
+            LeftToRight -> id
+            RightToLeft -> padLeft Max . padRight (Pad 1)
+
+        body = hBox $
+               padLeft (Pad 1) <$>
+               F.toList (renderMenu s <$> menuBarMenus mb)
 
 -- | Given a resource name, find the menu whose title bar portion
 -- matches the resource name, if any.
@@ -221,6 +230,11 @@ closeAllMenus mb = mb & menuBarMenusL.each %~ closeMenu
 -- in the menu bar. If the index is invalid, this does nothing.
 openMenuAtIndex :: Int -> MenuBar s n k -> MenuBar s n k
 openMenuAtIndex i mb = (closeAllMenus mb) & menuBarMenusL.ix i %~ openMenu
+
+-- | Set the menu bar's orientation, including all of its menus.
+setMenuBarOrientation :: MenuOrientation -> MenuBar s n k -> MenuBar s n k
+setMenuBarOrientation o mb = mb & menuBarOrientationL .~ o
+                                & menuBarMenusL.each %~ setMenuOrientation o
 
 -- | Toggle the open state of the menu at the specified index. If
 -- toggling to open, this will close any other open menus in the menu

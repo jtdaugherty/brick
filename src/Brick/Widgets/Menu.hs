@@ -77,6 +77,7 @@ module Brick.Widgets.Menu
   , menuContentWidth
   , menuTitleName
   , MenuRegion(..)
+  , MenuOrientation(..)
   , openMenu
   , closeMenu
   , toggleMenu
@@ -92,6 +93,7 @@ module Brick.Widgets.Menu
   -- * Configuring menus
   , setDefaultEntryRenderer
   , setTitleRenderer
+  , setMenuOrientation
 
   -- * Configuring menu items
   , setEnabledWith
@@ -159,6 +161,16 @@ data MenuRegion =
     -- ^ The region of a menu's body
     deriving (Ord, Show, Eq)
 
+-- | Orientation for menu contents.
+data MenuOrientation =
+    LeftToRight
+    -- ^ Menu entries are laid out with labels on the left and submenus
+    -- opening to the right
+    | RightToLeft
+    -- ^ Menu entries are laid out with labels on the right and submenus
+    -- opening to the left
+    deriving (Ord, Show, Eq)
+
 -- | The general menu type.
 --
 -- Menus and their items are parameterized on three types:
@@ -194,6 +206,9 @@ data MenuRegion =
 -- constructor of type @MenuRegion -> n@ to uniquely identify the menu
 -- and its constituent parts.
 --
+-- By default, menus use the 'LeftToRight' content orientation. This can
+-- be changed with 'setMenuOrientation'.
+--
 -- A menu carries an event handler that will be invoked by
 -- 'handleMenuEvent' whenever a menu entry is selected.
 data Menu s n k =
@@ -222,8 +237,10 @@ data Menu s n k =
          , menuFallbackEventHandler :: Vty.Key -> [Vty.Modifier] -> EventM n s Bool
          -- ^ Handler for key events that weren't handled by
          -- 'handleMenuEvent'
-         , menuEntryDefaultRenderer :: k -> T.Text -> Widget n
+         , menuEntryDefaultRenderer :: MenuOrientation -> k -> T.Text -> Widget n
          -- ^ The function to render entries in this menu
+         , menuOrientation :: !MenuOrientation
+         -- ^ The layout orientation of the menu's contents
          }
 
 -- | The type of menu items.
@@ -248,11 +265,18 @@ data MenuEntry s n k =
               -- enabled
               , menuEntryEvent :: !k
               -- ^ The event to generate when this entry is activated
-              , menuEntryRenderer :: Maybe (k -> T.Text -> Widget n)
+              , menuEntryRenderer :: Maybe (MenuOrientation -> k -> T.Text -> Widget n)
               -- ^ This menu entry's renderer
               }
 
 suffixLenses ''Menu
+
+-- | Set the menu's content orientation, including the orientation of
+-- all of its submenus.
+setMenuOrientation :: MenuOrientation -> Menu s n k -> Menu s n k
+setMenuOrientation o m =
+    m & menuOrientationL .~ o
+      & menuItemsL.each._Submenu %~ setMenuOrientation o
 
 -- | Set this menu entry's function used to check for its enabled state.
 -- This is equivalent to 'id' for non-entry items.
@@ -262,11 +286,11 @@ setEnabledWith f = mapMenuEntry (\e -> e { menuEntryEnabled = f })
 -- | Set this menu entry's rendering function, overriding the menu's
 -- default rendering behavior for this entry. This is equivalent to 'id'
 -- for non-entry items.
-setEntryRenderer :: (k -> T.Text -> Widget n) -> MenuItem s n k -> MenuItem s n k
+setEntryRenderer :: (MenuOrientation -> k -> T.Text -> Widget n) -> MenuItem s n k -> MenuItem s n k
 setEntryRenderer f = mapMenuEntry (\e -> e { menuEntryRenderer = Just f })
 
 -- | Set this menu's entry rendering function.
-setDefaultEntryRenderer :: (k -> T.Text -> Widget n) -> Menu s n k -> Menu s n k
+setDefaultEntryRenderer :: (MenuOrientation -> k -> T.Text -> Widget n) -> Menu s n k -> Menu s n k
 setDefaultEntryRenderer f m = m { menuEntryDefaultRenderer = f }
 
 -- | Set this menu's title renderer.
@@ -365,7 +389,8 @@ menu title regionNameBuilder items handler =
             , menuSelectedIndex = Nothing
             , menuEventHandler = handler
             , menuFallbackEventHandler = const $ const $ return False
-            , menuEntryDefaultRenderer = \_ label -> txt label
+            , menuEntryDefaultRenderer = \_ _ label -> txt label
+            , menuOrientation = LeftToRight
             }
 
 -- | A trigger to be executed when an entry with this trigger is
@@ -416,17 +441,24 @@ menuWithDispatcher kd title regionNameBuilder items =
         addFallbackHandler m =
             m { menuFallbackEventHandler = handleKey kd }
 
-        renderWithKeybinding e label =
+        renderWithKeybinding o e label =
             let maybeShowKeybinding w = fromMaybe w $ do
                     keybinding <- case e of
                         TriggerEvent (ByKey b) -> return b
                         TriggerEvent (ByEvent ev) -> listToMaybe $ bindingsForEvent ev
                         TriggerAction {} -> Nothing
 
-                    return $ w <+> (withDefAttr menuEntryKeybindingAttr $
-                                    txt $ ppBinding keybinding)
+                    let renderedBinding = withDefAttr menuEntryKeybindingAttr $
+                                          txt $ ppBinding keybinding
+                    return $ case o of
+                        LeftToRight ->
+                            w <+> renderedBinding
+                        RightToLeft ->
+                            renderedBinding <+> w
 
-            in maybeShowKeybinding $ padRight Max $ txt label
+            in maybeShowKeybinding $ case o of
+                LeftToRight -> padRight Max $ txt label
+                RightToLeft -> padLeft Max $ txt label
 
         bindingsForEvent ev =
             [ b | KeyHandler { khBinding = b, khHandler = h } <- snd <$> keyDispatcherToList kd, kehEventTrigger h == ByEvent ev ]
@@ -525,9 +557,14 @@ menuEntryWidth = textWidth . menuEntryLabel
 renderMenu :: (Ord n) => s -> Menu s n k -> Widget n
 renderMenu s m =
     if menuIsOpen m
-    then (translateLayer (Location (-1, 1)) (renderMenuContents s m)) `above` title
+    then contentsLayer `above` title
     else title
     where
+        contentsLayer = translateLayer layerOffset $ renderMenuContents s m
+        layerOffset =
+            case m^.menuOrientationL of
+                LeftToRight -> Location (-1, 1)
+                RightToLeft -> Location (-1 * (menuContentWidth m - textWidth (menuTitle m) + 1), 1)
         setTitleAttr = if menuIsOpen m
                        then withDefAttr menuTitleSelectedAttr
                        else withDefAttr menuTitleAttr
@@ -554,10 +591,18 @@ renderMenuContents s m = body
         renderSubmenu i sm =
             let submenuTitle = vLimit 1 $
                                padRight (Pad 1) $
-                               ((padRight Max $
-                                 padLeft (Pad 1) $
-                                 txt $ menuTitle sm) <+> txt ">")
-                layerOffset = Location (menuContentWidth m + 1, -1)
+                               padLeft (Pad 1) $
+                               addSubmenuPointer $
+                               padEntry $
+                               txt $ menuTitle sm
+                addSubmenuPointer w =
+                    case m^.menuOrientationL of
+                        LeftToRight -> w <+> txt ">"
+                        RightToLeft -> txt "<" <+> w
+                layerOffset =
+                    case menuOrientation sm of
+                        LeftToRight -> Location (menuContentWidth m + 1, -1)
+                        RightToLeft -> Location (-1 * (menuContentWidth sm + 3), -1)
                 submenuLayer = translateLayer layerOffset $ renderMenuContents s sm
                 maybeAddLayer = if sm^.menuIsOpenL
                                 then (submenuLayer `above`)
@@ -568,14 +613,18 @@ renderMenuContents s m = body
             in maybeAddLayer $
                maybeSetAttr submenuTitle
 
+        padEntry = case m^.menuOrientationL of
+            LeftToRight -> padRight Max
+            RightToLeft -> padLeft Max
+
         renderMenuEntry i e =
             let renderEntry = fromMaybe (menuEntryDefaultRenderer m) (menuEntryRenderer e)
             in setEntryAttr i e $
                vLimit 1 $
                padRight (Pad 1) $
-               padRight Max $
                padLeft (Pad 1) $
-               renderEntry (menuEntryEvent e) (menuEntryLabel e)
+               padEntry $
+               renderEntry (menuOrientation m) (menuEntryEvent e) (menuEntryLabel e)
 
         setEntryAttr i e =
             if Just i == menuSelectedIndex m
@@ -699,8 +748,8 @@ targetMenu = foldl (\base idx -> base.menuItemsL.ix idx._Submenu)
 --
 -- * Mouse clicks on the menu title will toggle whether the menu is
 --   open.
--- * If a submenu entry is selected, the Right arrow key will open it
---   and the Left arrow key will close it if it is open.
+-- * If a submenu entry is selected, arrow keys will open and close it
+--   depending on the menu orientation.
 -- * Mouse clicks on submenu entries will open their submenus.
 -- * @Esc@ will close the menu if no submenus are open; otherwise it
 --   will close the last open submenu.
@@ -764,26 +813,19 @@ handleMenuEventCommon which path (VtyEvent (Vty.EvKey Vty.KEnter [])) = do
             Nothing -> return True
             Just idx -> activateMenuItem which path idx
 handleMenuEventCommon which path (VtyEvent (Vty.EvKey Vty.KRight [])) = do
-    withMenu (targetMenu which path) $ \m -> do
-        let sel = m^.menuSelectedIndexL
-        case sel of
-            Nothing -> return False
-            Just idx -> do
-                -- If the selected item is a submenu that is not open,
-                -- open it and select its first item.
-                let is = m^.menuItemsL
-                case is V.!? idx of
-                    Just (MISubmenu sm) | not (sm^.menuIsOpenL) -> do
-                        which.menuItemsL.ix idx._Submenu %= (selectNextEntry . openMenu)
-                        return True
-                    _ -> return False
-handleMenuEventCommon which path (VtyEvent (Vty.EvKey Vty.KLeft [])) =
-    -- Close the current menu if it is a submenu.
-    case path of
-        [] -> return False
-        _ -> do
-            targetMenu which path %= closeMenu
-            return True
+    withMenu which $ \m ->
+        case menuOrientation m of
+            LeftToRight ->
+                maybeOpenSubmenu which path
+            RightToLeft ->
+                maybeCloseSubmenu which path
+handleMenuEventCommon which path (VtyEvent (Vty.EvKey Vty.KLeft [])) = do
+    withMenu which $ \m ->
+        case menuOrientation m of
+            LeftToRight ->
+                maybeCloseSubmenu which path
+            RightToLeft ->
+                maybeOpenSubmenu which path
 handleMenuEventCommon which path (VtyEvent (Vty.EvKey Vty.KDown [])) = do
     targetMenu which path %= selectNextEntry
     return True
@@ -815,6 +857,31 @@ handleMenuEventCommon which path (VtyEvent (Vty.EvKey Vty.KEsc [])) = do
         else return False
 handleMenuEventCommon _ _ _ =
     return False
+
+maybeCloseSubmenu :: Traversal' s (Menu s n k) -> [Int] -> EventM n s Bool
+maybeCloseSubmenu which path = do
+    -- Close the current menu if it is a submenu.
+    case path of
+        [] -> return False
+        _ -> do
+            targetMenu which path %= closeMenu
+            return True
+
+maybeOpenSubmenu :: Traversal' s (Menu s n k) -> [Int] -> EventM n s Bool
+maybeOpenSubmenu which path = do
+    withMenu (targetMenu which path) $ \m -> do
+        let sel = m^.menuSelectedIndexL
+        case sel of
+            Nothing -> return False
+            Just idx -> do
+                -- If the selected item is a submenu that is not open,
+                -- open it and select its first item.
+                let is = m^.menuItemsL
+                case is V.!? idx of
+                    Just (MISubmenu sm) | not (sm^.menuIsOpenL) -> do
+                        (targetMenu which path).menuItemsL.ix idx._Submenu %= (selectNextEntry . openMenu)
+                        return True
+                    _ -> return False
 
 _Submenu :: Traversal' (MenuItem s n k) (Menu s n k)
 _Submenu f (MISubmenu sm) = MISubmenu <$> f sm
