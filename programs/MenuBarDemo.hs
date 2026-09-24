@@ -5,7 +5,7 @@ module Main where
 
 import Lens.Micro ((^.))
 import Lens.Micro.TH (makeLenses)
-import Lens.Micro.Mtl ((%=))
+import Lens.Micro.Mtl ((%=), use)
 import Control.Monad (void, when)
 import Control.Monad.Trans (liftIO)
 #if !(MIN_VERSION_base(4,11,0))
@@ -31,6 +31,7 @@ data Name = FileMenu MenuRegion
 
 data St =
     St { _menuBar :: SimpleMenuBar St Name
+       , _menuBarOrientation :: MenuOrientation
        }
 
 makeLenses ''St
@@ -44,6 +45,8 @@ drawUi st =
       Text.unlines $
       [ "Click the menu title with the mouse or press Alt-F, Alt-E, " <>
         "or Alt-H to open the menus."
+      , ""
+      , "Press 'o' to toggle the orientation of the menu bar and its menus."
       , ""
       , "When a menu is open:"
       , ""
@@ -71,8 +74,16 @@ handleNonMenuBarEvent (T.VtyEvent (V.EvKey (V.KChar 'e') [V.MMeta])) =
     menuBar %= toggleMenuAtIndex 1
 handleNonMenuBarEvent (T.VtyEvent (V.EvKey (V.KChar 'h') [V.MMeta])) =
     menuBar %= toggleMenuAtIndex 2
+handleNonMenuBarEvent (T.VtyEvent (V.EvKey (V.KChar 'o') [])) = do
+    menuBarOrientation %= nextOrientation
+    o <- use menuBarOrientation
+    menuBar %= setMenuBarOrientation o
 handleNonMenuBarEvent _ =
     return ()
+
+nextOrientation :: MenuOrientation -> MenuOrientation
+nextOrientation LeftToRight = RightToLeft
+nextOrientation RightToLeft = LeftToRight
 
 aMap :: AttrMap
 aMap = attrMap V.defAttr
@@ -132,4 +143,4 @@ main = do
                         , newEditMenu
                         , newHelpMenu
                         ]
-    void $ M.defaultMain app $ St mb
+    void $ M.defaultMain app $ St mb LeftToRight
