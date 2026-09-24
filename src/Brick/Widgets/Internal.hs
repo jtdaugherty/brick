@@ -108,6 +108,7 @@ renderFinal aMap layerRenders (w, h) chooseCursor rs =
                       , windowHeight = h
                       , ctxBorderStyle = defaultBorderStyle
                       , ctxAttrMap = aMap
+                      , ctxOrigAttrMap = aMap
                       , ctxDynBorders = False
                       , ctxVScrollBarOrientation = Nothing
                       , ctxVScrollBarRenderer = Nothing

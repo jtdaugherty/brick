@@ -1166,8 +1166,11 @@ layerRelativeTo n off w =
 -- | @above upper lower@ introduces @upper@ as a new layer that is
 -- positioned relative to the upper-left corner of @lower@. The upper
 -- layer will be drawn in a rendering context with the same available
--- space as the screen, regardless of the rendering context in which the
--- lower layer is drawn.
+-- space as the screen, regardless of the rendering context in which
+-- the lower layer is drawn. The attribute map in use for the upper
+-- layer will be the same as the one for the initial rendering request,
+-- meaning that any attribute changes for the lower layer will not
+-- affect the upper layer's appearnce.
 --
 -- A layer introduced this way will be beneath any layers further up in
 -- the layer stack returned by the main drawing function, so that means
@@ -1205,9 +1208,12 @@ above upper lower =
         ctx <- getContext
 
         let resetConstraints = (availHeightL .~ ctx^.windowHeightL) .
-                               (availWidthL .~ ctx^.windowWidthL)
+                               (availWidthL .~ ctx^.windowWidthL) .
+                               (ctxAttrNameL .~ attrName "") .
+                               (ctxAttrMapL .~ ctx^.ctxOrigAttrMapL)
 
         upperResult <- withReaderT resetConstraints $ render upper
+
         lowerResult <- render lower
 
         return $ lowerResult & extraLayersL %~ (upperResult Seq.<|)

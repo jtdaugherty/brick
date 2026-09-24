@@ -29,6 +29,7 @@ module Brick.Types.Internal
   , ClickableScrollbarElement(..)
   , Context(..)
   , ctxAttrMapL
+  , ctxOrigAttrMapL
   , ctxAttrNameL
   , ctxBorderStyleL
   , ctxDynBordersL
@@ -467,6 +468,7 @@ data Context n =
             , windowHeight :: !Int
             , ctxBorderStyle :: !BorderStyle
             , ctxAttrMap :: !AttrMap
+            , ctxOrigAttrMap :: !AttrMap
             , ctxDynBorders :: !Bool
             , ctxVScrollBarOrientation :: !(Maybe VScrollBarOrientation)
             , ctxVScrollBarRenderer :: !(Maybe (VScrollbarRenderer n))
