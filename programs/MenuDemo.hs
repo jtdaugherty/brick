@@ -52,7 +52,7 @@ drawUi st =
       , "When the menu is open, press Enter or the right arrow key to open " <>
         "the submenu; press Esc or the left arrow key to close it."
       , ""
-      , "Press number keys to switch menu border styles:"
+      , "Press these keys to switch menu border styles:"
       , ""
       ] <>
       [Text.pack $ "- " <> show c <> ": " <> Text.unpack label | (c, (label, _)) <- borderStyles] <>
