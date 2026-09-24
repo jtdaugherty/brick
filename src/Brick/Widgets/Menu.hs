@@ -487,7 +487,7 @@ entryWithKeybinding kd o e label =
     let maybeShowKeybinding w = fromMaybe w $ do
             keybinding <- case e of
                 TriggerEvent (ByKey b) -> return b
-                TriggerEvent (ByEvent ev) -> listToMaybe $ bindingsForEvent ev
+                TriggerEvent (ByEvent ev) -> listToMaybe $ bindingsForEvent kd ev
                 TriggerAction {} -> Nothing
 
             let renderedBinding = withDefAttr menuEntryKeybindingAttr $
@@ -497,9 +497,6 @@ entryWithKeybinding kd o e label =
                     w <+> renderedBinding
                 RightToLeft ->
                     renderedBinding <+> w
-
-        bindingsForEvent ev =
-            [ b | KeyHandler { khBinding = b, khHandler = h } <- snd <$> keyDispatcherToList kd, kehEventTrigger h == ByEvent ev ]
 
     in maybeShowKeybinding $ case o of
         LeftToRight -> padRight Max $ txt label

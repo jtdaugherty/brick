@@ -46,6 +46,7 @@ module Brick.Keybindings.KeyDispatcher
   , keyDispatcherToList
   , lookupVtyEvent
   , lookupEvent
+  , bindingsForEvent
   )
 where
 
@@ -113,6 +114,12 @@ lookupEvent :: (Eq k) => k -> KeyDispatcher k m -> Maybe (KeyHandler k m)
 lookupEvent ev (KeyDispatcher m) = listToMaybe results
     where
         results = filter ((== ByEvent ev) . kehEventTrigger . khHandler) $ M.elems m
+
+-- | Get the list of all key bindings for the specified event from this
+-- dispatcher.
+bindingsForEvent :: (Eq k) => KeyDispatcher k m -> k -> [Binding]
+bindingsForEvent kd ev =
+    [ b | KeyHandler { khBinding = b, khHandler = h } <- snd <$> keyDispatcherToList kd, kehEventTrigger h == ByEvent ev ]
 
 -- | Handle a keyboard event by looking it up in the 'KeyDispatcher'
 -- and invoking the matching binding's handler if one is found. Return
