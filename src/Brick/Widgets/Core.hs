@@ -72,6 +72,7 @@ module Brick.Widgets.Core
   , translateLayer
   , layerRelativeTo
   , above
+  , clampLayerToScreen
 
   -- * Cropping
   , cropLeftBy
@@ -703,6 +704,7 @@ renderBox br ws =
                             (concatMap extents allTranslatedResults)
                             newBorders
                             (Location (0, 0))
+                            Truncate Truncate
                             (mconcat $ extraLayers <$> allTranslatedResults)
 
 -- | Given a result, crop all of its extra layers to the rendering
@@ -1121,10 +1123,24 @@ raw img = Widget Fixed Fixed $ return $ emptyResult & imageL .~ img
 -- @translateLayer@ does not translate immediately; instead, it records
 -- a translation offset to be applied at rendering time. Subsequent
 -- calls to this function on the same widget accumulate the offset.
+--
+-- Note that by default, layers may be cut off by screen edges when
+-- translated enough so that the contents don't fit on screen; to
+-- prevent this, use 'clampLayerToScreen'.
 translateLayer :: Location -> Widget n -> Widget n
 translateLayer (Location (0, 0)) w = w
 translateLayer off p =
     Widget (hSize p) (vSize p) $ addTranslationOffset off <$> render p
+
+-- | Given a layer, clamp its translation offset so that its contents
+-- stay on screen even when its translation would otherwise result the
+-- widget being partially or completely cut off by a screen edge.
+clampLayerToScreen :: Widget n -> Widget n
+clampLayerToScreen w =
+    Widget (hSize w) (vSize w) $ do
+        r <- render w
+        return $ r & horizontalClampPolicyL .~ Reposition
+                   & verticalClampPolicyL .~ Reposition
 
 -- | Given a layer widget, translate it to position it relative to
 -- the upper-left coordinates of a reported extent with the specified
