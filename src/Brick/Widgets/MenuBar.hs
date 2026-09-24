@@ -107,7 +107,7 @@ getOpenMenu mb = do
 -- | Render this menu bar with the given application state as input.
 renderMenuBar :: (Ord n) => s -> MenuBar s n k -> Widget n
 renderMenuBar s mb =
-    padForOrientation body
+    withDefAttr menuTitleAttr $ padForOrientation body
     where
         padForOrientation = case mb^.menuBarOrientationL of
             LeftToRight -> id

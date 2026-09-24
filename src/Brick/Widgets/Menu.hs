@@ -596,7 +596,8 @@ renderMenu s m =
 renderMenuContents :: (Ord n) => s -> Menu s n k -> Widget n
 renderMenuContents s m = body
     where
-        body = joinBorders $
+        body = withDefAttr menuAttr $
+               joinBorders $
                border $
                hLimit (menuContentWidth m) $
                clickable (menuRegionNameBuilder m MenuBody) $
