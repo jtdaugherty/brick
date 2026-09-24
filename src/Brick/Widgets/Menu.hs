@@ -693,10 +693,8 @@ titleHightlightKey c _ title = hBox parts
     where
         parts = go "" title
 
-        lowerC = toLower c
-
         go acc (h T.:< tl)
-            | toLower h == lowerC =
+            | toLower h == toLower c =
                 (if T.null acc then [] else [txt acc]) <>
                 [withDefAttr menuTitleKeyHighlightAttr $ char h] <>
                 go "" tl
