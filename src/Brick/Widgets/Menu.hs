@@ -96,6 +96,7 @@ module Brick.Widgets.Menu
   -- * Configuring menus
   , setDefaultEntryRenderer
   , setTitleRenderer
+  , titleHightlightKey
   , setMenuOrientation
 
   -- * Configuring menu items
@@ -126,6 +127,7 @@ module Brick.Widgets.Menu
   , menuAttr
   , menuTitleAttr
   , menuTitleSelectedAttr
+  , menuTitleKeyHighlightAttr
   , menuBodyAttr
   , menuEntryDisabledAttr
   , menuEntrySelectedAttr
@@ -139,6 +141,7 @@ import Control.Monad (when)
 import Lens.Micro.Platform ((^.), (.~), (%~), (&), Traversal', ix, each)
 import Lens.Micro.Mtl
 
+import Data.Char (toLower)
 import qualified Data.Foldable as F
 import qualified Data.Text as T
 import qualified Data.Vector as V
@@ -652,6 +655,11 @@ menuAttr = attrName "brick" <> attrName "menu"
 menuTitleAttr :: AttrName
 menuTitleAttr = menuAttr <> attrName "title"
 
+-- | A highlighted key in a menu title as rendered with
+-- 'titleHightlightKey', based on 'menuTitleAttr'.
+menuTitleKeyHighlightAttr :: AttrName
+menuTitleKeyHighlightAttr = menuTitleAttr <> attrName "highlightedKey"
+
 -- | Selected menu titles, for open menus.
 menuTitleSelectedAttr :: AttrName
 menuTitleSelectedAttr = menuTitleAttr <> attrName "selected"
@@ -676,6 +684,26 @@ menuEntrySelectedAttr = menuBodyAttr <> attrName "selected"
 -- | Selected and disnabled menu entries.
 menuEntrySelectedDisabledAttr :: AttrName
 menuEntrySelectedDisabledAttr = menuEntrySelectedAttr <> attrName "disabled"
+
+-- | A title rendering function that highlights the specified character
+-- with 'menuTitleKeyHighlightAttr' if it appears in the title,
+-- case-insensitively.
+titleHightlightKey :: Char -> s -> T.Text -> Widget n
+titleHightlightKey c _ title = hBox parts
+    where
+        parts = go "" title
+
+        lowerC = toLower c
+
+        go acc (h T.:< tl)
+            | toLower h == lowerC =
+                (if T.null acc then [] else [txt acc]) <>
+                [withDefAttr menuTitleKeyHighlightAttr $ char h] <>
+                go "" tl
+            | otherwise =
+                go (T.snoc acc h) tl
+        go acc T.Empty =
+            if T.null acc then [] else [txt acc]
 
 -- | Select the next entry in a menu, or the first one if no entry is
 -- currently selected.
