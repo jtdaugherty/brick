@@ -77,7 +77,7 @@ handleNonMenuBarEvent _ =
 aMap :: AttrMap
 aMap = attrMap V.defAttr
     [ (menuAttr, fg V.white)
-    , (menuTitleAttr, fg V.white)
+    , (menuTitleAttr, V.white `on` V.blue)
     , (menuTitleSelectedAttr, V.black `on` V.white)
     , (menuEntryDisabledAttr, fg V.red)
     , (menuEntrySelectedAttr, V.black `on` V.yellow)
