@@ -136,8 +136,9 @@ getMenuTitleMatch mb n =
 --   other open menus.
 -- * Left and Right arrow keys will cycle between menus if there is an
 --   open menu.
--- * If a submenu entry is selected, the Right arrow key will open it or
---   close it if it is open.
+-- * If a submenu entry is selected, the arrow keys will open it or
+--   close it if it is open, depending on the configured menu bar
+--   orientation.
 -- * @Esc@ will close the currently-open menu.
 --
 -- In all other cases, this will attempt to defer to the opened menu to
