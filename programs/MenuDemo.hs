@@ -97,6 +97,7 @@ aMap = attrMap V.defAttr
     , (menuEntryDisabledAttr, fg V.red)
     , (menuEntrySelectedAttr, V.black `on` V.yellow)
     , (menuEntrySelectedDisabledAttr, V.black `on` V.red)
+    , (menuTitleKeyHighlightAttr, style V.underline)
     ]
 
 app :: M.App St e Name
@@ -112,6 +113,7 @@ app =
 
 newFileMenu :: SimpleMenu St Name
 newFileMenu =
+    setTitleRenderer (titleHightlightKey 'f') $
     simpleMenu "File" FileMenu
         [ menuEntry "New..." (return ())
         , menuEntry "Open..." (return ())
