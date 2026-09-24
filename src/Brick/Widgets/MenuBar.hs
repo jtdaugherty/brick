@@ -235,7 +235,8 @@ closeAllMenus mb = mb & menuBarMenusL.each %~ closeMenu
 openMenuAtIndex :: Int -> MenuBar s n k -> MenuBar s n k
 openMenuAtIndex i mb = (closeAllMenus mb) & menuBarMenusL.ix i %~ openMenu
 
--- | Set the menu bar's orientation, including all of its menus.
+-- | Set the menu bar's orientation, including all of its menus. For
+-- details, see 'setMenuOrientation'.
 setMenuBarOrientation :: MenuOrientation -> MenuBar s n k -> MenuBar s n k
 setMenuBarOrientation o mb = mb & menuBarOrientationL .~ o
                                 & menuBarMenusL.each %~ setMenuOrientation o
