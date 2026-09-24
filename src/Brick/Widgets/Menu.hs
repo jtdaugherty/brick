@@ -32,11 +32,10 @@
 --   entries
 -- * /gaps/ - vertical space between items
 --
--- Menu /entries/ can be either enabled or disabled; their status
--- in this regard is determined by invoking a function of type @s
--- -> Bool@ at rendering and event-handling time. By default, all
--- entries are always enabled. Change this on a per-entry basis with
--- 'setEnabledWith'.
+-- Menu /entries/ can be either enabled or disabled; their status in
+-- this regard is determined by invoking a function of type @s -> Bool@
+-- at rendering and event-handling time. Change this on a per-entry
+-- basis with 'setEnabledWith'.
 --
 -- Depending on the type of menu you're creating, different item
 -- constructors may apply. See the 'MenuItem' type aliases, since their
@@ -206,9 +205,6 @@ data MenuOrientation =
 -- constructor of type @MenuRegion -> n@ to uniquely identify the menu
 -- and its constituent parts.
 --
--- By default, menus use the 'LeftToRight' content orientation. This can
--- be changed with 'setMenuOrientation'.
---
 -- A menu carries an event handler that will be invoked by
 -- 'handleMenuEvent' whenever a menu entry is selected.
 data Menu s n k =
@@ -368,6 +364,15 @@ defaultMenuPadding :: Int
 defaultMenuPadding = 7
 
 -- | Create a 'Menu'.
+--
+-- By default, menus use the 'LeftToRight' content orientation. This can
+-- be changed with 'setMenuOrientation'.
+--
+-- By default, entries are rendered using 'txt'. Change this with
+-- 'setDefaultEntryRenderer' or 'setEntryRenderer'.
+--
+-- By default, the menu title is rendered using 'txt'. Change this with
+-- 'setTitleRenderer'.
 menu :: T.Text
      -- ^ The menu's title
      -> (MenuRegion -> n)
