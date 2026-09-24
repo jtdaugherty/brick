@@ -687,7 +687,7 @@ menuEntrySelectedDisabledAttr = menuEntrySelectedAttr <> attrName "disabled"
 
 -- | A title rendering function that highlights the specified character
 -- with 'menuTitleKeyHighlightAttr' if it appears in the title,
--- case-insensitively.
+-- case-insensitively. Use with 'setTitleRenderer'.
 titleHightlightKey :: Char -> s -> T.Text -> Widget n
 titleHightlightKey c _ title = hBox parts
     where
