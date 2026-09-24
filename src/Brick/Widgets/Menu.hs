@@ -574,7 +574,8 @@ renderMenu s m =
     then contentsLayer `above` title
     else title
     where
-        contentsLayer = translateLayer layerOffset $ renderMenuContents s m
+        contentsLayer = clampLayerToScreen $
+                        translateLayer layerOffset $ renderMenuContents s m
         layerOffset =
             case m^.menuOrientationL of
                 LeftToRight -> Location (-1, 1)
@@ -628,7 +629,8 @@ renderMenuContents s m = body
                     case menuOrientation sm of
                         LeftToRight -> Location (menuContentWidth m + 1, -1)
                         RightToLeft -> Location (-1 * (menuContentWidth sm + 3), -1)
-                submenuLayer = translateLayer layerOffset $ renderMenuContents s sm
+                submenuLayer = clampLayerToScreen $
+                               translateLayer layerOffset $ renderMenuContents s sm
                 maybeAddLayer = if sm^.menuIsOpenL
                                 then (submenuLayer `above`)
                                 else id
