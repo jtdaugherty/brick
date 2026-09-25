@@ -19,8 +19,10 @@ breaking API changes: *layer embedding* and *pop-up menus*.
   Brick's output was to include them in the list of layers returned by
   the top-level application draw function. This made it difficult to use
   layers in a modular way as part of UI components because the top-level
-  draw function would need to be updated to introduce any layers needed
-  by elements in the UI.
+  draw function would need to be updated to introduce any layers
+  needed by elements in the UI. The `LayerDemo` (`brick-layer-demo`)
+  demonstration program was updated to include a demonstration of
+  `above`.
 * Pop-up menus: taking advantage of the new `above` function are the new
   modules `Brick.Widgets.Menu` and `Brick.Widgets.MenuBar`, which
   introduce support for menus and menu bars in Brick applications. To
