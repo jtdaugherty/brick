@@ -8,8 +8,34 @@
 -- entries that can be activated with the mouse and keyboard and invoke
 -- event handlers that you specify when creating the menus and entries.
 --
+-- = General Information
+--
+-- Menus carry a sequence of /items/, expressed by the 'MenuItem' type.
+-- Items can be:
+--
+-- * /entries/ - named menu items that can be activated with the
+--   keyboard or mouse
+-- * /submenus/ - entries that contain nested menus
+-- * /separators/ - horizontal lines dividing up groups of other
+--   entries
+-- * /gaps/ - vertical space between items
+--
+-- Menu /entries/ can be either enabled or disabled; their status in
+-- this regard is determined by invoking a function of type @s -> Bool@
+-- at rendering and event-handling time.
+--
+-- Menus and submenus support both mouse and keyboard interaction. See
+-- 'handleMenuEvent' for details.
+--
+-- Menus have an orientation that can be changed with
+-- 'setMenuOrientation' to suit different writing systems. This affects
+-- how entries and submenus are rendered and how left/right arrow keys
+-- navigate submenus.
+--
+-- = Use Cases
+--
 -- This module provides a fully general 'Menu' type and a few
--- specialized interfaces for common menu use cases:
+-- specialized menu types for common menu use cases:
 --
 -- * 'SimpleMenu': a menu with entries that have 'EventM' handlers.
 --   Create one of these with 'simpleMenu'. This is a good starting point.
@@ -22,33 +48,43 @@
 -- * 'Menu': the fully general type for menus. Create one of these with
 --   'menu'.
 --
--- Menus carry a sequence of /items/, expressed by the 'MenuItem' type.
--- Items can be:
---
--- * /entries/ - named menu items that can be activated with the
---   keyboard or mouse
--- * /submenus/ - entries that correspond to nested menus
--- * /separators/ - horizontal lines dividing up groups of other
---   entries
--- * /gaps/ - vertical space between items
---
--- Menu /entries/ can be either enabled or disabled; their status in
--- this regard is determined by invoking a function of type @s -> Bool@
--- at rendering and event-handling time. Change this on a per-entry
--- basis with 'setEnabledWith'.
---
 -- Depending on the type of menu you're creating, different item
--- constructors may apply. See the 'MenuItem' type aliases, since their
+-- constructors may apply. See the 'MenuItem' type aliases since their
 -- naming convention follows that of the menu types.
 --
--- Handle menu events with 'handleMenuEvent', deferring to your
--- application's event handling for events that the menu bar doesn't
--- handle. To support mouse events, each menu must be identified by
--- a unique resource name; this is done by providing a resource name
--- constructor when creating each menu. The application's name type must
--- provide a constructor of type @MenuRegion -> n@ to uniquely identify
--- the menu and its constituent parts. For example, if your resource
--- name type is as follows,
+-- See the @MenuDemo@ and @MenuKeybindingsDemo@ demonstration programs
+-- for complete working examples of using this API.
+--
+-- = Adding Menus to Your Application
+--
+-- To use this module in your application:
+--
+-- * Choose a menu type that you want to work with based on your needs,
+--   such as 'SimpleMenu'.
+-- * For each menu that you want to host, add an application state field
+--   and lens for a value of the menu's type, and add a constructor to
+--   your resource name type, with an argument of type 'MenuRegion'. Add
+--   lenses to your application state with 'makeLenses'.
+-- * Populate your application's initial state with your menus.
+-- * Render menus with 'renderMenu'.
+-- * Handle incoming events first with 'handleMenuEvent', and when
+--   'handleMenuEvent' returns @False@, pass unhandled events on to your
+--   existing application event handler.
+--
+-- Use 'Brick.Widgets.MenuBar.MenuBar' if you want to host more than one
+-- menu in a group.
+--
+-- = Handling Events
+--
+-- Menu events are handled with 'handleMenuEvent', and any unhandled
+-- events should be deferred to your application's event handling.
+--
+-- To support mouse events, each menu must be identified by a unique
+-- resource name; this is done by providing a resource name constructor
+-- when creating each menu. The application's name type must provide a
+-- constructor of type @MenuRegion -> n@ to uniquely identify the menu
+-- and its constituent parts. For example, if your resource name type is
+-- as follows,
 --
 -- @
 -- data Name = Editor1 | Editor2
@@ -60,21 +96,6 @@
 -- @
 -- data Name = Editor1 | Editor2 | FileMenu MenuRegion
 -- @
---
--- If you would like to use more than one menu in a menu bar
--- arrangement, see the 'Brick.Widgets.MenuBar' module, which builds on
--- this abstraction.
---
--- Menus have an orientation that can be changed with
--- 'setMenuOrientation' to suit different writing systems. This affects
--- how entries and submenus are rendered and how left/right arrow keys
--- navigate submenus.
---
--- This API requires the use of lenses for application state fields that
--- store menu bar state.
---
--- See the @MenuDemo@ and @MenuKeybindingsDemo@ demonstration programs
--- for complete working examples of using this API.
 module Brick.Widgets.Menu
   ( Menu
   , menuIsOpen
