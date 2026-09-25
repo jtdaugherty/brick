@@ -63,9 +63,9 @@ layer translations. Here's a summary of the impact:
 * The layer-handling functions in `Brick.Widgets.Center` were updated to
   use `translateLayer`. Their apparent behavior is unchanged.
 * Widget-modifying functions are commutative with `translateLayer`. In
-  general, any transformation applied to a layer is applied directly to
-  the layer itself without regard to its translation position. E.g.,
-  these are equivalent:
+  general, any transformation applied to a layer is applied directly
+  to the layer itself without regard for its translation position. For
+  example, these are equivalent:
   * `padLeft (Pad 2) $ translateLayer (Location (a, b)) $ txt "foo"`
   * `translateLayer (Location (a, b)) $ padLeft (Pad 2) $ txt "foo"`
 * Cropping functions were changed to use less aggressive context sizes.
