@@ -2,6 +2,120 @@
 Brick changelog
 ---------------
 
+3.0
+---
+
+This release focuses on two major new features that include some
+breaking API changes: *layer embedding* and *pop-up menus*.
+
+* Layer embedding: prior to the addition of this feature, the only way
+  to introduce new layers into Brick's output was to include them
+  in the list of layers returned by the top-level application draw
+  function. This made it difficult to use layers in a modular way as
+  part of UI components because the top-level draw function would
+  need to be updated to introduce any layers needed by elements
+  in the UI. This release introduces a powerful new function,
+  `Brick.Widgets.Core.above`, that allows any widget at any layer to
+  introduce a new layer floating above it, positioned relative to the
+  upper-left corner of the lower element. This makes UI elements that
+  need floating layers much more modular and composable. This change
+  brings with it some API and behavioral changes; see below for details.
+* Pop-up menus: taking advantage of the new `above` function are the new
+  modules `Brick.Widgets.Menu` and `Brick.Widgets.MenuBar`, which
+  introduce support for menus and menu bars in Brick applications. To
+  learn more, see the Haddock documentation for those modules as well as
+  the new demonstration programs, built with `cabal run -f demos <progname>`:
+  * `programs/MenuDemo.hs` (`brick-menu-demo`)
+  * `programs/MenuKeybindingsDemo.hs` (`brick-menu-keybindings-demo`)
+  * `programs/MenuBarDemo.hs` (`brick-menu-bar-demo`)
+
+Additional layer embedding details:
+
+The layer embedding feature comes with a rework of how Brick handles
+layer translations. Here's a summary of the impact:
+
+* `translateBy` was renamed to `translateLayer` and now has no effect on
+  non-layer widgets. Previously, `translateBy` worked by adding left and
+  top padding for positive translations, and by performing cropping for
+  negative translations. While this gave the desired effect, it needed
+  to be changed to support the new layer embedding feature. Starting
+  with this release, `translateBy` does a true translation without
+  modifying the layer image itself. When applied to a non-layer, it
+  has no effect. A widget is a non-layer if it gets embedded within or
+  modified by another widget (such as by embedding it in an `hBox`).
+* `relativeTo` was renamed to `layerRelativeTo` to clarify that its
+  use is only for layers; like `translateLayer`, it has no effect for
+  non-layer widgets.
+* Applications that were exploiting the previous padding and cropping
+  behavior of `translateBy` for non-layer widgets should migrate to
+  applying padding and cropping directly to achieve the same result.
+* `above` also works in viewports, and behaves as one might expect:
+  layers above viewport content are placed as specified, but are cropped
+  as they are scrolled out of view.
+* The layer-handling functions in `Brick.Widgets.Center` were updated to
+  use `translateLayer`.
+* Widget-modifying functions are commutative with `translateLayer`. In
+  general, any transformation applied to a layer is applied directly to
+  the layer itself without regard to its translation position. E.g.,
+  these are equivalent:
+  * `padLeft (Pad 2) $ translateLayer (Location (a, b)) $ txt "foo"`
+  * `translateLayer (Location (a, b)) $ padLeft (Pad 2) $ txt "foo"`
+* Cropping functions were changed to use less aggressive context sizes.
+  Prior to this change, cropping functions rendered with a rendering
+  context using the size of the widget being cropped as the basis for
+  the cropping amount. This turned out to be too aggressive when things
+  like cursor positions and other positional information were present
+  outside the widgets' cropped regions, since they could be mistakenly
+  removed from the rendering result. For example, `cropLeftBy 1 (str
+  "foo")` previously would crop to "oo" and remove any extents and
+  cursor positions to the right of the "oo" portion of the result, even
+  though those shouldn't be affected at all because they weren't in the
+  cropped portion of the image. The improvement to these functions fixes
+  this behavior so that only cursors, extents, etc. in the affected
+  image region are cropped.
+
+Other improvements:
+
+* Mouse clicks in layers will no longer fall through to lower layers
+  when the mouse clicks occur at locations that aren't within any named
+  regions in the clicked layer. Prior to this change, Brick would
+  report click events in clickable regions even if those clickable
+  regions were obscured by higher, non-clickable layers. This obviously
+  isn't good and is almost certainly never what anyone wants; the
+  more natural behavior is to ensure that a clickable region is
+  only clickable if it is not obscured by anything on top of it.
+  `Brick.Main.findClickedExtents` now reflects this behavior, which
+  means that the function no longer reports underlying region matches if
+  they are obscured by the clicked layer.
+
+API changes:
+
+* Added new modules:
+  * `Brick.Widgets.Menu`
+  * `Brick.Widgets.MenuBar`
+* `Brick.Widgets.Core`:
+  * Added `clampLayerToScreen`
+  * Added `char` `Widget` constructor
+  * Renamed `translateBy` to `translateLayer`
+  * Renamed `relativeTo` to `layerRelativeTo`
+* `Brick.Types` now exports `Result` lenses `performTranslationL` and
+  `translationOffsetL` used in tracking layer translations.
+* `Brick.Keybindings.KeyDispatcher`:
+  * Added `bindingsForEvent` for obtaining bindings for an event from a
+    dispatcher
+  * Added `lookupEvent` for looking up a handler by key event
+
+Functionality-preserving changes:
+
+* Made `Brick.Types.Location` a `newtype`. Previously, `Location` was a
+  normal data type with one record field to access its inner tuple; it
+  is now a `newtype` wrapper around that tuple with the same record
+  field name.
+
+Package changes:
+
+* Set a lower bound on `text` to `2.1.2`
+
 2.13
 ----
 
