@@ -8,18 +8,19 @@ Brick changelog
 This release focuses on two major new features that include some
 breaking API changes: *layer embedding* and *pop-up menus*.
 
-* Layer embedding: prior to the addition of this feature, the only way
-  to introduce new layers into Brick's output was to include them
-  in the list of layers returned by the top-level application draw
-  function. This made it difficult to use layers in a modular way as
-  part of UI components because the top-level draw function would
-  need to be updated to introduce any layers needed by elements
-  in the UI. This release introduces a powerful new function,
-  `Brick.Widgets.Core.above`, that allows any widget at any layer to
-  introduce a new layer floating above it, positioned relative to the
-  upper-left corner of the lower element. This makes UI elements that
-  need floating layers much more modular and composable. This change
-  brings with it some API and behavioral changes; see below for details.
+* Layer embedding: This release introduces a powerful new function,
+  `Brick.Widgets.Core.above`, written ``a `above` b`` that allows any
+  widget at any layer (in this case, `b`) to introduce a new layer
+  floating above it (here, `a`), positioned relative to the upper-left
+  corner of the lower element. This makes UI elements that need floating
+  layers much more modular and composable. This change brings with it
+  some API and behavioral changes; see below for details. Prior to the
+  addition of this feature, the only way to introduce new layers into
+  Brick's output was to include them in the list of layers returned by
+  the top-level application draw function. This made it difficult to use
+  layers in a modular way as part of UI components because the top-level
+  draw function would need to be updated to introduce any layers needed
+  by elements in the UI.
 * Pop-up menus: taking advantage of the new `above` function are the new
   modules `Brick.Widgets.Menu` and `Brick.Widgets.MenuBar`, which
   introduce support for menus and menu bars in Brick applications. To
