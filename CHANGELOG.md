@@ -126,7 +126,7 @@ Package changes:
 
 Repository changes:
 
-* Renamed the `master` branch to `main`.
+* Renamed the `master` branch to `main`
 
 2.13
 ----
