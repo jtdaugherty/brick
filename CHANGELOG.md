@@ -25,9 +25,11 @@ breaking API changes: *layer embedding* and *pop-up menus*.
   `above`.
 * Pop-up menus: taking advantage of the new `above` function are the new
   modules `Brick.Widgets.Menu` and `Brick.Widgets.MenuBar`, which
-  introduce support for menus and menu bars in Brick applications. To
-  learn more, see the Haddock documentation for those modules as well as
-  the new demonstration programs, built with `cabal run -f demos <progname>`:
+  introduce support for menus and menu bars in Brick applications. The
+  menu interface allows for custom menus as well as menus that integrate
+  with Brick's custom keybinding infrastructure. To learn more, see
+  the Haddock documentation for those modules as well as the new
+  demonstration programs, built with `cabal run -f demos <progname>`:
   * `programs/MenuDemo.hs` (`brick-menu-demo`)
   * `programs/MenuKeybindingsDemo.hs` (`brick-menu-keybindings-demo`)
   * `programs/MenuBarDemo.hs` (`brick-menu-bar-demo`)
@@ -40,23 +42,26 @@ layer translations. Here's a summary of the impact:
 * `translateBy` was renamed to `translateLayer` and now has no effect on
   non-layer widgets. Previously, `translateBy` worked by adding left and
   top padding for positive translations, and by performing cropping for
-  negative translations. While this gave the desired effect, it needed
-  to be changed to support the new layer embedding feature. Starting
-  with this release, `translateBy` does a true translation without
-  modifying the layer image itself. When applied to a non-layer, it
-  has no effect. A widget is a non-layer if it gets embedded within or
-  modified by another widget (such as by embedding it in an `hBox`).
+  negative translations. While this gave the desired effect, it wasn't
+  a true translation and it needed to be changed to support the new
+  layer embedding feature. Starting with this release, `translateLayer`
+  does a true translation without modifying the layer image itself. When
+  applied to a non-layer, it has no effect. A widget is a non-layer if
+  it gets embedded within or modified by another widget (such as by
+  embedding it in an `hBox`).
 * `relativeTo` was renamed to `layerRelativeTo` to clarify that its
   use is only for layers; like `translateLayer`, it has no effect for
-  non-layer widgets.
+  non-layer widgets. Its behavior is unchanged.
 * Applications that were exploiting the previous padding and cropping
   behavior of `translateBy` for non-layer widgets should migrate to
   applying padding and cropping directly to achieve the same result.
-* `above` also works in viewports, and behaves as one might expect:
+  Most applications can likely just update to account for the renamings
+  without further changes.
+* `above` also works in viewports and behaves as one might expect:
   layers above viewport content are placed as specified, but are cropped
   as they are scrolled out of view.
 * The layer-handling functions in `Brick.Widgets.Center` were updated to
-  use `translateLayer`.
+  use `translateLayer`. Their apparent behavior is unchanged.
 * Widget-modifying functions are commutative with `translateLayer`. In
   general, any transformation applied to a layer is applied directly to
   the layer itself without regard to its translation position. E.g.,
@@ -71,8 +76,8 @@ layer translations. Here's a summary of the impact:
   outside the widgets' cropped regions, since they could be mistakenly
   removed from the rendering result. For example, `cropLeftBy 1 (str
   "foo")` previously would crop to "oo" and remove any extents and
-  cursor positions to the right of the "oo" portion of the result, even
-  though those shouldn't be affected at all because they weren't in the
+  cursor positions to the *right* of the "oo" portion of the result even
+  though that area shouldn't be affected at all because it wasn't in the
   cropped portion of the image. The improvement to these functions fixes
   this behavior so that only cursors, extents, etc. in the affected
   image region are cropped.
@@ -89,7 +94,7 @@ Other improvements in this release:
   only clickable if it is not obscured by anything on top of it.
   `Brick.Main.findClickedExtents` now reflects this behavior, which
   means that the function no longer reports underlying region matches if
-  they are obscured by the clicked layer.
+  they are obscured.
 
 API changes in this release:
 
