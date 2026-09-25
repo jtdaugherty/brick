@@ -64,7 +64,7 @@
 -- * For each menu that you want to host, add an application state field
 --   and lens for a value of the menu's type, and add a constructor to
 --   your resource name type, with an argument of type 'MenuRegion'. Add
---   lenses to your application state with 'makeLenses'.
+--   lenses to your application state with 'Lens.Micro.TH.makeLenses'.
 -- * Populate your application's initial state with your menus.
 -- * Render menus with 'renderMenu'.
 -- * Handle incoming events first with 'handleMenuEvent', and when
