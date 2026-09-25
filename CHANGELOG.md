@@ -12,7 +12,7 @@ breaking API changes: *layer embedding* and *pop-up menus*.
   `Brick.Widgets.Core.above`, written ``a `above` b`` that allows any
   widget at any layer (in this case, `b`) to introduce a new layer
   floating above it (here, `a`), positioned relative to the upper-left
-  corner of the lower element. This makes UI elements that need floating
+  corner of the lower element. This makes the introduction of floating
   layers much more modular and composable. This change brings with it
   some API and behavioral changes; see below for details. Prior to the
   addition of this feature, the only way to introduce new layers into
