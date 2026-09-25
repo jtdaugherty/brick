@@ -77,7 +77,7 @@ layer translations. Here's a summary of the impact:
   this behavior so that only cursors, extents, etc. in the affected
   image region are cropped.
 
-Other improvements:
+Other improvements in this release:
 
 * Mouse clicks in layers will no longer fall through to lower layers
   when the mouse clicks occur at locations that aren't within any named
@@ -91,7 +91,7 @@ Other improvements:
   means that the function no longer reports underlying region matches if
   they are obscured by the clicked layer.
 
-API changes:
+API changes in this release:
 
 * Added new modules:
   * `Brick.Widgets.Menu`
