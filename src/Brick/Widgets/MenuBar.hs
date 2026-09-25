@@ -30,6 +30,23 @@
 --
 -- See the @MenuBarDemo@ demonstration program for a complete working
 -- example of using this API.
+--
+-- = Adding a Menu Bar to Your Application
+--
+-- To use this module in your application:
+--
+-- * Choose a menu bar type that you want to work with based on your
+--   needs, such as 'SimpleMenuBar'.
+-- * Add an application state field and lens for a value of the menu
+--   bar's type, and add a constructor to your resource name
+--   type, with an argument of type 'MenuRegion', for each menu
+--   in the menu bar. Add lenses to your application state with
+--   'Lens.Micro.TH.makeLenses'.
+-- * Populate your application's initial state with your menu bar.
+-- * Render the menu bar with 'renderMenuBar'.
+-- * Handle incoming events first with 'handleMenuBarEvent', and when
+--   'handleMenuBarEvent' returns @False@, pass unhandled events on to
+--   your existing application event handler.
 module Brick.Widgets.MenuBar
   (
   -- * Types
