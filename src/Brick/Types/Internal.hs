@@ -12,6 +12,7 @@ module Brick.Types.Internal
   , locL
   , origin
   , TerminalLocation(..)
+  , ClampPolicy(..)
   , Viewport(..)
   , ViewportType(..)
   , RenderState(..)
@@ -28,6 +29,7 @@ module Brick.Types.Internal
   , ClickableScrollbarElement(..)
   , Context(..)
   , ctxAttrMapL
+  , ctxOrigAttrMapL
   , ctxAttrNameL
   , ctxBorderStyleL
   , ctxDynBordersL
@@ -84,6 +86,8 @@ module Brick.Types.Internal
   , extentsL
   , bordersL
   , translationOffsetL
+  , verticalClampPolicyL
+  , horizontalClampPolicyL
   , extraLayersL
   , visibilityRequestsL
   , emptyResult
@@ -366,6 +370,9 @@ data DynBorder = DynBorder
     , dbSegments :: !(Edges BorderSegment)
     } deriving (Eq, Read, Show, Generic, NFData)
 
+data ClampPolicy = Truncate | Reposition
+                 deriving (Show, Read, Generic, NFData)
+
 -- | The type of result returned by a widget's rendering function. The
 -- result provides the image, cursor positions, and visibility requests
 -- that resulted from the rendering process.
@@ -397,6 +404,12 @@ data Result n =
            , translationOffset :: !Location
            -- ^ Offset of this result's upper-left corner as a
            -- consequence of translation
+           , horizontalClampPolicy :: !ClampPolicy
+           -- ^ The policy for whether to clamp this layer to the screen
+           -- horizontally, or let it get truncated
+           , verticalClampPolicy :: !ClampPolicy
+           -- ^ The policy for whether to clamp this layer to the screen
+           -- vertically, or let it get truncated
            , extraLayers :: !(Seq (Result n))
            -- ^ Rendering results introduced as intermediate layers
            -- by this result
@@ -412,6 +425,8 @@ emptyResult =
            , borders = BM.empty
            , translationOffset = Location (0, 0)
            , extraLayers = mempty
+           , horizontalClampPolicy = Truncate
+           , verticalClampPolicy = Truncate
            }
 
 -- | The type of events.
@@ -460,6 +475,7 @@ data Context n =
             , windowHeight :: !Int
             , ctxBorderStyle :: !BorderStyle
             , ctxAttrMap :: !AttrMap
+            , ctxOrigAttrMap :: !AttrMap
             , ctxDynBorders :: !Bool
             , ctxVScrollBarOrientation :: !(Maybe VScrollBarOrientation)
             , ctxVScrollBarRenderer :: !(Maybe (VScrollbarRenderer n))

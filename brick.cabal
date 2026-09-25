@@ -97,6 +97,8 @@ library
     Brick.Widgets.Edit
     Brick.Widgets.FileBrowser
     Brick.Widgets.List
+    Brick.Widgets.Menu
+    Brick.Widgets.MenuBar
     Brick.Widgets.ProgressBar
     Brick.Widgets.Table
     Data.IMap
@@ -117,14 +119,15 @@ library
                        exceptions >= 0.10.0,
                        filepath,
                        containers >= 0.5.7,
-                       microlens >= 0.3.0.0 && < 0.6,
+                       microlens-platform >= 0.3.0.0 && < 0.6,
+                       microlens,
                        microlens-th,
                        microlens-mtl,
                        mtl,
                        config-ini,
                        vector,
                        stm >= 2.4.3,
-                       text,
+                       text >= 2.1.2,
                        text-zipper >= 0.13,
                        template-haskell,
                        deepseq >= 1.3 && < 1.6,
@@ -540,6 +543,57 @@ executable brick-progressbar-demo
   build-depends:       base,
                        brick,
                        vty,
+                       microlens-mtl,
+                       microlens-th
+
+executable brick-menu-demo
+  if !flag(demos)
+    Buildable: False
+  hs-source-dirs:      programs
+  ghc-options:         -threaded -Wall -Wcompat -O2
+  default-extensions:  CPP
+  default-language:    Haskell2010
+  main-is:             MenuDemo.hs
+  build-depends:       base,
+                       brick,
+                       vty,
+                       mtl,
+                       text,
+                       microlens,
+                       microlens-mtl,
+                       microlens-th
+
+executable brick-menu-keybindings-demo
+  if !flag(demos)
+    Buildable: False
+  hs-source-dirs:      programs
+  ghc-options:         -threaded -Wall -Wcompat -O2
+  default-extensions:  CPP
+  default-language:    Haskell2010
+  main-is:             MenuKeybindingsDemo.hs
+  build-depends:       base,
+                       brick,
+                       vty,
+                       mtl,
+                       text,
+                       microlens,
+                       microlens-mtl,
+                       microlens-th
+
+executable brick-menu-bar-demo
+  if !flag(demos)
+    Buildable: False
+  hs-source-dirs:      programs
+  ghc-options:         -threaded -Wall -Wcompat -O2
+  default-extensions:  CPP
+  default-language:    Haskell2010
+  main-is:             MenuBarDemo.hs
+  build-depends:       base,
+                       brick,
+                       vty,
+                       mtl,
+                       text,
+                       microlens,
                        microlens-mtl,
                        microlens-th
 

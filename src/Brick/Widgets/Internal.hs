@@ -83,8 +83,35 @@ renderFinal aMap layerRenders (w, h) chooseCursor rs =
                     translatedLayerResults <- T.mapM gatherLayer $ result^.extraLayersL
                     return $ concatSeq translatedLayerResults Seq.|> (resultSize preTranslation, result)
 
+        getTranslationOffset r =
+            let originalOffset = translationOffset r
+                correction = getTranslationCorrection r
+            in originalOffset <> correction
+
+        getTranslationCorrection r =
+            let Location (hOff, vOff) = translationOffset r
+                rWidth = V.imageWidth (r^.imageL)
+                rHeight = V.imageHeight (r^.imageL)
+                colCorrection = if hOff < 0
+                                then abs hOff
+                                else if hOff + rWidth > w
+                                     then w - (hOff + rWidth)
+                                     else 0
+                rowCorrection = if vOff < 0
+                                then abs vOff
+                                else if vOff + rHeight > h
+                                     then h - (vOff + rHeight)
+                                     else 0
+                hCorrection = case horizontalClampPolicy r of
+                    Truncate -> Location (0, 0)
+                    Reposition -> Location (colCorrection, 0)
+                vCorrection = case verticalClampPolicy r of
+                    Truncate -> Location (0, 0)
+                    Reposition -> Location (0, rowCorrection)
+            in hCorrection <> vCorrection
+
         translateResult r =
-            let off = translationOffset r
+            let off = getTranslationOffset r
             in addResultOffset off $
                r & imageL %~ (V.translate (off^.locationColumnL) (off^.locationRowL))
 
@@ -102,6 +129,7 @@ renderFinal aMap layerRenders (w, h) chooseCursor rs =
                       , windowHeight = h
                       , ctxBorderStyle = defaultBorderStyle
                       , ctxAttrMap = aMap
+                      , ctxOrigAttrMap = aMap
                       , ctxDynBorders = False
                       , ctxVScrollBarOrientation = Nothing
                       , ctxVScrollBarRenderer = Nothing

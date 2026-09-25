@@ -45,10 +45,13 @@ module Brick.Keybindings.KeyDispatcher
   -- * Misc
   , keyDispatcherToList
   , lookupVtyEvent
+  , lookupEvent
+  , bindingsForEvent
   )
 where
 
 import qualified Data.Map.Strict as M
+import Data.Maybe (listToMaybe)
 import qualified Data.Set as S
 import qualified Data.Text as T
 import qualified Graphics.Vty as Vty
@@ -105,6 +108,18 @@ data KeyHandler k m =
 -- 'KeyDispatcher' internals.
 lookupVtyEvent :: Vty.Key -> [Vty.Modifier] -> KeyDispatcher k m -> Maybe (KeyHandler k m)
 lookupVtyEvent k mods (KeyDispatcher m) = M.lookup (Binding k $ S.fromList mods) m
+
+-- | Find the handler that matches an abstract key event, if any.
+lookupEvent :: (Eq k) => k -> KeyDispatcher k m -> Maybe (KeyHandler k m)
+lookupEvent ev (KeyDispatcher m) = listToMaybe results
+    where
+        results = filter ((== ByEvent ev) . kehEventTrigger . khHandler) $ M.elems m
+
+-- | Get the list of all key bindings for the specified event from this
+-- dispatcher.
+bindingsForEvent :: (Eq k) => KeyDispatcher k m -> k -> [Binding]
+bindingsForEvent kd ev =
+    [ b | KeyHandler { khBinding = b, khHandler = h } <- snd <$> keyDispatcherToList kd, kehEventTrigger h == ByEvent ev ]
 
 -- | Handle a keyboard event by looking it up in the 'KeyDispatcher'
 -- and invoking the matching binding's handler if one is found. Return

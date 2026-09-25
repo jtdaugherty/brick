@@ -147,6 +147,7 @@ Feature Overview
  * List and table widgets
  * Progress bar widget
  * Simple dialog box widget
+ * Menus and menu bars with optional custom keybinding integration
  * Border-drawing widgets (put borders around or in between things)
  * Animation support
  * Generic scrollable viewports and viewport scroll bars

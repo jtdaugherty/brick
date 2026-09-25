@@ -72,6 +72,7 @@ module Brick.Widgets.Core
   , translateLayer
   , layerRelativeTo
   , above
+  , clampLayerToScreen
 
   -- * Cropping
   , cropLeftBy
@@ -705,6 +706,7 @@ renderBox br ws =
                             (concatMap extents allTranslatedResults)
                             newBorders
                             (Location (0, 0))
+                            Truncate Truncate
                             (mconcat $ extraLayers <$> allTranslatedResults)
 
 -- | Given a result, crop all of its extra layers to the rendering
@@ -1123,10 +1125,24 @@ raw img = Widget Fixed Fixed $ return $ emptyResult & imageL .~ img
 -- @translateLayer@ does not translate immediately; instead, it records
 -- a translation offset to be applied at rendering time. Subsequent
 -- calls to this function on the same widget accumulate the offset.
+--
+-- Note that by default, layers may be cut off by screen edges when
+-- translated enough so that the contents don't fit on screen; to
+-- prevent this, use 'clampLayerToScreen'.
 translateLayer :: Location -> Widget n -> Widget n
 translateLayer (Location (0, 0)) w = w
 translateLayer off p =
     Widget (hSize p) (vSize p) $ addTranslationOffset off <$> render p
+
+-- | Given a layer, clamp its translation offset so that its contents
+-- stay on screen even when its translation would otherwise result the
+-- widget being partially or completely cut off by a screen edge.
+clampLayerToScreen :: Widget n -> Widget n
+clampLayerToScreen w =
+    Widget (hSize w) (vSize w) $ do
+        r <- render w
+        return $ r & horizontalClampPolicyL .~ Reposition
+                   & verticalClampPolicyL .~ Reposition
 
 -- | Given a layer widget, translate it to position it relative to
 -- the upper-left coordinates of a reported extent with the specified
@@ -1152,8 +1168,11 @@ layerRelativeTo n off w =
 -- | @above upper lower@ introduces @upper@ as a new layer that is
 -- positioned relative to the upper-left corner of @lower@. The upper
 -- layer will be drawn in a rendering context with the same available
--- space as the screen, regardless of the rendering context in which the
--- lower layer is drawn.
+-- space as the screen, regardless of the rendering context in which
+-- the lower layer is drawn. The attribute map in use for the upper
+-- layer will be the same as the one for the initial rendering request,
+-- meaning that any attribute changes for the lower layer will not
+-- affect the upper layer's appearnce.
 --
 -- A layer introduced this way will be beneath any layers further up in
 -- the layer stack returned by the main drawing function, so that means
@@ -1191,9 +1210,12 @@ above upper lower =
         ctx <- getContext
 
         let resetConstraints = (availHeightL .~ ctx^.windowHeightL) .
-                               (availWidthL .~ ctx^.windowWidthL)
+                               (availWidthL .~ ctx^.windowWidthL) .
+                               (ctxAttrNameL .~ attrName "") .
+                               (ctxAttrMapL .~ ctx^.ctxOrigAttrMapL)
 
         upperResult <- withReaderT resetConstraints $ render upper
+
         lowerResult <- render lower
 
         return $ lowerResult & extraLayersL %~ (upperResult Seq.<|)
