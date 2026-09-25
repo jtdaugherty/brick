@@ -41,10 +41,9 @@
 --   Create one of these with 'simpleMenu'. This is a good starting point.
 -- * 'DispatchingMenu': a menu whose entries correspond to abstract key
 --   events bound to keys by a 'KeyDispatcher'. Create one of these with
---   'menuWithDispatcher'. This is a good choice when you already have
---   a 'KeyDispatcher' set up and would like your menu entries to be
---   triggered by the rebindable keys that trigger your dispatcher's
---   handlers.
+--   'menuWithDispatcher'. This is a good choice when you already have a
+--   'KeyDispatcher' set up and would like menu entries to be triggered
+--   by the rebindable keys that trigger the dispatcher's handlers.
 -- * 'Menu': the fully general type for menus. Create one of these with
 --   'menu'.
 --
@@ -55,22 +54,22 @@
 -- See the @MenuDemo@ and @MenuKeybindingsDemo@ demonstration programs
 -- for complete working examples of using this API.
 --
--- = Adding Menus to Your Application
+-- = Adding Menus to An Application
 --
--- To use this module in your application:
+-- To use this module in an application:
 --
--- * Choose a menu type that you want to work with based on your needs,
---   such as 'SimpleMenu'.
+-- * Choose a menu type that you want to work with such as 'SimpleMenu'.
 -- * For each menu that you want to host, add an application state field
---   and lens for a value of the menu's type, and add a constructor to
---   your resource name type, with an argument of type 'MenuRegion'. Add
---   lenses to your application state with 'Lens.Micro.TH.makeLenses'.
--- * Populate your application's initial state with your menus.
+--   and lens for a value of the menu's type, and add a constructor
+--   to the application's resource name type, with an argument of
+--   type 'MenuRegion'. Add lenses to the application state type with
+--   'Lens.Micro.TH.makeLenses'.
+-- * Populate the application's initial state with the menus.
 -- * Render menus with 'renderMenu'.
 -- * Handle incoming events first with 'handleMenuEvent', and when
---   'handleMenuEvent' returns @False@, pass unhandled events on to your
+--   'handleMenuEvent' returns @False@, pass unhandled events on to the
 --   existing application event handler.
--- * As desired, add entries to your application's 'AttrMap' for the
+-- * As desired, add entries to the application's 'AttrMap' for the
 --   attributes used in this module.
 --
 -- Use 'Brick.Widgets.MenuBar.MenuBar' if you want to host more than one
@@ -79,14 +78,14 @@
 -- = Handling Events
 --
 -- Menu events are handled with 'handleMenuEvent', and any unhandled
--- events should be deferred to your application's event handling.
+-- events should be deferred to the application's event handler.
 --
 -- To support mouse events, each menu must be identified by a unique
 -- resource name; this is done by providing a resource name constructor
 -- when creating each menu. The application's name type must provide a
 -- constructor of type @MenuRegion -> n@ to uniquely identify the menu
--- and its constituent parts. For example, if your resource name type is
--- as follows,
+-- and its constituent parts. For example, if the application's resource
+-- name type is as follows,
 --
 -- @
 -- data Name = Editor1 | Editor2

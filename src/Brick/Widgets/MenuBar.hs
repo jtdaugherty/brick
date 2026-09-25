@@ -16,10 +16,10 @@
 --
 -- In all cases, use 'newMenuBar' to construct a menu bar, and create
 -- its menus using the corresponding menu constructor for the type of
--- menu bar you want to make.
+-- menu bar you want to use.
 --
--- Render your menu bar with 'renderMenuBar' and handle menu bar events
--- with 'handleMenuBarEvent', deferring to your application's event
+-- Render the menu bar with 'renderMenuBar' and handle menu bar events
+-- with 'handleMenuBarEvent', deferring to the application's event
 -- handling for events that the menu bar doesn't handle.
 --
 -- Similar to individual menus, menu bars have an orientation that can
@@ -31,22 +31,22 @@
 -- See the @MenuBarDemo@ demonstration program for a complete working
 -- example of using this API.
 --
--- = Adding a Menu Bar to Your Application
+-- = Adding a Menu Bar to An Application
 --
--- To use this module in your application:
+-- To use this module in an application:
 --
--- * Choose a menu bar type that you want to work with based on your
---   needs, such as 'SimpleMenuBar'.
+-- * Choose a menu bar type that you want to work with such as
+--   'SimpleMenuBar'.
 -- * Add an application state field and lens for a value of the menu
---   bar's type, and add a constructor to your resource name
---   type, with an argument of type 'MenuRegion', for each menu
---   in the menu bar. Add lenses to your application state with
+--   bar's type, and add a constructor to the application's resource
+--   name type, with an argument of type 'MenuRegion', for each menu
+--   in the menu bar. Add lenses to the application state type with
 --   'Lens.Micro.TH.makeLenses'.
--- * Populate your application's initial state with your menu bar.
+-- * Populate the application's initial state with the menu bar.
 -- * Render the menu bar with 'renderMenuBar'.
 -- * Handle incoming events first with 'handleMenuBarEvent', and when
 --   'handleMenuBarEvent' returns @False@, pass unhandled events on to
---   your existing application event handler.
+--   the existing application event handler.
 module Brick.Widgets.MenuBar
   (
   -- * Types
