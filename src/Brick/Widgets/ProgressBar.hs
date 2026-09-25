@@ -44,7 +44,7 @@ progressBar = customProgressBar ' ' ' '
 -- progress value and custom characters to fill the progress.
 -- This fills available horizontal space and is one row high.
 -- Please be aware of using wide characters in Brick,
--- see [Wide Character Support and the TextWidth class](https://github.com/jtdaugherty/brick/blob/master/docs/guide.rst#wide-character-support-and-the-textwidth-class)
+-- see [Wide Character Support and the TextWidth class](https://github.com/jtdaugherty/brick/blob/main/docs/guide.rst#wide-character-support-and-the-textwidth-class)
 customProgressBar :: Char
                   -- ^ Character to fill the completed part.
                   -> Char

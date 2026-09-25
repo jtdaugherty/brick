@@ -6,4 +6,4 @@ raw-project
 -- Therefore we install it via GHCup.
 ghcup-jobs: >= 8.10
 
-branches: master
+branches: main

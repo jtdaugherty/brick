@@ -125,17 +125,17 @@ $ cabal new-build -f demos
 $ find dist-newstyle -type f -name \*-demo
 ```
 
-To get started, see the [user guide](https://github.com/jtdaugherty/brick/blob/master/docs/guide.rst).
+To get started, see the [user guide](https://github.com/jtdaugherty/brick/blob/main/docs/guide.rst).
 
 Documentation
 -------------
 
 Documentation for `brick` comes in a variety of forms:
 
-* [The official brick user guide](https://github.com/jtdaugherty/brick/blob/master/docs/guide.rst)
+* [The official brick user guide](https://github.com/jtdaugherty/brick/blob/main/docs/guide.rst)
 * [Haddock documentation](https://hackage.haskell.org/package/brick)
-* [Demo programs](https://github.com/jtdaugherty/brick/blob/master/programs)
-* [FAQ](https://github.com/jtdaugherty/brick/blob/master/FAQ.md)
+* [Demo programs](https://github.com/jtdaugherty/brick/blob/main/programs)
+* [FAQ](https://github.com/jtdaugherty/brick/blob/main/FAQ.md)
 
 Feature Overview
 ----------------
