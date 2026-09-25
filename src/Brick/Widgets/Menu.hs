@@ -70,6 +70,8 @@
 -- * Handle incoming events first with 'handleMenuEvent', and when
 --   'handleMenuEvent' returns @False@, pass unhandled events on to your
 --   existing application event handler.
+-- * As desired, add entries to your application's 'AttrMap' for the
+--   attributes used in this module.
 --
 -- Use 'Brick.Widgets.MenuBar.MenuBar' if you want to host more than one
 -- menu in a group.
