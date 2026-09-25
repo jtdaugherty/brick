@@ -124,6 +124,10 @@ Package changes:
 
 * Set a lower bound on `text` to `2.1.2`
 
+Repository changes:
+
+* Renamed the `master` branch to `main`.
+
 2.13
 ----
 
