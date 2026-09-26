@@ -238,7 +238,7 @@ renderEditor draw foc e =
        viewport (e^.editorNameL) Both $
        (if foc then showCursor (e^.editorNameL) cursorLoc else id) $
        visibleRegion cursorLoc (atCharWidth, 1) $
-       padRight (Pad 1) $ draw contents
+       (draw contents) <+> char ' '
 
 charAtCursor :: (Z.GenericTextZipper t) => Z.TextZipper t -> Maybe t
 charAtCursor z =
