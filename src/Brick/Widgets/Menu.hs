@@ -835,7 +835,10 @@ resolveMenuEventTarget' m = fromMaybe [] $ do
 targetMenu :: Traversal' s (Menu s n k)
            -> [Int]
            -> Traversal' s (Menu s n k)
-targetMenu = foldl (\base idx -> base.menuItemsL.ix idx._Submenu)
+targetMenu which path = which . go path
+    where
+        go [] = id
+        go (idx:rest) = menuItemsL.ix idx._Submenu . go rest
 
 -- | Handle an event for this menu and return @True@, or return @False@
 -- if the event was not handled (e.g. because the event was not a menu
