@@ -585,6 +585,10 @@ showCursorNamed name locs =
 
 -- | A viewport scrolling handle for managing the scroll state of
 -- viewports.
+--
+-- Note that if you are wanting to obtain the current state of a
+-- viewport rather than manipulate it, see 'lookupViewport' and its
+-- associated result type, 'Viewport'.
 data ViewportScroll n =
     ViewportScroll { viewportName :: n
                    -- ^ The name of the viewport to be controlled by
