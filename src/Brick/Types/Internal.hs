@@ -248,6 +248,10 @@ data VisibilityRequest =
 
 -- | Describes the state of a viewport as it appears as its most recent
 -- rendering.
+--
+-- Note that if you are wanting to manipulate a viewport from within
+-- 'Brick.Types.EventM', see 'Brick.Main.viewportScroll' and the
+-- 'Brick.Main.ViewportScroll' type.
 data Viewport =
     VP { _vpLeft :: !Int
        -- ^ The column offset of left side of the viewport.
