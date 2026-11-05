@@ -710,10 +710,16 @@ makeVisible n = EventM $ do
     lift $ lift $ modify (\s -> s { requestedVisibleNames = S.insert n $ requestedVisibleNames s })
 
 -- | Enable terminal mouse events.
+--
+-- This is a convenience function provided as more direct alternative to
+-- using 'getVtyHandle' and 'setMode'.
 enableMouseEvents :: EventM n s ()
 enableMouseEvents = setVtyMode Mouse True
 
 -- | Disable terminal mouse events.
+--
+-- This is a convenience function provided as more direct alternative to
+-- using 'getVtyHandle' and 'setMode'.
 disableMouseEvents :: EventM n s ()
 disableMouseEvents = setVtyMode Mouse False
 
