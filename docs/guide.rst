@@ -1086,18 +1086,10 @@ text data.
 Mouse Support
 =============
 
-Some terminal emulators support mouse interaction. The Vty library used
-by brick provides these low-level events if mouse mode has been enabled.
-To enable mouse mode, we need to get access to the Vty library handle in
-``EventM``:
-
-.. code:: haskell
-
-   do
-       vty <- Brick.Main.getVtyHandle
-       let output = outputIface vty
-       when (supportsMode output Mouse) $
-           liftIO $ setMode output Mouse True
+Some terminal emulators support mouse interaction. The Vty library
+used by brick provides these low-level events if mouse mode has been
+enabled. To enable mouse mode, call ``Brick.Main.enableMouseEvents`` in
+``EventM``.
 
 Bear in mind that some terminals do not support mouse interaction, so
 use Vty's ``getModeStatus`` to find out whether your terminal will
