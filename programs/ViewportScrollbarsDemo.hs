@@ -10,7 +10,6 @@ import Control.Monad (void)
 import Data.Monoid ((<>))
 #endif
 import qualified Graphics.Vty as V
-import Graphics.Vty.CrossPlatform (mkVty)
 
 import qualified Brick.Types as T
 import qualified Brick.Main as M
@@ -192,7 +191,7 @@ theme =
 app :: M.App St e Name
 app =
     M.App { M.appDraw = drawUi
-          , M.appStartEvent = return ()
+          , M.appStartEvent = M.enableMouseEvents
           , M.appHandleEvent = appEvent
           , M.appAttrMap = const theme
           , M.appChooseCursor = M.neverShowCursor
@@ -200,10 +199,4 @@ app =
 
 main :: IO ()
 main = do
-    let buildVty = do
-          v <- mkVty V.defaultConfig
-          V.setMode (V.outputIface v) V.Mouse True
-          return v
-
-    initialVty <- buildVty
-    void $ M.customMain initialVty buildVty Nothing app (St Nothing)
+    void $ M.defaultMain app (St Nothing)

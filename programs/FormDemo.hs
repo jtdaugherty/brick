@@ -11,7 +11,6 @@ import Data.Monoid ((<>))
 #endif
 
 import qualified Graphics.Vty as V
-import Graphics.Vty.CrossPlatform (mkVty)
 
 import Brick
 import Brick.Forms
@@ -131,18 +130,13 @@ app =
                     modify $ setFieldValid (st^.age >= 18) AgeField
 
         , appChooseCursor = focusRingCursor formFocus
-        , appStartEvent = return ()
+        , appStartEvent = enableMouseEvents
         , appAttrMap = const theMap
         }
 
 main :: IO ()
 main = do
-    let buildVty = do
-          v <- mkVty V.defaultConfig
-          V.setMode (V.outputIface v) V.Mouse True
-          return v
-
-        initialUserInfo = UserInfo { _name = ""
+    let initialUserInfo = UserInfo { _name = ""
                                    , _address = ""
                                    , _age = 0
                                    , _handed = RightHanded
@@ -152,8 +146,7 @@ main = do
         f = setFieldValid False AgeField $
             mkForm initialUserInfo
 
-    initialVty <- buildVty
-    f' <- customMain initialVty buildVty Nothing app f
+    f' <- defaultMain app f
 
     putStrLn "The starting form state was:"
     print initialUserInfo
