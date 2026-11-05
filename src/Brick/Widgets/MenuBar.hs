@@ -68,6 +68,8 @@ module Brick.Widgets.MenuBar
   , closeAllMenus
   , openMenuAtIndex
   , toggleMenuAtIndex
+  , toggleNamedMenu
+  , openNamedMenu
   , setMenuBarOrientation
   )
 where
@@ -252,6 +254,20 @@ closeAllMenus mb = mb & menuBarMenusL.each %~ closeMenu
 openMenuAtIndex :: Int -> MenuBar s n k -> MenuBar s n k
 openMenuAtIndex i mb = (closeAllMenus mb) & menuBarMenusL.ix i %~ openMenu
 
+-- | Open the menu with the specified resource name constructor, closing
+-- any other open menus in the menu bar. If the index is invalid, this
+-- does nothing.
+openNamedMenu :: (Eq n) => (MenuRegion -> n) -> MenuBar s n k -> MenuBar s n k
+openNamedMenu f mb =
+    case findNamedMenu f mb of
+        Just (i, _) -> (closeAllMenus mb) & menuBarMenusL.ix i %~ openMenu
+        Nothing -> mb
+
+findNamedMenu :: (Eq n) => (MenuRegion -> n) -> MenuBar s n k -> Maybe (Int, Menu s n k)
+findNamedMenu f mb =
+    V.find ((== (f MenuTitle)) . menuTitleName . snd) $
+    V.zip (V.fromList [0..]) $ menuBarMenus mb
+
 -- | Set the menu orientation of the menu bar and all of its menus. For
 -- details, see 'setMenuOrientation'.
 setMenuBarOrientation :: MenuOrientation -> MenuBar s n k -> MenuBar s n k
@@ -268,6 +284,17 @@ toggleMenuAtIndex i mb =
         Just (idx, _) -> if idx == i
                          then closeAllMenus mb
                          else openMenuAtIndex i mb
+
+-- | Toggle the open state of the menu with the specified resource name
+-- constructor. If toggling to open, this will close any other open
+-- menus in the menu bar. If the index is invalid, this does nothing.
+toggleNamedMenu :: (Eq n) => (MenuRegion -> n) -> MenuBar s n k -> MenuBar s n k
+toggleNamedMenu f mb =
+    case getOpenMenu mb of
+        Nothing -> openNamedMenu f mb
+        Just (_, m) -> if menuTitleName m == f MenuTitle
+                       then closeAllMenus mb
+                       else openNamedMenu f mb
 
 -- | Given a lens to access a menu bar and a handler to invoke on its
 -- currently open menu, invoke the handler if there is an open menu and
