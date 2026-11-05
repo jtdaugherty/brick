@@ -75,6 +75,7 @@ module Brick.Widgets.MenuBar
 where
 
 import Control.Monad (when)
+import qualified Data.Set as S
 import Data.Maybe (isJust, listToMaybe, fromMaybe)
 import Lens.Micro.Platform ((^.), (&), (%~), (.~), Lens', ix, each)
 import Lens.Micro.Mtl
@@ -107,10 +108,17 @@ type SimpleMenuBar s n = MenuBar s n (EventM n s ())
 type DispatchingMenuBar s n k = MenuBar s n (EventM n s (EntryTrigger s n k))
 
 -- | Create a new menu bar from the specified menu list. If the list is
--- empty, this calls 'error'.
-newMenuBar :: [Menu s n k] -> MenuBar s n k
+-- empty, this calls 'error'. If the list contains menus with the same
+-- resource name constructor, this calls 'error'.
+newMenuBar :: (Ord n) => [Menu s n k] -> MenuBar s n k
 newMenuBar [] = error "BUG: newMenuBar requires a non-empty list"
-newMenuBar ms = MenuBar LeftToRight $ V.fromList ms
+newMenuBar ms = MenuBar LeftToRight $ V.fromList uniqueMenus
+    where
+        uniqueMenus = if S.size menuNames == length ms
+                      then ms
+                      else error "newMenuBar: all menus must use unique resource name constructors"
+        menuNames = S.fromList $
+                    menuTitleName <$> ms
 
 -- | Return whether this menu bar has an open menu.
 hasOpenMenu :: MenuBar s n k -> Bool
