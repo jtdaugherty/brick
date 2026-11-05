@@ -216,7 +216,6 @@ executable brick-form-demo
                        text,
                        microlens,
                        microlens-th,
-                       vty-crossplatform,
                        vty
 
 executable brick-text-wrap-demo
@@ -269,7 +268,6 @@ executable brick-viewport-scrollbars-demo
   build-depends:       base,
                        brick,
                        vty,
-                       vty-crossplatform,
                        microlens-mtl,
                        microlens-th
 
@@ -438,7 +436,6 @@ executable brick-animation-demo
   build-depends:       base,
                        brick,
                        vty,
-                       vty-crossplatform,
                        containers,
                        microlens-platform
 
