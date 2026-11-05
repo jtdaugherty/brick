@@ -306,8 +306,7 @@ executable brick-mouse-demo
                        vty,
                        microlens >= 0.3.0.0,
                        microlens-th,
-                       microlens-mtl,
-                       mtl
+                       microlens-mtl
 
 executable brick-layer-demo
   if !flag(demos)
