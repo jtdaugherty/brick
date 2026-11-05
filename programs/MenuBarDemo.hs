@@ -69,11 +69,11 @@ handleNonMenuBarEvent (T.VtyEvent (V.EvKey V.KEsc [])) =
     -- Esc quits the application
     M.halt
 handleNonMenuBarEvent (T.VtyEvent (V.EvKey (V.KChar 'f') [V.MMeta])) =
-    menuBar %= toggleMenuAtIndex 0
+    menuBar %= toggleNamedMenu FileMenu
 handleNonMenuBarEvent (T.VtyEvent (V.EvKey (V.KChar 'e') [V.MMeta])) =
-    menuBar %= toggleMenuAtIndex 1
+    menuBar %= toggleNamedMenu EditMenu
 handleNonMenuBarEvent (T.VtyEvent (V.EvKey (V.KChar 'h') [V.MMeta])) =
-    menuBar %= toggleMenuAtIndex 2
+    menuBar %= toggleNamedMenu HelpMenu
 handleNonMenuBarEvent (T.VtyEvent (V.EvKey (V.KChar 'o') [])) = do
     menuBarOrientation %= nextOrientation
     o <- use menuBarOrientation
