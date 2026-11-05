@@ -26,6 +26,7 @@ import Brick.Widgets.MenuBar
 data Name = FileMenu MenuRegion
           | EditMenu MenuRegion
           | HelpMenu MenuRegion
+          | FormatMenu MenuRegion
           deriving (Show, Ord, Eq)
 
 data St =
@@ -121,9 +122,21 @@ newEditMenu =
         [ menuEntry "Undo" (return ())
         , menuEntry "Redo" (return ())
         , menuSeparator
+        , submenu newFormatMenu
+        , menuSeparator
         , menuEntry "Cut" (return ())
         , menuEntry "Copy" (return ())
         , menuEntry "Paste" (return ())
+        ]
+
+newFormatMenu :: SimpleMenu St Name
+newFormatMenu =
+    simpleMenu "Format" FormatMenu
+        [ menuEntry "Bold" (return ())
+        , menuEntry "Strikethrough" (return ())
+        , menuEntry "Underline" (return ())
+        , menuSeparator
+        , menuEntry "Clear formatting" (return ())
         ]
 
 newHelpMenu :: SimpleMenu St Name
