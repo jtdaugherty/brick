@@ -45,6 +45,10 @@ module Brick.Main
   , invalidateCacheEntry
   , invalidateCache
 
+  -- * Terminal mode conveniences
+  , enableMouseEvents
+  , disableMouseEvents
+
   -- * Renderer internals (for benchmarking)
   , renderFinal
   , getRenderState
@@ -69,6 +73,7 @@ import Graphics.Vty
   , Picture(..)
   , Cursor(..)
   , Event(..)
+  , Mode(..)
   , update
   , outputIface
   , displayBounds
@@ -76,6 +81,8 @@ import Graphics.Vty
   , nextEvent
   , restoreInputState
   , inputIface
+  , setMode
+  , outputIface
   )
 import Graphics.Vty.CrossPlatform (mkVty)
 import Graphics.Vty.Config (defaultConfig)
@@ -699,3 +706,18 @@ suspendAndResume' act = do
 makeVisible :: (Ord n) => n -> EventM n s ()
 makeVisible n = EventM $ do
     lift $ lift $ modify (\s -> s { requestedVisibleNames = S.insert n $ requestedVisibleNames s })
+
+-- | Enable terminal mouse events.
+enableMouseEvents :: EventM n s ()
+enableMouseEvents = setVtyMode Mouse True
+
+-- | Disable terminal mouse events.
+disableMouseEvents :: EventM n s ()
+disableMouseEvents = setVtyMode Mouse False
+
+-- | Set the given Vty mode status on the event handler's current Vty
+-- handle.
+setVtyMode :: Mode -> Bool -> EventM n s ()
+setVtyMode m val = do
+    vty <- getVtyHandle
+    liftIO $ setMode (outputIface vty) m val
