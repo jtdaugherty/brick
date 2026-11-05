@@ -566,7 +566,6 @@ executable brick-menu-keybindings-demo
   build-depends:       base,
                        brick,
                        vty,
-                       mtl,
                        text,
                        microlens,
                        microlens-mtl,
