@@ -7,7 +7,6 @@ import Lens.Micro ((^.))
 import Lens.Micro.TH (makeLenses)
 import Lens.Micro.Mtl
 import Control.Monad (void, forM_)
-import Control.Monad.Trans (liftIO)
 #if !(MIN_VERSION_base(4,11,0))
 import Data.Monoid ((<>))
 #endif
@@ -127,9 +126,7 @@ aMap = attrMap V.defAttr
 app :: M.App St e Name
 app =
     M.App { M.appDraw = drawUi
-          , M.appStartEvent = do
-              vty <- M.getVtyHandle
-              liftIO $ V.setMode (V.outputIface vty) V.Mouse True
+          , M.appStartEvent = M.enableMouseEvents
           , M.appHandleEvent = appEvent
           , M.appAttrMap = const aMap
           , M.appChooseCursor = M.showFirstCursor
