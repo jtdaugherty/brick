@@ -11,11 +11,10 @@ import Data.Monoid
 #endif
 import qualified Data.Map as M
 import qualified Graphics.Vty as V
-import Graphics.Vty.CrossPlatform (mkVty)
 
 import Brick.BChan
 import Brick.Util (fg)
-import Brick.Main (App(..), neverShowCursor, customMain, halt)
+import Brick.Main (App(..), neverShowCursor, customMain, halt, enableMouseEvents)
 import Brick.AttrMap (AttrName, AttrMap, attrMap, attrName)
 import Brick.Types (Widget, EventM, BrickEvent(..), Location(..))
 import Brick.Widgets.Border (border)
@@ -198,7 +197,7 @@ theApp =
     App { appDraw = drawUI
         , appChooseCursor = neverShowCursor
         , appHandleEvent = appEvent
-        , appStartEvent = return ()
+        , appStartEvent = enableMouseEvents
         , appAttrMap = const attrs
         }
 
@@ -214,10 +213,5 @@ main = do
                , _animation3 = Nothing
                , _clickAnimations = mempty
                }
-        buildVty = do
-            v <- mkVty V.defaultConfig
-            V.setMode (V.outputIface v) V.Mouse True
-            return v
 
-    initialVty <- buildVty
-    void $ customMain initialVty buildVty (Just chan) theApp initialState
+    void $ customMain Nothing (Just chan) theApp initialState

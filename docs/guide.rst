@@ -411,9 +411,7 @@ our events over that channel. Once we've created the channel with
    main = do
        eventChan <- Brick.BChan.newBChan 10
        let buildVty = Graphics.Vty.CrossPlatform.mkVty Graphics.Vty.Config.defaultConfig
-       initialVty <- buildVty
-       finalState <- customMain initialVty buildVty
-                       (Just eventChan) app initialState
+       finalState <- customMain (Just buildVty) (Just eventChan) app initialState
        -- Use finalState and exit
 
 The ``customMain`` function lets us have control over how the ``vty``

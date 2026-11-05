@@ -65,7 +65,7 @@ import Control.Monad.Reader
 import Control.Concurrent (forkIO, killThread)
 import qualified Data.Foldable as F
 import Data.List (find)
-import Data.Maybe (listToMaybe)
+import Data.Maybe (listToMaybe, fromMaybe)
 import qualified Data.Map as M
 import qualified Data.Set as S
 import Graphics.Vty
@@ -216,13 +216,12 @@ runWithVty vtyCtx brickChan mUserChan app initialRS initialSt = do
 -- prior to the first Vty initialization is the terminal input state
 -- that is restored on shutdown (regardless of exceptions).
 customMain :: (Ord n)
-           => Vty
-           -- ^ The initial Vty handle to use.
-           -> IO Vty
-           -- ^ An IO action to build a Vty handle. This is used
-           -- to build a Vty handle whenever the event loop needs
-           -- to reinitialize the terminal, e.g. on resume after
-           -- suspension.
+           => Maybe (IO Vty)
+           -- ^ An IO action to build a Vty handle. This is used to
+           -- build a Vty handle at startup and whenever the event
+           -- loop needs to reinitialize the terminal, e.g. on resume
+           -- after suspension. If not given, the default Vty handle
+           -- configuration will be used.
            -> Maybe (BChan e)
            -- ^ An event channel for sending custom events to the event
            -- loop (you write to this channel, the event loop reads from
@@ -233,10 +232,13 @@ customMain :: (Ord n)
            -> s
            -- ^ The initial application state.
            -> IO s
-customMain initialVty buildVty mUserChan app initialAppState = do
+customMain mBuildVty mUserChan app initialAppState = do
+    let builder = fromMaybe (mkVty defaultConfig) mBuildVty
+    initialVty <- builder
+
     let restoreInitialState = restoreInputState $ inputIface initialVty
 
-    (s, vty) <- customMainWithVty initialVty buildVty mUserChan app initialAppState
+    (s, vty) <- customMainWithVty initialVty builder mUserChan app initialAppState
         `E.catch` (\(e::E.SomeException) -> restoreInitialState >> E.throw e)
 
     shutdown vty
