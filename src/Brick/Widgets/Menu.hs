@@ -957,8 +957,10 @@ handleMenuEventCommon which path (MouseDown n _ _ (Location (_, row))) = do
                -- index here is equivalent to the item index.
                activateMenuItem which path row
            | otherwise -> return False
-handleMenuEventCommon which path (VtyEvent (Vty.EvMouseDown {})) = do
-    targetMenu which path %= closeMenu
+handleMenuEventCommon which _ (VtyEvent (Vty.EvMouseDown {})) = do
+    -- A mouse click outside any known region means we should close the
+    -- entire menu, including any open submenu chain.
+    targetMenu which [] %= closeMenu
     return True
 handleMenuEventCommon which path (VtyEvent (Vty.EvKey Vty.KEsc [])) = do
     withMenu (targetMenu which path) $ \m -> do
