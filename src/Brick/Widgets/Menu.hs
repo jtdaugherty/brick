@@ -949,7 +949,7 @@ handleMenuEventCommon which path (MouseDown n _ _ (Location (_, row))) = do
         let mkRegionName = m^.menuRegionNameBuilderL
 
         if | mkRegionName MenuTitle == n -> do
-               (targetMenu which path).menuIsOpenL %= not
+               targetMenu which path %= toggleMenu
                return True
            | mkRegionName MenuBody == n ->
                -- Map the location to the clicked menu entry; since each
