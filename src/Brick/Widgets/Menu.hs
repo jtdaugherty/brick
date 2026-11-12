@@ -898,7 +898,11 @@ handleMenuEvent which e = do
        then return True
        else handleMenuEventFallback which path e
 
-handleMenuEventFallback :: (Eq n) => Traversal' s (Menu s n k) -> [Int] -> BrickEvent n e -> EventM n s Bool
+handleMenuEventFallback :: (Eq n)
+                        => Traversal' s (Menu s n k)
+                        -> [Int]
+                        -> BrickEvent n e
+                        -> EventM n s Bool
 handleMenuEventFallback which path (VtyEvent (Vty.EvKey k mods)) =
     withMenu (targetMenu which path) $ \m -> do
         handled <- menuFallbackEventHandler m k mods
@@ -906,7 +910,11 @@ handleMenuEventFallback which path (VtyEvent (Vty.EvKey k mods)) =
 handleMenuEventFallback _ _ _ =
     return False
 
-handleMenuEventCommon :: (Eq n) => Traversal' s (Menu s n k) -> [Int] -> BrickEvent n e -> EventM n s Bool
+handleMenuEventCommon :: (Eq n)
+                      => Traversal' s (Menu s n k)
+                      -> [Int]
+                      -> BrickEvent n e
+                      -> EventM n s Bool
 handleMenuEventCommon which path (VtyEvent (Vty.EvKey Vty.KEnter [])) = do
     withMenu (targetMenu which path) $ \m -> do
         let sel = m^.menuSelectedIndexL
