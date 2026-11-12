@@ -944,8 +944,8 @@ handleMenuEventCommon which path (VtyEvent (Vty.EvKey Vty.KDown [])) = do
 handleMenuEventCommon which path (VtyEvent (Vty.EvKey Vty.KUp [])) = do
     targetMenu which path %= selectPrevEntry
     return True
-handleMenuEventCommon which path (MouseDown n _ _ (Location (_, row))) = do
-    withMenu (targetMenu which path) $ \m -> do
+handleMenuEventCommon which fullPath (MouseDown n _ _ (Location (_, row))) = do
+    withMatchingMenu n which fullPath $ \path m -> do
         let mkRegionName = m^.menuRegionNameBuilderL
 
         if | mkRegionName MenuTitle == n -> do
@@ -971,6 +971,41 @@ handleMenuEventCommon which path (VtyEvent (Vty.EvKey Vty.KEsc [])) = do
         else return False
 handleMenuEventCommon _ _ _ =
     return False
+
+-- | Given a resource name and a menu path, find the menu in the path
+-- whose body or title matches the resource name, starting with the
+-- menu referred to by the full given path. If one is found, invoke
+-- the specified function on the located menu, including the path to
+-- that menu. If the given path does not match the name, recurse to
+-- the menu's parent and so on until the base menu is reached. If no
+-- matching menu is found, return @False@.
+withMatchingMenu :: (Eq n)
+                 => n
+                 -- ^ The name of the menu title or body to match
+                 -> Traversal' s (Menu s n k)
+                 -- ^ The base menu
+                 -> [Int]
+                 -- ^ The full menu path to match against
+                 -> ([Int] -> Menu s n k -> EventM n s Bool)
+                 -- ^ The function to invoke on the match, if found
+                 -> EventM n s Bool
+withMatchingMenu n which path f = do
+    mMenu <- preuse (targetMenu which path)
+    case mMenu of
+        Just m ->
+            if menuMatchesName n m
+            then f path m
+            else case path of
+                [] -> return False
+                _ -> withMatchingMenu n which (init path) f
+        Nothing -> return False
+
+-- | Return whether the given resource name is the title name or body
+-- name of the given menu.
+menuMatchesName :: (Eq n) => n -> Menu s n k -> Bool
+menuMatchesName n m =
+    menuTitleName m == n ||
+    menuRegionNameBuilder m MenuBody == n
 
 maybeCloseSubmenu :: Traversal' s (Menu s n k) -> [Int] -> EventM n s Bool
 maybeCloseSubmenu which path = do
