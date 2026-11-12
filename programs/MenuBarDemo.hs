@@ -74,16 +74,19 @@ handleNonMenuBarEvent (T.VtyEvent (V.EvKey (V.KChar 'e') [V.MMeta])) =
     menuBar %= toggleNamedMenu EditMenu
 handleNonMenuBarEvent (T.VtyEvent (V.EvKey (V.KChar 'h') [V.MMeta])) =
     menuBar %= toggleNamedMenu HelpMenu
-handleNonMenuBarEvent (T.VtyEvent (V.EvKey (V.KChar 'o') [])) = do
-    menuBarOrientation %= nextOrientation
-    o <- use menuBarOrientation
-    menuBar %= setMenuBarOrientation o
+handleNonMenuBarEvent (T.VtyEvent (V.EvKey (V.KChar 'o') [])) =
+    toggleMenuBarOrientation
 handleNonMenuBarEvent _ =
     return ()
 
-nextOrientation :: MenuOrientation -> MenuOrientation
-nextOrientation LeftToRight = RightToLeft
-nextOrientation RightToLeft = LeftToRight
+toggleMenuBarOrientation :: T.EventM Name St ()
+toggleMenuBarOrientation = do
+    let nextOrientation LeftToRight = RightToLeft
+        nextOrientation RightToLeft = LeftToRight
+
+    menuBarOrientation %= nextOrientation
+    o <- use menuBarOrientation
+    menuBar %= setMenuBarOrientation o
 
 aMap :: AttrMap
 aMap = attrMap V.defAttr
