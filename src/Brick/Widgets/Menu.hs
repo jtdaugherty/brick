@@ -486,9 +486,12 @@ menuWithDispatcher kd title regionNameBuilder items =
 
         handler trigger =
             case trigger of
-                  TriggerEvent (ByKey b)    -> invokeHandler $ lookupVtyEvent (kbKey b) (F.toList $ kbMods b) kd
-                  TriggerEvent (ByEvent ev) -> invokeHandler $ lookupEvent ev kd
-                  TriggerAction act         -> act
+                  TriggerEvent (ByKey b) ->
+                      invokeHandler $ lookupVtyEvent (kbKey b) (F.toList $ kbMods b) kd
+                  TriggerEvent (ByEvent ev) ->
+                      invokeHandler $ lookupEvent ev kd
+                  TriggerAction act ->
+                      act
             where
                 invokeHandler Nothing = return ()
                 invokeHandler (Just kh) = handlerAction $ kehHandler $ khHandler kh
