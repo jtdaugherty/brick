@@ -21,9 +21,9 @@ API changes:
   passes the builder (and the library invokes it to create an initial
   handle) and the builder is now optional for cases where the caller
   doesn't care or just wants the default Vty behavior.
-* `Brick.Main`: added convenience functions
-   `{enable,disable}MouseEvents` to make it easier to manage mouse mode
-   without needing to use `customMain` to get access to the Vty handle.
+* `Brick.Main`: added convenience functions `enableMouseEvents` and
+  `disableMouseEvents` to make it easier to manage mouse mode without
+  needing to use `customMain` to get access to the Vty handle.
 * `Brick.Widgets.MenuBar`: added `openNamedMenu` and `toggleNamedMenu`.
 * `newMenuBar` now raises an exception if any menus in the menu bar use
   duplicate resource name constructors.
