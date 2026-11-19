@@ -2,6 +2,46 @@
 Brick changelog
 ---------------
 
+3.1
+---
+
+API changes:
+
+* `Brick.Main.customMain` now takes only a single optional Vty handle
+  builder rather than two separate arguments for the initial handle and
+  subsequent rebuiding. Prior to this change, `customMain` effectively
+  always took the same thing for its first two arguments: a Vty handle
+  builder, and a handle built with that same builder. That had two
+  negative consequences: first, the duplication of the builder when
+  the library could have handled the initial Vty handle creation, and
+  second, the fact that callers of `customMain` had to provide these
+  two arguments even in cases where the only reason to call customMain
+  was to provide a custom event channel. This change addresses these
+  problems by combining the Vty handle arguments so that the caller only
+  passes the builder (and the library invokes it to create an initial
+  handle) and the builder is now optional for cases where the caller
+  doesn't care or just wants the default Vty behavior.
+* `Brick.Main`: added convenience functions
+   `{enable,disable}MouseEvents` to make it easier to manage mouse mode
+   without needing to use `customMain` to get access to the Vty handle.
+* `Brick.Widgets.MenuBar`: added `openNamedMenu` and `toggleNamedMenu`.
+* `newMenuBar` now raises an exception if any menus in the menu bar use
+  duplicate resource name constructors.
+
+Behavior improvements:
+
+* `handleMenuEvent` now handles mouse click events on parent menus even
+  when submenus are open. Prior to this change, a menu with an open
+  submenu would ignore mouse clicks in the body of the parent menu.
+* `handleMenuEvent` now handles mouse clicks so that when they fall
+  outside known regions, the entire menu is closed, not just the most
+  recently-opened submenu.
+
+Other improvements:
+
+* Improved the documentation for the `Viewport` and `ViewportScroll`
+  types to make their use cases a bit clearer.
+
 3.0
 ---
 
