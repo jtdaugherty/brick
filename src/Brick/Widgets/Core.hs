@@ -952,18 +952,18 @@ setAvailableSize (w, h) p
 -- For example:
 --
 -- @
---    appAttrMap = attrMap (white `on` blue) [ ("highlight", fg yellow)
---                                           , ("warning", bg magenta)
+--    appAttrMap = attrMap (white `on` blue) [ (attrName "highlight", fg yellow)
+--                                           , (attrName "warning", bg magenta)
 --                                           ]
 --
 --    renderA :: (String, String) -> [Widget n]
 --    renderA (a,b) = hBox [ str a
 --                         , str " is "
---                         , withAttr "highlight" (str b)
+--                         , withAttr (attrName "highlight") (str b)
 --                         ]
 --
 --    render1 = renderA (\"Brick\", "fun")
---    render2 = withAttr "warning" render1
+--    render2 = withAttr (attrName "warning") render1
 -- @
 --
 -- In the example above, @render1@ will show @Brick is fun@ where the
@@ -996,18 +996,18 @@ modifyDefAttr f p =
 --
 -- @
 --    ...
---    appAttrMap = attrMap (white `on` blue) [ ("highlight", fg yellow)
---                                           , ("warning", bg magenta)
---                                           , ("good", white `on` green) ]
+--    appAttrMap = attrMap (white `on` blue) [ (attrName "highlight", fg yellow)
+--                                           , (attrName "warning", bg magenta)
+--                                           , (attrName "good", white `on` green) ]
 --    ...
 --
 --    renderA :: (String, String) -> [Widget n]
---    renderA (a,b) = hBox [ withAttr "good" (str a)
+--    renderA (a,b) = hBox [ withAttr (attrName "good") (str a)
 --                         , str " is "
---                         , withAttr "highlight" (str b) ]
+--                         , withAttr (attrName "highlight") (str b) ]
 --
 --    render1 = renderA (\"Brick\", "fun")
---    render2 = withDefAttr "warning" render1
+--    render2 = withDefAttr (attrName "warning") render1
 -- @
 --
 -- In the above, render1 will show "Brick is fun" where the first word
@@ -1045,18 +1045,18 @@ updateAttrMap f p =
 --
 -- @
 --    ...
---    appAttrMap = attrMap (white `on` blue) [ ("highlight", fg yellow)
---                                           , ("notice", fg red) ]
+--    appAttrMap = attrMap (white `on` blue) [ (attrName "highlight", fg yellow)
+--                                           , (attrName "notice", fg red) ]
 --    ...
 --
 --    renderA :: (String, String) -> [Widget n]
---    renderA (a,b) = hBox [ withAttr "highlight" (str a)
+--    renderA (a,b) = hBox [ withAttr (attrName "highlight") (str a)
 --                         , str " is "
---                         , withAttr "highlight" (str b)
+--                         , withAttr (attrName "highlight") (str b)
 --                         ]
 --
 --    render1 = renderA ("Brick", "fun")
---    render2 = forceAttr "notice" render1
+--    render2 = forceAttr (attrName "notice") render1
 -- @
 --
 -- In the above, render1 will show "Brick is fun" where the first and
@@ -1088,15 +1088,15 @@ forceAttrAllowStyle an p =
 -- For example:
 --
 -- @
---    appAttrMap = attrMap (white `on` blue) [ ("highlight", fg yellow)
---                                           , ("notice", fg red)
+--    appAttrMap = attrMap (white `on` blue) [ (attrName "highlight", fg yellow)
+--                                           , (attrName "notice", fg red)
 --                                           ]
 --
 --    renderA :: (String, String) -> [Widget n]
---    renderA (a, b) = str a <+> str " is " <+> withAttr "highlight" (str b)
+--    renderA (a, b) = str a <+> str " is " <+> withAttr (attrName "highlight") (str b)
 --
---    render1 = withAttr "notice" $ renderA ("Brick", "fun")
---    render2 = overrideAttr "highlight" "notice" render1
+--    render1 = withAttr (attrName "notice") $ renderA ("Brick", "fun")
+--    render2 = overrideAttr (attrName "highlight") (attrName "notice") render1
 -- @
 --
 -- In the example above, @render1@ will show @Brick is fun@ where the
